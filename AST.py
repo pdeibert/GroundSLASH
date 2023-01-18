@@ -11,28 +11,10 @@ class Expr(ABC):
 # ----- operators -----
 
 class ArithOp(Enum):
-    PLUS    = 0 
+    PLUS    = 0
     MINUS   = 1
     TIMES   = 2
     DIV     = 3
-
-    """
-    @classmethod
-    def from_operator(cls, operator: str):
-        if operator == "+":
-            value = 0
-        elif operator == "-":
-            value = 1
-        elif operator == "*":
-            value = 2
-        elif operator == "/":
-            value = 3
-        else:
-            # TODO
-            raise Exception
-        
-        return cls(value)
-    """
 
 class RelOp(Enum):
     EQUAL           = 0
@@ -42,51 +24,11 @@ class RelOp(Enum):
     LESS_OR_EQ      = 4
     GREATER_OR_EQ   = 5
 
-    """
-    @classmethod
-    def from_operator(cls, operator: str):
-        if operator == "=":
-            value = 0
-        elif operator == "!=":
-            value = 1
-        elif operator == "<":
-            value = 2
-        elif operator == ">":
-            value = 3
-        elif operator == "<=":
-            value = 4
-        elif operator == ">=":
-            value = 5
-        else:
-            # TODO
-            raise Exception
-
-        return cls(value)
-    """
-
 class AggrOp(Enum):
     COUNT   = 0
     SUM     = 1
     MAX     = 2
     MIN     = 3
-
-    """
-    @classmethod
-    def from_operator(cls, operator: str):
-        if operator == "#count":
-            value = 0
-        elif operator == "#sum":
-            value = 1
-        elif operator == "#max":
-            value = 2
-        elif operator == "#min":
-            value = 3
-        else:
-            # TODO
-            raise Exception
-        
-        return cls(value)
-    """
 
 # ----- terms -----
 

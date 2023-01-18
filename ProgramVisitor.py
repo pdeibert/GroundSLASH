@@ -331,7 +331,7 @@ class ProgramVisitor(ASPVisitor):
         else:
             terms = tuple()
 
-        id = Id(ctx.children[minus], terms)
+        id = Id(ctx.children[minus].getSymbol().text, terms)
 
         if minus:
             return UnaryArithTerm(id)
