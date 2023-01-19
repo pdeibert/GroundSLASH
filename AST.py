@@ -1,4 +1,4 @@
-from typing import Set, Tuple
+from typing import Set, Tuple, Optional, Iterable
 from abc import ABC
 from enum import Enum
 from dataclasses import dataclass
@@ -159,15 +159,33 @@ class Statement(Expr, ABC):
 class Disjunction(Expr):
     literals: Tuple[ClassicalAtom]
 
+    def __init__(self, literals: Optional[Tuple[ClassicalAtom]]=None):
+        if literals is None:
+            literals = tuple()
+        
+        self.literals = literals
+
     def __len__(self) -> int:
         return len(self.literals)
+
+    def __iter__(self) -> Iterable[Literal]:
+        return iter(self.literals)
 
 @dataclass
 class Conjunction(Expr):
     literals: Tuple[Literal]
 
+    def __init__(self, literals: Optional[Tuple[Literal]]=None):
+        if literals is None:
+            literals = tuple()
+        
+        self.literals = literals
+
     def __len__(self) -> int:
         return len(self.literals)
+
+    def __iter__(self) -> Iterable[Literal]:
+        return iter(self.literals)
 
     def getPositive(self) -> "Conjunction":
 
@@ -215,8 +233,11 @@ class NormalRule(DisjunctiveRule):
 
     for classical atom h and literals b_1,...,b_n.
     """
-    def __init__(self, head: ClassicalAtom, body: Conjunction):
+    def __init__(self, head: ClassicalAtom, body: Optional[Conjunction]=None):
         self.head = Disjunction( (ClassicalAtom,) )
+
+        if body is None:
+            body = Conjunction()
         self.body = body
 
 class Fact(DisjunctiveRule):
@@ -255,8 +276,37 @@ class WeakConstraint(Rule):
 
 # Choice Rule
 class ChoiceRule(Rule):
-    # TODO
-    pass
+    def __init__(self, head: ChoiceAtom, body: Conjunction):
+        self.head = head
+        self.body = body
+
+    def simplify(self) -> Tuple[NormalRule]:
+
+        # TODO: way to create a new UNIQUE identifier!
+        new_head = Id("todo")
+
+        rules = [
+            NormalRule(new_head, self.body)
+        ]
+
+        for literal in self.head:
+
+            # TODO: way to create new UNIQUE identifier!
+            literal_prime = ClassicalAtom(Id("todo"))
+
+            rules += [
+                NormalRule(
+                    literal,
+                    Conjunction( (new_head, DefaultAtom(literal_prime, neg=True) ) )
+                ),
+                NormalRule(
+                    literal_prime,
+                    Conjunction( (DefaultAtom(literal, neg=True),) )
+                )
+            ]
+        
+        return tuple(rules)
+        # TODO: store identifiers/Variables somewhere in a table together with information whether or not it is original or not (and relevant for output)
 
 # Weight Rule ?
 class WeightRule(Rule):
@@ -279,3 +329,8 @@ class MinimizeStatement(Statement):
 class Query:
     """Query."""
     atom: ClassicalAtom
+
+# ----- WIPs -----
+
+class ArithTerm(Term):
+    pass

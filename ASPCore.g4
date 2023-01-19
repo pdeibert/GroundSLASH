@@ -1,4 +1,9 @@
-grammar ASP;
+/* ASP-Core-2.03b
+
+For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03b.pdf.
+*/
+
+grammar ASPCore;
 
 /* parser rules */
 
@@ -11,6 +16,7 @@ query               :   classical_literal QUERY_MARK ;
 statement           :   CONS body? DOT
                     |   head (CONS body?)? DOT
                     |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
+                    |   optimize DOT
                     ;
 
 head                :   disjunction
@@ -31,7 +37,8 @@ aggregate           :   (term binop)? aggregate_function CURLY_OPEN aggregate_el
 
 aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)? ;
 
-aggregate_element   :   basic_terms? (COLON naf_literals?)? ;
+// can be empty
+aggregate_element   :   terms? (COLON naf_literals?)? ;
 
 aggregate_function  :   COUNT
                     |   MAX
@@ -39,14 +46,25 @@ aggregate_function  :   COUNT
                     |   SUM
                     ;
 
+optimize            :   optimize_function CURLY_OPEN optimize_elements? CURLY_CLOSE ;
+
+optimize_elements   :   optimize_element (SEMICOLON optimize_elements)? ;
+
+optimize_element    :   weight_at_level (COLON naf_literals?)? ;
+
+optimize_function   :   MAXIMIZE
+                    |   MINIMIZE ;
+
 weight_at_level     :   term (AT term)? (COMMA terms)? ;
 
 naf_literals        :   naf_literal (COMMA naf_literals)? ;
 
-naf_literal         :   NAF? classical_literal | builtin_atom ;
+naf_literal         :   NAF? classical_literal
+                    |   builtin_atom ;
 
 classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)? ;
 
+// TODO: term -> arith_term?
 builtin_atom        :   term binop term ;
 
 binop               :   EQUAL
@@ -59,35 +77,34 @@ binop               :   EQUAL
 
 terms               :   term (COMMA terms)? ;
 
-term                :   ID (PAREN_OPEN terms? PAREN_CLOSE)?
-                    |   NUMBER
+term                :   ID
                     |   STRING
                     |   VARIABLE
                     |   ANONYMOUS_VARIABLE
                     |   PAREN_OPEN term PAREN_CLOSE
                     |   MINUS term
-                    |   term arithop term
+                    |   func_term
+                    |   arith_term
                     ;
 
-basic_terms         :   basic_term (COMMA basic_terms)? ;
+// functional terms
+func_term           :   ID PAREN_OPEN terms PAREN_CLOSE ;
 
-basic_term          :   ground_term
-                    |   variable_term
+// arithmetical terms (operator precedences built into the grammar)
+arith_term          :   arith_sum ;
+
+arith_sum           :   arith_prod
+                    |   arith_sum PLUS arith_prod
+                    |   arith_sum MINUS arith_prod
                     ;
 
-ground_term         :   ID
-                    |   STRING
-                    |   MINUS? NUMBER
+arith_prod          :   arith_atom
+                    |   arith_prod TIMES arith_atom
+                    |   arith_prod DIV arith_atom 
                     ;
 
-variable_term       :   VARIABLE
-                    |   ANONYMOUS_VARIABLE
-                    ;
-
-arithop             :   PLUS
-                    |   MINUS
-                    |   TIMES
-                    |   DIV
+arith_atom          :   (PLUS | MINUS)* (NUMBER | VARIABLE)
+                    |   PAREN_OPEN arith_sum PAREN_CLOSE
                     ;
 
 /* lexer rules */
@@ -127,6 +144,8 @@ COUNT               :   '#count' ;
 MAX                 :   '#max' ;
 MIN                 :   '#min' ;
 SUM                 :   '#sum' ;
+MINIMIZE            :   '#minimize' ;
+MAXIMIZE            :   '#maximize' ;
 COMMENT             :   '%' ~[\r\n]* -> skip ;
 MULTI_LINE_COMMENT  :   '%*' .*? '*%' -> skip ;
 BLANK               :   [ \t\n]+ -> skip ;

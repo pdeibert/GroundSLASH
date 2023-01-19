@@ -1,33 +1,34 @@
 import sys
 from antlr4 import *
-from ASPLexer import ASPLexer
-from ASPParser import ASPParser
-#from ASPASTListener import ASPASTListener
-from ProgramVisitor import ProgramVisitor
-#from ASPVisitor import ASPVisitor
-
+from ASPCoreLexer import ASPCoreLexer
+from ASPCoreParser import ASPCoreParser
+from ASTVisitor import ASTVisitor
 
 # read input program
 input_stream = FileStream(sys.argv[1])
 
 # tokenize
-lexer = ASPLexer(input_stream)
+lexer = ASPCoreLexer(input_stream)
 stream = CommonTokenStream(lexer)
 stream.fill()
 
 # output tokens
+"""
 print("Lexing:")
 for token in stream.tokens:
     if token.type != '<EOF>':
         print(f"\t{lexer.symbolicNames[token.type] :15}{token.text}")
 print()
+"""
 
 # parse
 print("Parsing:")
-parser = ASPParser(stream)
+parser = ASPCoreParser(stream)
 tree = parser.program()
 
 # traverse parse tree using visitor
-visitor = ProgramVisitor()
-ast = visitor.visitProgram(tree)
-print(ast)
+visitor = ASTVisitor()
+statements, query = visitor.visitProgram(tree)
+
+for s in statements:
+    print(s)
