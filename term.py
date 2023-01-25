@@ -217,17 +217,17 @@ class Functional(Term):
 
         return False
 
-    def substitute(self, subst: Dict[str, Term]) -> "Functional":
-        return Functional(
-            self.functor,
-            tuple(term.substitute(subst) for term in self.terms)
-        )
-
     def __repr__(self) -> str:
         return f"Func[{self.functor}]" + (f"({','.join([repr(term) for term in self.terms])})" if self.terms else '')
 
     def __str__(self) -> str:
         return self.functor + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
+
+    def substitute(self, subst: Dict[str, Term]) -> "Functional":
+        return Functional(
+            self.functor,
+            tuple(term.substitute(subst) for term in self.terms)
+        )
 
 
 class ArithOp(Enum):
@@ -251,12 +251,12 @@ class ArithOp(Enum):
 
 
 class ArithTerm(Term, ABC):
-    @abstractmethod
-    def __call__(self) -> Number:
-        pass
-
     def __lshift__(self, other: "Term") -> bool:
-        return self() << other
+        return self.evaluate() << other
+
+    @abstractmethod
+    def evaluate(self) -> Number:
+        pass
 
 
 @dataclass
@@ -264,8 +264,11 @@ class Add(ArithTerm):
     loperand: Term
     roperand: Term
 
-    def __call__(self) -> Number:
-        return Number(self.loperands() + self.roperands())
+    def __repr__(self) -> str:
+        return f"Add({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}+{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Add":
         return Add(
@@ -273,11 +276,8 @@ class Add(ArithTerm):
             self.roperand.substitute(subst),
         )
 
-    def __repr__(self) -> str:
-        return f"Add({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}+{str(self.roperand)}"
+    def evaluate(self) -> Number:
+        return Number(self.loperands.evaluate() + self.roperands.evaluate())
 
 
 @dataclass
@@ -285,8 +285,11 @@ class Sub(ArithTerm):
     loperand: Term
     roperand: Term
 
-    def __call__(self) -> Number:
-        return Number(self.loperands() - self.roperands())
+    def __repr__(self) -> str:
+        return f"Sub({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}-{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Sub":
         return Sub(
@@ -294,11 +297,8 @@ class Sub(ArithTerm):
             self.roperand.substitute(subst),
         )
 
-    def __repr__(self) -> str:
-        return f"Sub({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}-{str(self.roperand)}"
+    def evaluate(self) -> Number:
+        return Number(self.loperands.evaluate() - self.roperands.evaluate())
 
 
 @dataclass
@@ -306,8 +306,11 @@ class Mult(ArithTerm):
     loperand: Term
     roperand: Term
 
-    def __call__(self) -> Number:
-        return Number(self.loperands() * self.roperands())
+    def __repr__(self) -> str:
+        return f"Mult({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}*{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Mult":
         return Mult(
@@ -315,11 +318,8 @@ class Mult(ArithTerm):
             self.roperand.substitute(subst),
         )
 
-    def __repr__(self) -> str:
-        return f"Mult({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}*{str(self.roperand)}"
+    def evaluate(self) -> Number:
+        return Number(self.loperands.evaluate() * self.roperands.evaluate())
 
 
 @dataclass
@@ -327,8 +327,11 @@ class Div(ArithTerm):
     loperand: Term
     roperand: Term
 
-    def __call__(self) -> Number:
-        return Number(self.loperands() // self.roperands())
+    def __repr__(self) -> str:
+        return f"Div({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}/{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Div":
         return Div(
@@ -336,24 +339,13 @@ class Div(ArithTerm):
             self.roperand.substitute(subst),
         )
 
-    def __repr__(self) -> str:
-        return f"Div({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}/{str(self.roperand)}"
+    def evaluate(self) -> Number:
+        return Number(self.loperands.evaluate() // self.roperands.evaluate())
 
 
 @dataclass
 class Minus(ArithTerm):
     operand: Term
-
-    def __call__(self) -> Number:
-        return ~self.operand()
-
-    def substitute(self, subst: Dict[str, Term]) -> "Minus":
-        return Minus(
-            self.operand.substitute(subst)
-        )
 
     def __repr__(self) -> str:
         return f"Minus({repr(self.operand)})"
@@ -361,8 +353,53 @@ class Minus(ArithTerm):
     def __str__(self) -> str:
         return f"-{str(self.operand)}"
 
+    def substitute(self, subst: Dict[str, Term]) -> "Minus":
+        return Minus(
+            self.operand.substitute(subst)
+        )
 
-# TODO: arithmetic terms may not contain any symbolic constants, functional terms or strings! (ensure via grammar)
-# -> only NUMBERS or VARIABLES
+    def evaluate(self) -> Number:
+        return ~self.operand.evaluate()
+
 
 # TODO: use __pos__, __neg__ for annotating default/classical negation?
+
+"""
+@dataclass
+class RootTerm: # TODO: change typings of all statements that expect a root term!
+    ""TODO: should represent a FINAL term that is not part of another term.""
+    term: Term
+
+    def __eq__(self, other: Term) -> bool:
+        ""Implements the binary '=' operator for terms.""
+        return self.term == other
+
+    def __ne__(self, other: Term) -> bool:
+        ""Implements the binary '!=' operator for terms.""
+        return self.term != other
+
+    def __lt__(self, other: Term) -> bool:
+        ""Implements the binary '<' operator for terms.""
+        return self.term < other
+
+    def __gt__(self, other: Term) -> bool:
+        ""Implements the binary '>' operator for terms.""
+        return self.term > other
+
+    def __le__(self, other: Term) -> bool:
+        ""Implements the binary '<=' operator for terms.""
+        return self.term <= other
+
+    def __ge__(self, other: Term) -> bool:
+        ""Implements the binary '>=' operator for terms.""
+        return self.term >= other
+
+    def __lshift__(self, other: "Term") -> bool:
+        ""Defines the total ordering operator defined for terms in ASP-Core-2.""
+        return self.term << other
+
+    def substitute(self, subst: Dict[str, Term]) -> "RootTerm":
+        return RootTerm(
+            self.term.substitute(subst)
+        )
+"""

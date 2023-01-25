@@ -32,14 +32,16 @@ class AggregateFunction(ABC):
     tuples: Tuple[Tuple[Term, ...], ...] # tuple of tuples of terms
 
     @abstractmethod
-    def __call__(self) -> Number:
+    def evaluate(self) -> Number:
         pass
 
 
 class AggregateCount(AggregateFunction):
-    @abstractmethod
-    def __call__(self) -> Number:
-        return len(self.tuples)
+    def __repr__(self) -> str:
+        return f"AggregateCount({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
+
+    def __str__(self) -> str:
+        return f"#count{{{';'.join([','.join([str(term) for term in tup]) for tup in self.tuples])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "AggregateCount":
         return AggregateCount(
@@ -51,19 +53,16 @@ class AggregateCount(AggregateFunction):
             )
         )
 
-    def __repr__(self) -> str:
-        return f"AggregateCount({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
-
-    def __str__(self) -> str:
-        return f"#count{{{';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])}}}"
+    def evaluate(self) -> Number:
+        return len(self.tuples)
 
 
 class AggregateSum(AggregateFunction):
-    @abstractmethod
-    def __call__(self) -> Number:
-        # TODO: what if a tuple is empty ?
-        # TODO: what if all tuples are empty or non have an integer as first element ?
-        return Number(sum([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)]))
+    def __repr__(self) -> str:
+        return f"AggregateSum({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
+
+    def __str__(self) -> str:
+        return f"#sum{{{';'.join([','.join([str(term) for term in tup]) for tup in self.tuples])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "AggregateSum":
         return AggregateCount(
@@ -75,22 +74,19 @@ class AggregateSum(AggregateFunction):
             )
         )
 
-    def __repr__(self) -> str:
-        return f"AggregateSum({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
-
-    def __str__(self) -> str:
-        return f"#sum{{{';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])}}}"
-
+    def evaluate(self) -> Number:
+        # TODO: what if a tuple is empty ?
+        # TODO: what if all tuples are empty or non have an integer as first element ?
+        # TODO: evaluate recursively?
+        return Number(sum([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)]))
+    
 
 class AggregateMin(AggregateFunction):
-    @abstractmethod
-    def __call__(self) -> Number:
-        if self.tuples:
-            # TODO: what if a tuple is empty
-            # TODO: what if all tuples are empty
-            return min([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)])
-        else:
-            return Infimum
+    def __repr__(self) -> str:
+        return f"AggregateMin({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
+
+    def __str__(self) -> str:
+        return f"#min{{{';'.join([','.join([str(term) for term in tup]) for tup in self.tuples])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "AggregateMin":
         return AggregateCount(
@@ -102,23 +98,22 @@ class AggregateMin(AggregateFunction):
             )
         )
 
-    def __repr__(self) -> str:
-        return f"AggregateMin({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
-
-    def __str__(self) -> str:
-        return f"#min{{{';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])}}}"
-
+    def evaluate(self) -> Number:
+        if self.tuples:
+            # TODO: what if a tuple is empty
+            # TODO: what if all tuples are empty\
+            # TODO: evaluate recursively?
+            return min([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)])
+        else:
+            return Infimum
 
 
 class AggregateMax(AggregateFunction):
-    @abstractmethod
-    def __call__(self):
-        if self.tuples:
-            # TODO: what if a tuple is empty
-            # TODO: what if all tuples are empty
-            return max([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)])
-        else:
-            return Supremum
+    def __repr__(self) -> str:
+        return f"AggregateMax({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
+
+    def __str__(self) -> str:
+        return f"#max{{{';'.join([','.join([str(term) for term in tup]) for tup in self.tuples])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "AggregateMax":
         return AggregateCount(
@@ -130,11 +125,14 @@ class AggregateMax(AggregateFunction):
             )
         )
 
-    def __repr__(self) -> str:
-        return f"AggregateMax({';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])})"
-
-    def __str__(self) -> str:
-        return f"#max{{{';'.join([','.join([repr(term) for term in tup]) for tup in self.tuples])}}}"
+    def evaluate(self):
+        if self.tuples:
+            # TODO: what if a tuple is empty
+            # TODO: what if all tuples are empty
+            # TODO: evaluate recursively?
+            return max([tuple[0] for tuple in self.tuples if tuple and isinstance(tuple[0], Number)])
+        else:
+            return Supremum
 
 
 class AggregateAtom: # TODO: inherit?
@@ -147,6 +145,12 @@ class AggregateAtom: # TODO: inherit?
         self.lcomp = lcomp
         self.rcomp = rcomp
 
+    def __repr__(self) -> str:
+        return f"AggregateAtom({repr(self.lcomp[1])} {repr(self.lcomp[0])} {repr(self.func)} {repr(self.rcomp[0])} {repr(self.rcomp[1])})"
+
+    def __str__(self) -> str:
+        return f"{str(self.lcomp[1])} {str(self.lcomp[0])} {str(self.func)} {str(self.rcomp[0])} {str(self.rcomp[1])}"
+
     def substitute(self, subst: Dict[str, Term]) -> "AggregateAtom":
         return AggregateAtom(
             self.func.substitute(subst),
@@ -154,17 +158,17 @@ class AggregateAtom: # TODO: inherit?
             (self.rcomp[0], self.rcomp[1].substitute(subst))
         )
 
-    def __repr__(self) -> str:
-        return f"AggregateAtom({repr(self.lcomp[1])} {repr(self.lcomp[0])} {repr(self.func)} {repr(self.rcomp[0])} {repr(self.rcomp[1])})"
-
-    def __str__(self) -> str:
-        return f"{str(self.lcomp[1])} {str(self.lcomp[0])} {str(self.func)} {str(self.rcomp[0])} {str(self.rcomp[1])}"
-
 
 @dataclass
 class AggregateLiteral:
     atom: AggregateAtom
     neg: bool=False
+
+    def __repr__(self) -> str:
+        return ("-" if self.neg else '') + repr(self.atom)
+
+    def __str__(self) -> str:
+        return ("not " if self.neg else '') + str(self.atom)
 
     def substitute(self, subst: Dict[str, Term]) -> "AggregateLiteral":
         return AggregateLiteral(
@@ -172,8 +176,5 @@ class AggregateLiteral:
             self.neg
         )
 
-    def __repr__(self) -> str:
-        return ("-" if self.neg else '') + repr(self.atom)
 
-    def __str__(self) -> str:
-        return ("not " if self.neg else '') + str(self.atom)
+# TODO: evaluate for other terms, atoms, literals? 

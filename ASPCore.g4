@@ -1,6 +1,6 @@
-/* ASP-Core-2.03b
+/* ASP-Core-2.03c
 
-For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03b.pdf.
+For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
 */
 
 grammar ASPCore;

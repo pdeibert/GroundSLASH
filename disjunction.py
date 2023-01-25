@@ -26,7 +26,7 @@ class Disjunction: # TODO: inherit from Expr ?
         return f"Disjunction({','.join([repr(literal) for literal in self.literals])})"
 
     def __str__(self) -> str:
-        return '|'.join([str(literal) for literal in self.literals])
+        return ' | '.join([str(literal) for literal in self.literals])
 
 
 # TODO: neg(), pos() to return positive, negative literals?

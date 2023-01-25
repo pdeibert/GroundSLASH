@@ -11,28 +11,35 @@ from conjunction import Conjunction
 from tables import VariableTable
 
 
-# TODO: provide an substitute method assigning values to variables
-# should raise error if not valid (e.g. string in arithmetical term)
-# whenever we have a variable in a statement -> register
-# how to substitute ?
-# Maybe everything that can receive a variable -> hold off
-
-# substitute_callback:
-
-
 class Statement(ABC):
     """Abstract base class for all statements."""
     def __init__(self) -> None:
         # initialize variable table
-        self.vars = VariableTable()
+        self.variables = VariableTable()
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        pass
+
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
 
     @abstractmethod # TODO: must also be implemented by Disjunction, Conjunction and Elements
     def substitute(self, subst: Dict[str, Term]) -> "Statement":
         """substitutes the statement by replacing all variables with assigned terms."""
         pass
 
-    def set_variable_table(self, var_table: VariableTable) -> None:
-        self.vars = VariableTable
+    def is_ground(self) -> bool:
+        """Checks whether or not the statement contains any variables."""
+        return not self.variables.variables
+
+    def is_safe(self) -> bool:
+        """Checks whether or not the statement is safe."""
+        return all(self.variables.variables.values())
+
+    def set_variable_table(self, variables: VariableTable) -> None:
+        self.variables = variables
 
 
 @dataclass
@@ -40,9 +47,7 @@ class Rule(Statement, ABC):
     head: Disjunction
     body: Conjunction
     """Abstract base class for all rules."""
-# for rules:
-#   issafe ?
-#   istight ?
+#   def istight ?
 
 
 class Fact(Rule, ABC):
@@ -54,7 +59,7 @@ class Fact(Rule, ABC):
 class NormalFact(Fact):
     """Normal fact."""
     def __init__(self, head: ClassicalAtom) -> None:
-        super().__init__(tuple([head]))
+        super().__init__(Disjunction([head]))
 
     def substitute(self, subst: Dict[str, Term]) -> "NormalFact":
         return NormalFact(

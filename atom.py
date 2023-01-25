@@ -26,21 +26,22 @@ class PredicateAtom(Atom): # TODO: inherit from Expr ?
         self.name = name
         self.terms = terms
 
-    @cached_property
-    def arity(self) -> int:
-        return len(self.terms)
-
-    def substitute(self, subst: Dict[str, Term]) -> "PredicateAtom":
-        return PredicateAtom(
-            self.name,
-            tuple(term.substitute(subst) for term in self.terms)
-        )
-
     def __repr__(self) -> str:
         return f"PredicateAtom[{self.name}]({','.join([repr(term) for term in self.terms])})"
 
     def __str__(self) -> str:
         return self.name + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
+
+    @cached_property
+    def arity(self) -> int:
+        return len(self.terms)
+
+    def substitute(self, subst: Dict[str, Term]) -> "PredicateAtom":
+        # TODO: root term?
+        return PredicateAtom(
+            self.name,
+            tuple(term.substitute(subst) for term in self.terms)
+        )
 
 
 @dataclass
@@ -48,6 +49,12 @@ class ClassicalAtom(Atom, NafLiteral):
     """Classical atom."""
     atom: PredicateAtom
     cneg: bool=False
+
+    def __repr__(self) -> str:
+        return ('-' if self.cneg else '') + f"ClassicalAtom({repr(self.atom)})"
+
+    def __str__(self) -> str:
+        return ('-' if self.cneg else '') + str(self.atom)
 
     def __neg__(self) -> "ClassicalAtom":
         return ClassicalAtom(self.atom, ~self.neg)
@@ -59,16 +66,11 @@ class ClassicalAtom(Atom, NafLiteral):
         return ClassicalAtom(self.atom)
 
     def substitute(self, subst: Dict[str, Term]) -> "ClassicalAtom":
+        # TODO: root term?
         return ClassicalAtom(
             self.atom.substitute(subst),
             self.cneg
         )
-
-    def __repr__(self) -> str:
-        return ('-' if self.cneg else '') + f"ClassicalAtom({repr(self.atom)})"
-
-    def __str__(self) -> str:
-        return ('-' if self.cneg else '') + str(self.atom)
 
 
 @dataclass
@@ -101,6 +103,7 @@ class DefaultAtom(Atom, NafLiteral):
         return ('not ' if self.dneg else '') + str(self.catom)
 
     def substitute(self, subst: Dict[str, Term]) -> "DefaultAtom":
+        # TODO: root term?
         return DefaultAtom(
             self.catom.substitute(subst),
             self.dneg
@@ -113,13 +116,16 @@ class BuiltinAtom(Atom, NafLiteral, ABC):
     roperand: Term
 
     @abstractmethod
-    def __call__(self) -> bool:
+    def evaluate(self) -> bool:
         pass
 
 
 class Equal(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand == self.roperand
+    def __repr__(self) -> str:
+        return f"Equal({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}={str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Equal":
         return Equal(
@@ -127,16 +133,17 @@ class Equal(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"Equal({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}={str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand == self.roperand    
 
 
 class Unequal(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand != self.roperand
+    def __repr__(self) -> str:
+        return f"Unequal({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}!={str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Unequal":
         return Unequal(
@@ -144,16 +151,17 @@ class Unequal(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"Unequal({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}!={str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand != self.roperand
 
 
 class Less(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand < self.roperand
+    def __repr__(self) -> str:
+        return f"Less({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}<{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Less":
         return Less(
@@ -161,16 +169,17 @@ class Less(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"Less({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}<{str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand < self.roperand
 
 
 class Greater(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand > self.roperand
+    def __repr__(self) -> str:
+        return f"Greater({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}>{str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "Greater":
         return Greater(
@@ -178,16 +187,17 @@ class Greater(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"Greater({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}>{str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand > self.roperand
 
 
 class LessEqual(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand <= self.roperand
+    def __repr__(self) -> str:
+        return f"LessEqual({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}<={str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "LessEqual":
         return LessEqual(
@@ -195,16 +205,17 @@ class LessEqual(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"LessEqual({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}<={str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand <= self.roperand
 
 
 class GreaterEqual(BuiltinAtom):
-    def __call__(self) -> bool:
-        return self.loperand >= self.roperand
+    def __repr__(self) -> str:
+        return f"GreaterEqual({repr(self.loperand)},{repr(self.roperand)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.loperand)}>={str(self.roperand)}"
 
     def substitute(self, subst: Dict[str, Term]) -> "GreaterEqual":
         return GreaterEqual(
@@ -212,8 +223,6 @@ class GreaterEqual(BuiltinAtom):
             self.roperand.substitute(subst)
         )
 
-    def __repr__(self) -> str:
-        return f"GreaterEqual({repr(self.loperand)},{repr(self.roperand)})"
-
-    def __str__(self) -> str:
-        return f"{str(self.loperand)}>={str(self.roperand)}"
+    def evaluate(self) -> bool:
+        # TODO: evaluate recursively?
+        return self.loperand >= self.roperand
