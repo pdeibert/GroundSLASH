@@ -28,14 +28,14 @@ tree = parser.program()
 
 # traverse parse tree using visitor
 visitor = ProgramBuilder()
-statements, query = visitor.visitProgram(tree)
+prog = visitor.visitProgram(tree)
 
-#for s in statements:
+#for prog.statement in statements:
 #    print(s)
 
 from term import Number, SymbolicConstant, String
 
-cons = statements[-2]
+cons = prog.statements[-2]
 print(cons)
 
 print(cons.substitute({'X': Number(-10)}))
@@ -47,3 +47,8 @@ except:
 
 print(cons.substitute({'X': SymbolicConstant("test")}))
 print(cons.substitute({'X': String("Test")}))
+
+# TODO: object representation is smaller than string representation (IMPORTANT!) 
+# maybe even more extreme for C++?
+#print(sum([sys.getsizeof(statement) for statement in statements]))
+#print(sum([sys.getsizeof(str(statement)) for statement in statements]))

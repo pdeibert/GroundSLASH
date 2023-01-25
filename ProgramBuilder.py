@@ -18,7 +18,6 @@ from program import Program
 class ProgramBuilder(ASPCoreVisitor):
     """Builds ASP program from ANTLR4 parse tree."""
     def __init__(self) -> None:
-        self.prog = Program()
         self.const_table = ConstantTable()
         self.var_table = None
 
@@ -42,7 +41,7 @@ class ProgramBuilder(ASPCoreVisitor):
             elif isinstance(child, ASPCoreParser.QueryContext):
                 query = self.visitQuery(child)
 
-        return (statements, query)
+        return Program(statements, query, self.const_table)
 
 
     # Visit a parse tree produced by ASPCoreParser#statements.
