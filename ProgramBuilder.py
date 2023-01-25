@@ -1,15 +1,29 @@
 # Generated from ASP.g4 by ANTLR 4.11.1
-import antlr4
+import antlr4  # type: ignore
 
 from ASPCoreParser import ASPCoreParser
 from ASPCoreVisitor import ASPCoreVisitor
-from AST import *
+
+from atom import *
+from term import *
+from statement import *
+from aggregate import *
+from comparison import *
+from disjunction import Disjunction
+from conjunction import Conjunction
+from tables import VariableTable, ConstantTable
+from program import Program
 
 
-class ASTVisitor(ASPCoreVisitor):
+class ProgramBuilder(ASPCoreVisitor):
+    """Builds ASP program from ANTLR4 parse tree."""
+    def __init__(self) -> None:
+        self.prog = Program()
+        self.const_table = ConstantTable()
+        self.var_table = None
 
     # Visit a parse tree produced by ASPCoreParser#program.
-    def visitProgram(self, ctx:ASPCoreParser.ProgramContext):
+    def visitProgram(self, ctx:ASPCoreParser.ProgramContext) -> Program:
         """Visits 'program'.
         
         Handles the following rule(s):
@@ -23,6 +37,7 @@ class ASTVisitor(ASPCoreVisitor):
             # statements
             if isinstance(child, ASPCoreParser.StatementsContext):
                 statements += self.visitStatements(child)
+                self.var_table = None
             # query
             elif isinstance(child, ASPCoreParser.QueryContext):
                 query = self.visitQuery(child)
@@ -49,7 +64,6 @@ class ASTVisitor(ASPCoreVisitor):
 
             query               :   classical_literal QUERY_MARK
         """
-        self.logging("query")
         return self.visitClassical_literal(ctx.children[0])
 
 
@@ -64,6 +78,9 @@ class ASTVisitor(ASPCoreVisitor):
                                 |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
                                 |   optimize DOT
         """
+        # initialize new VariableTable used for this statement
+        self.var_table = VariableTable()
+
         n_children = len(ctx.children)
 
         # first child is a token
@@ -77,7 +94,7 @@ class ASTVisitor(ASPCoreVisitor):
             if(token_type == "CONS"):
                 # body
                 if n_children > 2:
-                    return Constraint(self.visitBody(ctx.children[1]))
+                    statement = Constraint(self.visitBody(ctx.children[1]))
                 else:
                     # TODO: empty constraint?
                     raise Exception("Empty constraints not supported yet.")
@@ -96,20 +113,28 @@ class ASTVisitor(ASPCoreVisitor):
 
             # head DOT | head CONS DOT (i.e., fact)
             if n_children < 4:
-                return Fact(self.visitHead(ctx.children[0]))
+                if len(head) > 1:
+                    statement = DisjunctiveFact(head)
+                else:
+                    return NormalFact(head.literals[0])
             # head CONS body DOT (i.e., disjunctive rule)
             else:
                 body = self.visitBody(ctx.children[2])
 
                 # disjunctive rule
                 if len(head) > 1:
-                    return DisjunctiveRule(head, body)
+                    statement = DisjunctiveRule(head, body)
                 # normal rule
                 else:
-                    return NormalRule(head.literals[0], body)
+                    statement = NormalRule(head.literals[0], body)
         # optimize DOT
         else:
-            return self.visitOptimize(ctx.children[0])
+            statement = self.visitOptimize(ctx.children[0])
+
+        # append variable table to statement
+        statement.set_variable_table(self.var_table)
+
+        return statement
 
 
     # Visit a parse tree produced by ASPCoreParser#head.
@@ -144,13 +169,12 @@ class ASTVisitor(ASPCoreVisitor):
         else:
             # NAF aggregate (true) or aggregate (false)
             neg = True if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode) else False
-            literals = [AggrLiteral(self.visitAggregate(ctx.children[1]), neg=neg)]
-
+            literals = [AggregateLiteral(self.visitAggregate(ctx.children[1]), neg=neg)]
         # COMMA body
         if len(ctx.children) > 2:
             literals + self.visitBody(ctx.children[-1])
 
-        return Conjunction(literals)
+        return Conjunction(tuple(literals))
 
 
     # Visit a parse tree produced by ASPCoreParser#disjunction.
@@ -178,7 +202,7 @@ class ASTVisitor(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            choice              :   (term binop)? CURLY_OPEN choice_elements? CURLY_CLOSE (binop term)?
+            choice              :   (term compop)? CURLY_OPEN choice_elements? CURLY_CLOSE (compop term)?
         """
         # TODO: implement
         raise Exception("Choices are not supported yet.")
@@ -220,7 +244,7 @@ class ASTVisitor(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            aggregate           :   (term binop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (binop term)?
+            aggregate           :   (term compop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (compop term)?
         """
         # TODO: implement
         raise Exception("Aggregates not supported yet.")
@@ -402,10 +426,10 @@ class ASTVisitor(ASPCoreVisitor):
         else:
             terms = tuple()
 
-        id = Id(ctx.children[minus].getSymbol().text, terms)
+        id = PredicateAtom(ctx.children[minus].getSymbol().text, terms)
 
         if minus:
-            return UnaryArithTerm(id)
+            return Minus(id)
         else:
             return id
 
@@ -416,22 +440,38 @@ class ASTVisitor(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            builtin_atom        :   term binop term
+            builtin_atom        :   term compop term
         """
-        return BuiltinAtom(
-                self.visitBinop(ctx.children[1]), # parse binary relation operator
-                self.visitTerm(ctx.children[0]), # parse left term
-                self.visitTerm(ctx.children[2]), # parse right term
-            )
+        comp_op = self.visitCompop(ctx.children[1])
+
+        # TODO: rename compop in grammar to compop
+        # select correct comparison construct
+        if(comp_op == CompOp.EQUAL):
+            Comp = Equal
+        if(comp_op == CompOp.UNEQUAL):
+            Comp = Unequal
+        if(comp_op == CompOp.LESS):
+            Comp = Less
+        if(comp_op == CompOp.GREATER):
+            Comp = Greater
+        if(comp_op == CompOp.LESS_OR_EQ):
+            Comp = LessEqual
+        else:
+            Comp = GreaterEqual
+
+        return Comp(
+            self.visitTerm(ctx.children[0]), # parse left term
+            self.visitTerm(ctx.children[2]), # parse right term
+        )
 
 
-    # Visit a parse tree produced by ASPCoreParser#binop.
-    def visitBinop(self, ctx:ASPCoreParser.BinopContext):
-        """Visits 'binop'.
+    # Visit a parse tree produced by ASPCoreParser#compop.
+    def visitCompop(self, ctx:ASPCoreParser.CompopContext):
+        """Visits 'compop'.
 
         Handles the following rule(s):
 
-            binop               :   EQUAL
+            compop               :   EQUAL
                                 |   UNEQUAL
                                 |   LESS
                                 |   GREATER
@@ -442,7 +482,7 @@ class ASTVisitor(ASPCoreVisitor):
         token = ctx.children[0].getSymbol()
         token_type = ASPCoreParser.symbolicNames[token.type]
 
-        return RelOp[token_type]
+        return CompOp[token_type]
 
 
     # Visit a parse tree produced by ASPCoreParser#terms.
@@ -474,7 +514,6 @@ class ASTVisitor(ASPCoreVisitor):
                                 |   VARIABLE
                                 |   ANONYMOUS_VARIABLE
                                 |   PAREN_OPEN term PAREN_CLOSE
-                                |   MINUS term
                                 |   func_term
                                 |   arith_term
         """
@@ -487,24 +526,22 @@ class ASTVisitor(ASPCoreVisitor):
 
             # ID
             if(token_type == "ID"):
-                return Id(token.text, tuple())
+                return SymbolicConstant(token.text) # TODO: predicate or function ?!
             # STRING
             elif(token_type == "STRING"):
                 return token.text
             # VARIABLE
             elif(token_type == "VARIABLE"):
-                return Variable(token.text)
+                # track variable
+                return self.var_table.register(token.text)
             # ANONYMOUS_VARIABLE
             elif(token_type == "ANONYMOUS_VARIABLE"):
-                return AnonVariable()
+                return self.var_table.register()
             # PAREN_OPEN term PAREN_CLOSE
             elif(token_type == "PAREN_OPEN"):
                 return self.visitTerm(ctx.children[1]) # parse term
-            # MINUS term
             else:
-                return UnaryArithTerm(
-                    self.visitTerm(ctx.children[1]) # parse term
-                )
+                raise Exception("TODO: REMOVE RULE.")
         # func_term
         elif isinstance(ctx.children[0], ASPCoreParser.Func_termContext):
             return self.visitFunc_term(ctx.children[0])
@@ -521,7 +558,7 @@ class ASTVisitor(ASPCoreVisitor):
 
             func_term           :   ID PAREN_OPEN terms PAREN_CLOSE
         """
-        return Id(
+        return Functional(
             ctx.children[0].getSymbol().text,   # parse ID
             self.visitTerms(ctx.children[2])    # parse terms
         )
@@ -556,12 +593,18 @@ class ASTVisitor(ASPCoreVisitor):
             token = ctx.children[1].getSymbol()
             token_type = ASPCoreParser.symbolicNames[token.type]
 
-            # TODO: simplify if possible?
-            return BinaryArithTerm(
-                ArithOp[token_type],
-                self.visitArith_sum(ctx.children[0]),
-                self.visitArith_prod(ctx.children[2])
-            )
+            # PLUS
+            if(ArithOp[token_type] == ArithOp.PLUS):
+                return Add(
+                    self.visitArith_sum(ctx.children[0]),
+                    self.visitArith_prod(ctx.children[2])
+                )
+            # MINUS
+            else:
+                return Sub(
+                    self.visitArith_sum(ctx.children[0]),
+                    self.visitArith_prod(ctx.children[2])
+                )
         # arith_prod
         else:
             return self.visitArith_prod(ctx.children[0])
@@ -584,12 +627,18 @@ class ASTVisitor(ASPCoreVisitor):
             token = ctx.children[1].getSymbol()
             token_type = ASPCoreParser.symbolicNames[token.type]
 
-            # TODO: simplify if possible?
-            return BinaryArithTerm(
-                ArithOp[token_type],
-                self.visitArith_prod(ctx.children[0]),
-                self.visitArith_atom(ctx.children[2])
-            )
+            # TIMES
+            if(ArithOp[token_type] == ArithOp.TIMES):
+                return Mult(
+                    self.visitArith_prod(ctx.children[0]),
+                    self.visitArith_atom(ctx.children[2])
+                )
+            # DIV
+            else:
+                return Div(
+                    self.visitArith_prod(ctx.children[0]),
+                    self.visitArith_atom(ctx.children[2])
+                )
         # arith_atom
         else:
             return self.visitArith_atom(ctx.children[0])
@@ -604,6 +653,8 @@ class ASTVisitor(ASPCoreVisitor):
             arith_atom          :   (PLUS | MINUS)* (NUMBER | VARIABLE)
                                 |   PAREN_OPEN arith_sum PAREN_CLOSE
         """
+        # TODO: what about anonymous variables ?
+
         # get first token
         token = ctx.children[0].getSymbol()
         token_type = ASPCoreParser.symbolicNames[token.type]
@@ -616,9 +667,7 @@ class ASTVisitor(ASPCoreVisitor):
             # get all tokens (avoid getting first token again)
             tokens = [token] + [child.getSymbol() for child in ctx.children[1:]]
 
-            # number of pluses/minuses
-            n_signs = len(ctx.children) - 1
-
+            # TODO: remove?
             # count minuses (pluses can be ignored)
             n_minuses = 0
 
@@ -630,13 +679,13 @@ class ASTVisitor(ASPCoreVisitor):
 
             # NUMBER
             if(ASPCoreParser.symbolicNames[tokens[-1].type] == "NUMBER"):
-                num = Id(tokens[-1].text, tuple())
+                operand = Number(int(tokens[-1].text))
             # VARIABLE
             else:
-                num = Variable(tokens[-1].text)
+                operand = self.var_table.register(tokens[-1].text)
 
             # odd number of minuses
             if(n_minuses % 2 > 0):
-                num = UnaryArithTerm(num)
+                operand = Minus(operand)
 
-            return num
+            return operand

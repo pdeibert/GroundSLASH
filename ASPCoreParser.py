@@ -174,7 +174,7 @@ class ASPCoreParser ( Parser ):
     RULE_naf_literal = 20
     RULE_classical_literal = 21
     RULE_builtin_atom = 22
-    RULE_binop = 23
+    RULE_compop = 23
     RULE_terms = 24
     RULE_term = 25
     RULE_func_term = 26
@@ -189,7 +189,7 @@ class ASPCoreParser ( Parser ):
                    "aggregate_function", "optimize", "optimize_elements", 
                    "optimize_element", "optimize_function", "weight_at_level", 
                    "naf_literals", "naf_literal", "classical_literal", "builtin_atom", 
-                   "binop", "terms", "term", "func_term", "arith_term", 
+                   "compop", "terms", "term", "func_term", "arith_term", 
                    "arith_sum", "arith_prod", "arith_atom" ]
 
     EOF = Token.EOF
@@ -764,11 +764,11 @@ class ASPCoreParser ( Parser ):
                 return self.getTypedRuleContext(ASPCoreParser.TermContext,i)
 
 
-        def binop(self, i:int=None):
+        def compop(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ASPCoreParser.BinopContext)
+                return self.getTypedRuleContexts(ASPCoreParser.CompopContext)
             else:
-                return self.getTypedRuleContext(ASPCoreParser.BinopContext,i)
+                return self.getTypedRuleContext(ASPCoreParser.CompopContext,i)
 
 
         def choice_elements(self):
@@ -801,7 +801,7 @@ class ASPCoreParser ( Parser ):
                 self.state = 126
                 self.term()
                 self.state = 127
-                self.binop()
+                self.compop()
 
 
             self.state = 131
@@ -821,7 +821,7 @@ class ASPCoreParser ( Parser ):
             _la = self._input.LA(1)
             if ((_la) & ~0x3f) == 0 and ((1 << _la) & 4227858432) != 0:
                 self.state = 136
-                self.binop()
+                self.compop()
                 self.state = 137
                 self.term()
 
@@ -981,11 +981,11 @@ class ASPCoreParser ( Parser ):
                 return self.getTypedRuleContext(ASPCoreParser.TermContext,i)
 
 
-        def binop(self, i:int=None):
+        def compop(self, i:int=None):
             if i is None:
-                return self.getTypedRuleContexts(ASPCoreParser.BinopContext)
+                return self.getTypedRuleContexts(ASPCoreParser.CompopContext)
             else:
-                return self.getTypedRuleContext(ASPCoreParser.BinopContext,i)
+                return self.getTypedRuleContext(ASPCoreParser.CompopContext,i)
 
 
         def aggregate_elements(self):
@@ -1018,7 +1018,7 @@ class ASPCoreParser ( Parser ):
                 self.state = 153
                 self.term()
                 self.state = 154
-                self.binop()
+                self.compop()
 
 
             self.state = 158
@@ -1040,7 +1040,7 @@ class ASPCoreParser ( Parser ):
             _la = self._input.LA(1)
             if ((_la) & ~0x3f) == 0 and ((1 << _la) & 4227858432) != 0:
                 self.state = 164
-                self.binop()
+                self.compop()
                 self.state = 165
                 self.term()
 
@@ -1763,8 +1763,8 @@ class ASPCoreParser ( Parser ):
                 return self.getTypedRuleContext(ASPCoreParser.TermContext,i)
 
 
-        def binop(self):
-            return self.getTypedRuleContext(ASPCoreParser.BinopContext,0)
+        def compop(self):
+            return self.getTypedRuleContext(ASPCoreParser.CompopContext,0)
 
 
         def getRuleIndex(self):
@@ -1788,7 +1788,7 @@ class ASPCoreParser ( Parser ):
             self.state = 238
             self.term()
             self.state = 239
-            self.binop()
+            self.compop()
             self.state = 240
             self.term()
         except RecognitionException as re:
@@ -1800,7 +1800,7 @@ class ASPCoreParser ( Parser ):
         return localctx
 
 
-    class BinopContext(ParserRuleContext):
+    class CompopContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -1826,21 +1826,21 @@ class ASPCoreParser ( Parser ):
             return self.getToken(ASPCoreParser.GREATER_OR_EQ, 0)
 
         def getRuleIndex(self):
-            return ASPCoreParser.RULE_binop
+            return ASPCoreParser.RULE_compop
 
         def accept(self, visitor:ParseTreeVisitor):
-            if hasattr( visitor, "visitBinop" ):
-                return visitor.visitBinop(self)
+            if hasattr( visitor, "visitCompop" ):
+                return visitor.visitCompop(self)
             else:
                 return visitor.visitChildren(self)
 
 
 
 
-    def binop(self):
+    def compop(self):
 
-        localctx = ASPCoreParser.BinopContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 46, self.RULE_binop)
+        localctx = ASPCoreParser.CompopContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 46, self.RULE_compop)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
