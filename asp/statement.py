@@ -2,12 +2,12 @@ from typing import Tuple, Dict, Union, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from expression import Expr
-from term import Term
-from atom import ClassicalAtom, Literal
-from choice import Choice
-from aggregate import AggregateLiteral
-from tables import VariableTable
+from .expression import Expr
+from .term import Term
+from .atom import ClassicalAtom, Literal
+from .choice import Choice
+from .aggregate import AggregateLiteral
+from .tables import VariableTable
 
 
 class Statement(Expr, ABC):

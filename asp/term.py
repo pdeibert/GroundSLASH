@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
-from expression import Expr
+from .expression import Expr
 
 
 class Term(Expr, ABC):

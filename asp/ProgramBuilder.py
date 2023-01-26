@@ -6,14 +6,14 @@ from antlr.ASPCoreVisitor import ASPCoreVisitor
 
 from typing import Tuple, Union
 
-from atom import *
-from term import *
-from choice import *
-from statement import *
-from aggregate import *
-from comparison import *
-from tables import VariableTable, ConstantTable
-from program import Program
+from .atom import *
+from .term import *
+from .choice import *
+from .statement import *
+from .aggregate import *
+from .comparison import *
+from .tables import VariableTable, ConstantTable
+from .program import Program
 
 
 class ProgramBuilder(ASPCoreVisitor):

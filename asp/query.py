@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from expression import Expr
-from atom import ClassicalAtom
+from .expression import Expr
+from .atom import ClassicalAtom
 
 
 @dataclass

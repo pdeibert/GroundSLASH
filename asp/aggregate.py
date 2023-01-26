@@ -3,11 +3,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
-from atom import NafLiteral
-from term import Term, Number, Infimum, Supremum
-from comparison import CompOp
-
-from expression import Expr
+from .atom import NafLiteral
+from .term import Term, Number, Infimum, Supremum
+from .comparison import CompOp
+from .expression import Expr
 
 
 class AggrOp(Enum):

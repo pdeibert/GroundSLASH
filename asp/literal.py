@@ -1,6 +1,6 @@
 from abc import ABC
 
-from expression import Expr
+from .expression import Expr
 
 
 class Literal(Expr, ABC): # TODO: inherit Expr ?

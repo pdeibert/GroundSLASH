@@ -1,7 +1,7 @@
 from typing import Dict, List, Union
 from dataclasses import dataclass
 
-from term import Variable, AnonVariable
+from .term import Variable, AnonVariable
 
 
 @dataclass

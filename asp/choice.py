@@ -1,9 +1,9 @@
 from typing import Optional, Tuple
 
-from comparison import CompOp
-from atom import ClassicalAtom, NafLiteral
-from term import Term
-from expression import Expr
+from .comparison import CompOp
+from .atom import ClassicalAtom, NafLiteral
+from .term import Term
+from .expression import Expr
 
 
 class ChoiceElement(Expr):

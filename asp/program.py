@@ -1,8 +1,8 @@
 from typing import Tuple
 
-from statement import Statement
-from query import Query
-from tables import ConstantTable
+from .statement import Statement
+from .query import Query
+from .tables import ConstantTable
 
 
 class Program:
