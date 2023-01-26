@@ -1,7 +1,7 @@
 import sys
 from antlr4 import * # type: ignore
-from ASPCoreLexer import ASPCoreLexer
-from ASPCoreParser import ASPCoreParser
+from antlr.ASPCoreLexer import ASPCoreLexer
+from antlr.ASPCoreParser import ASPCoreParser
 from ProgramBuilder import ProgramBuilder
 
 # read input program

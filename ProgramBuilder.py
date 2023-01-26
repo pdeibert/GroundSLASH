@@ -1,8 +1,8 @@
 # Generated from ASP.g4 by ANTLR 4.11.1
 import antlr4  # type: ignore
 
-from ASPCoreParser import ASPCoreParser
-from ASPCoreVisitor import ASPCoreVisitor
+from antlr.ASPCoreParser import ASPCoreParser
+from antlr.ASPCoreVisitor import ASPCoreVisitor
 
 from typing import Tuple, Union
 
