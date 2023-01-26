@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
+from expression import Expr
 from atom import ClassicalAtom
 
 
 @dataclass
-class Query:
+class Query(Expr):
     """Query."""
     atom: ClassicalAtom
 

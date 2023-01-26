@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
 
+from expression import Expr
 
-class Term(ABC):
+
+class Term(Expr, ABC):
     def __eq__(self, other: "Term") -> bool:
         """Implements the binary '=' operator for terms."""
         return (self << other) and (other << self)
@@ -359,6 +361,7 @@ class Minus(ArithTerm):
         )
 
     def evaluate(self) -> Number:
+        # TODO: '~' or '-'?
         return ~self.operand.evaluate()
 
 

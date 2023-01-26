@@ -1,7 +1,9 @@
 from abc import ABC
 
+from expression import Expr
 
-class Literal(ABC): # TODO: inherit Expr ?
+
+class Literal(Expr, ABC): # TODO: inherit Expr ?
     """Abstract base class for all literals."""
     pass
 

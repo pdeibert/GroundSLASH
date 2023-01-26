@@ -1,17 +1,16 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Union, Optional
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from expression import Expr
 from term import Term
-from atom import ClassicalAtom
+from atom import ClassicalAtom, Literal
+from choice import Choice
 from aggregate import AggregateLiteral
-from disjunction import Disjunction
-from conjunction import Conjunction
-
 from tables import VariableTable
 
 
-class Statement(ABC):
+class Statement(Expr, ABC):
     """Abstract base class for all statements."""
     def __init__(self) -> None:
         # initialize variable table
@@ -25,7 +24,7 @@ class Statement(ABC):
     def __str__(self) -> str:
         pass
 
-    @abstractmethod # TODO: must also be implemented by Disjunction, Conjunction and Elements
+    @abstractmethod
     def substitute(self, subst: Dict[str, Term]) -> "Statement":
         """substitutes the statement by replacing all variables with assigned terms."""
         pass
@@ -42,30 +41,24 @@ class Statement(ABC):
         self.variables = variables
 
 
-@dataclass
-class Rule(Statement, ABC):
-    head: Disjunction
-    body: Conjunction
-    """Abstract base class for all rules."""
-#   def istight ?
-
-
-class Fact(Rule, ABC):
+class Fact(Statement, ABC):
     """Abstract base class for all facts."""
-    def __init__(self, head: Disjunction) -> None:
-        super().__init__(head, Conjunction)
+    pass
 
 
+@dataclass
 class NormalFact(Fact):
-    """Normal fact."""
-    def __init__(self, head: ClassicalAtom) -> None:
-        super().__init__(Disjunction([head]))
+    """Normal fact.
 
-    def substitute(self, subst: Dict[str, Term]) -> "NormalFact":
-        return NormalFact(
-            self.head.substitute(subst),
-            self.body.substitute(subst)
-        )
+    Rule of form
+
+        h :- .
+
+    for a classical atom h. The symbol ':-' may be omitted.
+
+    Semantically, any answer set must include h.
+    """
+    head: ClassicalAtom
 
     def __repr__(self) -> str:
         return f"NormalFact[{repr(self.head)}]"
@@ -73,54 +66,52 @@ class NormalFact(Fact):
     def __str__(self) -> str:
         return f"{str(self.head)}."
 
+    def substitute(self, subst: Dict[str, Term]) -> "NormalFact":
+        return NormalFact(self.head.substitute(subst))
 
+
+@dataclass
 class DisjunctiveFact(Fact):
     """Disjunctive fact.
     
-    Rule of form:
+    Rule of form
 
         h_1 | ... | h_m :- .
 
-    or simply
+    for classical atoms h_1,...,h_m. The symbol ':-' may be omitted.
 
-        h_1 | ... | h_m .
-    
-    for classical atoms h_1,...,h_m.
+    Semantically, any answer set must include exactly one classical atom h_i.
     """
-    def __init__(self, head: Disjunction) -> None:
-        super().__init__(head)
-
-    def substitute(self, subst: Dict[str, Term]) -> "DisjunctiveFact":
-        return DisjunctiveFact(
-            self.head.substitute(subst),
-            self.body.substitute(subst)
-        )
+    head: Tuple[ClassicalAtom, ...]
 
     def __repr__(self) -> str:
-        return f"DisjunctiveFact[{repr(self.head)}]"
+        return f"DisjunctiveFact[{'| '.join([repr(atom) for atom in self.head])}]"
 
     def __str__(self) -> str:
-        return f"{str(self.head)}."
+        return ' | '.join([str(atom) for atom in self.head]) + '.'
+
+    def substitute(self, subst: Dict[str, Term]) -> "DisjunctiveFact":
+        return DisjunctiveFact(tuple([atom.substitute(subst) for atom in self.head]))
 
 
+@dataclass
 class ChoiceFact(Fact):
-    """Choice fact."""
-    def __init__(self, head: Disjunction, lb: int=0, ub: int=-1) -> None:
-        super().__init__(head)
+    """Choice fact.
 
-        if(ub == -1):
-            ub = len(head)
+    Rule of form
 
-        self.lb = lb
-        self.ub = ub
+        u_1 R_1 { h_1,...,h_m } R_2 u_2 :- .
 
-    def substitute(self, subst: Dict[str, Term]) -> "ChoiceFact":
-        return ChoiceFact(
-            self.head.substitute(subst),
-            self.body.substitute(subst),
-            self.lb,
-            self.ub
-        )
+    for classical atoms h_1,...,h_m, terms u_1,u_2 and comparison operators R_1,R_2.
+    The symbol ':-' may be omitted.
+
+    TODO: R_1, R_2 may be omitted
+    TODO: u_1,R_1 u_2,R_2 may be omitted.
+
+    Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
+    """
+    def __init__(self, head: Choice) -> None:
+        self.head = head
 
     def __repr__(self) -> str:
         return f"ChoiceFact[{repr(self.head)}]"
@@ -128,8 +119,16 @@ class ChoiceFact(Fact):
     def __str__(self) -> str:
         return f"{{{','.join([str(literal) for literal in self.head.literals])}}}."
 
+    def substitute(self, subst: Dict[str, Term]) -> "ChoiceFact":
+        return ChoiceFact(self.head.substitute(subst))
 
-class NormalRule(Rule):
+    def transform(self) -> Tuple[Union[DisjunctiveFact, "Constraint"], ...]:
+        """TODO"""
+        raise Exception("Transformation of choice facts not supported yet.")
+
+
+@dataclass
+class NormalRule(Statement):
     """Normal rule.
 
     Rule of form:
@@ -137,24 +136,24 @@ class NormalRule(Rule):
         h :- b_1, ..., b_n .
 
     for a classical atom h and literals b_1,...,b_n.
-    """
-    def __init__(self, head: ClassicalAtom, body: Disjunction) -> None:
-        super().__init__(Disjunction([head]), body)
 
-    def substitute(self, subst: Dict[str, Term]) -> "NormalRule":
-        return NormalRule(
-            self.head.substitute(subst),
-            self.body.substitute(subst)
-        )
+    Semantically, any answer set that includes b_1,...,b_n must also include h.
+    """
+    head: ClassicalAtom
+    body: Tuple[Literal, ...]
 
     def __repr__(self) -> str:
-        return f"NormalRule[{repr(self.head)}]({repr(self.body)})"
+        return f"NormalRule[{repr(self.head)}]({', '.join([repr(literal) for literal in self.body])})"
 
     def __str__(self) -> str:
-        return f"{str(self.head)} :- {str(self.body)}."
+        return f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
+
+    def substitute(self, subst: Dict[str, Term]) -> "NormalRule":
+        return NormalRule(self.head.substitute(subst), tuple([literal.substitute(subst) for literal in self.body]))
 
 
-class DisjunctiveRule(Rule):
+@dataclass
+class DisjunctiveRule(Statement):
     """Disjunctive rule.
     
     Rule of form:
@@ -162,123 +161,104 @@ class DisjunctiveRule(Rule):
         h_1 | ... | h_m :- b_1,...,b_n .
 
     for classical atoms h_1,...,h_m and literals b_1,...,b_n.
+
+    Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
     """
-    def substitute(self, subst: Dict[str, Term]) -> "DisjunctiveRule":
-        return DisjunctiveFact(
-            self.head.substitute(subst),
-            self.body.substitute(subst)
-        )
+    head: Tuple[ClassicalAtom, ...]
+    body: Tuple[Literal, ...]
 
     def __repr__(self) -> str:
-        return f"DisjunctiveRule[{repr(self.head)}]({repr(self.body)})"
+        return f"DisjunctiveRule[{' | '.join([repr(atom) for atom in self.head])}]({', '.join([repr(literal) for literal in self.body])})"
 
     def __str__(self) -> str:
-        return f"{str(self.head)} :- {str(self.body)}."
+        return f"{' | '.join([repr(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
+
+    def substitute(self, subst: Dict[str, Term]) -> "DisjunctiveRule":
+        return DisjunctiveFact(tuple([atom.substitute(subst) for atom in self.head]), tuple([literal.substitute(subst) for literal in self.body]))
 
 
-class ChoiceRule(Rule):
+@dataclass
+class ChoiceRule(Statement):
     """Choice rule.
 
     Rule of form:
 
-        t R { h_1 ; ... ; h_m } S u :- b_1,...,b_n .
+        u_1 R_1 { h_1 ; ... ; h_m } R_2 u_2 :- b_1,...,b_n .
 
-    for classical atoms h_1,...,h_m, literals b_1,...,b_n, terms t,u and binary relation operators R,S.
+    for classical atoms h_1,...,h_m, literals b_1,...,b_n, terms u_1,u_2 and comparison operators R_1,R_2.
+
+    Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
     """
-    def __init__(self, head: ClassicalAtom, body: Disjunction, lb=1, ub=-1) -> None:
-        super().__init__(head, body)
+    head: Choice
+    body: Tuple[Literal, ...]
 
-        # TODO: generalize to two relation operators
-
-        if(ub == -1):
-            ub = len(head)
-
-        self.lb = lb
-        self.ub = ub
-
-        # TODO: parse relation operators and check for validity ?
-    
     def __repr__(self) -> str:
-        return f"ChoiceRule[{repr(self.head)}]({repr(self.body)})"
+        return f"ChoiceRule[{repr(self.head)}]({', '.join([repr(literal) for literal in self.body])})"
 
     def __str__(self) -> str:
-        return f"{{{','.join([str(literal) for literal in self.head.literals])}}} :- {str(self.body)}."
+        return f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
 
     def substitute(self, subst: Dict[str, Term]) -> "ChoiceFact":
-        return ChoiceFact(
-            self.head.substitute(subst),
-            self.body.substitute(subst),
-            self.lb,
-            self.ub
-        )
+        return ChoiceFact(self.head.substitute(subst), tuple([literal.substitute(subst) for literal in self.body]))
 
-    def transform(self) -> Tuple[NormalRule, ...]:
+    def transform(self) -> Tuple[Union[DisjunctiveRule, "Constraint"], ...]:
         """TODO"""
-        # Choice rule (0 <= and <= m) -> translated to 2m+1 normal rules
-        # what about other bounds/relations ?
-        pass
+        raise Exception("Transformation of choice rules not supported yet.")
 
 
 # TODO: cardinality rules? not part of standard (syntactic sugar?)
 # TODO: weight rules? not part of standard (syntactic sugar?)
 
-class Constraint(Rule): # TODO: not inherit from rule ?
+@dataclass
+class Constraint(Statement):
     """Constraint.
 
-    Rule of form:
+    Statement of form:
 
         :- b_1,...,b_n .
 
     for literals b_1,...,b_n.
     """
-    def __init__(self, body: Conjunction) -> None:
-        super().__init__(Disjunction(), body)
+    body: Tuple[Literal, ...]
 
     def __repr__(self) -> str:
-        return f"Constraint({repr(self.body)})"
+        return f"Constraint({', '.join([repr(literal) for literal in self.body])})"
 
     def __str__(self) -> str:
-        return f":- {str(self.body)}."
+        return f":- {', '.join([str(literal) for literal in self.body])}."
 
     def substitute(self, subst: Dict[str, Term]) -> "Constraint":
-        return Constraint(
-            self.body.substitute(subst)
-        )
+        return Constraint(tuple([literal.substitute(subst) for literal in self.body]))
 
     def transform(self) -> Tuple[NormalRule]:
-        # TODO
+        """TODO"""
         raise Exception("Transformation of constraints not supported yet.")
 
 
-class WeakConstraint(Rule): # TODO: not inherit from rule ?
+@dataclass
+class WeakConstraint(Statement):
     """Weak constraint.
 
-    Rule of form:
+    Statement of form:
 
         :~ b_1,...,b_n . [ w@l,t_1,...,t_m ]
 
     for literals b_1,...,b_n and terms w,l,t_1,...,t_m.
     '@ l' may be omitted if l=0.
     """
-    def __init__(self, body: Conjunction, weight: Term, level: Term, terms: Tuple[Term, ...]) -> None: # TODO: type 'w_at_l'
-        super().__init__(Disjunction(), body)
-        self.weight = weight
-        self.level = level
-        self.terms = terms
+    body: Tuple[Literal, ...]
+    weight: Term
+    level: Term
+    terms: Tuple[Term, ...]
 
     def __repr__(self) -> str:
-        return f"WeakConstraint({repr(self.body)})"
+        return f"WeakConstraint({', '.join([repr(literal) for literal in self.body])},{repr(self.weight)}@{repr(self.level)},{', '.join([repr(term) for term in self.terms])})"
 
     def __str__(self) -> str:
-        return f":~ {str(self.body)}."
+        return f":~ {', '.join([str(literal) for literal in self.body])}. [{str(self.weight)}@{str(self.level)}, {', '.join([str(term) for term in self.terms])}]"
 
     def substitute(self, subst: Dict[str, Term]) -> "WeakConstraint":
-        return WeakConstraint(
-            self.body.substitute(subst),
-            self.weight.substitute(subst),
-            self.level.substitute(subst),
-            self.terms.substitute(subst)
-        )
+        return WeakConstraint(tuple([literal.substitute(subst) for literal in self.literal]), self.weight.substitute(subst), self.level.substitute(subst), tuple([term.substitute(subst) for term in self.body]))
 
     def transform(self) -> Tuple["WeakConstraint", ...]:
         """Handles any aggregates in the constraint body."""
@@ -302,7 +282,7 @@ class WeakConstraint(Rule): # TODO: not inherit from rule ?
 
 
 @dataclass
-class OptimizeElement: # TODO: inherit expression?
+class OptimizeElement(Expr):
     """Optimization element for optimize statements.
     
     Expression of form:
@@ -315,21 +295,16 @@ class OptimizeElement: # TODO: inherit expression?
     weight: Term
     level: Term
     terms: Tuple[Term]
-    literals: Conjunction # TODO: conjunction=tuple[literal]
+    literals: Tuple[Literal, ...]
 
     def __repr__(self) -> str:
-        return f"OptimizeElement({repr(self.weight)}@{repr(self.level)},{','.join([repr(term) for term in self.terms])}:{','.join([repr(literal) for literal in self.literals])})"
+        return f"OptimizeElement({repr(self.weight)}@{repr(self.level)}, {', '.join([repr(term) for term in self.terms])} : {', '.join([repr(literal) for literal in self.literals])})"
 
     def __str__(self) -> str:
-        return f"{str(self.weight)}@{str(self.level)},{','.join([str(term) for term in self.terms])}:{','.join([str(literal) for literal in self.literals])}"
+        return f"{str(self.weight)}@{str(self.level)}, {', '.join([str(term) for term in self.terms])} : {', '.join([str(literal) for literal in self.literals])}"
 
     def substitute(self, subst: Dict[str, Term]) -> "OptimizeElement":
-        return OptimizeElement(
-            self.weight.substitute(subst),
-            self.level.substitute(subst),
-            self.terms.substitute(subst),
-            self.literals.substitute(subst)
-        )
+        return OptimizeElement(self.weight.substitute(subst), self.level.substitute(subst), tuple([term.substitute(subst) for term in self.terms]), tuple([literal.substitute(subst) for literal in self.literals]))
 
 
 @dataclass
@@ -371,10 +346,10 @@ class MinimizeStatement(OptimizeStatement):
         super().__init__(elements, True)
 
     def __repr__(self) -> str:
-        return f"Minimize({','.join([repr(element) for element in self.elements])})"
+        return f"Minimize({', '.join([repr(element) for element in self.elements])})"
 
     def __str__(self) -> str:
-        return f"#minimize{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#minimize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "MinimizeStatement":
         return OptimizeStatement(
@@ -401,10 +376,10 @@ class MaximizeStatement(OptimizeStatement):
         super().__init__(elements, False)
 
     def __repr__(self) -> str:
-        return f"Maximize({','.join([repr(element) for element in self.elements])})"
+        return f"Maximize({', '.join([repr(element) for element in self.elements])})"
 
     def __str__(self) -> str:
-        return f"#maximize{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#maximize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
     def substitute(self, subst: Dict[str, Term]) -> "MaximizeStatement":
         return MaximizeStatement(

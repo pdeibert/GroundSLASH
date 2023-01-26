@@ -6,6 +6,7 @@ from tables import ConstantTable
 
 
 class Program:
+    """Program."""
     def __init__(self, statements: Tuple[Statement, ...], query: Query, constants: ConstantTable) -> None:
         self.statements = statements
         self.query = query

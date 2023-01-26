@@ -3,11 +3,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
 
+from expression import Expr
 from term import Term
 from literal import Literal, NafLiteral
 
 
-class Atom(ABC):
+class Atom(Expr, ABC):
     """Abstract base class for all atoms."""
     pass
 

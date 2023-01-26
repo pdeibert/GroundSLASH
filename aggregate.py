@@ -3,8 +3,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
+from atom import NafLiteral
 from term import Term, Number, Infimum, Supremum
 from comparison import CompOp
+
+from expression import Expr
 
 
 class AggrOp(Enum):
@@ -28,8 +31,23 @@ class AggrOp(Enum):
 
 
 @dataclass
-class AggregateFunction(ABC):
-    tuples: Tuple[Tuple[Term, ...], ...] # tuple of tuples of terms
+class AggregateElement(Expr):
+    terms: Tuple[Term, ...]
+    literals: Tuple[NafLiteral, ...]
+
+    def __repr__(self) -> str:
+        return f"AggregateElement({', '.join([repr(term) for term in self.terms])};{', '.join([repr(literal) for literal in self.literals])})"
+
+    def __str__(self) -> str:
+        return ', '.join([str(term) for term in self.terms]) + (f"; {', '.join([str(literal) for literal in self.literals])}" if self.literals else "")
+
+    def substitute(self, subst: Dict[str, Term]) -> "AggregateElement":
+        return AggregateElement(tuple([term.substitute(subst) for term in self.terms]), tuple([literal.substitute(subst) for literal in self.literals]))
+
+
+@dataclass
+class AggregateFunction(Expr, ABC):
+    tuples: Tuple[AggregateElement, ...]
 
     @abstractmethod
     def evaluate(self) -> Number:
@@ -160,7 +178,7 @@ class AggregateAtom: # TODO: inherit?
 
 
 @dataclass
-class AggregateLiteral:
+class AggregateLiteral(Expr):
     atom: AggregateAtom
     neg: bool=False
 
