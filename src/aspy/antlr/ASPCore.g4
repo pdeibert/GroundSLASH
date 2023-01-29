@@ -64,7 +64,6 @@ naf_literal         :   NAF? classical_literal
 
 classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)? ;
 
-// TODO: term -> arith_term?
 builtin_atom        :   term compop term ;
 
 compop              :   EQUAL

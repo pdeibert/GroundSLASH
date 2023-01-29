@@ -1,26 +1,24 @@
-# Generated from ASP.g4 by ANTLR 4.11.1
+from typing import Tuple, Union, TYPE_CHECKING
+
 import antlr4  # type: ignore
 
-from antlr.ASPCoreParser import ASPCoreParser
-from antlr.ASPCoreVisitor import ASPCoreVisitor
+from aspy.antlr.ASPCoreParser import ASPCoreParser
+from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
-from typing import Tuple, Union
-
-from .atom import *
-from .term import *
-from .choice import *
-from .statement import *
-from .aggregate import *
-from .comparison import *
-from .tables import VariableTable, ConstantTable
+from .terms import Number, String, SymbolicConstant, Functional, ArithOp, Minus, Add, Sub, Mult, Div
+from .literals import PredicateLiteral, CompOp, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggrOp, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
+from .statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement
 from .program import Program
+from .tables import VariableTable
+
+if TYPE_CHECKING:
+    from .terms import Term
+    from .literals import Literal, BuiltinLiteral, AggregateFunction
+    from .statements import OptimizeStatement
 
 
 class ProgramBuilder(ASPCoreVisitor):
     """Builds ASP program from ANTLR4 parse tree."""
-    def __init__(self) -> None:
-        self.const_table = ConstantTable()
-        self.var_table = None
 
     # Visit a parse tree produced by ASPCoreParser#program.
     def visitProgram(self, ctx:ASPCoreParser.ProgramContext) -> Program:
@@ -37,12 +35,11 @@ class ProgramBuilder(ASPCoreVisitor):
             # statements
             if isinstance(child, ASPCoreParser.StatementsContext):
                 statements += self.visitStatements(child)
-                self.var_table = None
             # query
             elif isinstance(child, ASPCoreParser.QueryContext):
                 query = self.visitQuery(child)
 
-        return Program(statements, query, self.const_table)
+        return Program(statements, query)
 
     # Visit a parse tree produced by ASPCoreParser#statements.
     def visitStatements(self, ctx:ASPCoreParser.StatementsContext):
@@ -77,6 +74,9 @@ class ProgramBuilder(ASPCoreVisitor):
                                 |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
                                 |   optimize DOT
         """
+        # initialize empty variable table
+        self.var_table = VariableTable()
+
         n_children = len(ctx.children)
 
         # first child is a token
@@ -90,8 +90,7 @@ class ProgramBuilder(ASPCoreVisitor):
             if(token_type == "CONS"):
                 # body
                 if n_children > 2:
-                    body, variables = self.visitBody(ctx.children[1])
-                    statement = Constraint(body)
+                    statement = Constraint(self.visitBody(ctx.children[1]))
                 else:
                     # TODO: empty constraint?
                     raise Exception("Empty constraints not supported yet.")
@@ -106,7 +105,7 @@ class ProgramBuilder(ASPCoreVisitor):
                     raise Exception("Empty weak constraints not supported yet.")
         # head (CONS body?)? DOT
         elif isinstance(ctx.children[0], ASPCoreParser.HeadContext):
-            head, variables = self.visitHead(ctx.children[0])
+            head = self.visitHead(ctx.children[0])
 
             # head DOT | head CONS DOT (i.e., fact)
             if n_children < 4:
@@ -116,10 +115,7 @@ class ProgramBuilder(ASPCoreVisitor):
                     statement = NormalFact(head[0])
             # head CONS body DOT (i.e., disjunctive rule)
             else:
-                body, body_variables = self.visitBody(ctx.children[2])
-
-                # merge variables
-                variables.merge(body_variables)
+                body = self.visitBody(ctx.children[2])
 
                 # disjunctive rule
                 if len(head) > 1:
@@ -129,15 +125,16 @@ class ProgramBuilder(ASPCoreVisitor):
                     statement = NormalRule(head[0], body)
         # optimize DOT
         else:
-            statement, variables = self.visitOptimize(ctx.children[0])
+            statement = self.visitOptimize(ctx.children[0])
 
-        statement.set_variable_table(variables)
+        # set variable table
+        statement.var_table = self.var_table
 
         return statement
 
 
     # Visit a parse tree produced by ASPCoreParser#head.
-    def visitHead(self, ctx:ASPCoreParser.HeadContext) -> Tuple[Union[Choice, Tuple[ClassicalAtom, ...]], VariableTable]:
+    def visitHead(self, ctx:ASPCoreParser.HeadContext) -> Union[Choice, Tuple[PredicateLiteral, ...]]:
         """Visits 'head'.
 
         Handles the following rule(s):
@@ -147,19 +144,14 @@ class ProgramBuilder(ASPCoreVisitor):
         """
         # disjunction
         if isinstance(ctx.children[0], ASPCoreParser.DisjunctionContext):
-            head, variables = self.visitDisjunction(ctx.children[0])
+            return self.visitDisjunction(ctx.children[0])
         # choice
         else:
-            head, variables = self.visitChoice(ctx.children[0])
-
-        # set all variables in head to unsafe
-        variables.set_safe(False)
-
-        return (head, variables)
+            return self.visitChoice(ctx.children[0])
 
 
     # Visit a parse tree produced by ASPCoreParser#body.
-    def visitBody(self, ctx:ASPCoreParser.BodyContext) -> Tuple[Tuple[Literal, ...], VariableTable]:
+    def visitBody(self, ctx:ASPCoreParser.BodyContext) -> Tuple["Literal", ...]:
         """Visits 'body'.
 
         Handles the following rule(s):
@@ -168,28 +160,22 @@ class ProgramBuilder(ASPCoreVisitor):
         """
         # naf_literal
         if isinstance(ctx.children[0], ASPCoreParser.Naf_literalContext):
-            literal, variables = self.visitNaf_literal(ctx.children[0])
-            literals = tuple([literal])
+            literals = tuple([self.visitNaf_literal(ctx.children[0])])
         # NAF? aggregate
         else:
             # NAF aggregate (true) or aggregate (false)
-            neg = True if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode) else False
-            literal, variables = self.visitAggregate(ctx.children[1])
-            literals = tuple([AggregateLiteral(literal, neg=neg)])
+            naf = True if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode) else False
+            literals = tuple([AggregateLiteral(self.visitAggregate(ctx.children[1]), naf=naf)])
         # COMMA body
         if len(ctx.children) > 2:
-            additional_literals, additional_variables = self.visitBody(ctx.children[-1])
-
             # append literals
-            literals += additional_literals
-            # merge variables
-            variables.merge(additional_variables)
+            literals += self.visitBody(ctx.children[-1])
 
-        return (tuple(literals), variables)
+        return tuple(literals)
 
 
     # Visit a parse tree produced by ASPCoreParser#disjunction.
-    def visitDisjunction(self, ctx:ASPCoreParser.DisjunctionContext) -> Tuple[Tuple[ClassicalAtom, ...], VariableTable]:
+    def visitDisjunction(self, ctx:ASPCoreParser.DisjunctionContext) -> Tuple[PredicateLiteral, ...]:
         """Visits 'disjunction'.
 
         Handles the following rule(s):
@@ -197,23 +183,18 @@ class ProgramBuilder(ASPCoreVisitor):
             disjunction         :   classical_literal (OR disjunction)?
         """
         # classical_literal
-        literal, variables = self.visitClassical_literal(ctx.children[0])
-        literals = tuple([literal])
+        literals = tuple([self.visitClassical_literal(ctx.children[0])])
 
         # OR disjunction
         if len(ctx.children) > 1:
-            additional_literals, additional_variables = self.visitDisjunction(ctx.children[2])
-
             # append literals
-            literals += additional_literals
-            # merge variables
-            variables.merge(additional_variables)
+            literals += self.visitDisjunction(ctx.children[2])
 
-        return (literals, variables)
+        return literals
 
 
     # Visit a parse tree produced by ASPCoreParser#choice.
-    def visitChoice(self, ctx:ASPCoreParser.ChoiceContext) -> Tuple[Choice, VariableTable]:
+    def visitChoice(self, ctx:ASPCoreParser.ChoiceContext) -> Choice:
         """Visits 'choice'.
 
         Handles the following rule(s):
@@ -221,15 +202,11 @@ class ProgramBuilder(ASPCoreVisitor):
             choice              :   (term compop)? CURLY_OPEN choice_elements? CURLY_CLOSE (compop term)?
         """
         moving_index = 0
-        variables = None
         lcomp, rcomp = None, None
 
         # term compop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lterm, variables = self.visitTerm(self[0]) # since this is the first parsed part, we can safely directly assign to 'variables'
-            lop = self.visitCompop(ctx.children[1])
-            lcomp = (lop, lterm)
-
+            lcomp = (self.visitCompop(ctx.children[1]), self.visitTerm(self[0]))
             moving_index += 3 # skip CURLY_OPEN as well
 
         # CURLY_OPEN CURLY_CLOSE
@@ -238,25 +215,18 @@ class ProgramBuilder(ASPCoreVisitor):
             moving_index += 1
         # CURLY_OPEN choice_elements CURLY_CLOSE
         else:
-            elements, choice_variables = self.visitChoice_elements(ctx.children[moving_index+1])
-            # update variable table
-            variables = variables.merge(choice_variables) if variables else choice_variables
+            elements = self.visitChoice_elements(ctx.children[moving_index+1])
             moving_index += 2
 
         # compop term
         if moving_index < len(ctx.children)-1:
-            rterm, rvariables = self.visitTerm(self[moving_index+1])
-            rop = self.visitCompop(ctx.children[moving_index])
-            rcomp = (rop, rterm)
+            rcomp = (self.visitCompop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
 
-            # update variable table
-            variables = variables.merge(rvariables) if variables else rvariables
-
-        return (Choice(elements, lcomp, rcomp), variables)
+        return Choice(elements, lcomp, rcomp)
 
 
     # Visit a parse tree produced by ASPCoreParser#choice_elements.
-    def visitChoice_elements(self, ctx:ASPCoreParser.Choice_elementsContext) -> Tuple[Tuple[ChoiceElement, ...], VariableTable]:
+    def visitChoice_elements(self, ctx:ASPCoreParser.Choice_elementsContext) -> Tuple[ChoiceElement, ...]:
         """Visits 'choice_elements'.
 
         Handles the following rule(s):
@@ -264,23 +234,18 @@ class ProgramBuilder(ASPCoreVisitor):
             choice_elements     :   choice_element (SEMICOLON choice_elements)?
         """
         # choice_element
-        element, variables = self.visitChoice_element(ctx.children[0])
-        elements = tuple([element])
+        elements = tuple([self.visitChoice_element(ctx.children[0])])
 
         # SEMICOLON choice_elements
         if len(ctx.children) > 1:
-            additional_elements, additional_variables = self.visitChoice_elements(ctx.children[2])
-
             # append literals
-            elements += additional_elements
-            # merge variables
-            variables.merge(additional_variables)            
+            elements += self.visitChoice_elements(ctx.children[2])
 
-        return (elements, variables)
+        return elements
 
 
     # Visit a parse tree produced by ASPCoreParser#choice_element.
-    def visitChoice_element(self, ctx:ASPCoreParser.Choice_elementContext) -> Tuple[ChoiceElement, VariableTable]:
+    def visitChoice_element(self, ctx:ASPCoreParser.Choice_elementContext) -> ChoiceElement:
         """Visits 'choice_element'.
 
         Handles the following rule(s):
@@ -288,21 +253,20 @@ class ProgramBuilder(ASPCoreVisitor):
             choice_element      :   classical_literal (COLON naf_literals?)?
         """
         # classical_literal
-        atom, variables = self.visitClassical_literal(ctx.children[0])
+        atom = self.visitClassical_literal(ctx.children[0])
 
         # COLON naf_literals
         if len(ctx.children) > 2:
-            literals, literal_variables = self.visitNaf_literals(ctx.children[2])
-            variables.merge(literal_variables)
+            literals = self.visitNaf_literals(ctx.children[2])
         # COLON?
         else:
             literals = tuple()
 
-        return ( ChoiceElement(atom, literals), variables )
+        return ChoiceElement(atom, literals)
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate.
-    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> Tuple[AggregateFunction, VariableTable]:
+    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> "AggregateFunction":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
@@ -315,10 +279,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
         # term compop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lterm, variables = self.visitTerm(self[0]) # since this is the first parsed part, we can safely directly assign to 'variables'
-            lop = self.visitCompop(ctx.children[1])
-            lcomp = (lop, lterm)
-
+            lcomp = (self.visitCompop(ctx.children[1]), self.visitTerm(self[0]))
             moving_index += 2
         
         # aggregate_function
@@ -331,21 +292,12 @@ class ProgramBuilder(ASPCoreVisitor):
             moving_index += 1
         # CURLY_OPEN choice_elements CURLY_CLOSE
         else:
-            elements, choice_variables = self.visitAggregate_elements(ctx.children[moving_index+1])
-            # update variable table
-            # TODO: how to handle variables in aggregates?
-            variables = variables.merge(choice_variables) if variables else choice_variables
+            elements = self.visitAggregate_elements(ctx.children[moving_index+1])
             moving_index += 2
 
         # compop term
         if moving_index < len(ctx.children)-1:
-            rterm, rvariables = self.visitTerm(self[moving_index+1])
-            rop = self.visitCompop(ctx.children[moving_index])
-            rcomp = (rop, rterm)
-
-            # update variable table
-            # TODO: how to handle variables in aggregates?
-            variables = variables.merge(rvariables) if variables else rvariables
+            rcomp = (self.visitCompop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
 
         if(aggregate_function == "COUNT"):
             Aggregate = AggregateCount
@@ -356,11 +308,11 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             Aggregate = AggregateMin
 
-        return (Aggregate(elements, lcomp, rcomp), variables)
+        return Aggregate(elements, lcomp, rcomp)
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_elements.
-    def visitAggregate_elements(self, ctx:ASPCoreParser.Aggregate_elementsContext) -> Tuple[Tuple[AggregateElement, ...], VariableTable]:
+    def visitAggregate_elements(self, ctx:ASPCoreParser.Aggregate_elementsContext) -> Tuple[AggregateElement, ...]:
         """Visits 'aggregate_elements'.
 
         Handles the following rule(s):
@@ -368,24 +320,18 @@ class ProgramBuilder(ASPCoreVisitor):
             aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)?
         """
         # aggregate_element
-        element, variables = self.visitAggregate_element(ctx.children[0])
-        elements = tuple([element])
+        elements = tuple([self.visitAggregate_element(ctx.children[0])])
 
         # SEMICOLON aggregate_elements
         if len(ctx.children) > 1:
-            additional_elements, additional_variables = self.visitAggregate_elements(ctx.children[2])
-
             # append literals
-            elements += additional_elements
-            # merge variables
-            # TODO: how to handle variables in aggregates?
-            variables.merge(additional_variables)            
+            elements += self.visitAggregate_elements(ctx.children[2])
 
-        return (elements, variables)
+        return elements
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_element.
-    def visitAggregate_element(self, ctx:ASPCoreParser.Aggregate_elementContext) -> Tuple[AggregateElement, VariableTable]:
+    def visitAggregate_element(self, ctx:ASPCoreParser.Aggregate_elementContext) -> AggregateElement:
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
@@ -393,20 +339,16 @@ class ProgramBuilder(ASPCoreVisitor):
             aggregate_element   :   terms? (COLON naf_literals?)?
         """
         # terms
-        terms, variables = self.visitTerms(ctx.children[0])
+        terms = self.visitTerms(ctx.children[0])
 
         # COLON naf_literals
         if len(ctx.children) > 2:
-            literals, literal_variables = self.visitNaf_literals(ctx.children[2])
-
-            # TODO: how to handle variables in aggregate element?
-            # merge variables
-            variables.merge(literal_variables)
+            literals = self.visitNaf_literals(ctx.children[2])
         # COLON?
         else:
             literals = tuple()
 
-        return (AggregateElement(terms, literals), variables)
+        return AggregateElement(terms, literals)
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_function.
@@ -428,7 +370,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#optimize.
-    def visitOptimize(self, ctx:ASPCoreParser.OptimizeContext) -> Tuple[OptimizeStatement, VariableTable]:
+    def visitOptimize(self, ctx:ASPCoreParser.OptimizeContext) -> "OptimizeStatement":
         """Visits 'optimize'.
         
         Handles the following rule(s):
@@ -439,19 +381,19 @@ class ProgramBuilder(ASPCoreVisitor):
     
         # CURLY_OPEN optimize_elements CURLY_CLOSE
         if len(ctx.children) > 3:
-            elements, variables = self.visitOptimize_elements(ctx.children[2])
+            elements = self.visitOptimize_elements(ctx.children[2])
         # CURLY_OPEN CURLY_CLOSE
         else:
-            elements, variables = tuple(), VariableTable()
+            elements = tuple()
 
         if optimization_function == "MINIMIZE":
-            return (MinimizeStatement(elements), variables)
+            return MinimizeStatement(elements)
         else:
-            return (MaximizeStatement(elements), variables)
+            return MaximizeStatement(elements)
 
 
     # Visit a parse tree produced by ASPCoreParser#optimize_elements.
-    def visitOptimize_elements(self, ctx:ASPCoreParser.Optimize_elementsContext) -> Tuple[Tuple[OptimizeElement, ...], VariableTable]:
+    def visitOptimize_elements(self, ctx:ASPCoreParser.Optimize_elementsContext) -> Tuple[OptimizeElement, ...]:
         """Visits 'optimize_elements'.
         
         Handles the following rule(s):
@@ -459,24 +401,18 @@ class ProgramBuilder(ASPCoreVisitor):
             optimize_elements   :   optimize_element (SEMICOLON optimize_elements)?
         """
         # optimize_element
-        element, variables = self.visitOptimize_element(ctx.children[0])
-        elements = tuple([element])
+        elements = tuple([self.visitOptimize_element(ctx.children[0])])
 
         # SEMICOLON optimize_elements
         if len(ctx.children) > 1:
-            additional_elements, additional_variables = self.visitOptimize_elements(ctx.children[2])
-
             # append literals
-            elements += additional_elements
-            # merge variables
-            # TODO: how to handle variables in optimizations?
-            variables.merge(additional_variables)  
+            elements += self.visitOptimize_elements(ctx.children[2])
 
-        return (elements, variables)
+        return elements
 
 
     # Visit a parse tree produced by ASPCoreParser#optimize_element.
-    def visitOptimize_element(self, ctx:ASPCoreParser.Optimize_elementContext) -> Tuple[OptimizeElement, VariableTable]:
+    def visitOptimize_element(self, ctx:ASPCoreParser.Optimize_elementContext) -> OptimizeElement:
         """Visits 'optimize_element'.
         
         Handles the following rule(s):
@@ -484,20 +420,16 @@ class ProgramBuilder(ASPCoreVisitor):
             optimize_element    :   weight_at_level (COLON naf_literals?)?
         """
         # weight_at_level
-        weight, level, terms, variables = self.visitWeight_at_level(ctx.children[0])
+        weight, level, terms = self.visitWeight_at_level(ctx.children[0])
 
         # COLON naf_literals
         if len(ctx.children) > 2:
-            literals, literals_variables = self.visitNaf_literals(ctx.children[2])
-
-            # merge variables
-            # TODO: how to handle variables in optimize elements?
-            variables.merge(literals_variables)
+            literals = self.visitNaf_literals(ctx.children[2])
         # COLON?
         else:
             literals = tuple()
 
-        return (OptimizeElement(weight, level, terms, literals), variables)
+        return OptimizeElement(weight, level, terms, literals)
 
 
     # Visit a parse tree produced by ASPCoreParser#optimize_function.
@@ -513,7 +445,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#weight_at_level.
-    def visitWeight_at_level(self, ctx:ASPCoreParser.Weight_at_levelContext) -> Tuple[Term, Term, Tuple[Term, ...], VariableTable]:
+    def visitWeight_at_level(self, ctx:ASPCoreParser.Weight_at_levelContext) -> Tuple["Term", "Term", Tuple["Term", ...]]:
         """Visits 'weight_at_level'.
 
         Handles the following rule(s):
@@ -521,7 +453,7 @@ class ProgramBuilder(ASPCoreVisitor):
             weight_at_level     :   term (AT term)? (COMMA terms)?
         """
         # weight
-        weight, variables = self.visitTerm(ctx.children[0])
+        weight = self.visitTerm(ctx.children[0])
 
         if len(ctx.children) > 0:
             # get next token
@@ -532,34 +464,25 @@ class ProgramBuilder(ASPCoreVisitor):
 
             # AT term
             if(token_type == "AT"):
-                level, level_variables = self.visitTerm(ctx.children[moving_index])
-
-                # TODO: how to handle variables in weight at level?
-                # merge variables
-                variables.merge(level_variables)
-
+                level = self.visitTerm(ctx.children[moving_index])
                 moving_index += 2
             else:
                 level = Number(0)
 
             # COMMA terms
             if moving_index < len(ctx.children):
-                terms, terms_variables = self.visitTerms(ctx.children[moving_index])
-
-                # merge variavles
-                # TODO: how to handle variables in weight at level?
-                variables.merge(terms_variables)
+                terms = self.visitTerms(ctx.children[moving_index])
             else:
                 terms = tuple()
         else:
             level = Number(0)
             terms = tuple()
         
-        return (weight, level, terms, variables)
+        return (weight, level, terms)
 
 
     # Visit a parse tree produced by ASPCoreParser#naf_literals.
-    def visitNaf_literals(self, ctx:ASPCoreParser.Naf_literalsContext) -> Tuple[Tuple[NafLiteral, ...], VariableTable]:
+    def visitNaf_literals(self, ctx:ASPCoreParser.Naf_literalsContext) -> Tuple["Literal", ...]:
         """Visits 'naf_literals'.
 
         Handles the following rule(s):
@@ -567,23 +490,18 @@ class ProgramBuilder(ASPCoreVisitor):
             naf_literals        :   naf_literal (COMMA naf_literals)?
         """
         # naf_literal
-        literal, variables = self.visitNaf_literal(ctx.children[0])
-        literals = tuple([literal])
+        literals = tuple([self.visitNaf_literal(ctx.children[0])])
 
         # COMMA naf_literals
         if len(ctx.children) > 1:
-            additional_literals, additional_vars = self.visitNaf_literals(ctx.children[2])
-
             # append literals
-            literals += additional_literals
-            # merge variables
-            variables.merge(additional_vars)
+            literals += self.visitNaf_literals(ctx.children[2])
 
-        return (literals, variables)
+        return literals
 
 
     # Visit a parse tree produced by ASPCoreParser#naf_literal.
-    def visitNaf_literal(self, ctx:ASPCoreParser.Naf_literalContext) -> Tuple[NafLiteral, VariableTable]:
+    def visitNaf_literal(self, ctx:ASPCoreParser.Naf_literalContext) -> "Literal":
         """Visits 'naf_literal'.
 
         Handles the following rule(s):
@@ -596,25 +514,18 @@ class ProgramBuilder(ASPCoreVisitor):
             return self.visitBuiltin_atom(ctx.children[0])
         # NAF? classical_literal
         else:
-            literal, variables = self.visitClassical_literal(ctx.children[-1])
+            literal = self.visitClassical_literal(ctx.children[-1])
 
-            # classical_literal
-            if len(ctx.children) == 1:
-                # mark all variables as safe
-                variables.set_safe(True)
-            
-                # wrap literal in default atom
-                literal = DefaultAtom(literal, dneg=False)
             # NAF classical_literal
-            else:
-                # wrap literal in default atom
-                literal = DefaultAtom(literal, dneg=True)
+            if len(ctx.children) > 1:
+                # set NaF to true
+                literal.naf = True
 
-            return (literal, variables)
+            return literal
 
 
     # Visit a parse tree produced by ASPCoreParser#classical_literal.
-    def visitClassical_literal(self, ctx:ASPCoreParser.Classical_literalContext) -> Tuple[Union[Minus,PredicateAtom], VariableTable]:
+    def visitClassical_literal(self, ctx:ASPCoreParser.Classical_literalContext) -> PredicateLiteral:
         """Visits 'classical_literal'.
 
         Handles the following rule(s):
@@ -633,21 +544,19 @@ class ProgramBuilder(ASPCoreVisitor):
         # PAREN_OPEN terms PAREN_CLOSE
         if n_children - (minus+1) > 2:
             # parse terms
-            terms, variables = self.visitTerms(ctx.children[minus+2])
+            terms = self.visitTerms(ctx.children[minus+2])
         else:
-            # initialize empty term tuple and variable table
-            terms, variables = tuple(), VariableTable()
+            # initialize empty term tuple
+            terms = tuple()
+        
+        neg = True if minus else False
+        id = PredicateLiteral(ctx.children[minus].getSymbol().text, terms, neg)
 
-        id = PredicateAtom(ctx.children[minus].getSymbol().text, terms)
-
-        if minus:
-            return ( Minus(id), variables)
-        else:
-            return ( id, variables )
+        return id
 
 
     # Visit a parse tree produced by ASPCoreParser#builtin_atom.
-    def visitBuiltin_atom(self, ctx:ASPCoreParser.Builtin_atomContext) -> Tuple[BuiltinAtom, VariableTable]:
+    def visitBuiltin_atom(self, ctx:ASPCoreParser.Builtin_atomContext) -> "BuiltinLiteral":
         """Visits 'builtin_atom'.
 
         Handles the following rule(s):
@@ -670,11 +579,7 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             Comp = GreaterEqual
 
-        # parse terms
-        lterm, lvariables = self.visitTerm(ctx.children[0])
-        rterm, rvariables = self.visitTerm(ctx.children[2])
-
-        return ( Comp(lterm, rterm), lvariables.merge(rvariables) )
+        return Comp(self.visitTerm(ctx.children[0]), self.visitTerm(ctx.children[2]))
 
 
     # Visit a parse tree produced by ASPCoreParser#compop.
@@ -698,7 +603,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#terms.
-    def visitTerms(self, ctx:ASPCoreParser.TermsContext) -> Tuple[Tuple[Term, ...], VariableTable]:
+    def visitTerms(self, ctx:ASPCoreParser.TermsContext) -> Tuple["Term", ...]:
         """Visits 'terms'.
 
         Handles the following rule(s):
@@ -706,23 +611,18 @@ class ProgramBuilder(ASPCoreVisitor):
             terms               :   term (COMMA terms)?
         """
         # term
-        term, variables = self.visitTerm(ctx.children[0])
-        terms = tuple([term])
+        terms = tuple([self.visitTerm(ctx.children[0])])
 
         # COMMA terms
         if len(ctx.children) > 1:
-            additional_terms, additional_vars = self.visitTerms(ctx.children[2])
-
             # append terms
-            terms += additional_terms
-            # merge variables
-            variables.merge(additional_vars)
+            terms += self.visitTerms(ctx.children[2])
 
-        return (terms, variables)
+        return terms
 
 
     # Visit a parse tree produced by ASPCoreParser#term.
-    def visitTerm(self, ctx:ASPCoreParser.TermContext) -> Tuple[Term, VariableTable]:
+    def visitTerm(self, ctx:ASPCoreParser.TermContext) -> "Term":
         """Visits 'term'.
     
         Handles the following rule(s):
@@ -738,27 +638,22 @@ class ProgramBuilder(ASPCoreVisitor):
         # first child is a token
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
 
-            # initialize new variable table
-            variables = VariableTable()
-
             # get token
             token = ctx.children[0].getSymbol()
             token_type = ASPCoreParser.symbolicNames[token.type]
 
             # ID
             if(token_type == "ID"):
-                return ( SymbolicConstant(token.text), variables ) # TODO: predicate or function ?!
+                return SymbolicConstant(token.text) # TODO: predicate or function ?!
             # STRING
             elif(token_type == "STRING"):
-                return ( String(token.text), variables )
+                return String(token.text)
             # VARIABLE
             elif(token_type == "VARIABLE"):
-                var = variables.register(token.text)
-                return ( var, variables )
+                return self.var_table.register(token.text)
             # ANONYMOUS_VARIABLE
             elif(token_type == "ANONYMOUS_VARIABLE"):
-                var = variables.register()
-                return ( var, variables )
+                return self.var_table.register()
             # PAREN_OPEN term PAREN_CLOSE
             elif(token_type == "PAREN_OPEN"):
                 return self.visitTerm(ctx.children[1]) # parse term
@@ -773,7 +668,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#func_term.
-    def visitFunc_term(self, ctx:ASPCoreParser.Func_termContext) -> Tuple[Term, VariableTable]:
+    def visitFunc_term(self, ctx:ASPCoreParser.Func_termContext) -> "Term":
         """Visits 'func_term'.
 
         Handles the following rule(s):
@@ -787,7 +682,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_term.
-    def visitArith_term(self, ctx:ASPCoreParser.Arith_termContext) -> Tuple[Term, VariableTable]:
+    def visitArith_term(self, ctx:ASPCoreParser.Arith_termContext) -> "Term":
         """Visits 'arith_term'.
 
         Handles the following rule(s):
@@ -799,7 +694,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_sum.
-    def visitArith_sum(self, ctx:ASPCoreParser.Arith_sumContext) -> Tuple[Term, VariableTable]:
+    def visitArith_sum(self, ctx:ASPCoreParser.Arith_sumContext) -> "Term":
         """Visits 'arith_sum'.
 
         Handles the following rule(s):
@@ -815,22 +710,22 @@ class ProgramBuilder(ASPCoreVisitor):
             token = ctx.children[1].getSymbol()
             token_type = ASPCoreParser.symbolicNames[token.type]
 
-            loperand, lvariables = self.visitArith_sum(ctx.children[0])
-            roperand, rvariables = self.visitArith_prod(ctx.children[2])
+            loperand = self.visitArith_sum(ctx.children[0])
+            roperand = self.visitArith_prod(ctx.children[2])
 
             # PLUS
             if(ArithOp[token_type] == ArithOp.PLUS):
-                return ( Add(loperand, roperand), lvariables.merge(rvariables) )
+                return Add(loperand, roperand)
             # MINUS
             else:
-                return ( Sub(loperand, roperand), lvariables.merge(rvariables) )
+                return Sub(loperand, roperand)
         # arith_prod
         else:
-            return self.visitArith_prod(ctx.children[0]) # (prod, variables)
+            return self.visitArith_prod(ctx.children[0])
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_prod.
-    def visitArith_prod(self, ctx:ASPCoreParser.Arith_prodContext) -> Tuple[Term, VariableTable]:
+    def visitArith_prod(self, ctx:ASPCoreParser.Arith_prodContext) -> "Term":
         """Visits 'arith_prod'.
 
         Handles the following rule(s):
@@ -846,22 +741,22 @@ class ProgramBuilder(ASPCoreVisitor):
             token = ctx.children[1].getSymbol()
             token_type = ASPCoreParser.symbolicNames[token.type]
 
-            loperand, lvariables = self.visitArith_prod(ctx.children[0])
-            roperand, rvariables = self.visitArith_atom(ctx.children[2])
+            loperand = self.visitArith_prod(ctx.children[0])
+            roperand = self.visitArith_atom(ctx.children[2])
 
             # TIMES
             if(ArithOp[token_type] == ArithOp.TIMES):
-                return ( Mult(loperand, roperand), lvariables.merge(rvariables) )
+                return Mult(loperand, roperand)
             # DIV
             else:
-                return ( Div(loperand, roperand), lvariables.merge(rvariables) )
+                return Div(loperand, roperand)
         # arith_atom
         else:
-            return self.visitArith_atom(ctx.children[0]) # (atom, variables)
+            return self.visitArith_atom(ctx.children[0])
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_atom.
-    def visitArith_atom(self, ctx:ASPCoreParser.Arith_atomContext) -> Tuple[Term, VariableTable]:
+    def visitArith_atom(self, ctx:ASPCoreParser.Arith_atomContext) -> "Term":
         """Visits 'arith_atom'.
 
         Handles the following rule(s):
@@ -877,12 +772,9 @@ class ProgramBuilder(ASPCoreVisitor):
 
         # PAREN_OPEN arith_sum PAREN_CLOSE
         if(token_type == "PAREN_OPEN"):
-            return self.visitArith_sum(ctx.children[1]) # (sum, variables)
+            return self.visitArith_sum(ctx.children[1])
         # (PLUS | MINUS)* (NUMBER | VARIABLE)
         else:
-            # initialize new variable table
-            variables = VariableTable()
-
             # get all tokens (avoid getting first token again)
             tokens = [token] + [child.getSymbol() for child in ctx.children[1:]]
 
@@ -901,10 +793,10 @@ class ProgramBuilder(ASPCoreVisitor):
                 operand = Number(int(tokens[-1].text))
             # VARIABLE
             else:
-                operand = variables.register(tokens[-1].text)
+                operand = self.var_table.register(tokens[-1].text)
 
             # odd number of minuses
             if(n_minuses % 2 > 0):
                 operand = Minus(operand)
 
-            return (operand, variables)
+            return operand

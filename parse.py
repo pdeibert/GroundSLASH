@@ -1,8 +1,8 @@
 import sys
 from antlr4 import * # type: ignore
-from antlr.ASPCoreLexer import ASPCoreLexer
-from antlr.ASPCoreParser import ASPCoreParser
-from asp.ProgramBuilder import ProgramBuilder
+from aspy.antlr.ASPCoreLexer import ASPCoreLexer
+from aspy.antlr.ASPCoreParser import ASPCoreParser
+from aspy.program import ProgramBuilder
 
 # read input program
 input_stream = FileStream(sys.argv[1]) # type: ignore
@@ -33,7 +33,7 @@ prog = visitor.visitProgram(tree)
 #for prog.statement in statements:
 #    print(s)
 
-from asp.term import Number, SymbolicConstant, String
+from aspy.program import Number, SymbolicConstant, String
 
 cons = prog.statements[-2]
 print(cons)
