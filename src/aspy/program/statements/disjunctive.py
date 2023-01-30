@@ -1,11 +1,13 @@
 from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 
+from aspy.program.variable_set import VariableSet
+
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.literals import Literal, PredicateLiteral
 
 
@@ -37,10 +39,10 @@ class DisjunctiveFact(Fact):
     def body(self) -> Tuple["Literal"]:
         return tuple()
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[atom.vars() for atom in self.head])
+    def vars(self) -> VariableSet:
+        return sum([atom.vars() for atom in self.head], VariableSet())
 
-    def global_vars(self) -> Set["Variable"]:
+    def global_vars(self) -> VariableSet:
         return self.vars()
 
     def substitute(self, subst: Dict[str, "Term"]) -> "DisjunctiveFact":
@@ -79,8 +81,8 @@ class DisjunctiveRule(Rule):
     def body(self) -> Tuple["Literal"]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[atom.vars() for atom in self.head]).union(*[literal.vars() for literal in self.body])
+    def vars(self) -> VariableSet:
+        return sum([atom.vars() for atom in self.head] + [literal.vars() for literal in self.body], VariableSet())
 
     def substitute(self, subst: Dict[str, "Term"]) -> "DisjunctiveRule":
         return DisjunctiveFact(tuple([atom.substitute(subst) for atom in self.head]), tuple([literal.substitute(subst) for literal in self.body]))

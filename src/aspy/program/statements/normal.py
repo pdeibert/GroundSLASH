@@ -4,9 +4,10 @@ from dataclasses import dataclass
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.expression import Expr, Substitution
     from aspy.program.literals import Literal, PredicateLiteral
+    from aspy.program.variable_set import VariableSet
 
 
 @dataclass
@@ -37,10 +38,10 @@ class NormalFact(Fact):
     def body(self) -> Tuple["Literal"]:
         return tuple()
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> "VariableSet":
         return self.atom.vars()
 
-    def global_vars(self) -> Set["Variable"]:
+    def global_vars(self) -> "VariableSet":
         return self.vars()
 
     def substitute(self, subst: Dict[str, "Term"]) -> "NormalFact":
@@ -79,8 +80,8 @@ class NormalRule(Rule):
     def body(self) -> Tuple["Literal"]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        return self.atom.vars().union(*[literal.vars() for literal in self.body])
+    def vars(self) -> "VariableSet":
+        return sum([literal.vars() for literal in self.body], self.atom.vars())
 
     def substitute(self, subst: Dict[str, "Term"]) -> "NormalRule":
         return NormalRule(self.atom.substitute(subst), tuple([literal.substitute(subst) for literal in self.body]))

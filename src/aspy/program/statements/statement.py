@@ -6,9 +6,7 @@ from functools import cached_property
 from aspy.program.expression import Expr
 from aspy.program.literals import AggregateLiteral
 from aspy.program.safety import Safety
-
-if TYPE_CHECKING:
-    from aspy.program.terms import Variable
+from aspy.program.variable_set import VariableSet
 
 
 class Statement(Expr, ABC):
@@ -32,13 +30,13 @@ class Statement(Expr, ABC):
         pass
 
     @abstractmethod
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> "VariableSet":
         pass
 
-    def global_vars(self) -> Set["Variable"]:
+    def global_vars(self) -> "VariableSet":
         return self.var_table.variables
 
-    def safety(self, global_vars: Optional[Set["Variable"]]=None) -> Safety:
+    def safety(self, global_vars: Optional["VariableSet"]=None) -> Safety:
 
         if global_vars is None:
             # compute global variables
@@ -58,7 +56,7 @@ class Statement(Expr, ABC):
         global_vars = self.global_vars()
 
         # compute safety characterization of rule
-        return (self.safety(global_vars) == Safety(global_vars,set(),set()))
+        return (self.safety(global_vars) == Safety(global_vars,VariableSet(),set()))
 
     def is_ground(self) -> bool:
         """Checks whether or not the statement contains any variables."""

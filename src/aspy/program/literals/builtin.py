@@ -3,12 +3,13 @@ from abc import abstractmethod
 
 from aspy.program.expression import Substitution, MatchError, AssignmentError
 from aspy.program.safety import Safety, SafetyRule
+from aspy.program.variable_set import VariableSet
 
 from .literal import Literal
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
 
 
 class BuiltinLiteral(Literal):
@@ -23,12 +24,12 @@ class BuiltinLiteral(Literal):
     def evaluate(self) -> bool:
         pass
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.loperand.vars().union(self.roperand.vars())
 
     def safety(self) -> Safety:
         # global variables are irrelevant
-        return Safety(set(),self.vars(),set())
+        return Safety(VariableSet(),self.vars(),set())
 
 
 class Equal(BuiltinLiteral):
@@ -47,11 +48,13 @@ class Equal(BuiltinLiteral):
 
         rules = set([SafetyRule(var, lvars) for var in rvars] + [SafetyRule(var, rvars) for var in lvars])
 
-        return Safety.normalize(set(), self.vars(), rules)
+        return Safety.normalize(VariableSet(), self.vars(), rules)
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand == self.roperand  
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return (loperand << roperand) and (roperand << loperand)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "Equal":
         return Equal(
@@ -119,8 +122,10 @@ class Unequal(BuiltinLiteral):
         return f"{str(self.loperand)}!={str(self.roperand)}"
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand != self.roperand
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return not ( (loperand << roperand) and (roperand << loperand) )
 
     def substitute(self, subst: Dict[str, "Term"]) -> "Unequal":
         return Unequal(
@@ -188,8 +193,10 @@ class Less(BuiltinLiteral):
         return f"{str(self.loperand)}<{str(self.roperand)}"
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand < self.roperand
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return (loperand << roperand) and not (roperand << loperand)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "Less":
         return Less(
@@ -255,8 +262,10 @@ class Greater(BuiltinLiteral):
         return f"{str(self.loperand)}>{str(self.roperand)}"
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand > self.roperand
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return (roperand << loperand) and not (loperand << roperand)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "Greater":
         return Greater(
@@ -322,8 +331,10 @@ class LessEqual(BuiltinLiteral):
         return f"{str(self.loperand)}<={str(self.roperand)}"
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand <= self.roperand
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return (loperand << roperand)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "LessEqual":
         return LessEqual(
@@ -389,8 +400,10 @@ class GreaterEqual(BuiltinLiteral):
         return f"{str(self.loperand)}>={str(self.roperand)}"
 
     def evaluate(self) -> bool:
-        # TODO: evaluate recursively?
-        return self.loperand >= self.roperand
+        loperand = self.loperand.evaluate()
+        roperand = self.roperand.evaluate()
+
+        return (roperand << loperand)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "GreaterEqual":
         return GreaterEqual(

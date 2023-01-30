@@ -1,11 +1,13 @@
 from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 
+from aspy.program.variable_set import VariableSet
+
 from .statement import Statement
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.literals import Literal
 
     from .normal import NormalRule
@@ -37,8 +39,8 @@ class Constraint(Statement):
     def body(self) -> Tuple["Term", ...]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[literal.vars() for literal in self.body])
+    def vars(self) -> VariableSet:
+        return sum([literal.vars() for literal in self.body], VariableSet())
 
     def transform(self) -> Tuple["NormalRule"]:
         """TODO"""

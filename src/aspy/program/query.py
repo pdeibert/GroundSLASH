@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from .expression import Expr
 
 if TYPE_CHECKING:
-    from .terms import Variable
+    from .variable_set import VariableSet
     from .literals import PredicateLiteral
 
 
 @dataclass
 class Query(Expr):
     """Query."""
-    atom: PredicateLiteral
+    atom: "PredicateLiteral"
 
     def __repr__(self) -> str:
         return f"Query({repr(self.atom)})"
@@ -19,5 +19,5 @@ class Query(Expr):
     def __str__(self) -> str:
         return f"{str(self.atom)} ?"
 
-    def vars(self) -> Set[Variable]:
+    def vars(self) -> "VariableSet":
         return self.atom.vars()

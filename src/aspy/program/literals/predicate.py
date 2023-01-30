@@ -2,12 +2,13 @@ from typing import Tuple, Dict, Set, Optional, TYPE_CHECKING
 from functools import cached_property
 
 from aspy.program.safety import Safety
+from aspy.program.variable_set import VariableSet
 
 from .literal import Literal
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
 
 
 class PredicateLiteral(Literal):
@@ -37,13 +38,13 @@ class PredicateLiteral(Literal):
     def arity(self) -> int:
         return len(self.terms)
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[term.vars() for term in self.terms])
+    def vars(self) -> VariableSet:
+        return sum([term.vars() for term in self.terms], VariableSet())
 
     def safety(self) -> Safety:
         # literal is negative (NaF-negated)
         if self.naf:
-            return Safety(set(), self.vars(), set())
+            return Safety(VariableSet(), self.vars(), set())
         # literal is positive
         else:
             return Safety.closure(tuple([term.safety() for term in self.terms]))

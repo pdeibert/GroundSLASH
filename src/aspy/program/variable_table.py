@@ -1,9 +1,10 @@
 from .terms import Variable, AnonVariable
+from .variable_set import VariableSet
 
 
 class VariableTable:
     def __init__(self) -> None:
-        self.variables = set()
+        self.variables = VariableSet()
         self.anon_counter = 0
 
     def __contains__(self, var: str) -> bool:
@@ -34,7 +35,7 @@ class VariableTable:
         # variable
         else:
             # check if variable is already known
-            for var in self.variables:
+            for var in self.variables.elements:
                 if symbol == var.val:
                     # return existing variable
                     return var

@@ -7,33 +7,10 @@ from sympy import Expr as SympyExpr # type: ignore
 
 from aspy.program.expression import Expr, Substitution, MatchError, AssignmentError
 from aspy.program.safety import Safety
+from aspy.program.variable_set import VariableSet
 
 
 class Term(Expr, ABC):
-    def __eq__(self, other: "Term") -> bool:
-        """Implements the binary '=' operator for terms."""
-        return (self << other) and (other << self)
-
-    def __ne__(self, other: "Term") -> bool:
-        """Implements the binary '!=' operator for terms."""
-        return not (self == other)
-
-    def __lt__(self, other: "Term") -> bool:
-        """Implements the binary '<' operator for terms."""
-        return (self << other) and not (other << self)
-
-    def __gt__(self, other: "Term") -> bool:
-        """Implements the binary '>' operator for terms."""
-        return (other << self) and not (self << other)
-
-    def __le__(self, other: "Term") -> bool:
-        """Implements the binary '<=' operator for terms."""
-        return (self << other)
-
-    def __ge__(self, other: "Term") -> bool:
-        """Implements the binary '>=' operator for terms."""
-        return (other << self)
-
     @abstractmethod
     def __lshift__(self, other: "Term") -> bool:
         """Defines the total ordering operator defined for terms in ASP-Core-2."""
@@ -51,11 +28,11 @@ class Infimum(Term):
     def __str__(self) -> str:
         return "#inf"
 
-    def vars(self) -> Set["Variable"]:
-        return set()
+    def vars(self) -> VariableSet:
+        return VariableSet()
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet(), VariableSet(), set())
 
     def substitute(self, subst: Dict[str, Term]) -> "Infimum":
         return Infimum
@@ -82,11 +59,11 @@ class Supremum(Term):
     def __str__(self) -> str:
         return "#sup"
 
-    def vars(self) -> Set["Variable"]:
-        return set()
+    def vars(self) -> VariableSet:
+        return VariableSet()
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet, VariableSet, set())
 
     def substitute(self, subst: Dict[str, Term]) -> "Supremum":
         return Supremum
@@ -101,9 +78,6 @@ class Supremum(Term):
         else:
             raise MatchError(self, other)
 
-    def vars(self) -> Set["Variable"]:
-        return set()
-
 
 @dataclass
 class Variable(Term):
@@ -117,15 +91,15 @@ class Variable(Term):
 
     def __str__(self) -> str:
         return self.val
-
+    """
     def __hash__(self) -> str:
         return hash(self.val)
-
-    def vars(self) -> Set["Variable"]:
-        return set([self])
+    """
+    def vars(self) -> VariableSet:
+        return VariableSet([self])
 
     def safety(self) -> Safety:
-        return Safety(set([self]), set(), set())
+        return Safety(self.vars(), VariableSet(), set())
 
     def sympy(self) -> SympyExpr:
         return Symbol(self.val)
@@ -170,11 +144,11 @@ class AnonVariable(Variable):
     def __str__(self) -> str:
         return "_"
 
-    def vars(self) -> Set[Variable]:
-        return set([self])
+    def vars(self) -> VariableSet:
+        return VariableSet([self])
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet(), VariableSet(), set())
 
     def sympy(self) -> SympyExpr:
         return Symbol(self.val)
@@ -242,11 +216,11 @@ class Number(Term):
     def __str__(self) -> str:
         return str(self.val)
 
-    def vars(self) -> Set[Variable]:
-        return set()
+    def vars(self) -> VariableSet:
+        return VariableSet()
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet(), VariableSet(), set())
 
     def sympy(self) -> SympyExpr:
         return self.val
@@ -286,11 +260,11 @@ class SymbolicConstant(Term):
     def __str__(self) -> str:
         return self.val
 
-    def vars(self) -> Set[Variable]:
-        return set()
+    def vars(self) -> VariableSet:
+        return VariableSet()
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet(), VariableSet(), set())
 
     def substitute(self, subst: Dict[str, Term]) -> "SymbolicConstant":
         return SymbolicConstant(self.val)
@@ -324,11 +298,11 @@ class String(Term):
     def __str__(self) -> str:
         return '"' + self.val + '"'
 
-    def vars(self) -> Set[Variable]:
-        return set()
+    def vars(self) -> VariableSet:
+        return VariableSet()
 
     def safety(self) -> Safety:
-        return Safety(set(), set(), set())
+        return Safety(VariableSet(), VariableSet(), set())
 
     def substitute(self, subst: Dict[str, Term]) -> "String":
         return String(self.val)

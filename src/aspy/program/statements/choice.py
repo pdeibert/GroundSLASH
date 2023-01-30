@@ -2,12 +2,13 @@ from typing import Optional, Tuple, Union, Set, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 
 from aspy.program.expression import Expr
+from aspy.program.variable_set import VariableSet
 
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:
     from aspy.program.expression import Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.literals import Literal, PredicateLiteral, CompOp
     
     from .disjunctive import DisjunctiveFact, DisjunctiveRule
@@ -37,8 +38,8 @@ class ChoiceElement(Expr):
     def body(self) -> Tuple["Literal"]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[literal.vars() for literal in self.literals])
+    def vars(self) -> VariableSet:
+        return sum([literal.vars() for literal in self.literals], VariableSet())
 
     def substitute(self, subst: Dict[str, "Term"]) -> "ChoiceElement":
         raise Exception()
@@ -51,25 +52,23 @@ class ChoiceElement(Expr):
 class Choice(Expr):
     """Choice."""
     # TODO: rename literals to elements?
-    def __init__(self, literals: Optional[Tuple[ChoiceElement]]=None, lcomp: Optional[Tuple["CompOp", "Term"]]=None, rcomp: Optional[Tuple["CompOp", "Term"]]=None):
-        if literals is None:
-            literals = tuple()
+    def __init__(self, elements: Optional[Tuple[ChoiceElement]]=None, lcomp: Optional[Tuple["CompOp", "Term"]]=None, rcomp: Optional[Tuple["CompOp", "Term"]]=None):
+        if elements is None:
+            elements = tuple()
 
-        self.literals = literals
+        self.elements = elements
         self.lcomp = lcomp
         self.rcomp = rcomp
 
     def __repr__(self) -> str:
-        return "Choice(" + (f"{repr(self.lcomp[1])} {repr(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([repr(literal) for literal in self.literals])}}}" + (f"{repr(self.lcomp[0])} {repr(self.lcomp[1])}" if self.lcomp else "") + ")"
+        return "Choice(" + (f"{repr(self.lcomp[1])} {repr(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([repr(literal) for literal in self.elements])}}}" + (f"{repr(self.lcomp[0])} {repr(self.lcomp[1])}" if self.lcomp else "") + ")"
 
     def __str__(self) -> str:
-        return (f"{str(self.lcomp[1])} {str(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([str(literal) for literal in self.literals])}}}" + (f"{str(self.lcomp[0])} {str(self.lcomp[1])}" if self.lcomp else "")
+        return (f"{str(self.lcomp[1])} {str(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([str(literal) for literal in self.elements])}}}" + (f"{str(self.lcomp[0])} {str(self.lcomp[1])}" if self.lcomp else "")
 
-    
+    def vars(self) -> VariableSet:
 
-    def vars(self) -> Set["Variable"]:
-
-        vars = set().union(*[literal.vars() for literal in self.literals])
+        vars = sum([literal.vars() for literal in self.elements], VariableSet())
 
         if not self.lcomp is None:
             vars.union(self.lcomp[1].vars())
@@ -109,7 +108,7 @@ class ChoiceFact(Fact):
         return f"ChoiceFact[{repr(self.head)}]"
 
     def __str__(self) -> str:
-        return f"{{{','.join([str(literal) for literal in self.head.literals])}}}."
+        return f"{{{','.join([str(literal) for literal in self.head.elements])}}}."
 
     @property
     def head(self) -> Choice:
@@ -119,7 +118,7 @@ class ChoiceFact(Fact):
     def body(self) -> Tuple["Literal"]:
         return tuple()
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.head.vars()
 
     def transform(self) -> Tuple[Union["DisjunctiveFact", "Constraint"], ...]:
@@ -154,8 +153,8 @@ class ChoiceRule(Rule):
     def __str__(self) -> str:
         return f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
 
-    def vars(self) -> Set["Variable"]:
-        return self.head.vars().union(*[literal.vars() for literal in self.body])
+    def vars(self) -> VariableSet:
+        return sum([literal.vars() for literal in self.body], self.head.vars())
 
     def transform(self) -> Tuple[Union["DisjunctiveRule", "Constraint"], ...]:
         """TODO"""

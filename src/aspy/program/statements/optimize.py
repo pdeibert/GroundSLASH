@@ -4,13 +4,14 @@ from dataclasses import dataclass
 
 from aspy.program.expression import Expr
 from aspy.program.safety import Safety
+from aspy.program.variable_set import VariableSet
 
 from .statement import Statement
 from .weak_constraint import WeakConstraint
 
 if TYPE_CHECKING:
     from aspy.program.expression import Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.literals import Literal
 
 
@@ -44,9 +45,9 @@ class OptimizeElement(Expr):
     def body(self) -> Tuple["Term", ...]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         # TODO: ugly
-        return set().union(*([self.weight.vars(), self.level.vars()] + [term.vars() for term in self.terms] + [literal.vars() for literal in self.literals]))
+        return sum([self.weight.vars(), self.level.vars()] + [term.vars() for term in self.terms] + [literal.vars() for literal in self.literals], VariableSet())
 
     def safety(self) -> Safety:
         return Safety.closure([literal.safety() for literal in self.literals])
@@ -85,8 +86,8 @@ class OptimizeStatement(Statement, ABC):
             for element in self.elements
         )
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[element.vars() for element in self.elements])
+    def vars(self) -> VariableSet:
+        return sum([element.vars() for element in self.elements], VariableSet())
 
 
 class MinimizeStatement(OptimizeStatement):

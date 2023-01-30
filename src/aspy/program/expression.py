@@ -2,7 +2,8 @@ from typing import Dict, Optional, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
-    from .terms import Term, Variable
+    from .terms import Term
+    from .variable_set import VariableSet
 
 
 class AssignmentError(Exception):
@@ -24,7 +25,7 @@ class Expr(ABC):
     """Abstract base class for all expressions."""
 
     @abstractmethod
-    def vars(self) -> Set["Variable"]: # type: ignore
+    def vars(self) -> "VariableSet": # type: ignore
         pass
 
     @abstractmethod

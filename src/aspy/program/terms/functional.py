@@ -4,11 +4,12 @@ from functools import cached_property
 
 from aspy.program.expression import Substitution, MatchError, AssignmentError
 from aspy.program.safety import Safety
+from aspy.program.variable_set import VariableSet
+
 from .term import Term, Infimum, Number, SymbolicConstant, String
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
-    from .term import Variable
 
 
 @dataclass
@@ -44,8 +45,8 @@ class Functional(Term):
     def arity(self) -> int:
         return len(self.terms)
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[term.vars() for term in self.terms])
+    def vars(self) -> VariableSet:
+        return sum([term.vars() for term in self.terms], VariableSet())
 
     def safety(self) -> Safety:
         # return closure of terms' safety characterizations

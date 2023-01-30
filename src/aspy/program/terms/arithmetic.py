@@ -8,11 +8,11 @@ from sympy import Expr as SympyExpr # type: ignore
 
 from aspy.program.expression import Substitution, MatchError
 from aspy.program.safety import Safety
+from aspy.program.variable_set import VariableSet
 from .term import Term, Number
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
-    from .term import Variable
 
 
 class ArithOp(Enum):
@@ -48,7 +48,7 @@ class ArithTerm(Term, ABC):
         pass
 
     def safety(self) -> Safety:
-        return Safety(set(), self.vars(), set())
+        return Safety(VariableSet(), self.vars(), set())
 
     def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
         if subst is None:
@@ -104,7 +104,7 @@ class Minus(ArithTerm):
     def __str__(self) -> str:
         return f"-{str(self.operand)}"
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.operand.vars()
 
     def sympy(self) -> SympyExpr:
@@ -143,7 +143,7 @@ class Add(ArithTerm):
     def __str__(self) -> str:
         return f"{str(self.loperand)}+{str(self.roperand)}"
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.loperand.vars().union(self.roperand.vars())
 
     def sympy(self) -> SympyExpr:
@@ -190,7 +190,7 @@ class Sub(ArithTerm):
     def __str__(self) -> str:
         return f"{str(self.loperand)}-{str(self.roperand)}"
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.loperand.vars().union(self.roperand.vars())
 
     def sympy(self) -> SympyExpr:
@@ -237,7 +237,7 @@ class Mult(ArithTerm):
     def __str__(self) -> str:
         return f"{str(self.loperand)}*{str(self.roperand)}"
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.loperand.vars().union(self.roperand.vars())
 
     def sympy(self) -> SympyExpr:
@@ -290,7 +290,7 @@ class Div(ArithTerm):
     def __str__(self) -> str:
         return f"{str(self.loperand)}/{str(self.roperand)}"
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self) -> VariableSet:
         return self.loperand.vars().union(self.roperand.vars())
     
     def sympy(self) -> SympyExpr:

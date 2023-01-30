@@ -9,7 +9,7 @@ from .terms import Number, String, SymbolicConstant, Functional, ArithOp, Minus,
 from .literals import PredicateLiteral, CompOp, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggrOp, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
 from .statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement
 from .program import Program
-from .tables import VariableTable
+from .variable_table import VariableTable
 
 if TYPE_CHECKING:
     from .terms import Term
@@ -40,6 +40,7 @@ class ProgramBuilder(ASPCoreVisitor):
                 query = self.visitQuery(child)
 
         return Program(statements, query)
+
 
     # Visit a parse tree produced by ASPCoreParser#statements.
     def visitStatements(self, ctx:ASPCoreParser.StatementsContext):
@@ -274,7 +275,6 @@ class ProgramBuilder(ASPCoreVisitor):
             aggregate           :   (term compop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (compop term)?
         """
         moving_index = 0
-        variables = None
         lcomp, rcomp = None, None
 
         # term compop
@@ -676,9 +676,9 @@ class ProgramBuilder(ASPCoreVisitor):
             func_term           :   ID PAREN_OPEN terms PAREN_CLOSE
         """
         # parse terms
-        terms, variables = self.visitTerms(ctx.children[2])
+        terms = self.visitTerms(ctx.children[2])
 
-        return ( Functional(ctx.children[0].getSymbol().text, terms), variables )
+        return Functional(ctx.children[0].getSymbol().text, terms)
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_term.

@@ -2,12 +2,13 @@ from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 
 from aspy.program.literals import AggregateLiteral
+from aspy.program.variable_set import VariableSet
 
 from .statement import Statement
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
     from aspy.program.literals import Literal
 
 
@@ -41,9 +42,8 @@ class WeakConstraint(Statement):
     def body(self) -> Tuple["Term", ...]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        # TODO: ugly
-        return set().union(*([self.weight.vars(), self.level.vars()] + [term.vars() for term in self.terms] + [literal.vars() for literal in self.body]))
+    def vars(self) -> VariableSet:
+        return sum([self.weight.vars(), self.level.vars()] + [term.vars() for term in self.terms] + [literal.vars() for literal in self.body], VariableSet())
 
     def transform(self) -> Tuple["WeakConstraint", ...]:
         """Handles any aggregates in the constraint body."""

@@ -6,12 +6,13 @@ from enum import Enum
 from aspy.program.expression import Expr
 from aspy.program.terms import Infimum, Supremum, Number
 from aspy.program.safety import Safety, SafetyRule
+from aspy.program.variable_set import VariableSet
 
 from .literal import Literal
 
 if TYPE_CHECKING:
     from aspy.program.expression import Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Term
 
     from .comparison import CompOp
 
@@ -53,8 +54,8 @@ class AggregateElement(Expr):
     def body(self) -> Tuple[Literal, ...]:
         return self.literals
 
-    def vars(self) -> Set["Variable"]:
-        return self.head_vars.union(self.body_vars)
+    def vars(self) -> VariableSet:
+        return sum([term.vars() for term in self.head] + [literal.vars() for literal in self.body], VariableSet())
 
     def substitute(self, subst: Dict[str, "Term"]) -> "AggregateElement":
         return AggregateElement(tuple([term.substitute(subst) for term in self.terms]), tuple([literal.substitute(subst) for literal in self.literals]))
@@ -68,8 +69,8 @@ class AggregateElement(Expr):
 class AggregateFunction(Expr, ABC):
     elements: Tuple[AggregateElement, ...]
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*[element.vars() for element in self.elements])
+    def vars(self) -> VariableSet:
+        return sum([element.vars() for element in self.elements], VariableSet())
 
     @abstractmethod
     def evaluate(self) -> Number:
@@ -187,30 +188,30 @@ class AggregateLiteral(Literal):
     def __str__(self) -> str:
         return ("not " if self.neg else '') + f"{str(self.lcomp[1])} {str(self.lcomp[0])} {str(self.func)} {str(self.rcomp[0])} {str(self.rcomp[1])}"
 
-    def invars(self) -> Set["Variable"]:
+    def invars(self) -> VariableSet:
         return self.func.vars()
 
-    def outvars(self) -> Set["Variable"]:
-        vars = set()
+    def outvars(self) -> VariableSet:
+        vars = VariableSet()
 
         if not self.lcomp is None:
             vars.union(self.lcomp[1].vars())
         if not self.rcomp is None:
             vars.union(self.rcomp[1].vars())
 
-        return vars()
+        return vars
 
-    def safety(self, global_vars: Set["Variable"]) -> Safety:
+    def safety(self, global_vars: VariableSet) -> Safety:
 
         # set of global variables that appear inside the aggregate
-        global_invars = self.invars().intersection(global_vars())
+        global_invars = self.invars().intersection(global_vars)
     
         # TODO: glob_r(self) = self.invars().intersection(glob(r)).union(self.outvars)
 
         # left guard specified
         if(self.lcomp is not None):
             if(self.lcomp[0] != CompOp.EQUAL):
-                lsafety = Safety(set(),global_vars,set())
+                lsafety = Safety(VariableSet(),global_vars,set())
             else:
                 # compute safety characterization of term guard
                 term_safety = self.lcomp[1].safety()
@@ -220,14 +221,14 @@ class AggregateLiteral(Literal):
                 # variables appearing in left guard
                 loutvars = self.lcomp[1].vars()
 
-                lsafety = Safety(set(),global_vars.union(loutvars),rules).normalize()
+                lsafety = Safety(VariableSet(),global_vars.union(loutvars),rules).normalize()
         else:
             lsafety = None
 
         # right guard specified
         if(self.rcomp is not None):
             if(self.rcomp[0] != CompOp.EQUAL):
-                rsafety = Safety(set(),global_vars,set())
+                rsafety = Safety(VariableSet(),global_vars,set())
             else:
                 # compute safety characterization of term guard
                 term_safety = self.rcomp[1].safety()
@@ -237,7 +238,7 @@ class AggregateLiteral(Literal):
                 # variables appearing in right guard
                 routvars = self.rcomp[1].vars()
 
-                rsafety = Safety(set(),global_vars.union(routvars),rules).normalize()
+                rsafety = Safety(VariableSet(),global_vars.union(routvars),rules).normalize()
         else:
             rsafety = None
 

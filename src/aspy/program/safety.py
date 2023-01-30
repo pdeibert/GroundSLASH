@@ -1,6 +1,8 @@
 from typing import Set, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 
+from .variable_set import VariableSet
+
 if TYPE_CHECKING:
     from .terms import Variable
 
@@ -8,13 +10,13 @@ if TYPE_CHECKING:
 @dataclass
 class SafetyRule:
     depender: "Variable"
-    dependees: Set["Variable"]
+    dependees: VariableSet
 
 
 @dataclass
 class Safety:
-    safe: Set["Variable"]
-    unsafe: Set["Variable"]
+    safe: VariableSet
+    unsafe: VariableSet
     rules: Set[SafetyRule]
 
     def copy(self) -> "Safety":
@@ -49,7 +51,7 @@ class Safety:
                 # if depender is unsafe
                 else:
                     # remove safe variables from dependees
-                    rule.dependees = rule.dependees - self.safe
+                    rule.dependees = rule.dependees.setminus(self.safe)
 
                     # if set of dependees empty
                     if not rule.dependees:
@@ -64,15 +66,15 @@ class Safety:
             safety.unsafe.update(rule.dependees)
 
         # remove safe variables from set of unsafe ones
-        safety.unsafe = safety.unsafe - safety.safe
+        safety.unsafe = safety.unsafe.setminus(safety.safe)
 
         return safety
 
     @classmethod
     def closure(cls, safeties: Tuple["Safety"]) -> "Safety":
 
-        safe = set()
-        unsafe = set()
+        safe = VariableSet()
+        unsafe = VariableSet()
         rules = set()
 
         # combine all safeties
