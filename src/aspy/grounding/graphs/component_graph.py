@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 class Component():
     def __init__(self, rules: Set["Statement"], pos_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, neg_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None) -> None:
         self.nodes = rules
-        self.pos_edges = pos_edges if not pos_edges is None else set()
-        self.neg_edges = neg_edges if not neg_edges is None else set()
+        self.pos_edges = pos_edges if pos_edges is not None else set()
+        self.neg_edges = neg_edges if neg_edges is not None else set()
 
     @property
     def edges(self) -> Set[Tuple["Statement","Statement"]]:

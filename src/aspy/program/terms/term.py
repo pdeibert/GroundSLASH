@@ -2,9 +2,11 @@ from typing import Optional, Union, Tuple, Iterable, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from functools import cached_property
 
+import aspy
 from aspy.program.expression import Expr
 from aspy.program.substitution import Substitution
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.symbol_table import VARIABLE_RE, SYM_CONST_RE
 
 if TYPE_CHECKING:
     from aspy.program.statements import Statement
@@ -25,7 +27,7 @@ class Term(Expr, ABC):
 class TermTuple:
     """Represents a collection of terms."""
     def __init__(self, terms: Optional[Tuple[Term, ...]]=None) -> None:
-        self.terms = terms if not terms is None else tuple()
+        self.terms = terms if terms is not None else tuple()
 
     def __len__(self) -> int:
         return len(self.terms)
@@ -131,6 +133,11 @@ class Variable(Term):
     ground: bool=False
 
     def __init__(self, val: str) -> None:
+
+        # check if variable name is valid
+        if aspy.debug() and not VARIABLE_RE.fullmatch(val):
+            raise ValueError(f"Invalid value for {type(self)}: {val}")
+
         self.val = val
 
     def __str__(self) -> str:
@@ -166,6 +173,11 @@ class Variable(Term):
 class AnonVariable(Variable):
     """Represents an anonymous variable."""
     def __init__(self, id: int) -> None:
+
+        # check if id is valid
+        if aspy.debug() and id < 0:
+            raise ValueError(f"Invalid value for {type(self)}: {id}")
+
         self.val = f"_{id}"
 
     def __str__(self) -> str:
@@ -247,6 +259,11 @@ class SymbolicConstant(Term):
     ground: bool=True
 
     def __init__(self, val: str) -> None:
+
+        # check if symbolic constant name is valid
+        if aspy.debug() and not SYM_CONST_RE.fullmatch(val): # TODO: alpha, eta, eps?
+            raise ValueError(f"Invalid value for {type(self)}: {val}")
+
         self.val = val
 
     def __str__(self) -> str:

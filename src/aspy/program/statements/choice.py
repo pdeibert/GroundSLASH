@@ -76,7 +76,7 @@ class Choice(Expr):
         if bound_only or global_only:
             raise Exception()
 
-        return set().union(guard[1].vars() for guard in self.guards() if not guard is None)
+        return set().union(guard[1].vars() for guard in self.guards() if guard is not None)
 
     def substitute(self, subst: "Substitution") -> "Choice":
         # substitute elements recursively

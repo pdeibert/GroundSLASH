@@ -34,7 +34,7 @@ class Literal(Expr, ABC):
 class LiteralTuple:
     """Represents a collection of literals."""
     def __init__(self, literals: Optional[Tuple[Literal, ...]]=None) -> None:
-        self.literals = literals if not literals is None else tuple()
+        self.literals = literals if literals is not None else tuple()
 
     def __str__(self) -> str:
         return f"{{{','.join(str(literal) for literal in self.literals)}}}"

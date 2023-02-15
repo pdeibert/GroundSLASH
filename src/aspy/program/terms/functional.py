@@ -1,7 +1,9 @@
 from typing import Union, Set, Optional, TYPE_CHECKING
 
+import aspy
 from aspy.program.substitution import Substitution
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.symbol_table import SYM_CONST_RE
 
 from .term import Term, TermTuple, Infimum, Number, SymbolicConstant, String
 
@@ -15,6 +17,11 @@ if TYPE_CHECKING:
 class Functional(Term):
     """Represents a functional term."""
     def __init__(self, symbol: str, terms: TermTuple) -> None:
+
+        # check if functor name is valid
+        if aspy.debug() and not SYM_CONST_RE.fullmatch(symbol):
+            raise ValueError(f"Invalid value for {type(self)}: {symbol}")
+
         self.symbol = symbol
         self.terms = terms
         self.ground = all(term.ground for term in terms)

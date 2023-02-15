@@ -1,9 +1,14 @@
 import unittest
+
+import aspy
 from aspy.grounding.graphs import compute_SCCs
 
 
 class TestSCC(unittest.TestCase):
     def test_compute_SCCs(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         nodes = {'A', 'B', 'C', 'D', 'E'}
         edges = {

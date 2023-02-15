@@ -1,9 +1,14 @@
 import unittest
+
+import aspy
 from aspy.grounding.graphs import topological_sort
 
 
 class TestSCC(unittest.TestCase):
     def test_topological_sort_acyclic(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         nodes = {'A', 'B', 'C', 'D', 'E'}
         edges = {
@@ -23,6 +28,9 @@ class TestSCC(unittest.TestCase):
         self.assertTrue(sequence in valid_sequences)
 
     def test_topological_sort_cyclic(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         nodes = {'A', 'B', 'C', 'D', 'E'}
         edges = {

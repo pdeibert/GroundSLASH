@@ -1,9 +1,14 @@
 from typing import Set
+import re
 
 
 CHAR_ALPHA  = '\u03b1' # α
 CHAR_EPS    = '\u03b5' # ε
 CHAR_ETA    = '\u03b7' # η
+CHAR_TAU    = '\u03C4' # τ
+
+VARIABLE_RE  = re.compile(fr"^[A-Z{CHAR_TAU}][a-zA-Z0-1_]*")
+SYM_CONST_RE = re.compile(fr"^[a-z{CHAR_ALPHA}{CHAR_EPS}{CHAR_ETA}][a-zA-Z0-1_]*")
 
 
 class SymbolTable:

@@ -175,7 +175,7 @@ class AggregateLiteral(Literal):
 
     @cached_property
     def ground(self) -> bool:
-        return self.func.ground and (self.lcomp[1] if not self.lcomp is None else True) and (self.rcomp[1] if not self.rcomp is None else True)
+        return self.func.ground and (self.lcomp[1] if self.lcomp is not None else True) and (self.rcomp[1] if self.rcomp is not None else True)
 
     def pos_occ(self) -> Set["PredicateLiteral"]:
         return self.func.pos_occ()
@@ -190,7 +190,7 @@ class AggregateLiteral(Literal):
         return self.func.vars()
 
     def outvars(self) -> Set["Variable"]:
-        return set().union(*tuple(guard[1].vars() for guard in self.guards() if not guard is None))
+        return set().union(*tuple(guard[1].vars() for guard in self.guards() if guard is not None))
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.outvars() if global_only else self.invars().union(self.outvars())

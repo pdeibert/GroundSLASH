@@ -1,11 +1,15 @@
 import unittest
 
+import aspy
 from aspy.grounding.graphs import DependencyGraph
 from aspy.program import ProgramBuilder
 
 
 class TestDependencyGraph(unittest.TestCase):
     def test_dependency_graph(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         # example from Example 17 in Kaminski, Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
         input = r"""

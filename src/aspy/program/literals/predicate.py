@@ -1,9 +1,11 @@
 from typing import Tuple, Optional, Union, Set, TYPE_CHECKING
 from functools import cached_property
 
+import aspy
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.terms import TermTuple
+from aspy.program.symbol_table import SYM_CONST_RE
 
 from .literal import Literal
 
@@ -18,6 +20,10 @@ class PredicateLiteral(Literal):
     """Predicate."""
     def __init__(self, name: str, terms: Optional[Union[TermTuple, Tuple["Term", ...]]]=None, cneg: bool=False, naf: bool=False) -> None:
         super().__init__(naf)
+
+        # check if predicate name is valid
+        if aspy.debug() and not SYM_CONST_RE.fullmatch(name):
+            raise ValueError(f"Invalid value for {type(self)}: {name}")
 
         if terms is None:
             terms = TermTuple()

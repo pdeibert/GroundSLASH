@@ -1,11 +1,15 @@
 import unittest
 
+import aspy
 from aspy.grounding.graphs.component_graph import ComponentGraph, Component
 from aspy.program import ProgramBuilder
 
 
 class TestComponentGraph(unittest.TestCase):
     def test_component_graph(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         # example modified from Example 17 in Kaminski, Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
         input = r"""

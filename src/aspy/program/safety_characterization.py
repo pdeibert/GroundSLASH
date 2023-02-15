@@ -11,9 +11,9 @@ class SafetyRule(NamedTuple):
 
 class SafetyTriplet:
     def __init__(self, safe: Optional[Set["Variable"]]=None, unsafe: Optional[Set["Variable"]]=None, rules: Optional[Set[SafetyRule]]=None) -> None:
-        self.safe   = safe if not safe is None else set()
-        self.unsafe = unsafe if not unsafe is None else set()
-        self.rules  = rules if not rules is None else set()
+        self.safe   = safe if safe is not None else set()
+        self.unsafe = unsafe if unsafe is not None else set()
+        self.rules  = rules if rules is not None else set()
 
     def __eq__(self, other: "SafetyTriplet") -> bool:
         return self.safe == other.safe and self.unsafe == self.unsafe and self.rules == other.rules
