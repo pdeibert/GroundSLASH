@@ -1,24 +1,27 @@
 from typing import Tuple, Union, TYPE_CHECKING
 
 import antlr4  # type: ignore
-
+from aspy.antlr.ASPCoreLexer import ASPCoreLexer
 from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
-from .terms import Number, String, SymbolicConstant, Functional, ArithOp, Minus, Add, Sub, Mult, Div
-from .literals import PredicateLiteral, CompOp, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggrOp, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
-from .statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement
-from .program import Program
-from .variable_table import VariableTable
+from aspy.program.terms import Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
+from aspy.program.literals import PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
+from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement
+from aspy.program.program import Program
+from aspy.program.operators import ArithOp, RelOp, AggrOp
+from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
-    from .terms import Term
-    from .literals import Literal, BuiltinLiteral, AggregateFunction
-    from .statements import OptimizeStatement
+    from aspy.program.terms import Term
+    from aspy.program.literals import Literal, BuiltinLiteral, Aggregate
+    from aspy.program.statements import OptimizeStatement
 
 
 class ProgramBuilder(ASPCoreVisitor):
     """Builds ASP program from ANTLR4 parse tree."""
+    def __init__(self, simplify_arithmetic: bool=True) -> None:
+        self.simplify_arithmetic = simplify_arithmetic
 
     # Visit a parse tree produced by ASPCoreParser#program.
     def visitProgram(self, ctx:ASPCoreParser.ProgramContext) -> Program:
@@ -200,14 +203,14 @@ class ProgramBuilder(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            choice              :   (term compop)? CURLY_OPEN choice_elements? CURLY_CLOSE (compop term)?
+            choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)?
         """
         moving_index = 0
         lcomp, rcomp = None, None
 
-        # term compop
+        # term relop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lcomp = (self.visitCompop(ctx.children[1]), self.visitTerm(self[0]))
+            lcomp = (self.visitRelop(ctx.children[1]), self.visitTerm(self[0]))
             moving_index += 3 # skip CURLY_OPEN as well
 
         # CURLY_OPEN CURLY_CLOSE
@@ -219,9 +222,9 @@ class ProgramBuilder(ASPCoreVisitor):
             elements = self.visitChoice_elements(ctx.children[moving_index+1])
             moving_index += 2
 
-        # compop term
+        # relop term
         if moving_index < len(ctx.children)-1:
-            rcomp = (self.visitCompop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
+            rcomp = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
 
         return Choice(elements, lcomp, rcomp)
 
@@ -267,19 +270,19 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate.
-    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> "AggregateFunction":
+    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> "Aggregate":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
 
-            aggregate           :   (term compop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (compop term)?
+            aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)?
         """
         moving_index = 0
         lcomp, rcomp = None, None
 
-        # term compop
+        # term relop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lcomp = (self.visitCompop(ctx.children[1]), self.visitTerm(self[0]))
+            lcomp = (self.visitRelop(ctx.children[1]), self.visitTerm(self[0]))
             moving_index += 2
         
         # aggregate_function
@@ -295,9 +298,9 @@ class ProgramBuilder(ASPCoreVisitor):
             elements = self.visitAggregate_elements(ctx.children[moving_index+1])
             moving_index += 2
 
-        # compop term
+        # relop term
         if moving_index < len(ctx.children)-1:
-            rcomp = (self.visitCompop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
+            rcomp = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
 
         if(aggregate_function == "COUNT"):
             Aggregate = AggregateCount
@@ -364,9 +367,8 @@ class ProgramBuilder(ASPCoreVisitor):
         """
         # get token
         token = ctx.children[0].getSymbol()
-        token_type = ASPCoreParser.symbolicNames[token.type]
 
-        return AggrOp[token_type]
+        return AggrOp(token.text)
 
 
     # Visit a parse tree produced by ASPCoreParser#optimize.
@@ -561,20 +563,20 @@ class ProgramBuilder(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            builtin_atom        :   term compop term
+            builtin_atom        :   term relop term
         """
-        comp_op = self.visitCompop(ctx.children[1])
+        comp_op = self.visitRelop(ctx.children[1])
 
         # select correct comparison construct
-        if(comp_op == CompOp.EQUAL):
+        if(comp_op == RelOp.EQUAL):
             Comp = Equal
-        if(comp_op == CompOp.UNEQUAL):
+        if(comp_op == RelOp.UNEQUAL):
             Comp = Unequal
-        if(comp_op == CompOp.LESS):
+        if(comp_op == RelOp.LESS):
             Comp = Less
-        if(comp_op == CompOp.GREATER):
+        if(comp_op == RelOp.GREATER):
             Comp = Greater
-        if(comp_op == CompOp.LESS_OR_EQ):
+        if(comp_op == RelOp.LESS_OR_EQ):
             Comp = LessEqual
         else:
             Comp = GreaterEqual
@@ -582,13 +584,13 @@ class ProgramBuilder(ASPCoreVisitor):
         return Comp(self.visitTerm(ctx.children[0]), self.visitTerm(ctx.children[2]))
 
 
-    # Visit a parse tree produced by ASPCoreParser#compop.
-    def visitCompop(self, ctx:ASPCoreParser.CompopContext) -> CompOp:
-        """Visits 'compop'.
+    # Visit a parse tree produced by ASPCoreParser#relop.
+    def visitRelop(self, ctx:ASPCoreParser.RelopContext) -> RelOp:
+        """Visits 'relop'.
 
         Handles the following rule(s):
 
-            compop               :   EQUAL
+            relop               :   EQUAL
                                 |   UNEQUAL
                                 |   LESS
                                 |   GREATER
@@ -597,9 +599,8 @@ class ProgramBuilder(ASPCoreVisitor):
         """
         # get token
         token = ctx.children[0].getSymbol()
-        token_type = ASPCoreParser.symbolicNames[token.type]
 
-        return CompOp[token_type]
+        return RelOp(token.text)
 
 
     # Visit a parse tree produced by ASPCoreParser#terms.
@@ -664,7 +665,11 @@ class ProgramBuilder(ASPCoreVisitor):
             return self.visitFunc_term(ctx.children[0])
         # arith_term
         else:
-            return self.visitArith_term(ctx.children[0])
+            # parse arithmetic term
+            arith_term = self.visitArith_term(ctx.children[0])
+
+            # return (simplified arithmetic term)
+            return arith_term.simplify() if self.simplify_arithmetic else arith_term
 
 
     # Visit a parse tree produced by ASPCoreParser#func_term.
@@ -708,17 +713,12 @@ class ProgramBuilder(ASPCoreVisitor):
 
             # get operator token
             token = ctx.children[1].getSymbol()
-            token_type = ASPCoreParser.symbolicNames[token.type]
 
             loperand = self.visitArith_sum(ctx.children[0])
             roperand = self.visitArith_prod(ctx.children[2])
 
-            # PLUS
-            if(ArithOp[token_type] == ArithOp.PLUS):
-                return Add(loperand, roperand)
-            # MINUS
-            else:
-                return Sub(loperand, roperand)
+            # PLUS | MINUS
+            return ArithOp(token.text).ast(loperand, roperand)
         # arith_prod
         else:
             return self.visitArith_prod(ctx.children[0])
@@ -739,17 +739,12 @@ class ProgramBuilder(ASPCoreVisitor):
 
             # get operator token
             token = ctx.children[1].getSymbol()
-            token_type = ASPCoreParser.symbolicNames[token.type]
 
             loperand = self.visitArith_prod(ctx.children[0])
             roperand = self.visitArith_atom(ctx.children[2])
 
-            # TIMES
-            if(ArithOp[token_type] == ArithOp.TIMES):
-                return Mult(loperand, roperand)
-            # DIV
-            else:
-                return Div(loperand, roperand)
+            # TIMES | DIV
+            return ArithOp(token.text).ast(loperand, roperand)
         # arith_atom
         else:
             return self.visitArith_atom(ctx.children[0])
@@ -800,3 +795,19 @@ class ProgramBuilder(ASPCoreVisitor):
                 operand = Minus(operand)
 
             return operand
+
+    @classmethod
+    def from_string(cls, prog_str: str) -> "Program":
+
+        input_stream = antlr4.InputStream(prog_str) # type: ignore
+
+        # tokenize input program
+        lexer = ASPCoreLexer(input_stream)
+        stream = antlr4.CommonTokenStream(lexer) # type: ignore
+        stream.fill()
+
+        parser = ASPCoreParser(stream)
+        tree = parser.program()
+
+        # traverse parse tree using visitor
+        return ProgramBuilder().visit(tree)

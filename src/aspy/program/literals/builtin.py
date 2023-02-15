@@ -1,18 +1,21 @@
-from typing import Optional, Set, Dict, TYPE_CHECKING
-from abc import abstractmethod
+from typing import Set, Tuple, Optional, Union, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from functools import cached_property
 
-from aspy.program.expression import Substitution, MatchError, AssignmentError
-from aspy.program.safety import Safety, SafetyRule
-from aspy.program.variable_set import VariableSet
+from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
+from aspy.program.substitution import Substitution
 
 from .literal import Literal
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
-    from aspy.program.terms import Term
+    from aspy.program.terms import Term, Variable
+    from aspy.program.statements import Statement
+    from aspy.program.query import Query
 
 
-class BuiltinLiteral(Literal):
+class BuiltinLiteral(Literal, ABC):
+    """Abstract base class for all built-in literals."""
     def __init__(self, loperand: "Term", roperand: "Term") -> None:
         # built-in literals are always positive
         super().__init__(naf=False)
@@ -20,26 +23,37 @@ class BuiltinLiteral(Literal):
         self.loperand = loperand
         self.roperand = roperand
 
+    @cached_property
+    def ground(self) -> bool:
+        return self.loperand.ground and self.roperand.ground
+
+    def pos(self) -> Set["Literal"]:
+        return set()
+
+    def neg(self) -> Set["Literal"]:
+        return set()
+
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
+
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.vars())
+
+    @property
+    def operands(self) -> Tuple["Term","Term"]:
+        return (self.loperand, self.roperand)
+
     @abstractmethod
-    def evaluate(self) -> bool:
+    def eval(self) -> bool:
         pass
-
-    def vars(self) -> VariableSet:
-        return self.loperand.vars().union(self.roperand.vars())
-
-    def safety(self) -> Safety:
-        # global variables are irrelevant
-        return Safety(VariableSet(),self.vars(),set())
 
 
 class Equal(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"Equal({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents an equality comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}={str(self.roperand)}"
 
-    def safety(self) -> Safety:
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
         # overrides inherited safety method
 
         # get variables in both terms
@@ -48,414 +62,250 @@ class Equal(BuiltinLiteral):
 
         rules = set([SafetyRule(var, lvars) for var in rvars] + [SafetyRule(var, rvars) for var in lvars])
 
-        return Safety.normalize(VariableSet(), self.vars(), rules)
+        return SafetyTriplet(unsafe=self.vars(), rules=rules).normalize()
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return (loperand << roperand) and (roperand << loperand)
+        return loperand.precedes(roperand) and roperand.precedes(loperand)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Equal":
-        return Equal(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
-
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
-            subst = Substitution()
-
-        # 'other' is an equality built-in atom
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
         if isinstance(other, Equal):
 
-            # create a copy of the original substitution
-            subst_copy = subst.copy()
-            
-            # try to match in order
+            subst = Substitution()
+
+            # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                # restore original substitution
-                subst = subst_copy
-                # try to match in switched order
-                try:
-                    # match left operand to right operand
-                    term_subst = self.loperand.match(other.roperand)
-
-                    # combine substitutions
-                    subst.merge(term_subst)
-
-                    # match right operand to left operand
-                    term_subst = self.roperand.match(other.loperand)
-
-                    # combine substitutions
-                    subst.merge(term_subst)
-
-                    # return final substitution
-                    return subst
-                except (MatchError, AssignmentError):
-                    raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "Equal":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Equal(*operands)
 
 
 class Unequal(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"Unequal({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents an unequality comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}!={str(self.roperand)}"
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return not ( (loperand << roperand) and (roperand << loperand) )
+        return not ( loperand.precedes(roperand) and roperand.precedes(loperand) )
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Unequal":
-        return Unequal(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
-
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
-            subst = Substitution()
-
-        # 'other' is an unequality built-in atom
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
         if isinstance(other, Unequal):
 
-            # create a copy of the original substitution
-            subst_copy = subst.copy()
-            
-            # try to match in order
+            subst = Substitution()
+
+            # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                # restore original substitution
-                subst = subst_copy
-                # try to match in switched order
-                try:
-                    # match left operand to right operand
-                    term_subst = self.loperand.match(other.roperand)
-
-                    # combine substitutions
-                    subst.merge(term_subst)
-
-                    # match right operand to left operand
-                    term_subst = self.roperand.match(other.loperand)
-
-                    # combine substitutions
-                    subst.merge(term_subst)
-
-                    # return final substitution
-                    return subst
-                except (MatchError, AssignmentError):
-                    raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "Unequal":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Unequal(*operands)
 
 
 class Less(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"Less({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents a less-than comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}<{str(self.roperand)}"
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return (loperand << roperand) and not (roperand << loperand)
+        return loperand.precedes(roperand) and not roperand.precedes(loperand)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Less":
-        return Less(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
+        if isinstance(other, Less):
 
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
             subst = Substitution()
 
-        # 'other' is an less-than built-in atom
-        if isinstance(other, Less):
             # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
-        # 'other' is an greater-than built-in atom
-        elif isinstance(other, Greater):
-            # TODO: should we even do this?
-            # match terms
-            try:
-                # match left operand with right operand
-                term_subst = self.loperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand with left operand
-                term_subst = self.roperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "Less":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Less(*operands)
 
 
 class Greater(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"Greater({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents a greater-than comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}>{str(self.roperand)}"
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return (roperand << loperand) and not (loperand << roperand)
+        return not loperand.precedes(roperand) and roperand.precedes(loperand)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Greater":
-        return Greater(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
+        if isinstance(other, Greater):
 
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
             subst = Substitution()
 
-        # 'other' is an greater-than built-in atom
-        if isinstance(other, Greater):
             # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
-        # 'other' is an less-than built-in atom
-        elif isinstance(other, Less):
-            # TODO: should we even do this?
-            # match terms
-            try:
-                # match left operand with right operand
-                term_subst = self.loperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand with left operand
-                term_subst = self.roperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "Greater":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Greater(*operands)
 
 
 class LessEqual(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"LessEqual({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents a less-or-equal-than comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}<={str(self.roperand)}"
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return (loperand << roperand)
+        return loperand.precedes(roperand)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "LessEqual":
-        return LessEqual(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
+        if isinstance(other, LessEqual):
 
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
             subst = Substitution()
 
-        # 'other' is an less-than-or-equal built-in atom
-        if isinstance(other, LessEqual):
             # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
-        # 'other' is an greater-than-or-equal built-in atom
-        elif isinstance(other, GreaterEqual):
-            # TODO: should we even do this?
-            # match terms
-            try:
-                # match left operand with right operand
-                term_subst = self.loperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand with left operand
-                term_subst = self.roperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)        
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "LessEqual":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return LessEqual(*operands)
 
 
 class GreaterEqual(BuiltinLiteral):
-    def __repr__(self) -> str:
-        return f"GreaterEqual({repr(self.loperand)},{repr(self.roperand)})"
-
+    """Represents a greater-or-equal-than comparison between terms."""
     def __str__(self) -> str:
         return f"{str(self.loperand)}>={str(self.roperand)}"
 
-    def evaluate(self) -> bool:
-        loperand = self.loperand.evaluate()
-        roperand = self.roperand.evaluate()
+    def eval(self) -> bool:
+        loperand = self.loperand.eval()
+        roperand = self.roperand.eval()
 
-        return (roperand << loperand)
+        return roperand.precedes(loperand)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "GreaterEqual":
-        return GreaterEqual(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst)
-        )
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
+        if isinstance(other, GreaterEqual):
 
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
             subst = Substitution()
 
-        # 'other' is an greater-than-or-equal built-in atom
-        if isinstance(other, GreaterEqual):
             # match terms
+            for (self_operand, other_operand) in zip(self.operands, other.operands):
+                matches = self_operand.match(other_operand)
+
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                # match left operand
-                term_subst = self.loperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand
-                term_subst = self.roperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
-        # 'other' is an less-than-or-equal built-in atom
-        elif isinstance(other, LessEqual):
-            # TODO: should we even do this?
-            # match terms
-            try:
-                # match left operand with right operand
-                term_subst = self.loperand.match(other.roperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # match right operand with left operand
-                term_subst = self.roperand.match(other.loperand)
-
-                # combine substitutions
-                subst.merge(term_subst)
-
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "GreaterEqual":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return GreaterEqual(*operands)

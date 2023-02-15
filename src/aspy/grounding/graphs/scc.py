@@ -1,8 +1,8 @@
-from typing import Set, Hashable
+from typing import Set, Hashable, List
 from dataclasses import dataclass
 
 
-def scc(nodes: Set[Hashable], edges: Set[Hashable]) -> Set[Hashable]:
+def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashable]]:
     """Implements Tarjan's algorithm for finding strongly connected components.
     
     See Tarjan (1972): "Depth-First Search and Linear Graph Algorithms" for details.
@@ -66,7 +66,7 @@ def scc(nodes: Set[Hashable], edges: Set[Hashable]) -> Set[Hashable]:
         if node.low_id == node.id:
 
             # initialize new SCC
-            scc = []
+            scc = set()
 
             root = False
 
@@ -75,13 +75,13 @@ def scc(nodes: Set[Hashable], edges: Set[Hashable]) -> Set[Hashable]:
                 other = stack.pop()
                 other.on_stack = False
                 # append original node to SCC
-                scc.append(other.node)
+                scc.add(other.node)
 
                 if other == node:
                     root = True
 
             # store SCC
-            scc_list.append(tuple(scc))
+            scc_list.append(scc)
 
     # iterate over nodes
     for node in node_map.values():
@@ -91,4 +91,4 @@ def scc(nodes: Set[Hashable], edges: Set[Hashable]) -> Set[Hashable]:
             scc_dfs(node)
 
     # return SCCs
-    return set(scc_list)
+    return scc_list

@@ -1,19 +1,17 @@
-from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
-from dataclasses import dataclass
+from typing import Set, Optional, TYPE_CHECKING
+from functools import cached_property
 
-from aspy.program.variable_set import VariableSet
+from aspy.program.literals import LiteralTuple
+from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
 
 if TYPE_CHECKING:
-    from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term
-    from aspy.program.literals import Literal
-
-    from .normal import NormalRule
+    from aspy.program.expression import Expr
+    from aspy.program.terms import Variable
+    from aspy.program.substitution import Substitution
 
 
-@dataclass
 class Constraint(Statement):
     """Constraint.
 
@@ -23,31 +21,28 @@ class Constraint(Statement):
 
     for literals b_1,...,b_n.
     """
-    literals: Tuple["Literal", ...]
-
-    def __repr__(self) -> str:
-        return f"Constraint({', '.join([repr(literal) for literal in self.body])})"
+    def __init__(self, literals: LiteralTuple) -> None:
+        self.literals = literals
+        self.ground = all(literal.ground for literal in literals)
 
     def __str__(self) -> str:
         return f":- {', '.join([str(literal) for literal in self.body])}."
 
-    @property
-    def head(self) -> Tuple["Term", ...]:
-        return tuple()
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(*self.body.vars(global_only))
 
-    @property
-    def body(self) -> Tuple["Term", ...]:
-        return self.literals
+    def safety(self, rule: Optional[Statement], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception()
 
-    def vars(self) -> VariableSet:
-        return sum([literal.vars() for literal in self.body], VariableSet())
+    @cached_property
+    def safe(self) -> bool:
+        global_vars = self.vars(global_only=True)
+        body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
 
-    def transform(self) -> Tuple["NormalRule"]:
-        """TODO"""
-        raise Exception("Transformation of constraints not supported yet.")
+        return body_safety == SafetyTriplet(global_vars)
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Constraint":
-        return Constraint(tuple([literal.substitute(subst) for literal in self.body]))
+    def substitute(self, subst: "Substitution") -> "Constraint":
+        return Constraint(self.literals.substitute(subst))
 
-    def match(self, other: "Expr", subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        raise Exception("Matching for constraints not supported yet.")

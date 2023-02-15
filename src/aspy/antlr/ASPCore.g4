@@ -27,13 +27,13 @@ body                :   (naf_literal | NAF? aggregate) (COMMA body)? ;
 
 disjunction         :   classical_literal (OR disjunction)? ;
 
-choice              :   (term compop)? CURLY_OPEN choice_elements? CURLY_CLOSE (compop term)? ;
+choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)? ;
 
 choice_elements     :   choice_element (SEMICOLON choice_elements)? ;
 
 choice_element      :   classical_literal (COLON naf_literals?)? ;
 
-aggregate           :   (term compop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (compop term)? ;
+aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)? ;
 
 aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)? ;
 
@@ -64,9 +64,9 @@ naf_literal         :   NAF? classical_literal
 
 classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)? ;
 
-builtin_atom        :   term compop term ;
+builtin_atom        :   term relop term ;
 
-compop              :   EQUAL
+relop              :   EQUAL
                     |   UNEQUAL
                     |   LESS
                     |   GREATER

@@ -1,70 +1,31 @@
-from typing import Optional, Set, TYPE_CHECKING
+from typing import Any
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from functools import cached_property
 
 from aspy.program.expression import Expr
-from aspy.program.literals import AggregateLiteral
-from aspy.program.safety import Safety
-from aspy.program.variable_set import VariableSet
 
 
 class Statement(Expr, ABC):
     """Abstract base class for all statements."""
     @abstractmethod
-    def __repr__(self) -> str:
-        pass
-
-    @abstractmethod
     def __str__(self) -> str:
         pass
-    
-    @property
-    @abstractmethod
-    def head(self): # TODO: typing:
-        pass
 
     @property
     @abstractmethod
-    def body(self): # TODO: typing:
+    def head(self) -> Any:
         pass
 
+    @property
     @abstractmethod
-    def vars(self) -> "VariableSet":
+    def body(self) -> Any:
         pass
 
-    def global_vars(self) -> "VariableSet":
-        return self.var_table.variables
-
-    def safety(self, global_vars: Optional["VariableSet"]=None) -> Safety:
-
-        if global_vars is None:
-            # compute global variables
-            global_vars = self.global_vars()
-
-        safeties = tuple([
-            literal.safety(global_vars) if isinstance(literal, AggregateLiteral) else literal.safety() for literal in self.body
-        ])
-
-        return Safety.closure(safeties)
-
-    @cached_property
-    def is_safe(self) -> bool:
-        """Checks whether or not the statement is safe."""
-
-        # pre-compute global variables to avoid recomputation
-        global_vars = self.global_vars()
-
-        # compute safety characterization of rule
-        return (self.safety(global_vars) == Safety(global_vars,VariableSet(),set()))
-
-    def is_ground(self) -> bool:
-        """Checks whether or not the statement contains any variables."""
-        # TODO: cache and dismiss after call to 'substitute'
-        return bool(self.global_vars)
+    @property
+    @abstractmethod
+    def safe(self) -> bool:
+        pass
 
 
-@dataclass
 class Rule(Statement, ABC):
     """Abstract base class for all rules."""
     pass
@@ -73,6 +34,3 @@ class Rule(Statement, ABC):
 class Fact(Rule, ABC):
     """Abstract base class for all facts."""
     pass
-
-
-# TODO: weight rules? not part of standard (syntactic sugar?)

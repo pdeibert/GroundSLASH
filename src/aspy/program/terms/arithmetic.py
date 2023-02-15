@@ -1,116 +1,64 @@
-from typing import Optional, Union, Set, Dict, TYPE_CHECKING
+from typing import Set, Union,Optional, Union, Tuple, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from enum import Enum
-from dataclasses import dataclass
 
-from sympy import solve # type: ignore
-from sympy import Expr as SympyExpr # type: ignore
+from aspy.program.safety_characterization import SafetyTriplet
 
-from aspy.program.expression import Substitution, MatchError
-from aspy.program.safety import Safety
-from aspy.program.variable_set import VariableSet
 from .term import Term, Number
 
 if TYPE_CHECKING:
+    from .term import Variable
     from aspy.program.expression import Expr
+    from aspy.program.substitution import Substitution
+    from aspy.program.statements import Statement
+    from aspy.program.query import Query
 
 
-class ArithOp(Enum):
-    PLUS    = 0
-    MINUS   = 1
-    TIMES   = 2
-    DIV     = 3
-
-    def __repr__(self) -> str:
-        return f"ArithOp({str(self)})"
-
-    def __str__(self) -> str:
-        if self == ArithOp.PLUS:
-            return '+'
-        elif self == ArithOp.MINUS:
-            return '-'
-        elif self == ArithOp.TIMES:
-            return '*'
-        else:
-            return '/'
-
+# TODO: restrictions when substituting ground terms? (or only handle during match?)
 
 class ArithTerm(Term, ABC):
-    def __lshift__(self, other: Term) -> bool:
-        return self.evaluate() << other
+    """Abstract base class for all arithmetic terms."""
+    def precedes(self, other: Term) -> bool:
+        return self.eval().precedes(other)
 
-    @abstractmethod
-    def evaluate(self) -> Number:
+    @ abstractmethod
+    def simplify(self) -> "ArithTerm":
         pass
 
     @abstractmethod
-    def sympy(self) -> SympyExpr:
+    def eval(self) -> Number:
         pass
-
-    def safety(self) -> Safety:
-        return Safety(VariableSet(), self.vars(), set())
-
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
-            subst = Substitution()
-
-        # simplify arithmetical expression first
-        simple_term = self.simplify()
-
-        # since we are dealing with ground atoms, the other expression must be an evaluated number
-        if isinstance(other, Number):
-            # compute sympy expression from arithmetical term
-            expr = simple_term.sympy()
-
-            # get variables in expression
-            variables = list(expr.free_symbols)
-
-            if len(variables) > 1:
-                raise Exception("Cannot match arithmetical expression with multiple variables.")
-
-            # solve for variables
-            candidates = solve(expr - other.val, dict=True)
-
-            # initialize list of valid solutions
-            valid_solutions = [] 
-
-            # parse solution set
-            for solution in candidates:
-                # get only variable and its value
-                var, value = next(iter(solution.items()))
-
-                # check if solution is integral (ASP-Core-2 is restricted to interger arithmetic)
-                if value.is_integer:
-                    valid_solutions.append(Number(int(value)))
-
-            if len(valid_solutions) == 0:
-                raise MatchError(self, other)
-            elif len(valid_solutions) > 1:
-                raise Exception("Cannot match arithmetical expression with multiple solutions.")
-            else:
-                subst.merge(Substitution({str(variables[0]): valid_solutions[0]}))
-                return subst
-        else:
-            raise MatchError(self, other)
+    
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        """Tries to match the expression with another one."""
+        raise Exception("Matching for arithmetic terms not supported yet.")
 
 
-@dataclass
 class Minus(ArithTerm):
-    operand: Term
-
-    def __repr__(self) -> str:
-        return f"Minus({repr(self.operand)})"
+    """Represents a negation of an arithmetic term."""
+    def __init__(self, operand: Union[ArithTerm, Number, "Variable"]) -> None:
+        self.operand = operand
+        self.ground = operand.ground
 
     def __str__(self) -> str:
         return f"-{str(self.operand)}"
 
-    def vars(self) -> VariableSet:
-        return self.operand.vars()
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.operand.vars(global_only)
 
-    def sympy(self) -> SympyExpr:
-        return -self.operand.sympy()
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.operand.vars())
 
-    def simplify(self) -> ArithTerm:
+    def eval(self) -> Number:
+        return -self.operand.eval()
+
+    def match(self, subst: "Substitution") -> "Minus":
+        pass
+
+    def substitute(self, subst: "Substitution") -> "Minus":
+        return Minus(self.operand.substitute(subst))
+
+    def simplify(self) -> "ArithTerm":
+        # simplify operand
         operand = self.operand.simplify()
 
         # simplified operand is a number
@@ -122,34 +70,38 @@ class Minus(ArithTerm):
         else:
             return Minus(operand)
 
-    def evaluate(self) -> Number:
-        # TODO: '~' or '-'?
-        return ~self.operand.evaluate()
 
-    def substitute(self, subst: Dict[str, Term]) -> "Minus":
-        return Minus(
-            self.operand.substitute(subst)
-        )
-
-
-@dataclass
 class Add(ArithTerm):
-    loperand: Term
-    roperand: Term
-
-    def __repr__(self) -> str:
-        return f"Add({repr(self.loperand)},{repr(self.roperand)})"
+    """Represents an addition of arithmetic terms."""
+    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+        self.loperand = loperand
+        self.roperand = roperand
+        self.ground = loperand.ground and roperand.ground
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}+{str(self.roperand)}"
 
-    def vars(self) -> VariableSet:
-        return self.loperand.vars().union(self.roperand.vars())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.loperand.vars(global_only).union()
 
-    def sympy(self) -> SympyExpr:
-        return self.loperand.sympy() + self.roperand.sympy()
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
+
+    @property
+    def operands(self) -> Tuple[Term, Term]:
+        return (self.loperand, self.roperand)
+
+    def eval(self) -> Number:
+        return Number(self.loperands.eval() + self.roperands.eval())
+
+    def substitute(self, subst: "Substitution") -> "Add":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Add(*operands)
 
     def simplify(self) -> ArithTerm:
+        # simplify operands
         loperand = self.loperand.simplify()
         roperand = self.roperand.simplify()
 
@@ -166,37 +118,42 @@ class Add(ArithTerm):
             # right operand does not add anything
             if roperand.val == 0:
                 return loperand
+
         # else return an instance of a simplified addition
         return Add(loperand, roperand)
 
-    def evaluate(self) -> Number:
-        return Number(self.loperands.evaluate() + self.roperands.evaluate())
 
-    def substitute(self, subst: Dict[str, Term]) -> "Add":
-        return Add(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst),
-        )
-
-
-@dataclass
 class Sub(ArithTerm):
-    loperand: Term
-    roperand: Term
-
-    def __repr__(self) -> str:
-        return f"Sub({repr(self.loperand)},{repr(self.roperand)})"
+    """Represents a subtraction of arithmetic terms."""
+    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+        self.loperand = loperand
+        self.roperand = roperand
+        self.ground = loperand.ground and roperand.ground
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}-{str(self.roperand)}"
 
-    def vars(self) -> VariableSet:
-        return self.loperand.vars().union(self.roperand.vars())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def sympy(self) -> SympyExpr:
-        return self.loperand.sympy() - self.roperand.sympy()
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
+
+    @property
+    def operands(self) -> Tuple[Term, Term]:
+        return (self.loperand, self.roperand)
+
+    def eval(self) -> Number:
+        return Number(self.loperand.eval() - self.roperand.eval())
+
+    def substitute(self, subst: "Substitution") -> "Sub":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Sub(*operands)
 
     def simplify(self) -> Union["Sub", Number]:
+        # simplify operands
         loperand = self.loperand.simplify()
         roperand = self.roperand.simplify()
 
@@ -207,43 +164,49 @@ class Sub(ArithTerm):
         elif isinstance(loperand, Number):
             # left operand does not add anything
             if loperand.val == 0:
+                # NOTE: return the negative of the right operand
                 return Minus(roperand)
         # only right operand is a number
         elif isinstance(roperand, Number):
             # right operand does not add anything
             if roperand.val == 0:
                 return loperand
+
         # else return an instance of a simplified subtraction
         return Sub(loperand, roperand)
 
-    def evaluate(self) -> Number:
-        return Number(self.loperand.evaluate() - self.roperand.evaluate())
 
-    def substitute(self, subst: Dict[str, Term]) -> "Sub":
-        return Sub(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst),
-        )
-
-
-@dataclass
 class Mult(ArithTerm):
-    loperand: Term
-    roperand: Term
-
-    def __repr__(self) -> str:
-        return f"Mult({repr(self.loperand)},{repr(self.roperand)})"
+    """Represents a multiplication of arithmetic terms."""
+    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+        self.loperand = loperand
+        self.roperand = roperand
+        self.ground = loperand.ground and roperand.ground
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}*{str(self.roperand)}"
 
-    def vars(self) -> VariableSet:
-        return self.loperand.vars().union(self.roperand.vars())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def sympy(self) -> SympyExpr:
-        return self.loperand.sympy() * self.roperand.sympy()
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
+
+    @property
+    def operands(self) -> Tuple[Term, Term]:
+        return (self.loperand, self.roperand)
+
+    def eval(self) -> Number:
+        return Number(self.loperands.eval() * self.roperands.eval())
+
+    def substitute(self, subst: "Substitution") -> "Mult":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Mult(*operands)
 
     def simplify(self) -> ArithTerm:
+        # simplify operands
         loperand = self.loperand.simplify()
         roperand = self.roperand.simplify()
 
@@ -252,82 +215,105 @@ class Mult(ArithTerm):
             return Number(loperand.val*roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
+            # multiplication by zero
             if loperand.val == 0:
-                return Number(0)
+                # only simplify to zero if other operand is grounded
+                if not roperand.vars:
+                    return Number(0)
+            # identity multiplication
             elif loperand.val == 1:
                 return roperand
+            # negation
             elif loperand.val == -1:
-                return Minus(roperand).simplify()
+                # check if left operand is already a 'Minus' instance (cancel out)
+                if isinstance(roperand, Minus):
+                    return roperand.operand
+
+                return Minus(roperand)
         # only right operand is a number
         elif isinstance(roperand, Number):
+            # multiplication by zero
             if roperand.val == 0:
-                return Number(0)
+                # only simplify to zero if other operand is grounded
+                if not loperand.vars:
+                    return Number(0)
+            # identity multiplication
             elif roperand.val == 1:
                 return loperand
+            # negation
             elif roperand.val == -1:
-                return Minus(loperand).simplify()
+                # check if right operand is already a 'Minus' instance (cancel out)
+                if isinstance(loperand, Minus):
+                    return loperand.operand
+
+                return Minus(loperand)
+
         # else return an instance of a simplified multiplication
         return Mult(loperand, roperand)
 
-    def evaluate(self) -> Number:
-        return Number(self.loperands.evaluate() * self.roperands.evaluate())
 
-    def substitute(self, subst: Dict[str, Term]) -> "Mult":
-        return Mult(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst),
-        )
-
-
-@dataclass
 class Div(ArithTerm):
-    loperand: Term
-    roperand: Term
-
-    def __repr__(self) -> str:
-        return f"Div({repr(self.loperand)},{repr(self.roperand)})"
+    """Represents a division of arithmetic terms."""
+    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+        self.loperand = loperand
+        self.roperand = roperand
+        self.ground = loperand.ground and roperand.ground
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}/{str(self.roperand)}"
 
-    def vars(self) -> VariableSet:
-        return self.loperand.vars().union(self.roperand.vars())
-    
-    def sympy(self) -> SympyExpr:
-        return self.loperand.sympy() // self.roperand.sympy() # integer division!
-    
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
+
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
+
+    @property
+    def operands(self) -> Tuple[Term, Term]:
+        return (self.loperand, self.roperand)
+
+    def eval(self) -> Number:
+        # NOTE: ASP-Core-2 requires integer division
+        return Number(self.loperands.eval() // self.roperands.eval())
+
+    def substitute(self, subst: "Substitution") -> "Div":
+        # substitute operands recursively
+        operands = (operand.substitute(subst) for operand in self.operands)
+
+        return Div(*operands)
+
     def simplify(self) -> ArithTerm:
+        # simplify operands
         loperand = self.loperand.simplify()
         roperand = self.roperand.simplify()
 
         # if both operands can be simplified to numbers, divide them
         if isinstance(loperand, Number) and isinstance(roperand, Number):
             if roperand.val == 0:
-                raise ValueError("Division by zero detected in arithmetical term.")
-            else:
-                return Number(loperand.val/roperand.val)
+                raise ArithmeticError("Division by zero detected while simplifying arithmetical term.")
+
+            # NOTE: integer division
+            return Number(loperand.val // roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
+            # dividing zero
             if loperand.val == 0:
-                return Number(0)
+                # only simplify to zero if other operand is grounded
+                if not roperand.vars:
+                    return Number(0)
         # only right operand is a number
         elif isinstance(roperand, Number):
-            # invalid operation
+            # division by zero
             if roperand.val == 0:
-                # TODO: custom error?
-                raise ValueError("Division by zero detected in arithmetical term.")
+                raise ArithmeticError("Division by zero detected while simplifying arithmetical term.")
             elif roperand.val == 1:
                 return loperand
             elif roperand.val == -1:
-                return Minus(loperand).simplify()
+                # check if right operand is already a 'Minus' instance (cancel out)
+                if isinstance(loperand, Minus):
+                    return loperand.operand
+
+                return Minus(loperand)
+
         # else return an instance of a simplified division
         return Div(loperand, roperand)
-
-    def evaluate(self) -> Number:
-        return Number(self.loperands.evaluate() // self.roperands.evaluate())
-
-    def substitute(self, subst: Dict[str, Term]) -> "Div":
-        return Div(
-            self.loperand.substitute(subst),
-            self.roperand.substitute(subst),
-        )

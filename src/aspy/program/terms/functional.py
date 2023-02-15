@@ -1,32 +1,47 @@
-from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
-from dataclasses import dataclass
-from functools import cached_property
+from typing import Union, Set, Optional, TYPE_CHECKING
 
-from aspy.program.expression import Substitution, MatchError, AssignmentError
-from aspy.program.safety import Safety
-from aspy.program.variable_set import VariableSet
+from aspy.program.substitution import Substitution
+from aspy.program.safety_characterization import SafetyTriplet
 
-from .term import Term, Infimum, Number, SymbolicConstant, String
+from .term import Term, TermTuple, Infimum, Number, SymbolicConstant, String
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
+    from aspy.program.terms import Variable
+    from aspy.program.statements import Statement
+    from aspy.program.query import Query
 
 
-@dataclass
 class Functional(Term):
-    functor: str
-    terms: Tuple[Term, ...]
+    """Represents a functional term."""
+    def __init__(self, symbol: str, terms: TermTuple) -> None:
+        self.symbol = symbol
+        self.terms = terms
+        self.ground = all(term.ground for term in terms)
 
-    def __lshift__(self, other: Term) -> bool:
+    def __str__(self) -> str:
+        return self.symbol + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
+
+    def __eq__(self, other) -> str:
+        return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms
+
+    def __hash__(self) -> int:
+        return hash(("func", self.symbol, *self.terms))
+
+    @property
+    def arity(self) -> int:
+        return len(self.terms)
+
+    def precedes(self, other: Term) -> bool:
         if isinstance(other, (Infimum, Number, SymbolicConstant, String)):
             return False
         elif isinstance(other, Functional):
             if self.arity < other.arity:
                 return True
             elif self.arity == other.arity:
-                if self.functor < other.functor:
+                if self.symbol < other.symbol:
                     return True
-                elif self.functor == other.functor:
+                elif self.symbol == other.symbol:
                     for self_term, other_term in zip(self.terms, other.terms):
                         if self_term > other_term:
                             return False
@@ -35,47 +50,38 @@ class Functional(Term):
 
         return False
 
-    def __repr__(self) -> str:
-        return f"Func[{self.functor}]" + (f"({','.join([repr(term) for term in self.terms])})" if self.terms else '')
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(*self.terms.vars(global_only))
 
-    def __str__(self) -> str:
-        return self.functor + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+        return SafetyTriplet.closure(self.terms.safety())
 
-    @cached_property
-    def arity(self) -> int:
-        return len(self.terms)
+    def match(self, other: "Expr") -> Set[Substitution]:
+        """Tries to match the expression with another one."""
+        if isinstance(other, Functional) and self.symbol == other.symbol and self.arity == other.arity:
 
-    def vars(self) -> VariableSet:
-        return sum([term.vars() for term in self.terms], VariableSet())
-
-    def safety(self) -> Safety:
-        # return closure of terms' safety characterizations
-        return Safety.closure(tuple([term.safety() for term in self.terms]))
-
-    def substitute(self, subst: Dict[str, Term]) -> "Functional":
-        return Functional(
-            self.functor,
-            tuple(term.substitute(subst) for term in self.terms)
-        )
-
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
-        if subst is None:
             subst = Substitution()
 
-        # 'other' is a functional term with same symbol and arity
-        if isinstance(other, Functional) and other.functor == self.functor and other.arity == self.arity:
             # match terms
+            for (self_term, other_term) in zip(self.terms, other.terms):
+                matches = self_term.match(other_term)
+            
+            # no match found
+            if len(matches) == 0:
+                return set()
+
+            # try to merge substitutions
             try:
-                for my_term, other_term in zip(self.terms, other.terms):
-                    term_subst = my_term.match(other_term)
-                    
-                    # combine substitutions
-                    subst.merge(term_subst)
-  
-                # return final substitution
-                return subst
-            except (MatchError, AssignmentError):
-                raise MatchError(self, other)
+                subst.merge(matches[0])
+            except:
+                return set()
+        
+            return set([subst])
         else:
-            # cannot be matched
-            raise MatchError(self, other)
+            return set()
+
+    def substitute(self, subst: Substitution) -> "Functional":
+        # substitute terms recursively
+        terms = (term.substitute(subst) for term in self.terms)
+
+        return Functional(*terms)

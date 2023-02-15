@@ -1,32 +1,31 @@
-from typing import Set, Tuple, TYPE_CHECKING
-from dataclasses import dataclass
-
-from .variable_set import VariableSet
+from typing import NamedTuple, Optional, Set, Iterable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .terms import Variable
 
 
-@dataclass
-class SafetyRule:
+class SafetyRule(NamedTuple):
     depender: "Variable"
-    dependees: VariableSet
+    dependees: set["Variable"]
 
 
-@dataclass
-class Safety:
-    safe: VariableSet
-    unsafe: VariableSet
-    rules: Set[SafetyRule]
+class SafetyTriplet:
+    def __init__(self, safe: Optional[Set["Variable"]]=None, unsafe: Optional[Set["Variable"]]=None, rules: Optional[Set[SafetyRule]]=None) -> None:
+        self.safe   = safe if not safe is None else set()
+        self.unsafe = unsafe if not unsafe is None else set()
+        self.rules  = rules if not rules is None else set()
 
-    def copy(self) -> "Safety":
-        return Safety(
+    def __eq__(self, other: "SafetyTriplet") -> bool:
+        return self.safe == other.safe and self.unsafe == self.unsafe and self.rules == other.rules
+
+    def copy(self) -> "SafetyTriplet":
+        return SafetyTriplet(
             self.safe.copy(),
             self.unsafe.copy(),
             self.rules.copy()
         )
 
-    def normalize(self) -> "Safety":
+    def normalize(self) -> "SafetyTriplet":
         """Algorithm 1 in Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition"."""
 
         # create copy of current safety characterization
@@ -71,10 +70,10 @@ class Safety:
         return safety
 
     @classmethod
-    def closure(cls, safeties: Tuple["Safety"]) -> "Safety":
+    def closure(cls, safeties: Iterable["SafetyTriplet"]) -> "SafetyTriplet":
 
-        safe = VariableSet()
-        unsafe = VariableSet()
+        safe = set()
+        unsafe = set()
         rules = set()
 
         # combine all safeties
@@ -84,4 +83,4 @@ class Safety:
             rules = rules.union(safety.rules)
         
         # return normalized combined safety
-        return Safety(safe, unsafe, rules).normalize()
+        return SafetyTriplet(safe, unsafe, rules).normalize()

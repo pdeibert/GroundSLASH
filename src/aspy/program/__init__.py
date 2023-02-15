@@ -1,10 +1,9 @@
-from .expression import Expr, Substitution, MatchError, AssignmentError
+from .expression import Expr
 from .terms import *
 from .literals import *
 from .statements import *
 from .query import Query
 from .program import Program
-from .safety import Safety, SafetyRule
-from .variable_set import VariableSet
-from .variable_table import VariableTable
-from .ProgramBuilder import ProgramBuilder
+from .substitution import Substitution
+from .operators import RelOp, ArithOp, AggrOp
+from .program_builder import ProgramBuilder

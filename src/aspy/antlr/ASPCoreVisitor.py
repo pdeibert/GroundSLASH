@@ -124,8 +124,8 @@ class ASPCoreVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ASPCoreParser#compop.
-    def visitCompop(self, ctx:ASPCoreParser.CompopContext):
+    # Visit a parse tree produced by ASPCoreParser#relop.
+    def visitRelop(self, ctx:ASPCoreParser.RelopContext):
         return self.visitChildren(ctx)
 
 

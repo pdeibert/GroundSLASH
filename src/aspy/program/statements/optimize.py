@@ -1,21 +1,19 @@
-from typing import Optional, Tuple, Dict, Set, TYPE_CHECKING
+from typing import Tuple, Optional, Set, TYPE_CHECKING
 from abc import ABC
-from dataclasses import dataclass
+from functools import cached_property
 
 from aspy.program.expression import Expr
-from aspy.program.safety import Safety
-from aspy.program.variable_set import VariableSet
+from aspy.program.terms import TermTuple
+from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
-from .weak_constraint import WeakConstraint
 
 if TYPE_CHECKING:
-    from aspy.program.expression import Substitution
-    from aspy.program.terms import Term
-    from aspy.program.literals import Literal
+    from aspy.program.substitution import Substitution
+    from aspy.program.terms import Term, Variable
+    from aspy.program.literals import LiteralTuple
 
 
-@dataclass
 class OptimizeElement(Expr):
     """Optimization element for optimize statements.
     
@@ -26,68 +24,64 @@ class OptimizeElement(Expr):
     for terms w,l,t_1,...,t_m and literals b_1,...,b_n.
     '@ l' may be omitted if l=0.
     """
-    weight: "Term"
-    level: "Term"
-    terms: Tuple["Term", ...]
-    literals: Tuple["Literal", ...]
-
-    def __repr__(self) -> str:
-        return f"OptimizeElement({repr(self.weight)}@{repr(self.level)}, {', '.join([repr(term) for term in self.terms])} : {', '.join([repr(literal) for literal in self.literals])})"
+    def __init__(self, weight: "Term", level: "Term", terms: TermTuple, literals: "LiteralTuple") -> None:
+        self.weight = weight
+        self.level = level
+        self.terms = terms
+        self.literals = literals
+        self.ground = weight.ground and level.ground and all(term.ground for term in terms) and all(literal.ground for literal in literals)
 
     def __str__(self) -> str:
         return f"{str(self.weight)}@{str(self.level)}, {', '.join([str(term) for term in self.terms])} : {', '.join([str(literal) for literal in self.literals])}"
 
     @property
-    def head(self) -> Tuple["Term", ...]:
-        return (self.weight, self.level, *self.terms)
+    def head(self) -> TermTuple:
+        return TermTuple([self.weight, self.level, *self.terms])
 
     @property
-    def body(self) -> Tuple["Term", ...]:
+    def body(self) -> "LiteralTuple":
         return self.literals
 
-    def vars(self) -> VariableSet:
-        # TODO: ugly
-        return sum([self.weight.vars(), self.level.vars()] + [term.vars() for term in self.terms] + [literal.vars() for literal in self.literals], VariableSet())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(self.weight.vars(global_only), self.level.vars(global_only), *self.terms.vars(global_only), *self.literals.vars(global_only))
 
-    def safety(self) -> Safety:
-        return Safety.closure([literal.safety() for literal in self.literals])
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception()
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "OptimizeElement":
-        return OptimizeElement(self.weight.substitute(subst), self.level.substitute(subst), tuple([term.substitute(subst) for term in self.terms]), tuple([literal.substitute(subst) for literal in self.literals]))
+    def substitute(self, subst: "Substitution") -> "OptimizeElement":
+        raise Exception("Substitution for optimize elements not supported yet.")
 
-    def match(self, other: Expr, subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        raise Exception("Matching for optimize elements not supported yet.")
 
 
-@dataclass
 class OptimizeStatement(Statement, ABC):
     """Abstract base class for all optimize statement."""
-    elements: Tuple[OptimizeElement, ...]
-    minimize: bool
+    def __init__(self, elements: Tuple[OptimizeElement, ...], minimize: bool) -> None:
+        self.elements = elements
+        self.minimize = minimize
+        self.ground = all(element.ground for element in elements)
 
     @property
-    def head(self) -> Tuple["Term", ...]:
+    def head(self) -> TermTuple:
         return sum([element.head() for element in self.elements])
 
     @property
-    def body(self) -> Tuple["Term", ...]:
+    def body(self) -> "LiteralTuple":
         return sum([element.body() for element in self.elements])
 
-    def transform(self) -> Tuple[WeakConstraint, ...]:
-        """Transforms the optimize statement into (possibly multiple) weak constraints."""
-        # transform each optimize element into a weak constraint
-        return tuple(
-            WeakConstraint(
-                element.literals,
-                element.weight,
-                element.level,
-                element.terms
-            )
-            for element in self.elements
-        )
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(element.vars(global_only) for element in self.elements)
 
-    def vars(self) -> VariableSet:
-        return sum([element.vars() for element in self.elements], VariableSet())
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception()
+
+    @cached_property
+    def safe(self) -> bool:
+        raise Exception()
+
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        raise Exception("Matching for optimize statements not supported yet.")
 
 
 class MinimizeStatement(OptimizeStatement):
@@ -108,19 +102,14 @@ class MinimizeStatement(OptimizeStatement):
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, True)
 
-    def __repr__(self) -> str:
-        return f"Minimize({', '.join([repr(element) for element in self.elements])})"
-
     def __str__(self) -> str:
         return f"#minimize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "MinimizeStatement":
-        return OptimizeStatement(
-            self.elements.substitute(subst)
-        )
-
-    def match(self, other: Expr, subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    def substitute(self, subst: "Substitution") -> "MinimizeStatement":
+        # substitute elements recursively
+        elements = (element.substitute(subst) for element in self.elements)
+    
+        return MinimizeStatement(elements)
 
 
 class MaximizeStatement(OptimizeStatement):
@@ -141,16 +130,11 @@ class MaximizeStatement(OptimizeStatement):
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, False)
 
-    def __repr__(self) -> str:
-        return f"Maximize({', '.join([repr(element) for element in self.elements])})"
-
     def __str__(self) -> str:
         return f"#maximize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "MaximizeStatement":
-        return MaximizeStatement(
-            self.elements.substitute(subst)
-        )
-    
-    def match(self, other: Expr, subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    def substitute(self, subst: "Substitution") -> "MaximizeStatement":
+        # substitute elements recursively
+        elements = (element.substitute(subst) for element in self.elements)
+
+        return MaximizeStatement(elements)

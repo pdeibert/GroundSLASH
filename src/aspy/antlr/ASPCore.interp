@@ -108,7 +108,7 @@ naf_literals
 naf_literal
 classical_literal
 builtin_atom
-compop
+relop
 terms
 term
 func_term

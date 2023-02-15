@@ -1,31 +1,24 @@
-from typing import Dict, Optional, Set, TYPE_CHECKING
+from typing import Dict, Set, Union, Optional, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
-    from .terms import Term
-    from .variable_set import VariableSet
-
-
-class AssignmentError(Exception):
-    def __init__(self, subst_1: "Substitution", subst_2: "Substitution") -> None:
-        super().__init__(f"Substitution {subst_1} is inconsistent with substitution {subst_2}.")
-
-
-class Substitution(dict):
-    def merge(self, other: "Substitution") -> None:
-        for var in other.keys():
-            if var in self.keys():
-                raise AssignmentError(self, other)
-            else:
-                # integrate assignment
-                self[var] = other[var]
+    from .statements import Statement
+    from .terms import Term, Variable
+    from .substitution import Substitution
+    from .safety_characterization import SafetyTriplet
+    from .query import Query
 
 
 class Expr(ABC):
     """Abstract base class for all expressions."""
+    __slots__ = ("ground")
 
     @abstractmethod
-    def vars(self) -> "VariableSet": # type: ignore
+    def vars(self, global_only: bool=False) -> Set["Variable"]: # type: ignore
+        pass
+
+    @abstractmethod
+    def safety(self, rule: Optional[Union["Statement", "Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
         pass
 
     @abstractmethod
@@ -34,11 +27,6 @@ class Expr(ABC):
         pass
 
     @abstractmethod
-    def match(self, other: "Expr", subst: Optional[Substitution]=None) -> Substitution:
+    def match(self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the expression with another one."""
         pass
-
-
-class MatchError(Exception):
-    def __init__(self, candidate: Expr, target: Expr) -> None:
-        super().__init__(f"{candidate} cannot be matched to {target}.")

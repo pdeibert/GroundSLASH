@@ -1,17 +1,18 @@
-from typing import Optional, Tuple, Set, Dict, TYPE_CHECKING
-from dataclasses import dataclass
+from typing import Set, Optional, TYPE_CHECKING
+from functools import cached_property
 
-from aspy.program.variable_set import VariableSet
+from aspy.program.literals import LiteralTuple
+from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:
-    from aspy.program.expression import Expr, Substitution
-    from aspy.program.terms import Term
-    from aspy.program.literals import Literal, PredicateLiteral
+    from aspy.program.expression import Expr
+    from aspy.program.terms import Variable
+    from aspy.program.substitution import Substitution
+    from aspy.program.statements import Statement
 
 
-@dataclass
 class DisjunctiveFact(Fact):
     """Disjunctive fact.
     
@@ -23,33 +24,36 @@ class DisjunctiveFact(Fact):
 
     Semantically, any answer set must include exactly one classical atom h_i.
     """
-    atoms: Tuple["PredicateLiteral", ...]
-
-    def __repr__(self) -> str:
-        return f"DisjunctiveFact[{'| '.join([repr(atom) for atom in self.atoms])}]"
+    def __init__(self, atoms: LiteralTuple) -> None:
+        self.atoms = atoms
+        self.ground = all(atom.ground for atom in atoms)
 
     def __str__(self) -> str:
         return ' | '.join([str(atom) for atom in self.atoms]) + '.'
 
     @property
-    def head(self) -> Tuple["PredicateLiteral"]:
+    def head(self) -> LiteralTuple:
         return self.atoms
 
     @property
-    def body(self) -> Tuple["Literal"]:
-        return tuple()
+    def body(self) -> LiteralTuple:
+        return LiteralTuple()
 
-    def vars(self) -> VariableSet:
-        return sum([atom.vars() for atom in self.head], VariableSet())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(*self.head.vars(global_only))
 
-    def global_vars(self) -> VariableSet:
-        return self.vars()
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception()
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "DisjunctiveFact":
-        return DisjunctiveFact(tuple([atom.substitute(subst) for atom in self.atoms]))
+    @cached_property
+    def safe(self) -> bool:
+        return len(self.vars()) > 0
 
-    def match(self, other: "Expr", subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    def substitute(self, subst: "Substitution") -> "DisjunctiveFact":
+        return DisjunctiveFact(self.head.substitute(subst))
+
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        raise Exception("Matching for disjunctive facts not supported yet.")
 
 
 class DisjunctiveRule(Rule):
@@ -63,29 +67,37 @@ class DisjunctiveRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
     """
-    def __init__(self, head: Tuple["PredicateLiteral", ...], body: Tuple["Literal", ...]) -> None:
+    def __init__(self, head: LiteralTuple, body: LiteralTuple) -> None:
         self.atoms = head
         self.literals = body
-
-    def __repr__(self) -> str:
-        return f"DisjunctiveRule[{' | '.join([repr(atom) for atom in self.head])}]({', '.join([repr(literal) for literal in self.body])})"
+        self.ground = all(atom.ground for atom in head) and all(literal.ground for literal in body)
 
     def __str__(self) -> str:
-        return f"{' | '.join([repr(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
+        return f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
 
     @property
-    def head(self) -> Tuple["Literal"]:
+    def head(self) -> LiteralTuple:
         return self.atoms
 
     @property
-    def body(self) -> Tuple["Literal"]:
+    def body(self) -> LiteralTuple:
         return self.literals
 
-    def vars(self) -> VariableSet:
-        return sum([atom.vars() for atom in self.head] + [literal.vars() for literal in self.body], VariableSet())
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(*self.head.vars(global_only), *self.body.vars(global_only))
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "DisjunctiveRule":
-        return DisjunctiveFact(tuple([atom.substitute(subst) for atom in self.head]), tuple([literal.substitute(subst) for literal in self.body]))
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception()
 
-    def match(self, other: "Expr", subst: Optional["Substitution"]=None) -> "Substitution":
-        pass
+    @cached_property
+    def safe(self) -> bool:
+        global_vars = self.vars(global_only=True)
+        body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
+
+        return body_safety == SafetyTriplet(global_vars)
+
+    def substitute(self, subst: "Substitution") -> "DisjunctiveRule":
+        return DisjunctiveRule(self.head.substitute(subst), self.literals.substitute(subst))
+
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        raise Exception("Matching for disjunctive rules not supported yet.")

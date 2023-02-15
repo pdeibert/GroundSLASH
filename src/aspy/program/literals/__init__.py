@@ -1,5 +1,4 @@
-from .literal import Literal
+from .literal import Literal, LiteralTuple
 from .predicate import PredicateLiteral
 from .builtin import BuiltinLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual
-from .aggregate import AggregateLiteral, AggregateElement, AggregateFunction, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggrOp
-from .comparison import CompOp
+from .aggregate import AggregateElement, Aggregate, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
