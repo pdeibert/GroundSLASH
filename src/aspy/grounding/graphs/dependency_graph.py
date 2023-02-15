@@ -7,30 +7,30 @@
 #       
 #       
 
-# literal.pos():
+# literal.pos_occ():
 #       pos. classical literal/aggregate literal -> set(self)
 #       _ -> set()
-# literal.neg():
+# literal.neg_occ():
 #       neg. classical literal/aggregate literal -> set(self)
 #       _ -> set()
 #
-# aggr.pos():
+# aggr.pos_occ():
 #       -> set.union(*tuple(e.body for e in self.elements))
-# aggr.neg():
+# aggr.neg_occ():
 #       aggr monotone (???) -> set()
 #       _ -> set.union(*tuple(e.body for e in self.elements))
 #
-# literal_set.pos():
-#       -> set().union(*tuple(literal.pos() for literal in self.literals))
-# literal_set.neg():
-#       -> set().union(*tuple(literal.pos() for literal in self.literals))
+# literal_set.pos_occ():
+#       -> set().union(*tuple(literal.pos_occ() for literal in self.literals))
+# literal_set.neg_occ():
+#       -> set().union(*tuple(literal.pos_occ() for literal in self.literals))
 
 # pred(a) = "name/arity"
 # pred(A) = {pred(atom) for atom in A}
 
 # Inter-Rule dependency:
-#       rule r1 pos. depends on rule r2 if pred(H(r2)) in pred(B(r1).pos())
-#               neg.                                   in pred(B(r1).neg())
+#       rule r1 pos. depends on rule r2 if pred(H(r2)) in pred(B(r1).pos_occ())
+#               neg.                                   in pred(B(r1).neg_occ())
 #           -> i.e. r2 requires predicates defined in r1 to infer its head
 #
 #       facts depend on no other rules
@@ -58,8 +58,8 @@ class DependencyGraph():
                 if depender is dependee:
                     continue
 
-                pos_body_predicates = set([literal.pred() for literal in depender.body.pos()])
-                neg_body_predicates = set([literal.pred() for literal in depender.body.neg()])
+                pos_body_predicates = set([literal.pred() for literal in depender.body.pos_occ()])
+                neg_body_predicates = set([literal.pred() for literal in depender.body.neg_occ()])
 
                 # positive dependency
                 if head_predicates.intersection(pos_body_predicates):

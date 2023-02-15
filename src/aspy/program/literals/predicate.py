@@ -47,11 +47,11 @@ class PredicateLiteral(Literal):
     def pred(self) -> Tuple[str, int]:
         return (self.name, self.arity)
 
-    def pos(self) -> Set["Literal"]:
+    def pos_occ(self) -> Set["Literal"]:
         # NOTE: naf flag gets dropped
         return {PredicateLiteral(self.name, self.terms, self.cneg)} if not self.naf else set()
 
-    def neg(self) -> Set["Literal"]:
+    def neg_occ(self) -> Set["Literal"]:
         # NOTE: naf flag gets dropped
         return {PredicateLiteral(self.name, self.terms, self.cneg)} if self.naf else set()
 

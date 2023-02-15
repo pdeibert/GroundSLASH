@@ -27,10 +27,10 @@ class BuiltinLiteral(Literal, ABC):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def pos(self) -> Set["Literal"]:
+    def pos_occ(self) -> Set["Literal"]:
         return set()
 
-    def neg(self) -> Set["Literal"]:
+    def neg_occ(self) -> Set["Literal"]:
         return set()
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:

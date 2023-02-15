@@ -40,11 +40,11 @@ class AggregateElement(Expr):
     def ground(self) -> bool:
         return all(term.ground for term in self.terms) and all(literal.ground for literal in self.literals)
 
-    def pos(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(literal.pos() for literal in self.literals))
+    def pos_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(literal.pos_occ() for literal in self.literals))
 
-    def neg(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(literal.neg() for literal in self.literals))
+    def neg_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(literal.neg_occ() for literal in self.literals))
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return set().union(*self.head.vars(global_only), *self.body.vars(global_only))
@@ -72,11 +72,11 @@ class Aggregate(Expr, ABC):
     def eval(self) -> Number:
         pass
 
-    def pos(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(element.pos() for element in self.elements))
+    def pos_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(element.pos_occ() for element in self.elements))
 
-    def neg(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(element.neg() for element in self.elements))
+    def neg_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregates not supported yet.")
@@ -177,11 +177,11 @@ class AggregateLiteral(Literal):
     def ground(self) -> bool:
         return self.func.ground and (self.lcomp[1] if not self.lcomp is None else True) and (self.rcomp[1] if not self.rcomp is None else True)
 
-    def pos(self) -> Set["PredicateLiteral"]:
-        return self.func.pos()
+    def pos_occ(self) -> Set["PredicateLiteral"]:
+        return self.func.pos_occ()
 
-    def neg(self) -> Set["PredicateLiteral"]:
-        return self.func.neg()
+    def neg_occ(self) -> Set["PredicateLiteral"]:
+        return self.func.neg_occ()
 
     def guards(self) -> Tuple[Tuple["RelOp", "Term"], Tuple["RelOp", "Term"]]:
         return (self.lcomp, self.rcomp)

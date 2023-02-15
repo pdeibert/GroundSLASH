@@ -23,11 +23,11 @@ class Literal(Expr, ABC):
     naf: bool = False
 
     @abstractmethod
-    def pos(self) -> Set["Literal"]:
+    def pos_occ(self) -> Set["Literal"]:
         pass
 
     @abstractmethod
-    def neg(self) -> Set["Literal"]:
+    def neg_occ(self) -> Set["Literal"]:
         pass
 
 
@@ -65,11 +65,11 @@ class LiteralTuple:
     def ground(self) -> bool:
         return all(literal.ground for literal in self.literals)
 
-    def pos(self) -> Set["Literal"]:
-        return set().union(*tuple(literal.pos() for literal in self.literals))
+    def pos_occ(self) -> Set["Literal"]:
+        return set().union(*tuple(literal.pos_occ() for literal in self.literals))
 
-    def neg(self) -> Set["Literal"]:
-        return set().union(*tuple(literal.neg() for literal in self.literals))
+    def neg_occ(self) -> Set["Literal"]:
+        return set().union(*tuple(literal.neg_occ() for literal in self.literals))
 
     def vars(self, global_only=False) -> Tuple[Set["Variable"], ...]:
         return tuple(term.vars(global_only) for term in self.terms)
