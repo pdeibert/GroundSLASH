@@ -32,12 +32,18 @@ class DisjunctiveFact(Fact):
         super().__init__(**kwargs)
 
         if len(atoms) < 2:
-            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {type(NormalFact)} instead.")
+            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {NormalFact} instead.")
 
         if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms):
-            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {type(PredicateLiteral)}.")
+            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}.")
 
         self.atoms = LiteralTuple(*atoms)
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, DisjunctiveFact) and self.atoms == other.atoms
+
+    def __hash__(self) -> int:
+        return hash( ("disjunctive fact", self.atoms) )
 
     def __str__(self) -> str:
         return '|'.join([str(atom) for atom in self.head]) + '.'
@@ -62,7 +68,7 @@ class DisjunctiveFact(Fact):
         return self.head.ground
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveFact":
-        return DisjunctiveFact(self.head.substitute(subst))
+        return DisjunctiveFact(*self.head.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for disjunctive facts not supported yet.")
@@ -83,15 +89,21 @@ class DisjunctiveRule(Rule):
         super().__init__(**kwargs)
 
         if len(head) < 2:
-            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {type(NormalRule)} instead.")
+            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {NormalRule} instead.")
         if len(body) == 0:
-            raise ValueError(f"Body for {type(DisjunctiveRule)} may not be empty.")
+            raise ValueError(f"Body for {type(self)} may not be empty.")
 
         if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in head):
-            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {type(PredicateLiteral)}.")
+            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}.")
 
         self.atoms = head if isinstance(head, LiteralTuple) else LiteralTuple(*head)
         self.literals = LiteralTuple(*body)
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, DisjunctiveRule) and self.atoms == other.atoms and self.literals == other.literals
+
+    def __hash__(self) -> int:
+        return hash( ("disjunctive rule", self.atoms, self.literals) )
 
     def __str__(self) -> str:
         return f"{'|'.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
@@ -116,7 +128,7 @@ class DisjunctiveRule(Rule):
         return self.head.ground and self.body.ground
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveRule":
-        return DisjunctiveRule(self.head.substitute(subst), self.literals.substitute(subst))
+        return DisjunctiveRule(self.head.substitute(subst), *self.literals.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for disjunctive rules not supported yet.")

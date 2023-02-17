@@ -1,7 +1,8 @@
 import unittest
 
 import aspy
-from aspy.program.terms import Number, Variable
+from aspy.program.substitution import Substitution
+from aspy.program.terms import Number, Variable, String
 from aspy.program.literals import PredicateLiteral, LiteralTuple
 
 from aspy.program.statements import NormalFact, NormalRule
@@ -28,8 +29,11 @@ class TestNormal(unittest.TestCase):
         self.assertTrue(rule.vars() == rule.vars(True) == {Variable('X')})
         self.assertFalse(rule.safe)
         self.assertFalse(rule.ground)
+
+        # substitution
+        rule = NormalFact(PredicateLiteral('p', Variable('X'), Number(0)))
+        self.assertEqual(rule.substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), NormalFact(PredicateLiteral('p', Number(1), Number(0)))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitution
 
     def test_normal_rule(self):
 
@@ -56,8 +60,11 @@ class TestNormal(unittest.TestCase):
         self.assertTrue(rule.vars() == rule.vars(True) == {Variable('X')})
         self.assertTrue(rule.safe)
         self.assertFalse(rule.ground)
+
+        # substitution
+        rule = NormalRule(PredicateLiteral('p', Variable('X'), Number(0)), PredicateLiteral('q', Variable('X')))
+        self.assertEqual(rule.substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), NormalRule(PredicateLiteral('p', Number(1), Number(0)), PredicateLiteral('q', Number(1)))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitution
 
 
 if __name__ == "__main__":

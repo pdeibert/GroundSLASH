@@ -37,6 +37,12 @@ class NormalFact(Fact):
     def __str__(self) -> str:
         return f"{str(self.atom)}."
 
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, NormalFact) and self.atom == other.atom
+
+    def __hash__(self) -> int:
+        return hash( ("normal fact", self.atom) )
+
     @property
     def head(self) -> LiteralTuple:
         return LiteralTuple(self.atom)
@@ -75,10 +81,16 @@ class NormalRule(Rule):
         super().__init__(**kwargs)
 
         if len(body) == 0:
-            raise ValueError(f"Body for {type(NormalRule)} may not be empty.")
+            raise ValueError(f"Body for {type(self)} may not be empty.")
 
         self.atom = head
         self.literals = LiteralTuple(*body)
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, NormalRule) and self.atom == other.atom and self.literals == other.literals
+
+    def __hash__(self) -> int:
+        return hash( ("normal rule", self.atom, self.literals) )
 
     def __str__(self) -> str:
         return f"{str(self.atom)} :- {', '.join([str(literal) for literal in self.body])}."
@@ -103,7 +115,7 @@ class NormalRule(Rule):
         return self.atom.ground and self.body.ground
 
     def substitute(self, subst: "Substitution") -> "NormalRule":
-        return NormalRule(self.atom.substitute(subst), self.literals.substitute(subst))
+        return NormalRule(self.atom.substitute(subst), *self.literals.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for normal rules not supported yet.")
