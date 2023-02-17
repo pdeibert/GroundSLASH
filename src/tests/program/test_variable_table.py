@@ -24,6 +24,8 @@ class TestVariableTable(unittest.TestCase):
         var_table = statement.var_table
 
         self.assertTrue(all(var in var_table and var_table[var] == is_global for (var, is_global) in [(Variable('X'), True), (Variable('Y'), True), (AnonVariable(0), True), (AnonVariable(1), True)]))
+        self.assertTrue(var_table.vars() == var_table.vars(True) == {Variable('X'), Variable('Y'), AnonVariable(0), AnonVariable(1)})
+        self.assertEqual(var_table.arith_vars(), set())
         self.assertEqual(var_table.anon_counter, 2)
 
     def test_variable_table_manual(self):
@@ -42,6 +44,8 @@ class TestVariableTable(unittest.TestCase):
         var_table = statement.var_table
 
         self.assertTrue(all(var in var_table and var_table[var] == is_global for (var, is_global) in [(Variable('X'), True), (Variable('Y'), True), (AnonVariable(0), True), (AnonVariable(1), True), (ArithVariable(0, Variable('Z')), True)]))
+        self.assertTrue(var_table.vars() == var_table.vars(True) == {Variable('X'), Variable('Y'), AnonVariable(0), AnonVariable(1), ArithVariable(0, Variable('Z'))})
+        self.assertEqual(var_table.arith_vars(), {ArithVariable(0, Variable('Z'))})
         self.assertEqual(var_table.anon_counter, 2)
         self.assertEqual(var_table.arith_counter, 1)
 

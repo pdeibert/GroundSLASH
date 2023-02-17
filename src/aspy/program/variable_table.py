@@ -96,3 +96,6 @@ class VariableTable:
             return set(var for (var, is_global) in self.variables.items() if is_global)
 
         return set(self.variables.keys())
+
+    def arith_vars(self) -> Set["ArithVariable"]:
+        return set(var for var in self.variables if isinstance(var, ArithVariable))
