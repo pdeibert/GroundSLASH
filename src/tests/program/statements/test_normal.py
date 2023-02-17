@@ -7,7 +7,7 @@ from aspy.program.literals import PredicateLiteral, LiteralTuple
 from aspy.program.statements import NormalFact, NormalRule
 
 
-class TestAggregate(unittest.TestCase):
+class TestNormal(unittest.TestCase):
     def test_normal_fact(self):
 
         # make sure debug mode is enabled

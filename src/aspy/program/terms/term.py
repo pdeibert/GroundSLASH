@@ -162,9 +162,8 @@ class Variable(Term):
     ground: bool=False
 
     def __init__(self, val: str) -> None:
-
         # check if variable name is valid
-        if aspy.debug() and not VARIABLE_RE.fullmatch(val):
+        if aspy.debug() and not (isinstance(val, str) and VARIABLE_RE.fullmatch(val)):
             raise ValueError(f"Invalid value for {type(self)}: {val}")
 
         self.val = val
