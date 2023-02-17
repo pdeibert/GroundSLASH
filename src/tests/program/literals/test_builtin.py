@@ -1,6 +1,7 @@
 import unittest
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
 from aspy.program.literals import Naf, BuiltinLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual
@@ -43,8 +44,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(safety.rules, {SafetyRule(Variable('X'),{Variable('Y')}), SafetyRule(Variable('Y'),{Variable('X')})})
         literal = Equal(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), Equal(Number(0), ArithVariable(0, Minus(Variable('X')))))
+        
+        # substitute
+        self.assertEqual(Equal(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), Equal(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_unequal(self):
 
@@ -75,8 +78,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet(unsafe={Variable('X'), Variable('Y')}))
         literal = Unequal(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), Unequal(Number(0), ArithVariable(0, Minus(Variable('X')))))
+
+        # substitute
+        self.assertEqual(Unequal(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), Unequal(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_less(self):
 
@@ -108,8 +113,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet(unsafe={Variable('X'), Variable('Y')}))
         literal = Less(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), Less(Number(0), ArithVariable(0, Minus(Variable('X')))))
+
+        # substitute
+        self.assertEqual(Less(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), Less(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_greater(self):
 
@@ -142,8 +149,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet(unsafe={Variable('X'), Variable('Y')}))
         literal = Greater(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), Greater(Number(0), ArithVariable(0, Minus(Variable('X')))))
+
+        # substitute
+        self.assertEqual(Greater(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), Greater(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_less_equal(self):
 
@@ -176,8 +185,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet(unsafe={Variable('X'), Variable('Y')}))
         literal = LessEqual(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), LessEqual(Number(0), ArithVariable(0, Minus(Variable('X')))))
+
+        # substitute
+        self.assertEqual(LessEqual(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), LessEqual(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_greater_equal(self):
 
@@ -209,8 +220,10 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet(unsafe={Variable('X'), Variable('Y')}))
         literal = GreaterEqual(Number(0), Minus(Variable(('X'))))
         self.assertEqual(literal.replace_arith(VariableTable()), GreaterEqual(Number(0), ArithVariable(0, Minus(Variable('X')))))
+
+        # substitute
+        self.assertEqual(GreaterEqual(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), GreaterEqual(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import unittest
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Functional, Number, Variable, String
@@ -30,8 +31,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), term)
         self.assertEqual(term.safety(), SafetyTriplet({Variable('X')}))
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Functional('f', String('f'), Variable('X')).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), Functional('f', String('f'), Number(1))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
 
 if __name__ == "__main__":

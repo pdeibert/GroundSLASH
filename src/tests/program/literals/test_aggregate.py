@@ -1,6 +1,7 @@
 import unittest
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.terms import TermTuple, Number, Variable, ArithVariable, Minus, String, Infimum, Supremum
 from aspy.program.literals import Naf, PredicateLiteral, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral, LiteralTuple
@@ -41,8 +42,15 @@ class TestAggregate(unittest.TestCase):
                 LiteralTuple(PredicateLiteral('p', String('str')), Naf(PredicateLiteral('q', Variable('Y'))))
             )
         )
+
+        # substitute
+        self.assertEqual(element.substitute(Substitution({Variable('X'): Number(1), Number(5): String('f')})), # NOTE: substitution is invalid
+            AggregateElement(
+                TermTuple(Number(5), Minus(Number(1))),
+                LiteralTuple(PredicateLiteral('p', String('str')), Naf(PredicateLiteral('q', Variable('Y'))))
+            )                 
+        )
         # TODO: match
-        # TODO: substitute
 
     def test_aggregate_count(self):
 
@@ -85,8 +93,12 @@ class TestAggregate(unittest.TestCase):
                 )
             )
         )
+
+        # substitute
+        self.assertEqual(aggregate.substitute(Substitution({Variable('X'): Number(1), Number(5): String('f')})), # NOTE: substitution is invalid
+            AggregateCount(AggregateElement(TermTuple(Number(5)), LiteralTuple(PredicateLiteral('p', Minus(Number(1))), Naf(PredicateLiteral('q')))))
+        )
         # TODO: match
-        # TODO: substitute
 
     def test_aggregate_sum(self):
 
@@ -130,8 +142,12 @@ class TestAggregate(unittest.TestCase):
                 )
             )
         )
+
+        # substitute
+        self.assertEqual(aggregate.substitute(Substitution({Variable('X'): Number(1), Number(5): String('f')})), # NOTE: substitution is invalid
+            AggregateSum(AggregateElement(TermTuple(Number(5)), LiteralTuple(PredicateLiteral('p', Minus(Number(1))), Naf(PredicateLiteral('q')))))
+        )
         # TODO: match
-        # TODO: substitute
 
     def test_aggregate_max(self):
 
@@ -176,6 +192,12 @@ class TestAggregate(unittest.TestCase):
             )
         )
 
+        # substitute
+        self.assertEqual(aggregate.substitute(Substitution({Variable('X'): Number(1), Number(5): String('f')})), # NOTE: substitution is invalid
+            AggregateMax(AggregateElement(TermTuple(Number(5)), LiteralTuple(PredicateLiteral('p', Minus(Number(1))), Naf(PredicateLiteral('q')))))
+        )
+        # TODO: match
+
     def test_aggregate_min(self):
 
         # make sure debug mode is enabled
@@ -218,8 +240,12 @@ class TestAggregate(unittest.TestCase):
                 )
             )
         )
+
+        # substitute
+        self.assertEqual(aggregate.substitute(Substitution({Variable('X'): Number(1), Number(5): String('f')})), # NOTE: substitution is invalid
+            AggregateMin(AggregateElement(TermTuple(Number(5)), LiteralTuple(PredicateLiteral('p', Minus(Number(1))), Naf(PredicateLiteral('q')))))
+        )
         # TODO: match
-        # TODO: substitute
 
     def test_aggregate_literal(self):
 
@@ -290,12 +316,26 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(literal.pos_occ(), {PredicateLiteral('p', Variable('X'))})
         self.assertEqual(literal.neg_occ(), {PredicateLiteral('p', String('str')), PredicateLiteral('q')})
 
-        # TODO: safety (given rule context)
         self.assertEqual(literal.safety(global_vars={Variable('X')}), SafetyTriplet(unsafe={Variable('X')}))
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet())
         literal = AggregateLiteral(aggregate, lcomp=(RelOp.LESS, Variable('X')))
         self.assertEqual(literal.safety(global_vars={Variable('X')}), SafetyTriplet(unsafe={Variable('X')}))
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet())
+
+        # substitute
+        self.assertEqual(literal.substitute(Substitution({Variable('X'): Number(1), Number(-3): String('f')})), # NOTE: substitution is invalid
+            AggregateLiteral(AggregateCount( (
+                AggregateElement(
+                    TermTuple(Number(5)),
+                    LiteralTuple(PredicateLiteral('p', Number(1)), Naf(PredicateLiteral('q')))
+                ),
+                AggregateElement(
+                    TermTuple(Number(-3)),
+                    LiteralTuple(Naf(PredicateLiteral('p', String('str'))))
+                )
+            )), lcomp=(RelOp.LESS, Number(1)))
+        )
+        # TODO: match
 
         literal = AggregateLiteral(aggregate, lcomp=(RelOp.EQUAL, Variable('Y')))
         # aggr_global_invars = {'X'}
@@ -318,8 +358,6 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet(safe={Variable('X')}))
 
         # TODO: safety characterization for case with two guards
-        # TODO: match
-        # TODO: substitute
 
 
 if __name__ == "__main__":

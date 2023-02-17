@@ -85,7 +85,7 @@ class LiteralTuple:
         # substitute literals recursively
         literals = (literal.substitute(subst) for literal in self)
 
-        return LiteralTuple(literals)
+        return LiteralTuple(*literals)
 
     def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
         return LiteralTuple( *tuple(literal.replace_arith(var_table) for literal in self.literals) )

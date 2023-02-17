@@ -1,6 +1,7 @@
 import unittest
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.literals import Neg, PredicateLiteral
@@ -34,8 +35,10 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(str(literal), 'not -p(0,"x")')
         self.assertEqual(literal.pos_occ(), set())
         self.assertEqual(literal.neg_occ(), {Neg(PredicateLiteral('p', Number(0), String('x')))})
+
+        # substitute
+        self.assertEqual(PredicateLiteral('p', Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), PredicateLiteral('p', Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
         literal = PredicateLiteral('p', Number(0), Variable('X'))
         self.assertFalse(literal.ground)

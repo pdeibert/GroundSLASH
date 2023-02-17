@@ -1,6 +1,7 @@
 import unittest
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
@@ -13,15 +14,17 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        self.assertRaises(ValueError, ArithVariable, -1, Add(Variable('X'), Number(1)))
         var = ArithVariable(0, Add(Variable('X'), Number(1)))
         self.assertEqual(str(var), f"{SpecialChar.TAU}0")
         self.assertRaises(Exception, var.precedes, Number(1))
+        self.assertFalse(var.ground)
         self.assertEqual(var, ArithVariable(0, Add(Variable('X'), Number(1))))
         self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable('X'), Number(1)))))
+
+        # substitute
+        self.assertEqual(ArithVariable(0, Add(Variable('X'), Number(1))).substitute(Substitution({ArithVariable(0, Add(Variable('X'), Number(1))): Number(0), Variable('X'): Number(1)})), Number(0), Number(1)) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
-        self.assertRaises(ValueError, ArithVariable, -1, Add(Variable('X'), Number(1)))
-        self.assertFalse(var.ground)
 
     def test_minus(self):
 
@@ -44,8 +47,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
         self.assertRaises(Exception, term.eval)
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Minus(Variable('X')).substitute(Substitution({Variable('X'): Number(1)})), Minus(Number(1))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
         # negation of a number
         self.assertEqual(Minus(Number(1)).simplify(), Number(-1))
@@ -73,8 +78,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
         self.assertRaises(Exception, term.eval)
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Add(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Add(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
         # addition of numbers
         self.assertEqual(Add(Number(1), Number(2)).simplify(), Number(3))
@@ -104,8 +111,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
         self.assertRaises(Exception, term.eval)
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Sub(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Sub(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
         # subtraction of numbers
         self.assertEqual(Sub(Number(1), Number(2)).simplify(), Number(-1))
@@ -135,8 +144,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
         self.assertRaises(Exception, term.eval)
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Mult(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Mult(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
     
         # multiplication of numbers
         self.assertEqual(Mult(Number(2), Number(3)).simplify(), Number(6))
@@ -178,8 +189,10 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
         self.assertRaises(Exception, term.eval)
         self.assertFalse(term.ground)
+
+        # substitute
+        self.assertEqual(Div(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Div(Number(1), Number(0))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
     
         # division of (valid) numbers
         self.assertEqual(Div(Number(3), Number(2)).simplify(), Number(1)) # integer division

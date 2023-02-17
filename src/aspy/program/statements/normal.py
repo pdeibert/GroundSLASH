@@ -119,8 +119,6 @@ class NormalRule(Rule):
         # first replace all non-ground arithmetic terms with new variables
         rule = NormalRule(self.atom.replace_arith(var_table), self.body.replace_arith(var_table))
 
-        # TODO: better use for variable table?
-
         # global variables
         glob_vars = self.vars(global_only=True)
 

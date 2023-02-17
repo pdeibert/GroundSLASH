@@ -99,7 +99,7 @@ class Functional(Term):
         # substitute terms recursively
         terms = (term.substitute(subst) for term in self.terms)
 
-        return Functional(*terms)
+        return Functional(self.symbol, *terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "Functional":
         return Functional(self.symbol, *self.terms.replace_arith(var_table).terms)

@@ -67,7 +67,10 @@ class AggregateElement(Expr):
         raise ValueError("Safety characterization for aggregate elements is undefined without context.")
 
     def substitute(self, subst: "Substitution") -> "AggregateElement":
-        raise Exception("Substitution for aggregate elements not supported yet.")
+        terms = TermTuple(*tuple(term.substitute(subst) for term in self.terms))
+        literals = LiteralTuple(*tuple(literal.substitute(subst) for literal in self.literals))
+
+        return AggregateElement(terms, literals)
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate elements not supported yet.")
@@ -105,9 +108,6 @@ class Aggregate(Expr, ABC):
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregates not supported yet.")
 
-    def substitute(self, subst: Dict[str, "Term"]) -> "Expr":
-        raise Exception("Substitution for aggregates not supported yet.")
-
 
 class AggregateCount(Aggregate):
     """Represents a 'count' aggregate."""
@@ -131,9 +131,9 @@ class AggregateCount(Aggregate):
 
     def substitute(self, subst: "Substitution") -> "AggregateCount":
         # substitute elements recursively
-        elements = (element.substitute(subst) for element in self.elements)
+        elements = tuple(element.substitute(subst) for element in self.elements)
 
-        return AggregateCount(elements)
+        return AggregateCount(*elements)
 
     def replace_arith(self, var_table: "VariableTable") -> "AggregateCount":
         return AggregateCount( *tuple(element.replace_arith(var_table) for element in self.elements) )
@@ -330,10 +330,13 @@ class AggregateLiteral(Literal):
 
     def substitute(self, subst: "Substitution") -> "AggregateLiteral":
         # substitute guard terms recursively
-        lcomp = (self.lcomp[0], self.lcomp[1].substitute(subst))
-        rcomp = (self.rcomp[0], self.rcomp[1].substitute(subst))
+        lcomp = (self.lcomp[0], self.lcomp[1].substitute(subst)) if self.lcomp is not None else None
+        rcomp = (self.rcomp[0], self.rcomp[1].substitute(subst)) if self.rcomp is not None else None
 
-        return AggregateLiteral(self.func, lcomp, rcomp, self.naf)
+        literal = AggregateLiteral(self.func.substitute(subst), lcomp, rcomp)
+        literal.set_naf(self.naf)
+
+        return literal
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate literals not supported yet.")

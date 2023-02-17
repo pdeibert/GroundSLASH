@@ -195,7 +195,9 @@ class Variable(Term):
         return Substitution({self: other})
 
     def substitute(self, subst: Substitution) -> Term:
-        return subst[self]
+        if self in subst:
+            return deepcopy(subst[self])
+        return deepcopy(self)
 
 
 class AnonVariable(Variable):

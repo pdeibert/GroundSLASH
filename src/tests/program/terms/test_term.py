@@ -3,6 +3,7 @@ import unittest
 import aspy
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.substitution import Substitution
 from aspy.program.terms import Infimum, Supremum, Variable, AnonVariable, Number, SymbolicConstant, String, TermTuple
 
 
@@ -21,8 +22,10 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), term)
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
+
+        # substitute
+        self.assertEqual(Infimum().substitute(Substitution({Infimum(): Supremum()})), Infimum()) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_supremum(self):
 
@@ -38,14 +41,17 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), term)
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
-        # TODO: match
-        # TODO: substitute
 
+        # substitute
+        self.assertEqual(Supremum().substitute(Substitution({Supremum(): Infimum()})), Supremum()) # NOTE: substitution is invalid
+        # TODO: match
+        
     def test_variable(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        self.assertRaises(ValueError, Variable, 'x')
         term = Variable('X')
         self.assertEqual(str(term), "X")
         self.assertEqual(term, Variable('X'))
@@ -57,15 +63,17 @@ class TestTerm(unittest.TestCase):
         self.assertFalse(term.ground)
 
         self.assertEqual(term.simplify(), term)
+        # substitute
+        self.assertEqual(Variable('X').substitute(Substitution({Variable('Y'): Number(0)})), Variable('X'))
+        self.assertEqual(Variable('X').substitute(Substitution({Variable('X'): Number(0)})), Number(0))
         # TODO: match
-        # TODO: substitute
-        self.assertRaises(ValueError, Variable, 'x')
 
     def test_anon_variable(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        self.assertRaises(ValueError, AnonVariable, -1)
         term = AnonVariable(0)
         self.assertEqual(str(term), "_0")
         self.assertEqual(term, AnonVariable(0))
@@ -77,9 +85,10 @@ class TestTerm(unittest.TestCase):
         self.assertFalse(term.ground)
 
         self.assertEqual(term.simplify(), term)
+        # substitute
+        self.assertEqual(AnonVariable(0).substitute(Substitution({AnonVariable(1): Number(0)})), AnonVariable(0))
+        self.assertEqual(AnonVariable(0).substitute(Substitution({AnonVariable(0): Number(0)})), Number(0))
         # TODO: match
-        # TODO: substitute
-        self.assertRaises(ValueError, AnonVariable, -1)
 
     def test_number(self):
 
@@ -104,8 +113,9 @@ class TestTerm(unittest.TestCase):
 
         self.assertEqual(term.simplify(), term)
         self.assertEqual(term.eval(), 5)
+        # substitute
+        self.assertEqual(Number(0).substitute(Substitution({Number(0): Number(1)})), Number(0)) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_symbolic_constant(self):
 
@@ -122,8 +132,10 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), term)
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
+        
+        # substitute
+        self.assertEqual(SymbolicConstant('f').substitute(Substitution({SymbolicConstant('f'): Number(0)})), SymbolicConstant('f')) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_string(self):
 
@@ -140,8 +152,10 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.replace_arith(VariableTable()), term)
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
+
+        # substitute
+        self.assertEqual(String('f').substitute(Substitution({String('f'): Number(0)})), String('f')) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
     def test_term_tuple(self):
 
@@ -158,8 +172,10 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(terms.replace_arith(VariableTable()), terms)
         self.assertEqual(terms.safety(), (terms[0].safety(), terms[1].safety()))
         self.assertFalse(terms.ground)
+
+        # substitute
+        self.assertEqual(TermTuple(String('f'), Variable('X')).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), TermTuple(String('f'), Number(1))) # NOTE: substitution is invalid
         # TODO: match
-        # TODO: substitute
 
         self.assertEqual(terms + TermTuple(String("")), TermTuple(Number(0), Variable('X'), String("")))
         # TODO: iter
