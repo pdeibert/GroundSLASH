@@ -22,9 +22,10 @@ class ChoiceElement(Expr):
         if literals is None:
             literals = LiteralTuple()
 
+        # TODO: debug tests for literals types
+
         self.atom = atom
         self.literals = literals
-        self.ground = atom.ground and all(literal.ground for literal in literals)
 
     def __str__(self) -> str:
         return f"{str(self.atom)}:{','.join([str(literal) for literal in self.literals])}"
@@ -37,9 +38,13 @@ class ChoiceElement(Expr):
     def body(self) -> LiteralTuple:
         return self.literals
 
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        # TODO: bound, global !!!
-        if bound_only or global_only:
+    @cached_property
+    def ground(self) -> bool:
+        return self.atom.ground and all(literal.ground for literal in self.literals)
+
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        # TODO: global
+        if global_only:
             raise Exception()
 
         return set().union(literal.vars() for literal in self.literals)
@@ -63,17 +68,20 @@ class Choice(Expr):
         self.elements = elements
         self.lcomp = lcomp
         self.rcomp = rcomp
-        self.ground = all(element.ground for element in elements)
 
     def __str__(self) -> str:
         return (f"{str(self.lcomp[1])} {str(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([str(literal) for literal in self.elements])}}}" + (f"{str(self.lcomp[0])} {str(self.lcomp[1])}" if self.lcomp else "")
 
+    @cached_property
+    def ground(self) -> bool:
+        return all(element.ground for element in self.elements)
+
     def guards(self) -> Tuple[Tuple["RelOp", "Term"], Tuple["RelOp", "Term"]]:
         return (self.lcomp, self.rcomp)
 
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        # TODO: bound, global !!!
-        if bound_only or global_only:
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        # TODO: global
+        if global_only:
             raise Exception()
 
         return set().union(guard[1].vars() for guard in self.guards() if guard is not None)
@@ -107,27 +115,16 @@ class ChoiceFact(Fact):
 
     Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
     """
-    def __init__(self, head: Choice) -> None:
+    def __init__(self, head: Choice, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
         self.choice = head
-        self.ground = head.ground
 
     def __str__(self) -> str:
         return f"{{{','.join([str(literal) for literal in self.head.elements])}}}."
 
-    @property
-    def head(self) -> Choice:
-        return self.choice
-
-    @property
     def body(self) -> LiteralTuple:
         return LiteralTuple()
-
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        # TODO: bound, global !!!
-        if bound_only or global_only:
-            raise Exception()
-
-        return self.head.vars()
 
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
         raise Exception()
@@ -135,6 +132,13 @@ class ChoiceFact(Fact):
     @cached_property
     def safe(self) -> bool:
         return len(self.vars()) > 0
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.head.ground
+
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception("Safety characterization for choice facts not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceFact":
         return ChoiceFact(self.head.substitute(subst))
@@ -154,19 +158,23 @@ class ChoiceRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
     """
-    def __init__(self, head: Choice, body: LiteralTuple) -> None:
-        self.head = head
-        self.body = body
-        self.ground = head.ground and body.ground
+    def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.choice = head
+        self.literals = body
 
     def __str__(self) -> str:
         return f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*self.head.vars(global_only), *self.body.vars(global_only))
+    @property
+    def head(self) -> Choice:
+        # TODO: correct?
+        return self.choice
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
-        raise Exception()
+    @property
+    def body(self) -> LiteralTuple:
+        return self.literals
 
     @cached_property
     def safe(self) -> bool:
@@ -174,6 +182,13 @@ class ChoiceRule(Rule):
         body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
 
         return body_safety == SafetyTriplet(global_vars)
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.head.ground and self.body.ground
+
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))

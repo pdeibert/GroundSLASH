@@ -1,46 +1,102 @@
 from typing import Set, Union,Optional, Union, Tuple, TYPE_CHECKING
 from abc import ABC, abstractmethod
+from copy import deepcopy
+from functools import cached_property
 
+import aspy
+from aspy.program.symbol_table import SpecialChar
 from aspy.program.safety_characterization import SafetyTriplet
 
-from .term import Term, Number
+from .term import Term, Number, Variable
 
 if TYPE_CHECKING:
-    from .term import Variable
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.variable_table import VariableTable
 
 
 # TODO: restrictions when substituting ground terms? (or only handle during match?)
 
+class ArithVariable(Variable):
+    ground: bool = False
+
+    """Variable replacing an arithmetic term"""
+    def __init__(self, id: int, orig_term: "ArithTerm") -> None:
+        # check if id is valid
+        if aspy.debug() and id < 0:
+            raise ValueError(f"Invalid value for {type(self)}: {id}")
+
+        self.val = f"{SpecialChar.TAU}{id}"
+        self.id = id
+        self.orig_term = orig_term
+
+    def precedes(self, other: Term) -> bool:
+        raise Exception("Total order is not defined for arithmetical (auxiliary) variables.")
+
+    def __str__(self) -> str:
+        return self.val
+
+    def __eq__(self, other: "Expr") -> str:
+        return isinstance(other, ArithVariable) and other.val == self.val and self.orig_term == other.orig_term
+
+    def __hash__(self) -> int:
+        return hash(("arith_var", self.val, self.orig_term))
+
+    def match(self, other: "Expr") -> Set["Substitution"]:
+        """Tries to match the expression with another one."""
+        return Substitution({self: other})
+
+    def replace_arith(self, var_table: "VariableTable") -> "ArithVariable":
+        return deepcopy(self)
+
+
 class ArithTerm(Term, ABC):
     """Abstract base class for all arithmetic terms."""
     def precedes(self, other: Term) -> bool:
-        return self.eval().precedes(other)
+        if not self.ground:
+            raise Exception("Total order is not defined for non-ground arithmetic terms.")
+
+        return Number(self.eval()).precedes(other)
 
     @ abstractmethod
     def simplify(self) -> "ArithTerm":
         pass
 
     @abstractmethod
-    def eval(self) -> Number:
+    def eval(self) -> int:
         pass
     
     def match(self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the expression with another one."""
         raise Exception("Matching for arithmetic terms not supported yet.")
 
+    def replace_arith(self, var_table: "VariableTable") -> Union["ArithTerm", ArithVariable]:
+        if self.ground:
+            return deepcopy(self)
+
+        # create new special variable
+        return var_table.create(SpecialChar.TAU, orig_term=deepcopy(self))
+
 
 class Minus(ArithTerm):
     """Represents a negation of an arithmetic term."""
     def __init__(self, operand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.operand = operand
-        self.ground = operand.ground
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, Minus) and self.operand == other.operand
+
+    def __hash__(self) -> int:
+        return hash( ("minus", self.operand) )
 
     def __str__(self) -> str:
         return f"-{str(self.operand)}"
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.operand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.operand.vars(global_only)
@@ -48,7 +104,10 @@ class Minus(ArithTerm):
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.operand.vars())
 
-    def eval(self) -> Number:
+    def eval(self) -> int:
+        if not self.ground:
+            raise Exception("Cannot evaluate non-ground arithmetic term.")
+
         return -self.operand.eval()
 
     def match(self, subst: "Substitution") -> "Minus":
@@ -76,10 +135,19 @@ class Add(ArithTerm):
     def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.loperand = loperand
         self.roperand = roperand
-        self.ground = loperand.ground and roperand.ground
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, Add) and self.loperand == other.loperand and self.roperand == other.roperand
+
+    def __hash__(self) -> int:
+        return hash( ("add", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}+{str(self.roperand)}"
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.loperand.ground and self.roperand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union()
@@ -91,8 +159,11 @@ class Add(ArithTerm):
     def operands(self) -> Tuple[Term, Term]:
         return (self.loperand, self.roperand)
 
-    def eval(self) -> Number:
-        return Number(self.loperands.eval() + self.roperands.eval())
+    def eval(self) -> int:
+        if not self.ground:
+            raise Exception("Cannot evaluate non-ground arithmetic term.")
+
+        return self.loperand.eval() + self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Add":
         # substitute operands recursively
@@ -128,10 +199,19 @@ class Sub(ArithTerm):
     def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.loperand = loperand
         self.roperand = roperand
-        self.ground = loperand.ground and roperand.ground
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, Sub) and self.loperand == other.loperand and self.roperand == other.roperand
+
+    def __hash__(self) -> int:
+        return hash( ("sub", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}-{str(self.roperand)}"
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.loperand.ground and self.roperand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
@@ -143,8 +223,11 @@ class Sub(ArithTerm):
     def operands(self) -> Tuple[Term, Term]:
         return (self.loperand, self.roperand)
 
-    def eval(self) -> Number:
-        return Number(self.loperand.eval() - self.roperand.eval())
+    def eval(self) -> int:
+        if not self.ground:
+            raise Exception("Cannot evaluate non-ground arithmetic term.")
+
+        return self.loperand.eval() - self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Sub":
         # substitute operands recursively
@@ -181,10 +264,19 @@ class Mult(ArithTerm):
     def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.loperand = loperand
         self.roperand = roperand
-        self.ground = loperand.ground and roperand.ground
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, Mult) and self.loperand == other.loperand and self.roperand == other.roperand
+
+    def __hash__(self) -> int:
+        return hash( ("mult", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}*{str(self.roperand)}"
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.loperand.ground and self.roperand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
@@ -196,8 +288,11 @@ class Mult(ArithTerm):
     def operands(self) -> Tuple[Term, Term]:
         return (self.loperand, self.roperand)
 
-    def eval(self) -> Number:
-        return Number(self.loperands.eval() * self.roperands.eval())
+    def eval(self) -> int:
+        if not self.ground:
+            raise Exception("Cannot evaluate non-ground arithmetic term.")
+
+        return self.loperand.eval() * self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Mult":
         # substitute operands recursively
@@ -257,10 +352,19 @@ class Div(ArithTerm):
     def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.loperand = loperand
         self.roperand = roperand
-        self.ground = loperand.ground and roperand.ground
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, Div) and self.loperand == other.loperand and self.roperand == other.roperand
+
+    def __hash__(self) -> int:
+        return hash( ("div", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
         return f"{str(self.loperand)}/{str(self.roperand)}"
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.loperand.ground and self.roperand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
@@ -272,9 +376,12 @@ class Div(ArithTerm):
     def operands(self) -> Tuple[Term, Term]:
         return (self.loperand, self.roperand)
 
-    def eval(self) -> Number:
+    def eval(self) -> int:
+        if not self.ground:
+            raise Exception("Cannot evaluate non-ground arithmetic term.")
+
         # NOTE: ASP-Core-2 requires integer division
-        return Number(self.loperands.eval() // self.roperands.eval())
+        return self.loperand.eval() // self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Div":
         # substitute operands recursively

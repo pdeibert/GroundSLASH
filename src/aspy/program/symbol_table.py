@@ -1,14 +1,16 @@
-from typing import Set
+from enum import Enum
 import re
 
 
-CHAR_ALPHA  = '\u03b1' # α
-CHAR_EPS    = '\u03b5' # ε
-CHAR_ETA    = '\u03b7' # η
-CHAR_TAU    = '\u03C4' # τ
+class SpecialChar(Enum):
+    ALPHA  = '\u03b1' # α
+    EPS    = '\u03b5' # ε
+    ETA    = '\u03b7' # η
+    TAU    = '\u03C4' # τ
 
-VARIABLE_RE  = re.compile(fr"^[A-Z{CHAR_TAU}][a-zA-Z0-1_]*")
-SYM_CONST_RE = re.compile(fr"^[a-z{CHAR_ALPHA}{CHAR_EPS}{CHAR_ETA}][a-zA-Z0-1_]*")
+
+VARIABLE_RE  = re.compile(fr"^[A-Z{SpecialChar.TAU}][a-zA-Z0-1_]*")
+SYM_CONST_RE = re.compile(fr"^[a-z{SpecialChar.ALPHA}{SpecialChar.EPS}{SpecialChar.ETA}][a-zA-Z0-1_]*")
 
 
 class SymbolTable:
@@ -38,7 +40,7 @@ class SymbolTable:
     def register(self, symbol: str, arity: int) -> str:
 
         # α
-        if symbol == CHAR_ALPHA:
+        if symbol == SpecialChar.ALPHA:
             # get current id for alpha symbols
             id = self.alpha_counter
             # increase counter
@@ -50,7 +52,7 @@ class SymbolTable:
             # register new symbol
             self.symbols.add( (symbol, arity) )
         # ε
-        elif symbol == CHAR_EPS:
+        elif symbol == SpecialChar.EPS:
             # get current id for epsilon symbols
             id = self.epsilon_counter
             # increase counter
@@ -62,7 +64,7 @@ class SymbolTable:
             # register new symbol
             self.symbols.add( (symbol, arity) )
         # η
-        elif symbol == CHAR_ETA:
+        elif symbol == SpecialChar.ETA:
             # get current id for eta symbols
             id = self.eta_counter
             # increase counter

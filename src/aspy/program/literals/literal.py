@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.variable_table import VariableTable
 
 
 @dataclass
@@ -33,8 +34,8 @@ class Literal(Expr, ABC):
 
 class LiteralTuple:
     """Represents a collection of literals."""
-    def __init__(self, literals: Optional[Tuple[Literal, ...]]=None) -> None:
-        self.literals = literals if literals is not None else tuple()
+    def __init__(self, *literals: Literal) -> None:
+        self.literals = tuple(literals)
 
     def __str__(self) -> str:
         return f"{{{','.join(str(literal) for literal in self.literals)}}}"
@@ -59,7 +60,10 @@ class LiteralTuple:
         return iter(self.literals)
 
     def __add__(self, other: "LiteralTuple") -> "LiteralTuple":
-        return LiteralTuple(self.literals + other.literals)
+        return LiteralTuple(*self.literals, *other.literals)
+
+    def __getitem__(self, index: int) -> "Literal":
+        return self.literals[index]
 
     @cached_property
     def ground(self) -> bool:
@@ -71,14 +75,17 @@ class LiteralTuple:
     def neg_occ(self) -> Set["Literal"]:
         return set().union(*tuple(literal.neg_occ() for literal in self.literals))
 
-    def vars(self, global_only=False) -> Tuple[Set["Variable"], ...]:
-        return tuple(term.vars(global_only) for term in self.terms)
+    def vars(self, global_only=False) -> Set["Variable"]:
+        return set().union(*tuple(literal.vars(global_only) for literal in self.literals))
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
-        return tuple(term.safety() for term in self.terms)
+        return tuple(literal.safety() for literal in self.literals)
 
     def substitute(self, subst: "Substitution") -> "LiteralTuple":
         # substitute literals recursively
         literals = (literal.substitute(subst) for literal in self)
 
         return LiteralTuple(literals)
+
+    def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
+        return LiteralTuple( *tuple(literal.replace_arith(var_table) for literal in self.literals) )

@@ -1,4 +1,6 @@
-from typing import Union, Set, Optional, TYPE_CHECKING
+from typing import Union, Set, Optional, Tuple, List, TYPE_CHECKING
+from copy import deepcopy
+from functools import cached_property
 
 import aspy
 from aspy.program.substitution import Substitution
@@ -12,32 +14,37 @@ if TYPE_CHECKING:
     from aspy.program.terms import Variable
     from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.literals import BuiltinLiteral
+    from aspy.program.variable_table import VariableTable
 
 
 class Functional(Term):
     """Represents a functional term."""
-    def __init__(self, symbol: str, terms: TermTuple) -> None:
+    def __init__(self, symbol: str, *terms: Term) -> None:
 
         # check if functor name is valid
         if aspy.debug() and not SYM_CONST_RE.fullmatch(symbol):
             raise ValueError(f"Invalid value for {type(self)}: {symbol}")
 
         self.symbol = symbol
-        self.terms = terms
-        self.ground = all(term.ground for term in terms)
+        self.terms = TermTuple(*terms)
 
     def __str__(self) -> str:
         return self.symbol + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
 
-    def __eq__(self, other) -> str:
+    def __eq__(self, other: "Expr") -> str:
         return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms
 
     def __hash__(self) -> int:
-        return hash(("func", self.symbol, *self.terms))
+        return hash(("func", self.symbol, self.terms))
 
     @property
     def arity(self) -> int:
         return len(self.terms)
+
+    @cached_property
+    def ground(self) -> bool:
+        return self.terms.ground
 
     def precedes(self, other: Term) -> bool:
         if isinstance(other, (Infimum, Number, SymbolicConstant, String)):
@@ -50,7 +57,8 @@ class Functional(Term):
                     return True
                 elif self.symbol == other.symbol:
                     for self_term, other_term in zip(self.terms, other.terms):
-                        if self_term > other_term:
+                        # other_term < self_term
+                        if other_term.precedes(self_term) and not self_term.precedes(other_term):
                             return False
                     
                     return True
@@ -58,10 +66,10 @@ class Functional(Term):
         return False
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*self.terms.vars(global_only))
+        return self.terms.vars(global_only)
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
-        return SafetyTriplet.closure(self.terms.safety())
+        return SafetyTriplet.closure(*self.terms.safety())
 
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
@@ -92,3 +100,6 @@ class Functional(Term):
         terms = (term.substitute(subst) for term in self.terms)
 
         return Functional(*terms)
+
+    def replace_arith(self, var_table: "VariableTable") -> "Functional":
+        return Functional(self.symbol, *self.terms.replace_arith(var_table).terms)

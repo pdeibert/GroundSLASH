@@ -21,18 +21,21 @@ class Constraint(Statement):
 
     for literals b_1,...,b_n.
     """
-    def __init__(self, literals: LiteralTuple) -> None:
+    def __init__(self, literals: LiteralTuple, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
         self.literals = literals
-        self.ground = all(literal.ground for literal in literals)
 
     def __str__(self) -> str:
         return f":- {', '.join([str(literal) for literal in self.body])}."
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*self.body.vars(global_only))
+    @property
+    def head(self) -> LiteralTuple:
+        return LiteralTuple()
 
-    def safety(self, rule: Optional[Statement], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
-        raise Exception()
+    @property
+    def body(self) -> LiteralTuple:
+        return self.literals
 
     @cached_property
     def safe(self) -> bool:
@@ -40,6 +43,13 @@ class Constraint(Statement):
         body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
 
         return body_safety == SafetyTriplet(global_vars)
+
+    @cached_property
+    def ground(self) -> bool:
+        return all(literal.ground for literal in self.literals)
+
+    def safety(self, rule: Optional[Statement], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception("Safety characterization for constraints not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "Constraint":
         return Constraint(self.literals.substitute(subst))

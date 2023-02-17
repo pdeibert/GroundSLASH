@@ -1,7 +1,8 @@
 from typing import Set, Optional, TYPE_CHECKING
 from functools import cached_property
 
-from aspy.program.literals import LiteralTuple
+import aspy
+from aspy.program.literals import LiteralTuple, PredicateLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule
@@ -24,12 +25,16 @@ class DisjunctiveFact(Fact):
 
     Semantically, any answer set must include exactly one classical atom h_i.
     """
-    def __init__(self, atoms: LiteralTuple) -> None:
-        self.atoms = atoms
-        self.ground = all(atom.ground for atom in atoms)
+    def __init__(self, head: LiteralTuple, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in head):
+            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {type(PredicateLiteral)}.")
+
+        self.atoms = head
 
     def __str__(self) -> str:
-        return ' | '.join([str(atom) for atom in self.atoms]) + '.'
+        return ' | '.join([str(atom) for atom in self.head]) + '.'
 
     @property
     def head(self) -> LiteralTuple:
@@ -39,15 +44,16 @@ class DisjunctiveFact(Fact):
     def body(self) -> LiteralTuple:
         return LiteralTuple()
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*self.head.vars(global_only))
-
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
         raise Exception()
 
     @cached_property
     def safe(self) -> bool:
         return len(self.vars()) > 0
+
+    @cached_property
+    def ground(self) -> bool:
+        return all(atom.ground for atom in self.head)
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveFact":
         return DisjunctiveFact(self.head.substitute(subst))
@@ -67,10 +73,17 @@ class DisjunctiveRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
     """
-    def __init__(self, head: LiteralTuple, body: LiteralTuple) -> None:
+    def __init__(self, head: LiteralTuple, body: LiteralTuple, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if len(body) == 0:
+            raise ValueError(f"Body for {type(DisjunctiveRule)} may not be empty.")
+
+        if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in head):
+            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {type(PredicateLiteral)}.")
+
         self.atoms = head
         self.literals = body
-        self.ground = all(atom.ground for atom in head) and all(literal.ground for literal in body)
 
     def __str__(self) -> str:
         return f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
@@ -83,18 +96,16 @@ class DisjunctiveRule(Rule):
     def body(self) -> LiteralTuple:
         return self.literals
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*self.head.vars(global_only), *self.body.vars(global_only))
-
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
-        raise Exception()
-
     @cached_property
     def safe(self) -> bool:
         global_vars = self.vars(global_only=True)
         body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
 
         return body_safety == SafetyTriplet(global_vars)
+
+    @cached_property
+    def ground(self) -> bool:
+        return all(atom.ground for atom in self.head) and all(literal.ground for literal in self.body)
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveRule":
         return DisjunctiveRule(self.head.substitute(subst), self.literals.substitute(subst))

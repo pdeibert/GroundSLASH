@@ -6,7 +6,7 @@ from aspy.program.terms import Add, Sub, Mult, Div
 
 if TYPE_CHECKING:
     from aspy.program.literals import BuiltinLiteral, Aggregate
-    from aspy.program.terms import ArithTerm
+    from aspy.program.terms import Term, ArithTerm
 
 
 class RelOp(Enum):
@@ -59,6 +59,20 @@ class RelOp(Enum):
             return RelOp.GREATER
         else:
             return RelOp.LESS
+
+    def eval(self, lterm: "Term", rterm: "Term") -> bool:
+        if(self == RelOp.EQUAL):
+            return lterm.precedes(rterm) and rterm.precedes(lterm)
+        elif(self == RelOp.UNEQUAL):
+            return not (lterm.precedes(rterm) and rterm.precedes(lterm))
+        elif(self == RelOp.LESS):
+            return lterm.precedes(rterm) and not rterm.precedes(lterm)
+        elif(self == RelOp.GREATER):
+            return not lterm.precedes(rterm) and rterm.precedes(lterm)
+        elif(self == RelOp.LESS_OR_EQ):
+            return lterm.precedes(rterm)
+        else:
+            return rterm.precedes(lterm)
 
 
 class ArithOp(Enum):

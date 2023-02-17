@@ -1,13 +1,13 @@
-from typing import Tuple, Union, TYPE_CHECKING
+from typing import Tuple, Union, List, TYPE_CHECKING
 
 import antlr4  # type: ignore
 from aspy.antlr.ASPCoreLexer import ASPCoreLexer
 from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
-from aspy.program.terms import Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
-from aspy.program.literals import PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
-from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement
+from aspy.program.terms import TermTuple, Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
+from aspy.program.literals import Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
+from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
 from aspy.program.program import Program
 from aspy.program.operators import ArithOp, RelOp, AggrOp
 from aspy.program.variable_table import VariableTable
@@ -78,7 +78,7 @@ class ProgramBuilder(ASPCoreVisitor):
                                 |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
                                 |   optimize DOT
         """
-        # initialize empty variable table
+        # initialize empty variable table (for special counters)
         self.var_table = VariableTable()
 
         n_children = len(ctx.children)
@@ -109,30 +109,35 @@ class ProgramBuilder(ASPCoreVisitor):
                     raise Exception("Empty weak constraints not supported yet.")
         # head (CONS body?)? DOT
         elif isinstance(ctx.children[0], ASPCoreParser.HeadContext):
+            # TODO: what about choice rule???
             head = self.visitHead(ctx.children[0])
 
             # head DOT | head CONS DOT (i.e., fact)
             if n_children < 4:
+                # disjunctive fact
                 if len(head) > 1:
                     statement = DisjunctiveFact(head)
-                else:
+                # normal fact
+                elif isinstance(head[0], PredicateLiteral):
                     statement = NormalFact(head[0])
+                # choice fact
+                else:
+                    statement = ChoiceFact(head[0])
             # head CONS body DOT (i.e., disjunctive rule)
             else:
                 body = self.visitBody(ctx.children[2])
 
                 # disjunctive rule
                 if len(head) > 1:
-                    statement = DisjunctiveRule(head, body)
+                    statement = DisjunctiveRule(TermTuple(*head), *body)
                 # normal rule
+                elif isinstance(head[0], PredicateLiteral):
+                    statement = NormalRule(head[0], *body)
                 else:
-                    statement = NormalRule(head[0], body)
+                    statement = ChoiceRule(head[0], *body)
         # optimize DOT
         else:
             statement = self.visitOptimize(ctx.children[0])
-
-        # set variable table
-        statement.var_table = self.var_table
 
         return statement
 
@@ -168,8 +173,7 @@ class ProgramBuilder(ASPCoreVisitor):
         # NAF? aggregate
         else:
             # NAF aggregate (true) or aggregate (false)
-            naf = True if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode) else False
-            literals = tuple([AggregateLiteral(self.visitAggregate(ctx.children[1]), naf=naf)])
+            literals = tuple([ Naf(AggregateLiteral(self.visitAggregate(ctx.children[1])), value=isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode)) ])
         # COMMA body
         if len(ctx.children) > 2:
             # append literals
@@ -179,7 +183,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#disjunction.
-    def visitDisjunction(self, ctx:ASPCoreParser.DisjunctionContext) -> Tuple[PredicateLiteral, ...]:
+    def visitDisjunction(self, ctx:ASPCoreParser.DisjunctionContext) -> List[PredicateLiteral]:
         """Visits 'disjunction'.
 
         Handles the following rule(s):
@@ -187,7 +191,7 @@ class ProgramBuilder(ASPCoreVisitor):
             disjunction         :   classical_literal (OR disjunction)?
         """
         # classical_literal
-        literals = tuple([self.visitClassical_literal(ctx.children[0])])
+        literals = [self.visitClassical_literal(ctx.children[0])]
 
         # OR disjunction
         if len(ctx.children) > 1:
@@ -521,7 +525,7 @@ class ProgramBuilder(ASPCoreVisitor):
             # NAF classical_literal
             if len(ctx.children) > 1:
                 # set NaF to true
-                literal.naf = True
+                literal = Naf(literal)
 
             return literal
 
@@ -550,11 +554,8 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             # initialize empty term tuple
             terms = tuple()
-        
-        neg = True if minus else False
-        id = PredicateLiteral(ctx.children[minus].getSymbol().text, terms, neg)
 
-        return id
+        return Neg(PredicateLiteral(ctx.children[minus].getSymbol().text, *terms), minus)
 
 
     # Visit a parse tree produced by ASPCoreParser#builtin_atom.
@@ -651,10 +652,10 @@ class ProgramBuilder(ASPCoreVisitor):
                 return String(token.text)
             # VARIABLE
             elif(token_type == "VARIABLE"):
-                return self.var_table.register(token.text)
+                return self.var_table.create(token.text, register=False)
             # ANONYMOUS_VARIABLE
             elif(token_type == "ANONYMOUS_VARIABLE"):
-                return self.var_table.register()
+                return self.var_table.create(register=False)
             # PAREN_OPEN term PAREN_CLOSE
             elif(token_type == "PAREN_OPEN"):
                 return self.visitTerm(ctx.children[1]) # parse term
@@ -788,7 +789,7 @@ class ProgramBuilder(ASPCoreVisitor):
                 operand = Number(int(tokens[-1].text))
             # VARIABLE
             else:
-                operand = self.var_table.register(tokens[-1].text)
+                operand = self.var_table.create(tokens[-1].text, register=False)
 
             # odd number of minuses
             if(n_minuses % 2 > 0):

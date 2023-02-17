@@ -1,23 +1,57 @@
-from typing import Set
+from typing import Set, Dict, Optional, Union
 
-from .terms import Variable, AnonVariable
+from .symbol_table import SpecialChar
+from .terms import Variable, AnonVariable, ArithVariable, ArithTerm
 
 
 class VariableTable:
-    def __init__(self) -> None:
-        self.variables: Set[Variable] = set()
+    def __init__(self, variables: Optional[Union[Dict[Variable, bool], Set[Variable]]]=None) -> None:
+        self.variables = dict()
         self.anon_counter = 0
+        self.arith_counter = 0
+
+        if variables is not None:
+            self.update(variables)
 
     def __contains__(self, var: str) -> bool:
         if var in self.variables:
             return True
-        
+
         return False
 
     def __str__(self) -> str:
-        return str(self.variables)
+        return f"{{{','.join(var.val if not is_global else var.val + '*' for (var, is_global) in self.variables.items())}}}"
 
-    def register(self, symbol: str="_", safe: bool=False) -> Variable:
+    def __getitem__(self, symbol: str) -> Variable:
+        return self.variables[symbol]
+
+    def __setitem__(self, symbol: str, is_global: bool) -> None:
+        self.variables[symbol] = is_global
+
+    def add(self, var: Variable, is_global: bool=False) -> None:
+        # adjust counters if necessary
+        if isinstance(var, AnonVariable):
+            self.anon_counter = max(self.anon_counter, var.id+1)
+        elif isinstance(var, ArithVariable):
+            self.arith_counter = max(self.arith_counter, var.id+1)
+
+        self.variables[var] = is_global
+
+    def update(self, vars: Union[Dict[Variable,bool], Set[Variable]]) -> None:
+
+        if isinstance(vars, Set):
+            vars = {var: False for var in vars}
+
+        self.variables.update(vars)
+
+        # adjust counters if necessary
+        for var in vars.keys():
+            if isinstance(var, AnonVariable):
+                self.anon_counter = max(self.anon_counter, var.id+1)
+            elif isinstance(var, ArithVariable):
+                self.arith_counter = max(self.arith_counter, var.id+1)
+
+    def create(self, symbol: str="_", register: bool=True, orig_term: Optional["ArithTerm"]=None) -> Variable:
         # anonymous variable
         if symbol == "_":
             # get current id for anonymous variables
@@ -27,12 +61,21 @@ class VariableTable:
 
             # create new variable
             var = AnonVariable(id)
+        # special 'arithmetic replacement' variable
+        elif symbol == SpecialChar.TAU:
+            if orig_term is None:
+                ValueError("Variable table cannot create arithmetic variable without specifying 'orig_term'.")
 
-            # register new variable
-            self.variables.add(var)
+            # get current id for arithmetic variables
+            id = self.arith_counter
+            # increase counter
+            self.arith_counter += 1
+
+            # create new variable
+            var = ArithVariable(id, orig_term)
         # variable
         else:
-            # check if variable is already known
+            # check if variable is already known (to avoid duplicate variables where possible)
             for var in self.variables:
                 if symbol == var.val:
                     # return existing variable
@@ -41,8 +84,15 @@ class VariableTable:
             # create new variable
             var = Variable(symbol)
 
+        if register:
             # register new variable
-            self.variables.add(var)
+            self.add(var)
 
         # return newly created variable
         return var
+
+    def vars(self, global_only: bool=True) -> Set["Variable"]:
+        if global_only:
+            return set(var for (var, is_global) in self.variables.items() if is_global)
+
+        return set(self.variables.keys())

@@ -29,24 +29,27 @@ class OptimizeElement(Expr):
         self.level = level
         self.terms = terms
         self.literals = literals
-        self.ground = weight.ground and level.ground and all(term.ground for term in terms) and all(literal.ground for literal in literals)
 
     def __str__(self) -> str:
         return f"{str(self.weight)}@{str(self.level)}, {', '.join([str(term) for term in self.terms])} : {', '.join([str(literal) for literal in self.literals])}"
 
     @property
     def head(self) -> TermTuple:
-        return TermTuple([self.weight, self.level, *self.terms])
+        return TermTuple(self.weight, self.level) + self.terms
 
     @property
     def body(self) -> "LiteralTuple":
         return self.literals
 
+    @property
+    def ground(self) -> bool:
+        return self.weight.ground and self.level.ground and self.terms.ground and self.literals.ground
+
     def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(self.weight.vars(global_only), self.level.vars(global_only), *self.terms.vars(global_only), *self.literals.vars(global_only))
+        return set().union(self.weight.vars(global_only), self.level.vars(global_only), self.terms.vars(global_only), self.literals.vars(global_only))
 
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
-        raise Exception()
+        raise Exception("Safety characterization for optimize elements not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "OptimizeElement":
         raise Exception("Substitution for optimize elements not supported yet.")
@@ -57,28 +60,32 @@ class OptimizeElement(Expr):
 
 class OptimizeStatement(Statement, ABC):
     """Abstract base class for all optimize statement."""
-    def __init__(self, elements: Tuple[OptimizeElement, ...], minimize: bool) -> None:
+    def __init__(self, elements: Tuple[OptimizeElement, ...], minimize: bool, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
         self.elements = elements
         self.minimize = minimize
-        self.ground = all(element.ground for element in elements)
 
     @property
     def head(self) -> TermTuple:
+        # TODO: correct?
         return sum([element.head() for element in self.elements])
 
     @property
     def body(self) -> "LiteralTuple":
+        # TODO: correct?
         return sum([element.body() for element in self.elements])
-
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(element.vars(global_only) for element in self.elements)
-
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
-        raise Exception()
 
     @cached_property
     def safe(self) -> bool:
-        raise Exception()
+        raise Exception("Safety for optimize statements not supported yet.")
+
+    @cached_property
+    def ground(self) -> bool:
+        return all(element.ground for element in self.elements)
+
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+        raise Exception("Safety characterization for optimize statements not supported yet.")
 
     def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for optimize statements not supported yet.")
