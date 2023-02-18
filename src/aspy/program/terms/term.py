@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import aspy
 from aspy.program.expression import Expr
-from aspy.program.substitution import Substitution
+from aspy.program.substitution import Substitution, AssignmentError
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.symbol_table import VARIABLE_RE, SYM_CONST_RE
 
@@ -34,61 +34,22 @@ class Term(Expr, ABC):
         """Defines the total ordering operator defined for terms in ASP-Core-2."""
         pass
 
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set()
+
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
         return SafetyTriplet()
 
     def replace_arith(self, var_table: "VariableTable") -> "Term":
         return deepcopy(self)
 
+    def substitute(self, subst: Substitution) -> "Expr":
+        return deepcopy(self)
 
-class TermTuple:
-    """Represents a collection of terms."""
-    def __init__(self, *terms: Term) -> None:
-        self.terms = tuple(terms)
-
-    def __len__(self) -> int:
-        return len(self.terms)
-
-    def __eq__(self, other: "TermTuple") -> bool:
-        if len(self) != len(other):
-            return False
-
-        for t1, t2 in zip(self, other):
-            if t1 != t2:
-                return False
-
-        return True
-
-    def __hash__(self) -> int:
-        return hash(self.terms)
-
-    def __iter__(self) -> Iterable[Term]:
-        return iter(self.terms)
-
-    def __add__(self, other: "TermTuple") -> "TermTuple":
-        return TermTuple(*self.terms, *other.terms)
-
-    def __getitem__(self, index: int) -> "Term":
-        return self.terms[index]
-
-    @cached_property
-    def ground(self) -> bool:
-        return all(term.ground for term in self.terms)
-
-    def substitute(self, subst: "Substitution") -> "TermTuple":
-        # substitute terms recursively
-        terms = (term.substitute(subst) for term in self)
-
-        return TermTuple(*terms)
-
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(*tuple(term.vars(global_only) for term in self.terms))
-
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
-        return tuple(term.safety() for term in self.terms)
-
-    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
-        return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))
+    def match(self, other: Expr) -> Optional[Substitution]:
+        """Tries to match the expression with another one."""
+        # empty substitution
+        return Substitution() if self == other else None
 
 
 class Infimum(Term):
@@ -110,19 +71,6 @@ class Infimum(Term):
 
         return True
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set()
-
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        if isinstance(other, Infimum):
-            return set([Substitution()])
-        else:
-            return set()
-
-    def substitute(self, subst: Substitution) -> "Infimum":
-        return Infimum()
-
 
 class Supremum(Term):
     """Greatest element in the total ordering for terms."""
@@ -142,19 +90,6 @@ class Supremum(Term):
             raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
 
         return True if isinstance(other, Supremum) else False
-
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set()
-
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        if isinstance(other, Supremum):
-            return set([Substitution()])
-        else:
-            return set()
-
-    def substitute(self, subst: Substitution) -> "Supremum":
-        return Supremum()
 
 
 class Variable(Term):
@@ -190,14 +125,12 @@ class Variable(Term):
         """Used in arithmetical terms."""
         return Variable(self.val)
 
-    def match(self, other: Expr) -> Set[Substitution]:
+    def match(self, other: Expr) -> Optional[Substitution]:
         """Tries to match the expression with another one."""
-        return Substitution({self: other})
+        return Substitution({self: other}) if not self == other else Substitution()
 
     def substitute(self, subst: Substitution) -> Term:
-        if self in subst:
-            return deepcopy(subst[self])
-        return deepcopy(self)
+        return subst[self]
 
 
 class AnonVariable(Variable):
@@ -215,15 +148,11 @@ class AnonVariable(Variable):
         return isinstance(other, AnonVariable) and other.val == self.val and other.id == self.id
 
     def __hash__(self) -> int:
-        return hash(("var", self.val))
+        return hash(("anon var", self.val))
 
     def simplify(self) -> "Number":
         """Used in arithmetical terms."""
         return AnonVariable(self.id)
-
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        return Substitution({self: other})
 
 
 class Number(Term):
@@ -271,25 +200,12 @@ class Number(Term):
         else:
             return True
 
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        return set()
-
     def simplify(self) -> "Number":
         """Used in arithmetical terms."""
         return Number(self.val)
 
     def eval(self) -> int:
         return self.val
-
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        if isinstance(other, Number) and self.val == other.val:
-            return set([Substitution()])
-        else:
-            return set()
-
-    def substitute(self, subst: Substitution) -> "Number":
-        return Number(self.val)
 
 
 class SymbolicConstant(Term):
@@ -327,19 +243,6 @@ class SymbolicConstant(Term):
         else:
             return True
 
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        return set()
-
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        if isinstance(other, SymbolicConstant) and self.val == other.val:
-            return set([Substitution()])
-        else:
-            return set()
-
-    def substitute(self, subst: Substitution) -> "SymbolicConstant":
-        return SymbolicConstant(self.val)
-
 
 class String(Term):
     """Represents a string."""
@@ -368,15 +271,73 @@ class String(Term):
         else:
             return True
 
-    def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
-        return set()
 
-    def match(self, other: Expr) -> Set[Substitution]:
-        """Tries to match the expression with another one."""
-        if isinstance(other, String) and self.val == other.val:
-            return set([Substitution()])
-        else:
-            return set()
+class TermTuple:
+    """Represents a collection of terms."""
+    def __init__(self, *terms: Term) -> None:
+        self.terms = tuple(terms)
 
-    def substitute(self, subst: Substitution) -> "String":
-        return String(self.val)
+    def __len__(self) -> int:
+        return len(self.terms)
+
+    def __eq__(self, other: "TermTuple") -> bool:
+        if len(self) != len(other):
+            return False
+
+        for t1, t2 in zip(self, other):
+            if t1 != t2:
+                return False
+
+        return True
+
+    def __hash__(self) -> int:
+        return hash(self.terms)
+
+    def __iter__(self) -> Iterable[Term]:
+        return iter(self.terms)
+
+    def __add__(self, other: "TermTuple") -> "TermTuple":
+        return TermTuple(*self.terms, *other.terms)
+
+    def __getitem__(self, index: int) -> "Term":
+        return self.terms[index]
+
+    @cached_property
+    def ground(self) -> bool:
+        return all(term.ground for term in self.terms)
+
+    def substitute(self, subst: "Substitution") -> "TermTuple":
+        # substitute terms recursively
+        terms = (term.substitute(subst) for term in self)
+
+        return TermTuple(*terms)
+
+    def match(self, other: Expr) -> Optional[Substitution]:
+        #raise Exception("Matching for term tuples is not supported yet.")
+
+        if not (isinstance(other, TermTuple) and len(self) == len(other)):
+            return None
+
+        subst = Substitution()
+
+        for term1, term2 in zip(self.terms, other.terms):
+            match = term1.match(term2)
+
+            if match is None:
+                return None
+
+            try:
+                subst = subst + match
+            except AssignmentError:
+                return None
+
+        return subst
+
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return set().union(*tuple(term.vars(global_only) for term in self.terms))
+
+    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
+        return tuple(term.safety() for term in self.terms)
+
+    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
+        return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))

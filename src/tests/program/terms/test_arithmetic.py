@@ -24,7 +24,9 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(ArithVariable(0, Add(Variable('X'), Number(1))).substitute(Substitution({ArithVariable(0, Add(Variable('X'), Number(1))): Number(0), Variable('X'): Number(1)})), Number(0), Number(1)) # NOTE: substitution is invalid
-        # TODO: match
+        # match
+        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(ArithVariable(0, Minus(Variable('X')))), Substitution())
+        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(Number(1)), Substitution({ArithVariable(0, Minus(Variable('X'))): Number(1)}))
 
     def test_minus(self):
 
@@ -39,7 +41,7 @@ class TestArithmetic(unittest.TestCase):
         self.assertFalse(term.precedes(Number(-2)))
         self.assertTrue(term.precedes(Number(-1)))
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.replace_arith(VariableTable()), term)
+        self.assertTrue(term.replace_arith(VariableTable()) == Minus(Number(1)).simplify() == Number(-1))
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
 
@@ -50,9 +52,12 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Minus(Variable('X')).substitute(Substitution({Variable('X'): Number(1)})), Minus(Number(1))) # NOTE: substitution is invalid
-        # TODO: match
+        # match
+        self.assertRaises(ValueError, Minus(Variable('X')).match, Number(3))
+        self.assertRaises(ValueError, Minus(Number(3)).match, Minus(Variable('X')))
+        self.assertEqual(Minus(Number(3)).match(Minus(Number(1))), None)
+        self.assertEqual(Minus(Number(3)).match(Minus(Number(3))), Substitution())
 
-        # negation of a number
         self.assertEqual(Minus(Number(1)).simplify(), Number(-1))
         # double negation
         self.assertEqual(Minus(Minus(Variable('X'))).simplify(), Variable('X'))
@@ -70,7 +75,7 @@ class TestArithmetic(unittest.TestCase):
         self.assertFalse(term.precedes(Number(2)))
         self.assertTrue(term.precedes(Number(3)))
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.replace_arith(VariableTable()), term)
+        self.assertTrue(term.replace_arith(VariableTable()) == Add(Number(1), Number(2)).simplify() == Number(3))
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
 
@@ -81,7 +86,11 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Add(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Add(Number(1), Number(0))) # NOTE: substitution is invalid
-        # TODO: match
+        # match
+        self.assertRaises(ValueError, Add(Variable('X'), Number(2)).match, Number(3))
+        self.assertRaises(ValueError, Add(Number(1), Number(2)).match, Minus(Variable('X')))
+        self.assertEqual(Add(Number(1), Number(2)).match(Add(Number(3), Number(1))), None)
+        self.assertEqual(Add(Number(1), Number(2)).match(Add(Number(3), Number(0))), Substitution())
 
         # addition of numbers
         self.assertEqual(Add(Number(1), Number(2)).simplify(), Number(3))
@@ -103,7 +112,7 @@ class TestArithmetic(unittest.TestCase):
         self.assertFalse(term.precedes(Number(-2)))
         self.assertTrue(term.precedes(Number(-1)))
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.replace_arith(VariableTable()), term)
+        self.assertTrue(term.replace_arith(VariableTable()) == Sub(Number(1), Number(2)).simplify() == Number(-1))
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
 
@@ -114,7 +123,11 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Sub(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Sub(Number(1), Number(0))) # NOTE: substitution is invalid
-        # TODO: match
+        # match
+        self.assertRaises(ValueError, Sub(Variable('X'), Number(2)).match, Number(1))
+        self.assertRaises(ValueError, Sub(Number(3), Number(2)).match, Minus(Variable('X')))
+        self.assertEqual(Sub(Number(3), Number(2)).match(Sub(Number(3), Number(1))), None)
+        self.assertEqual(Sub(Number(3), Number(2)).match(Sub(Number(3), Number(2))), Substitution())
 
         # subtraction of numbers
         self.assertEqual(Sub(Number(1), Number(2)).simplify(), Number(-1))
@@ -128,15 +141,15 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Mult(Number(1), Number(2))
-        self.assertEqual(str(term), "1*2")
-        self.assertEqual(term, Mult(Number(1), Number(2)))
-        self.assertEqual(hash(term), hash(Mult(Number(1), Number(2))))
-        self.assertEqual(term.eval(), 2)
-        self.assertFalse(term.precedes(Number(1)))
-        self.assertTrue(term.precedes(Number(2)))
+        term = Mult(Number(3), Number(2))
+        self.assertEqual(str(term), "3*2")
+        self.assertEqual(term, Mult(Number(3), Number(2)))
+        self.assertEqual(hash(term), hash(Mult(Number(3), Number(2))))
+        self.assertEqual(term.eval(), 6)
+        self.assertFalse(term.precedes(Number(5)))
+        self.assertTrue(term.precedes(Number(6)))
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.replace_arith(VariableTable()), term)
+        self.assertTrue(term.replace_arith(VariableTable()) == Mult(Number(3), Number(2)).simplify() == Number(6))
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
 
@@ -147,8 +160,12 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Mult(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Mult(Number(1), Number(0))) # NOTE: substitution is invalid
-        # TODO: match
-    
+        # match
+        self.assertRaises(ValueError, Mult(Variable('X'), Number(2)).match, Number(6))
+        self.assertRaises(ValueError, Mult(Number(3), Number(2)).match, Minus(Variable('X')))
+        self.assertEqual(Mult(Number(3), Number(2)).match(Mult(Number(3), Number(1))), None)
+        self.assertEqual(Mult(Number(3), Number(2)).match(Mult(Number(2), Number(3))), Substitution())
+
         # multiplication of numbers
         self.assertEqual(Mult(Number(2), Number(3)).simplify(), Number(6))
         # right operand zero 
@@ -181,7 +198,7 @@ class TestArithmetic(unittest.TestCase):
         self.assertFalse(term.precedes(Number(-1)))
         self.assertTrue(term.precedes(Number(0)))
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.replace_arith(VariableTable()), term)
+        self.assertTrue(term.replace_arith(VariableTable()) == Div(Number(1), Number(2)).simplify() == Number(0))
         self.assertEqual(term.safety(), SafetyTriplet())
         self.assertTrue(term.ground)
 
@@ -192,8 +209,12 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Div(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Div(Number(1), Number(0))) # NOTE: substitution is invalid
-        # TODO: match
-    
+        # match
+        self.assertRaises(ValueError, Div(Variable('X'), Number(2)).match, Number(3))
+        self.assertRaises(ValueError, Div(Number(1), Number(2)).match, Minus(Variable('X')))
+        self.assertEqual(Div(Number(1), Number(2)).match(Div(Number(1), Number(1))), None)
+        self.assertEqual(Div(Number(1), Number(2)).match(Div(Number(0), Number(3))), Substitution())
+
         # division of (valid) numbers
         self.assertEqual(Div(Number(3), Number(2)).simplify(), Number(1)) # integer division
         self.assertEqual(Div(Number(3), Number(-2)).simplify(), Number(-2)) # integer division

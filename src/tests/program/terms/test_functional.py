@@ -34,7 +34,10 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(Functional('f', String('f'), Variable('X')).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), Functional('f', String('f'), Number(1))) # NOTE: substitution is invalid
-        # TODO: match
+        # match
+        self.assertEqual(Functional('f', Variable('X'), String('f')).match(Functional('f', Number(1), String('f'))), Substitution({Variable('X'): Number(1)}))
+        self.assertEqual(Functional('f', Variable('X'), String('f')).match(Functional('f', Number(1), String('g'))), None) # ground terms don't match
+        self.assertEqual(Functional('f', Variable('X'), Variable('X')).match(Functional('f', Number(1), String('f'))), None) # assignment conflict
 
 
 if __name__ == "__main__":

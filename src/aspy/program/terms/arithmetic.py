@@ -4,6 +4,7 @@ from copy import deepcopy
 from functools import cached_property
 
 import aspy
+from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.safety_characterization import SafetyTriplet
 
@@ -11,7 +12,6 @@ from .term import Term, Number, Variable
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
-    from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
     from aspy.program.query import Query
     from aspy.program.variable_table import VariableTable
@@ -42,11 +42,7 @@ class ArithVariable(Variable):
         return isinstance(other, ArithVariable) and other.val == self.val and self.orig_term == other.orig_term
 
     def __hash__(self) -> int:
-        return hash(("arith_var", self.val, self.orig_term))
-
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        """Tries to match the expression with another one."""
-        return Substitution({self: other})
+        return hash(("arith var", self.val, self.orig_term))
 
     def replace_arith(self, var_table: "VariableTable") -> "ArithVariable":
         return deepcopy(self)
@@ -68,16 +64,27 @@ class ArithTerm(Term, ABC):
     def eval(self) -> int:
         pass
     
-    def match(self, other: "Expr") -> Set["Substitution"]:
+    def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
-        raise Exception("Matching for arithmetic terms not supported yet.")
+        if not (self.ground and other.ground):
+            raise ValueError("Cannot match non-groun arithmetic terms directly.")
+
+        if isinstance(other, ArithTerm):
+            # returns a 'Number' instance since 'other' is ground
+            other = other.simplify()
+
+        if not self.simplify() == other:
+            return None
+        
+        return Substitution()
 
     def replace_arith(self, var_table: "VariableTable") -> Union["ArithTerm", ArithVariable]:
+        # replace ground arithmetic term with its value
         if self.ground:
-            return deepcopy(self)
+            return self.simplify()
 
-        # create new special variable
-        return var_table.create(SpecialChar.TAU, orig_term=deepcopy(self))
+        # replace non-ground arithmetic term with a new special variable
+        return var_table.create(SpecialChar.TAU, orig_term=self)
 
 
 class Minus(ArithTerm):
@@ -109,9 +116,6 @@ class Minus(ArithTerm):
             raise Exception("Cannot evaluate non-ground arithmetic term.")
 
         return -self.operand.eval()
-
-    def match(self, subst: "Substitution") -> "Minus":
-        pass
 
     def substitute(self, subst: "Substitution") -> "Minus":
         return Minus(self.operand.substitute(subst))

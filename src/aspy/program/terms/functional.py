@@ -71,29 +71,12 @@ class Functional(Term):
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
         return SafetyTriplet.closure(*self.terms.safety())
 
-    def match(self, other: "Expr") -> Set[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
-        if isinstance(other, Functional) and self.symbol == other.symbol and self.arity == other.arity:
+        if not (isinstance(other, Functional) and self.symbol == other.symbol and self.arity == other.arity):
+            return None
 
-            subst = Substitution()
-
-            # match terms
-            for (self_term, other_term) in zip(self.terms, other.terms):
-                matches = self_term.match(other_term)
-            
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return self.terms.match(other.terms)
 
     def substitute(self, subst: Substitution) -> "Functional":
         # substitute terms recursively

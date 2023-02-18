@@ -27,6 +27,6 @@ class Expr(ABC):
         pass
 
     @abstractmethod
-    def match(self, other: "Expr") -> Set["Substitution"]:
+    def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
         pass
