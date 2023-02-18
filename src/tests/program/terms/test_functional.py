@@ -7,30 +7,38 @@ from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Functional, Number, Variable, String
 
 
-class TestArithmetic(unittest.TestCase):
+class TestFunctional(unittest.TestCase):
     def test_functional(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Functional('f', Number(1), String('x'))
-        self.assertEqual(str(term), 'f(1,"x")')
-        self.assertEqual(term, Functional('f', Number(1), String('x')))
-        self.assertEqual(hash(term), hash(Functional('f', Number(1), String('x'))))
-        self.assertFalse(term.precedes(Functional('e', Number(1), String('x'))))
-        self.assertFalse(term.precedes(Functional('f', Number(0), String('x'))))
-        self.assertFalse(term.precedes(Functional('f', Number(0), String('y'))))
-        self.assertTrue(term.precedes(Functional('f', Number(1), String('x'))))
-        self.assertEqual(term.replace_arith(VariableTable()), term)
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
-
-        term = Functional('f', Variable('X'))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == {Variable('X')})
-        self.assertEqual(term.replace_arith(VariableTable()), term)
-        self.assertEqual(term.safety(), SafetyTriplet({Variable('X')}))
-        self.assertFalse(term.ground)
+        ground_term = Functional('f', Number(1), String('x'))
+        var_term = Functional('f', Variable('X'))
+        
+        # string representation
+        self.assertEqual(str(ground_term), 'f(1,"x")')
+        # equality
+        self.assertEqual(ground_term, Functional('f', Number(1), String('x')))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Functional('f', Number(1), String('x'))))
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Functional('e', Number(1), String('x'))))
+        self.assertFalse(ground_term.precedes(Functional('f', Number(0), String('x'))))
+        self.assertFalse(ground_term.precedes(Functional('f', Number(0), String('y'))))
+        self.assertTrue(ground_term.precedes(Functional('f', Number(1), String('x'))))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertEqual(ground_term.replace_arith(VariableTable()), ground_term)
+        self.assertEqual(var_term.replace_arith(VariableTable()), var_term)
+        # safety characterizatin
+        self.assertEqual(ground_term.safety(), SafetyTriplet())
+        self.assertEqual(var_term.safety(), SafetyTriplet({Variable('X')}))
 
         # substitute
         self.assertEqual(Functional('f', String('f'), Variable('X')).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), Functional('f', String('f'), Number(1))) # NOTE: substitution is invalid
