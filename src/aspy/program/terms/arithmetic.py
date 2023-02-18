@@ -99,7 +99,7 @@ class Minus(ArithTerm):
         return hash( ("minus", self.operand) )
 
     def __str__(self) -> str:
-        return f"-{str(self.operand)}"
+        return f"-{f'({str(self.operand)})' if isinstance(self.operand, (Add, Sub, Mult, Div)) else str(self.operand)}"
 
     @cached_property
     def ground(self) -> bool:
@@ -147,14 +147,17 @@ class Add(ArithTerm):
         return hash( ("add", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
-        return f"{str(self.loperand)}+{str(self.roperand)}"
+        loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
+        roperand_str = f"{f'({str(self.roperand)})' if isinstance(self.roperand, (Add, Sub, Mult, Div, Minus)) else str(self.roperand)}"
+
+        return f"{loperand_str}+{roperand_str}"
 
     @cached_property
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union()
+        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
@@ -211,7 +214,10 @@ class Sub(ArithTerm):
         return hash( ("sub", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
-        return f"{str(self.loperand)}-{str(self.roperand)}"
+        loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
+        roperand_str = f"{f'({str(self.roperand)})' if isinstance(self.roperand, (Add, Sub, Mult, Div, Minus)) else str(self.roperand)}"
+
+        return f"{loperand_str}-{roperand_str}"
 
     @cached_property
     def ground(self) -> bool:
@@ -276,7 +282,10 @@ class Mult(ArithTerm):
         return hash( ("mult", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
-        return f"{str(self.loperand)}*{str(self.roperand)}"
+        loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
+        roperand_str = f"{f'({str(self.roperand)})' if isinstance(self.roperand, (Add, Sub, Mult, Div, Minus)) else str(self.roperand)}"
+
+        return f"{loperand_str}*{roperand_str}"
 
     @cached_property
     def ground(self) -> bool:
@@ -364,7 +373,10 @@ class Div(ArithTerm):
         return hash( ("div", self.loperand, self.roperand) )
 
     def __str__(self) -> str:
-        return f"{str(self.loperand)}/{str(self.roperand)}"
+        loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
+        roperand_str = f"{f'({str(self.roperand)})' if isinstance(self.roperand, (Add, Sub, Mult, Div, Minus)) else str(self.roperand)}"
+
+        return f"{loperand_str}/{roperand_str}"
 
     @cached_property
     def ground(self) -> bool:

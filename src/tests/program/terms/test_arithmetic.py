@@ -14,13 +14,21 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        # invalid initialization
         self.assertRaises(ValueError, ArithVariable, -1, Add(Variable('X'), Number(1)))
+
+        # valid initialization
         var = ArithVariable(0, Add(Variable('X'), Number(1)))
-        self.assertEqual(str(var), f"{SpecialChar.TAU}0")
-        self.assertRaises(Exception, var.precedes, Number(1))
-        self.assertFalse(var.ground)
+        # equality
         self.assertEqual(var, ArithVariable(0, Add(Variable('X'), Number(1))))
+        # hashing
         self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable('X'), Number(1)))))
+        # string representation
+        self.assertEqual(str(var), f"{SpecialChar.TAU}0")
+        # total order for terms
+        self.assertRaises(Exception, var.precedes, Number(1))
+        # ground
+        self.assertFalse(var.ground)
 
         # substitute
         self.assertEqual(ArithVariable(0, Add(Variable('X'), Number(1))).substitute(Substitution({ArithVariable(0, Add(Variable('X'), Number(1))): Number(0), Variable('X'): Number(1)})), Number(0), Number(1)) # NOTE: substitution is invalid
@@ -33,22 +41,38 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Minus(Number(1))
-        self.assertEqual(str(term), "-1")
-        self.assertEqual(term, Minus(Number(1)))
-        self.assertEqual(hash(term), hash(Minus(Number(1))))
-        self.assertEqual(term.eval(), -1)
-        self.assertFalse(term.precedes(Number(-2)))
-        self.assertTrue(term.precedes(Number(-1)))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertTrue(term.replace_arith(VariableTable()) == Minus(Number(1)).simplify() == Number(-1))
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
+        ground_term = Minus(Number(1))
+        var_term = Minus(Variable('X'))
 
-        term = Minus(Variable('X'))
-        self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
-        self.assertRaises(Exception, term.eval)
-        self.assertFalse(term.ground)
+        # string representation
+        self.assertEqual(str(ground_term), "-1")
+        self.assertEqual(str(Minus(Add(Number(3), Variable('X')))), "-(3+X)") # parentheses around nested term
+        # equality
+        self.assertEqual(ground_term, Minus(Number(1)))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Minus(Number(1))))
+        # evaluation
+        self.assertEqual(ground_term.eval(), -1)
+        self.assertRaises(Exception, var_term.eval)
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Number(-2)))
+        self.assertTrue(ground_term.precedes(Number(-1)))
+        self.assertRaises(Exception, var_term.precedes, Number(3))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replacing arithmetic terms
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == Minus(Number(1)).simplify() == Number(-1))
+        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
+        # safety charachterization
+        self.assertEqual(ground_term.safety(), SafetyTriplet())
+        self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
+        # simplify
+        self.assertEqual(ground_term.simplify(), Number(-1))
+        self.assertEqual(var_term.simplify(), var_term)
 
         # substitute
         self.assertEqual(Minus(Variable('X')).substitute(Substitution({Variable('X'): Number(1)})), Minus(Number(1))) # NOTE: substitution is invalid
@@ -67,22 +91,38 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Add(Number(1), Number(2))
-        self.assertEqual(str(term), "1+2")
-        self.assertEqual(term, Add(Number(1), Number(2)))
-        self.assertEqual(hash(term), hash(Add(Number(1), Number(2))))
-        self.assertEqual(term.eval(), 3)
-        self.assertFalse(term.precedes(Number(2)))
-        self.assertTrue(term.precedes(Number(3)))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertTrue(term.replace_arith(VariableTable()) == Add(Number(1), Number(2)).simplify() == Number(3))
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
+        ground_term = Add(Number(1), Number(2))
+        var_term = Add(Number(1), Variable('X'))
 
-        term = Add(Number(1), Variable('X'))
-        self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
-        self.assertRaises(Exception, term.eval)
-        self.assertFalse(term.ground)
+        # string representation
+        self.assertEqual(str(ground_term), "1+2")
+        self.assertEqual(str(Add(Number(1), Add(Number(2), Number(3)))), "1+(2+3)") # parentheses around nested term
+        # equality
+        self.assertEqual(ground_term, Add(Number(1), Number(2)))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Add(Number(1), Number(2))))
+        # evaluation
+        self.assertEqual(ground_term.eval(), 3)
+        self.assertRaises(Exception, var_term.eval)
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Number(2)))
+        self.assertTrue(ground_term.precedes(Number(3)))
+        self.assertRaises(Exception, var_term.precedes, Number(3))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == Add(Number(1), Number(2)).simplify() == Number(3))
+        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
+        # safety characterization
+        self.assertEqual(ground_term.safety(), SafetyTriplet())
+        self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
+        # simplify
+        self.assertEqual(ground_term.simplify(), Number(3))
+        self.assertEqual(var_term.simplify(), var_term)
 
         # substitute
         self.assertEqual(Add(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Add(Number(1), Number(0))) # NOTE: substitution is invalid
@@ -104,22 +144,37 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Sub(Number(1), Number(2))
-        self.assertEqual(str(term), "1-2")
-        self.assertEqual(term, Sub(Number(1), Number(2)))
-        self.assertEqual(hash(term), hash(Sub(Number(1), Number(2))))
-        self.assertEqual(term.eval(), -1)
-        self.assertFalse(term.precedes(Number(-2)))
-        self.assertTrue(term.precedes(Number(-1)))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertTrue(term.replace_arith(VariableTable()) == Sub(Number(1), Number(2)).simplify() == Number(-1))
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
+        ground_term = Sub(Number(1), Number(2))
+        var_term = Sub(Number(1), Variable('X'))
 
-        term = Sub(Number(1), Variable('X'))
-        self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
-        self.assertRaises(Exception, term.eval)
-        self.assertFalse(term.ground)
+        # string representation
+        self.assertEqual(str(ground_term), "1-2")
+        self.assertEqual(str(Sub(Number(1), Sub(Number(3), Number(2)))), "1-(3-2)") # parentheses around nested term
+        # equality
+        self.assertEqual(ground_term, Sub(Number(1), Number(2)))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Sub(Number(1), Number(2))))
+        # evaluation
+        self.assertEqual(ground_term.eval(), -1)
+        self.assertRaises(Exception, var_term.eval)
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Number(-2)))
+        self.assertRaises(Exception, var_term.precedes, Number(-1))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == Sub(Number(1), Number(2)).simplify() == Number(-1))
+        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
+        # safety characterization
+        self.assertEqual(ground_term.safety(), SafetyTriplet())
+        self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
+        # simplify
+        self.assertEqual(ground_term.simplify(), Number(-1))
+        self.assertEqual(var_term.simplify(), var_term)
 
         # substitute
         self.assertEqual(Sub(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Sub(Number(1), Number(0))) # NOTE: substitution is invalid
@@ -141,22 +196,38 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Mult(Number(3), Number(2))
-        self.assertEqual(str(term), "3*2")
-        self.assertEqual(term, Mult(Number(3), Number(2)))
-        self.assertEqual(hash(term), hash(Mult(Number(3), Number(2))))
-        self.assertEqual(term.eval(), 6)
-        self.assertFalse(term.precedes(Number(5)))
-        self.assertTrue(term.precedes(Number(6)))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertTrue(term.replace_arith(VariableTable()) == Mult(Number(3), Number(2)).simplify() == Number(6))
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
+        ground_term = Mult(Number(3), Number(2))
+        var_term = Mult(Number(3), Variable('X'))
 
-        term = Mult(Number(1), Variable('X'))
-        self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
-        self.assertRaises(Exception, term.eval)
-        self.assertFalse(term.ground)
+        # string representation
+        self.assertEqual(str(ground_term), "3*2")
+        self.assertEqual(str(Mult(Number(3), Mult(Number(2), Number(1)))), "3*(2*1)") # parentheses around nested term
+        # equality
+        self.assertEqual(ground_term, Mult(Number(3), Number(2)))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Mult(Number(3), Number(2))))
+        # evaluation
+        self.assertEqual(ground_term.eval(), 6)
+        self.assertRaises(Exception, var_term.eval)
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Number(5)))
+        self.assertTrue(ground_term.precedes(Number(6)))
+        self.assertRaises(Exception, var_term.precedes, Number(3))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == Mult(Number(3), Number(2)).simplify() == Number(6))
+        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
+        # safety characterization
+        self.assertEqual(var_term.safety(), SafetyTriplet())
+        self.assertEqual(ground_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
+        # simplify
+        self.assertEqual(ground_term.simplify(), Number(6))
+        self.assertEqual(var_term.simplify(), var_term)
 
         # substitute
         self.assertEqual(Mult(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Mult(Number(1), Number(0))) # NOTE: substitution is invalid
@@ -190,22 +261,38 @@ class TestArithmetic(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        term = Div(Number(1), Number(2))
-        self.assertEqual(str(term), "1/2")
-        self.assertEqual(term, Div(Number(1), Number(2)))
-        self.assertEqual(hash(term), hash(Div(Number(1), Number(2))))
-        self.assertEqual(term.eval(), 0)
-        self.assertFalse(term.precedes(Number(-1)))
-        self.assertTrue(term.precedes(Number(0)))
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        self.assertTrue(term.replace_arith(VariableTable()) == Div(Number(1), Number(2)).simplify() == Number(0))
-        self.assertEqual(term.safety(), SafetyTriplet())
-        self.assertTrue(term.ground)
+        ground_term = Div(Number(1), Number(2))
+        var_term = Div(Number(1), Variable('X'))
 
-        term = Div(Number(1), Variable('X'))
-        self.assertEqual(term.replace_arith(VariableTable()), ArithVariable(0, term))
-        self.assertRaises(Exception, term.eval)
-        self.assertFalse(term.ground)
+        # string representation
+        self.assertEqual(str(ground_term), "1/2")
+        self.assertEqual(str(Div(Number(3), Div(Number(2), Number(1)))), "3/(2/1)") # parentheses around nested term
+        # equality
+        self.assertEqual(ground_term, Div(Number(1), Number(2)))
+        # hashing
+        self.assertEqual(hash(ground_term), hash(Div(Number(1), Number(2))))
+        # evaluation
+        self.assertEqual(ground_term.eval(), 0)
+        self.assertRaises(Exception, var_term.eval)
+        # total order for terms
+        self.assertFalse(ground_term.precedes(Number(-1)))
+        self.assertTrue(ground_term.precedes(Number(0)))
+        self.assertRaises(Exception, var_term.precedes, Number(0))
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
+        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == Div(Number(1), Number(2)).simplify() == Number(0))
+        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
+        # safety characterization
+        self.assertEqual(ground_term.safety(), SafetyTriplet())
+        self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
+        # simplify
+        self.assertEqual(ground_term.simplify(), Number(0))
+        self.assertEqual(var_term.simplify(), var_term)
 
         # substitute
         self.assertEqual(Div(Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1)})), Div(Number(1), Number(0))) # NOTE: substitution is invalid
