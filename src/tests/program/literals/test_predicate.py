@@ -4,7 +4,7 @@ import aspy
 from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.literals import Neg, PredicateLiteral
+from aspy.program.literals import Neg, Naf, PredicateLiteral
 from aspy.program.terms import Variable, Number, String, Minus, ArithVariable
 
 
@@ -15,44 +15,54 @@ class TestPredicate(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         literal = PredicateLiteral('p', Number(0), String('x'))
-        self.assertEqual(str(literal), 'p(0,"x")')
-        self.assertEqual(literal, PredicateLiteral('p', Number(0), String('x')))
-        self.assertEqual(hash(literal), hash(PredicateLiteral('p', Number(0), String('x'))))
-        self.assertEqual(literal.arity, 2)
-        self.assertTrue(literal.naf == literal.neg == False)
-        self.assertEqual(literal.pred(), ('p', 2))
-        self.assertTrue(literal.ground)
-        self.assertTrue(literal.vars() == literal.vars(True) == set())
-        self.assertEqual(literal.safety(), SafetyTriplet())
-        self.assertEqual(literal.replace_arith(VariableTable()), literal)
+        naf_literal = Naf(PredicateLiteral('p', Number(0), String('x')))
+        var_literal = PredicateLiteral('p', Number(0), Variable('X'))
 
-        literal.set_neg(True)
-        self.assertEqual(str(literal), '-p(0,"x")')
-        self.assertTrue(literal.neg == True)
-        self.assertEqual(literal.pos_occ(), {Neg(PredicateLiteral('p', Number(0), String('x')))})
+        # string representation
+        self.assertEqual(str(literal), 'p(0,"x")')
+        self.assertEqual(str(Neg(PredicateLiteral('p', Number(0), String('x')))), '-p(0,"x")')
+        self.assertEqual(str(naf_literal), 'not p(0,"x")')
+        self.assertEqual(str(Naf(Neg(PredicateLiteral('p', Number(0), String('x'))))), 'not -p(0,"x")')
+        # equality
+        self.assertEqual(literal, PredicateLiteral('p', Number(0), String('x')))
+        # hashing
+        self.assertEqual(hash(literal), hash(PredicateLiteral('p', Number(0), String('x'))))
+        # arity
+        self.assertEqual(literal.arity, 2)
+        # predicate tuple
+        self.assertEqual(literal.pred(), ('p', 2))
+        # ground
+        self.assertTrue(literal.ground)
+        self.assertFalse(var_literal.ground)
+        # variables
+        self.assertTrue(literal.vars() == literal.vars(True) == set())
+        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable('X')})
+        # replace arithmetic terms
+        self.assertEqual(literal.replace_arith(VariableTable()), literal)
+        self.assertEqual(var_literal.replace_arith(VariableTable()), var_literal)
+        self.assertEqual(PredicateLiteral('p', Number(0), Minus(Number(1))).replace_arith(VariableTable()), PredicateLiteral('p', Number(0), Minus(Number(1)))) # ground arithmetic term should not be replaced
+        self.assertEqual(PredicateLiteral('p', Number(0), Minus(Variable('X'))).replace_arith(VariableTable()), PredicateLiteral('p', Number(0), ArithVariable(0, Minus(Variable('X'))))) # non-ground arithmetic term should be replaced
+        # positive/negative literal occurrences
+        self.assertEqual(literal.pos_occ(), {PredicateLiteral('p', Number(0), String('x'))})
         self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(naf_literal.pos_occ(), set())
+        self.assertEqual(naf_literal.neg_occ(), {PredicateLiteral('p', Number(0), String('x'))})
+        # safety characterization
+        self.assertEqual(literal.safety(), SafetyTriplet())
+        self.assertEqual(var_literal.safety(), SafetyTriplet({Variable('X')}))
+
+        # classical negation and negation-as-failure
+        self.assertTrue(literal.naf == literal.neg == False)
+        literal.set_neg(True)
+        self.assertTrue(literal.neg == True)
         literal.set_naf(True)
-        self.assertEqual(str(literal), 'not -p(0,"x")')
-        self.assertEqual(literal.pos_occ(), set())
-        self.assertEqual(literal.neg_occ(), {Neg(PredicateLiteral('p', Number(0), String('x')))})
 
         # substitute
         self.assertEqual(PredicateLiteral('p', Variable('X'), Number(0)).substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), PredicateLiteral('p', Number(1), Number(0))) # NOTE: substitution is invalid
-        # TODO: match
-
-        literal = PredicateLiteral('p', Number(0), Variable('X'))
-        self.assertFalse(literal.ground)
-        self.assertTrue(literal.vars() == literal.vars(True) == {Variable('X')})
-        self.assertEqual(literal.safety(), SafetyTriplet({Variable('X')}))
-        self.assertEqual(literal.replace_arith(VariableTable()), literal)
-
-        # ground arithmetic term should not be replaced
-        literal = PredicateLiteral('p', Number(0), Minus(Number(1)))
-        self.assertEqual(literal.replace_arith(VariableTable()), literal)
-
-        # non-ground arithmetic term should be replaced
-        literal = PredicateLiteral('p', Number(0), Minus(Variable('X')))
-        self.assertEqual(literal.replace_arith(VariableTable()), PredicateLiteral('p', Number(0), ArithVariable(0, Minus(Variable('X')))))     
+        # match
+        self.assertEqual(PredicateLiteral('p', Variable('X'), String('f')).match(PredicateLiteral('p', Number(1), String('f'))), Substitution({Variable('X'): Number(1)}))
+        self.assertEqual(Naf(PredicateLiteral('p', Variable('X'), String('f'))).match(Naf(PredicateLiteral('p', Number(1), String('g')))), None) # ground terms don't match
+        self.assertEqual(Neg(PredicateLiteral('p', Variable('X'), Variable('X'))).match(Neg(PredicateLiteral('p', Number(1), String('f')))), None) # assignment conflict
 
 
 if __name__ == "__main__":

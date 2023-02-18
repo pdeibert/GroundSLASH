@@ -13,15 +13,19 @@ class TestFunctional(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        # invalid initialization
+        self.assertRaises(ValueError, Functional, 'F')
+        # valid initialization
         ground_term = Functional('f', Number(1), String('x'))
         var_term = Functional('f', Variable('X'))
-        
         # string representation
         self.assertEqual(str(ground_term), 'f(1,"x")')
         # equality
         self.assertEqual(ground_term, Functional('f', Number(1), String('x')))
         # hashing
         self.assertEqual(hash(ground_term), hash(Functional('f', Number(1), String('x'))))
+        # arity
+        self.assertEqual(ground_term.arity, 2)
         # total order for terms
         self.assertFalse(ground_term.precedes(Functional('e', Number(1), String('x'))))
         self.assertFalse(ground_term.precedes(Functional('f', Number(0), String('x'))))

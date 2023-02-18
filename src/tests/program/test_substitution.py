@@ -15,14 +15,20 @@ class TestSubstitution(unittest.TestCase):
 
         # empty substitution
         subst = Substitution()
+        # equality
         self.assertEqual(subst, Substitution())
+        # hashing
         self.assertEqual(hash(subst), hash(Substitution()))
+        # __getitem__
         self.assertEqual(subst[Variable('X')], Variable('X')) # map non-specified variables to themselves
 
         # non-empty substitution
         subst = Substitution({Variable('X'): Number(0), Variable('Y'): String('str')})
+        # equality
         self.assertEqual(subst, Substitution({Variable('X'): Number(0), Variable('Y'): String('str')}))
+        # hashing
         self.assertEqual(hash(subst), hash(Substitution({Variable('X'): Number(0), Variable('Y'): String('str')})))
+        # __getitem__
         self.assertTrue(subst[Variable('X')], Number(0))
         self.assertTrue(subst[Variable('Y')], String('str'))
         self.assertEqual(subst[Variable('X')], Number(0))

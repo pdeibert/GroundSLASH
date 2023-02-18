@@ -82,29 +82,12 @@ class PredicateLiteral(Literal):
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple[SafetyTriplet, ...]:
         return SafetyTriplet.closure(*self.terms.safety()) if not self.naf else SafetyTriplet(unsafe=self.vars())
 
-    def match(self, other: "Expr") -> Set[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, PredicateLiteral) and self.name == other.name and self.arity == other.arity and self.neg == other.neg:
+            return self.terms.match(other.terms)
 
-            subst = Substitution()
-
-            # match terms
-            for (self_term, other_term) in zip(self.terms, other.terms):
-                matches = self_term.match(other_term)
-            
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "PredicateLiteral":
         # substitute terms recursively

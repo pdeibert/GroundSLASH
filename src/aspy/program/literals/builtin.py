@@ -2,7 +2,7 @@ from typing import Set, Tuple, Optional, Union, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from functools import cached_property
 
-from aspy.program.terms import ArithTerm, Number
+from aspy.program.terms import ArithTerm, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
 from aspy.program.substitution import Substitution
 
@@ -84,29 +84,12 @@ class Equal(BuiltinLiteral):
 
         return loperand.precedes(roperand) and roperand.precedes(loperand)
 
-    def match(self, other: "Expr") -> Set[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, Equal):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "Equal":
         # substitute operands recursively
@@ -141,26 +124,9 @@ class Unequal(BuiltinLiteral):
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, Unequal):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "Unequal":
         # substitute operands recursively
@@ -195,26 +161,9 @@ class Less(BuiltinLiteral):
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, Less):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "Less":
         # substitute operands recursively
@@ -249,26 +198,9 @@ class Greater(BuiltinLiteral):
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, Greater):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "Greater":
         # substitute operands recursively
@@ -303,26 +235,9 @@ class LessEqual(BuiltinLiteral):
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, LessEqual):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "LessEqual":
         # substitute operands recursively
@@ -357,26 +272,9 @@ class GreaterEqual(BuiltinLiteral):
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
         if isinstance(other, GreaterEqual):
+            return TermTuple(*self.operands).match(TermTuple(*other.operands))
 
-            subst = Substitution()
-
-            # match terms
-            for (self_operand, other_operand) in zip(self.operands, other.operands):
-                matches = self_operand.match(other_operand)
-
-            # no match found
-            if len(matches) == 0:
-                return set()
-
-            # try to merge substitutions
-            try:
-                subst.merge(matches[0])
-            except:
-                return set()
-        
-            return set([subst])
-        else:
-            return set()
+        return None
 
     def substitute(self, subst: Substitution) -> "GreaterEqual":
         # substitute operands recursively
