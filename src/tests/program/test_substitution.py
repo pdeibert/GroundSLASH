@@ -40,6 +40,14 @@ class TestSubstitution(unittest.TestCase):
         with self.assertRaises(AssignmentError):
             Substitution({Variable('X'): Number(0), Variable('Y'): String('str')}) + Substitution({Variable('Y'): Number(3), Variable('Z'): Number(3)})
 
+        # composing substitutions
+        subst1 = Substitution({Variable('X'): Variable('Y')})
+        subst2 = Substitution({Variable('X'): Number(1), Variable('Y'): Number(0), Variable('Z'): String('a')})
+        self.assertEqual(subst1.compose(subst2), Substitution({Variable('X'): Number(0), Variable('Y'): Number(0), Variable('Z'): String('a')}))
+        subst3 = Substitution({Variable('A'): Variable('B')})
+        subst4 = Substitution({Variable('B'): String('b')})
+        self.assertEqual(subst1.compose(subst2).compose(subst3).compose(subst4), Substitution.composition(subst1, subst2, subst3, subst4))
+
 
 if __name__ == "__main__":
     unittest.main()

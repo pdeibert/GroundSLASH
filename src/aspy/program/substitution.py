@@ -1,5 +1,6 @@
 from typing import Optional, Dict, TYPE_CHECKING
 from copy import deepcopy
+from functools import reduce
 
 from .expression import Expr
 
@@ -44,3 +45,16 @@ class Substitution(dict):
                 subst[var] = target
         
         return Substitution(subst)
+
+    def compose(self, other: "Substitution") -> "Substitution":
+
+        # apply other substitution to substituted values
+        subst = {var: target.substitute(other) for (var, target) in self.items()}
+        # add substitution of variables that are not in the original substitution (i.e., originally mapped onto themselves)
+        subst.update({var: target for (var, target) in other.items() if var not in subst})
+
+        return Substitution(subst)
+
+    @classmethod
+    def composition(cls, *substitutions: "Substitution") -> "Substitution":
+        return reduce(lambda s1, s2: s1.compose(s2), substitutions)
