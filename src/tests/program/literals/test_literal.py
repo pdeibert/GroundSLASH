@@ -32,6 +32,11 @@ class TestLiteral(unittest.TestCase):
 
         # substitute
         self.assertEqual(LiteralTuple(PredicateLiteral('p', String('f'), Variable('X'))).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), LiteralTuple(PredicateLiteral('p', String('f'), Number(1)))) # NOTE: substitution is invalid
+        # match
+        self.assertEqual(LiteralTuple(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(LiteralTuple(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(1)))), Substitution({Variable('X'): Number(1)}))
+        self.assertEqual(LiteralTuple(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(LiteralTuple(PredicateLiteral('p', Number(1), String('g')), PredicateLiteral('q', Number(1)))), None) # ground terms don't match
+        self.assertEqual(LiteralTuple(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(LiteralTuple(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(0)))), None) # assignment conflict
+        self.assertEqual(LiteralTuple(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('q', Number(1)), PredicateLiteral('u', Number(0))).match(LiteralTuple(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('u', Number(0)), PredicateLiteral('q', Number(1)))), None) # different order of literals
 
         # combining literal tuples
         self.assertEqual(literals + LiteralTuple(PredicateLiteral('u')), LiteralTuple(PredicateLiteral('p', Number(0), Variable('X')), PredicateLiteral('q', Minus(Variable('Y'))), PredicateLiteral('u')))

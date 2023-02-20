@@ -1,13 +1,14 @@
-from typing import Tuple, Set, TYPE_CHECKING
+from typing import Tuple, Set, Optional, TYPE_CHECKING
 from functools import cached_property
 from collections import deque
 from copy import deepcopy
 
 from aspy.program.symbol_table import SymbolTable, SpecialChar
 from aspy.program.variable_table import VariableTable
-from aspy.program.literals import Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral
+from aspy.program.literals import Equal, Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral
 from aspy.program.terms import ArithVariable
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.substitution import AssignmentError
 
 from .statement import Fact, Rule
 
@@ -62,8 +63,17 @@ class NormalFact(Fact):
     def substitute(self, subst: "Substitution") -> "NormalFact":
         return NormalFact(self.atom.substitute(subst))
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for normal facts not supported yet.")
+    def match(self, other: "Expr") -> Optional["Substitution"]:
+        if not isinstance(other, NormalFact):
+            return None
+
+        # match head
+        match = self.atom.match(other.atom)
+
+        if match is None:
+            return None
+
+        return match
 
 
 class NormalRule(Rule):
@@ -117,8 +127,31 @@ class NormalRule(Rule):
     def substitute(self, subst: "Substitution") -> "NormalRule":
         return NormalRule(self.atom.substitute(subst), *self.literals.substitute(subst))
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for normal rules not supported yet.")
+    def match(self, other: "Expr") -> Optional["Substitution"]:
+        # TODO: so far can only match body literals in order
+        if not isinstance(other, NormalRule):
+            return None
+
+        # match head
+        match = self.atom.match(other.atom)
+
+        if match is None:
+            return None
+        subst = match
+
+        # match body
+        match = self.body.match(other.body)
+
+        if match is None:
+            return None
+
+        # combine substitutions
+        try:
+            subst = subst + match
+        except AssignmentError:
+            return None
+
+        return subst
 
     def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
 
@@ -135,7 +168,9 @@ class NormalRule(Rule):
         glob_vars = self.vars(global_only=True)
 
         # get arithmetic variables
-        arith_vars = set(var for var in self.var_table.vars if isinstance(var, ArithVariable))
+        arith_vars = rule.var_table.arith_vars()
+        # create check literals for arithmetic variables and the terms they replaced
+        arith_checks = tuple(Equal(var, var.orig_term) for var in arith_vars)
 
         # group literals
         non_aggr_literals = []
@@ -147,12 +182,6 @@ class NormalRule(Rule):
         rules = deque()
         # map aggregate literals to replacement predicate literals
         aggr_map = dict()
-
-        # TODO: rewrite all arithmetic terms first!!!
-        # -> therefore iterate over all literals
-        # TODO: how to check for arithmetic literals?
-        for literal in self.body:
-            pass
 
         # rewrite all aggregate literals
         for literal in aggr_literals:
@@ -223,6 +252,8 @@ class NormalRule(Rule):
                     LiteralTuple(tuple(aggr_map[literal] if isinstance(literal) else literal for literal in self.body)) # TODO: also restores original order
                 )
             )
+
+        # TODO: what now?
 
         # TODO: What else to rewrite ??? (see mu-gringo) 
         # TODO: how does this translate to disjunctive or choice rules ????? same ?????

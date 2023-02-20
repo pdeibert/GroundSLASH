@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from aspy.program.expression import Expr
+from aspy.program.substitution import Substitution, AssignmentError
 
 if TYPE_CHECKING:
     from aspy.program.terms import Variable
     from aspy.program.safety_characterization import SafetyTriplet
-    from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
     from aspy.program.query import Query
     from aspy.program.variable_table import VariableTable
@@ -86,6 +86,27 @@ class LiteralTuple:
         literals = (literal.substitute(subst) for literal in self)
 
         return LiteralTuple(*literals)
+
+    def match(self, other: Expr) -> Optional["Substitution"]:
+        #raise Exception("Matching for term tuples is not supported yet.")
+
+        if not (isinstance(other, LiteralTuple) and len(self) == len(other)):
+            return None
+
+        subst = Substitution()
+
+        for literal1, literal2 in zip(self.literals, other.literals):
+            match = literal1.match(literal2)
+
+            if match is None:
+                return None
+
+            try:
+                subst = subst + match
+            except AssignmentError:
+                return None
+
+        return subst
 
     def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
         return LiteralTuple( *tuple(literal.replace_arith(var_table) for literal in self.literals) )
