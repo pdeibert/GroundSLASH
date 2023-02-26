@@ -1,41 +1,13 @@
 import unittest
 
 import aspy
-from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SpecialChar
 from aspy.program.variable_table import VariableTable
+from aspy.program.substitution import Substitution
 from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.terms import ArithVariable, Number, Variable, Minus, Add, Sub, Mult, Div
+from aspy.program.terms import Number, Variable, Minus, Add, Sub, Mult, Div, ArithVariable
 
 
 class TestArithmetic(unittest.TestCase):
-    def test_arith_variable(self):
-
-        # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
-
-        # invalid initialization
-        self.assertRaises(ValueError, ArithVariable, -1, Add(Variable('X'), Number(1)))
-
-        # valid initialization
-        var = ArithVariable(0, Add(Variable('X'), Number(1)))
-        # equality
-        self.assertEqual(var, ArithVariable(0, Add(Variable('X'), Number(1))))
-        # hashing
-        self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable('X'), Number(1)))))
-        # string representation
-        self.assertEqual(str(var), f"{SpecialChar.TAU}0")
-        # total order for terms
-        self.assertRaises(Exception, var.precedes, Number(1))
-        # ground
-        self.assertFalse(var.ground)
-
-        # substitute
-        self.assertEqual(ArithVariable(0, Add(Variable('X'), Number(1))).substitute(Substitution({ArithVariable(0, Add(Variable('X'), Number(1))): Number(0), Variable('X'): Number(1)})), Number(0), Number(1)) # NOTE: substitution is invalid
-        # match
-        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(ArithVariable(0, Minus(Variable('X')))), Substitution())
-        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(Number(1)), Substitution({ArithVariable(0, Minus(Variable('X'))): Number(1)}))
-
     def test_minus(self):
 
         # make sure debug mode is enabled
@@ -64,9 +36,6 @@ class TestArithmetic(unittest.TestCase):
         # variables
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
-        # replacing arithmetic terms
-        self.assertTrue(ground_term.replace_arith(VariableTable()) == Minus(Number(1)).simplify() == Number(-1))
-        self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
         # safety charachterization
         self.assertEqual(ground_term.safety(), SafetyTriplet())
         self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable('X')}))
@@ -114,8 +83,8 @@ class TestArithmetic(unittest.TestCase):
         # variables
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
-        # replace arithmetic terms
-        self.assertTrue(ground_term.replace_arith(VariableTable()) == Add(Number(1), Number(2)).simplify() == Number(3))
+        # replace arithmetic variable
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(3))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
         # safety characterization
         self.assertEqual(ground_term.safety(), SafetyTriplet())
@@ -166,8 +135,8 @@ class TestArithmetic(unittest.TestCase):
         # variables
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
-        # replace arithmetic terms
-        self.assertTrue(ground_term.replace_arith(VariableTable()) == Sub(Number(1), Number(2)).simplify() == Number(-1))
+        # replace arithmetic variable
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(-1))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
         # safety characterization
         self.assertEqual(ground_term.safety(), SafetyTriplet())
@@ -219,8 +188,8 @@ class TestArithmetic(unittest.TestCase):
         # variables
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
-        # replace arithmetic terms
-        self.assertTrue(ground_term.replace_arith(VariableTable()) == Mult(Number(3), Number(2)).simplify() == Number(6))
+        # replace arithmetic variable
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(6))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
         # safety characterization
         self.assertEqual(var_term.safety(), SafetyTriplet())
@@ -284,8 +253,8 @@ class TestArithmetic(unittest.TestCase):
         # variables
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
-        # replace arithmetic terms
-        self.assertTrue(ground_term.replace_arith(VariableTable()) == Div(Number(1), Number(2)).simplify() == Number(0))
+        # replace arithmetic variable
+        self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(0))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
         # safety characterization
         self.assertEqual(ground_term.safety(), SafetyTriplet())

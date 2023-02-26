@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
 
-import aspy
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .term import Term, Number, Variable
+from .special import ArithVariable
 
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
@@ -18,34 +18,6 @@ if TYPE_CHECKING:
 
 
 # TODO: restrictions when substituting ground terms? (or only handle during match?)
-
-class ArithVariable(Variable):
-    ground: bool = False
-
-    """Variable replacing an arithmetic term"""
-    def __init__(self, id: int, orig_term: "ArithTerm") -> None:
-        # check if id is valid
-        if aspy.debug() and id < 0:
-            raise ValueError(f"Invalid value for {type(self)}: {id}")
-
-        self.val = f"{SpecialChar.TAU}{id}"
-        self.id = id
-        self.orig_term = orig_term
-
-    def precedes(self, other: Term) -> bool:
-        raise Exception("Total order is not defined for arithmetical (auxiliary) variables.")
-
-    def __str__(self) -> str:
-        return self.val
-
-    def __eq__(self, other: "Expr") -> str:
-        return isinstance(other, ArithVariable) and other.val == self.val and self.orig_term == other.orig_term
-
-    def __hash__(self) -> int:
-        return hash(("arith var", self.val, self.orig_term))
-
-    def replace_arith(self, var_table: "VariableTable") -> "ArithVariable":
-        return deepcopy(self)
 
 
 class ArithTerm(Term, ABC):
@@ -118,6 +90,10 @@ class Minus(ArithTerm):
         return -self.operand.eval()
 
     def substitute(self, subst: "Substitution") -> "Minus":
+        if self.ground:
+            return deepcopy(self)
+
+        # substitute operand recursively
         return Minus(self.operand.substitute(subst))
 
     def simplify(self) -> "ArithTerm":
@@ -173,6 +149,9 @@ class Add(ArithTerm):
         return self.loperand.eval() + self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Add":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
@@ -240,6 +219,9 @@ class Sub(ArithTerm):
         return self.loperand.eval() - self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Sub":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
@@ -308,6 +290,9 @@ class Mult(ArithTerm):
         return self.loperand.eval() * self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Mult":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
@@ -400,6 +385,9 @@ class Div(ArithTerm):
         return self.loperand.eval() // self.roperand.eval()
 
     def substitute(self, subst: "Substitution") -> "Div":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 

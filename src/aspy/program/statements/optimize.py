@@ -1,6 +1,7 @@
 from typing import Tuple, Optional, Set, TYPE_CHECKING
 from abc import ABC
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.expression import Expr
 from aspy.program.terms import TermTuple
@@ -113,6 +114,9 @@ class MinimizeStatement(OptimizeStatement):
         return f"#minimize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
     def substitute(self, subst: "Substitution") -> "MinimizeStatement":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute elements recursively
         elements = (element.substitute(subst) for element in self.elements)
     
@@ -141,6 +145,9 @@ class MaximizeStatement(OptimizeStatement):
         return f"#maximize{{{' ; '.join([str(element) for element in self.elements])}}}"
 
     def substitute(self, subst: "Substitution") -> "MaximizeStatement":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute elements recursively
         elements = (element.substitute(subst) for element in self.elements)
 

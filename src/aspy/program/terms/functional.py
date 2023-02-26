@@ -1,4 +1,4 @@
-from typing import Union, Set, Optional, Tuple, List, TYPE_CHECKING
+from typing import Union, Set, Optional, TYPE_CHECKING
 from copy import deepcopy
 from functools import cached_property
 
@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from aspy.program.terms import Variable
     from aspy.program.statements import Statement
     from aspy.program.query import Query
-    from aspy.program.literals import BuiltinLiteral
     from aspy.program.variable_table import VariableTable
 
 
@@ -36,7 +35,7 @@ class Functional(Term):
         return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms
 
     def __hash__(self) -> int:
-        return hash(("func", self.symbol, self.terms))
+        return hash( ("functional", self.symbol, self.terms) )
 
     @property
     def arity(self) -> int:
@@ -79,10 +78,13 @@ class Functional(Term):
         return self.terms.match(other.terms)
 
     def substitute(self, subst: Substitution) -> "Functional":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute terms recursively
         terms = (term.substitute(subst) for term in self.terms)
 
         return Functional(self.symbol, *terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "Functional":
-        return Functional(self.symbol, *self.terms.replace_arith(var_table).terms)
+        return Functional(self.symbol, *self.terms.replace_arith(var_table))

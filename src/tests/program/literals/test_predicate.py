@@ -40,7 +40,7 @@ class TestPredicate(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(literal.replace_arith(VariableTable()), literal)
         self.assertEqual(var_literal.replace_arith(VariableTable()), var_literal)
-        self.assertEqual(PredicateLiteral('p', Number(0), Minus(Number(1))).replace_arith(VariableTable()), PredicateLiteral('p', Number(0), Minus(Number(1)))) # ground arithmetic term should not be replaced
+        self.assertEqual(PredicateLiteral('p', Number(0), Minus(Number(1))).replace_arith(VariableTable()), PredicateLiteral('p', Number(0), Number(-1))) # ground arithmetic term should not be replaced (only gets simplified)
         self.assertEqual(PredicateLiteral('p', Number(0), Minus(Variable('X'))).replace_arith(VariableTable()), PredicateLiteral('p', Number(0), ArithVariable(0, Minus(Variable('X'))))) # non-ground arithmetic term should be replaced
         # positive/negative literal occurrences
         self.assertEqual(literal.pos_occ(), {PredicateLiteral('p', Number(0), String('x'))})

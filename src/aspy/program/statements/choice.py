@@ -1,5 +1,6 @@
-from typing import Optional, Tuple, Set, TYPE_CHECKING
+from typing import Optional, Tuple, Set, Union, TYPE_CHECKING
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.expression import Expr
 from aspy.program.literals import LiteralTuple
@@ -10,7 +11,7 @@ from .statement import Fact, Rule
 if TYPE_CHECKING:
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
-    from aspy.program.literals import PredicateLiteral
+    from aspy.program.literals import PredicateLiteral, Guard
     from aspy.program.operators import RelOp
 
     from .statement import Statement
@@ -61,40 +62,71 @@ class ChoiceElement(Expr):
 
 class Choice(Expr):
     """Choice."""
-    def __init__(self, elements: Optional[Tuple[ChoiceElement]]=None, lcomp: Optional[Tuple["RelOp", "Term"]]=None, rcomp: Optional[Tuple["RelOp", "Term"]]=None):
+    def __init__(self, elements: Optional[Tuple[ChoiceElement]]=None, guards: Optional[Union["Guard", Tuple["Guard", ...]]]=None):
+        if guards is None:
+            guards = tuple()
+
+        # initialize left and right guard to 'None'
+        self.lguard, self.rguard = None, None
+
+        # single guard specified
+        if isinstance(guards, Guard):
+            # wrap in tuple
+            guards = (guards, )
+        # no guards specified
+        elif guards is None:
+            # TODO: set default guards
+            raise Exception()
+        # guard tuple specified
+        elif isinstance(guards, Tuple) and len(guards) > 2:
+            raise ValueError("Choice expression requires at least one and at most two guards to be specified.")
+        else:
+            raise ValueError(f"Invalid specification of aggregate guards: {guards}.")
+
+        # process guards
+        for guard in guards:
+            if guard.right:
+                if self.rguard is not None:
+                    raise ValueError("Multiple right guards specified for choice expression.")
+                self.rguard = guard
+            else:
+                if self.lguard is not None:
+                    raise ValueError("Multiple right guards specified for choice expression.")
+                self.lguard = guard
+
         if elements is None:
             elements = tuple()
 
         self.elements = elements
-        self.lcomp = lcomp
-        self.rcomp = rcomp
 
     def __str__(self) -> str:
-        return (f"{str(self.lcomp[1])} {str(self.lcomp[0])}" if self.lcomp else "") + f"{{{';'.join([str(literal) for literal in self.elements])}}}" + (f"{str(self.lcomp[0])} {str(self.lcomp[1])}" if self.lcomp else "")
+        return (f"{str(self.lguard.bound)} {str(self.lguard.op)}" if self.lguard else "") + f"{{{';'.join([str(literal) for literal in self.elements])}}}" + (f"{str(self.rguard.op)} {str(self.rguard.bound)}" if self.lguard else "")
 
     @cached_property
     def ground(self) -> bool:
         return all(element.ground for element in self.elements)
 
-    def guards(self) -> Tuple[Tuple["RelOp", "Term"], Tuple["RelOp", "Term"]]:
-        return (self.lcomp, self.rcomp)
+    def guards(self) -> Tuple[Union["Guard", None], Union["Guard", None]]:
+        return (self.lguard, self.rguard)
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         # TODO: global
         if global_only:
             raise Exception()
 
-        return set().union(guard[1].vars() for guard in self.guards() if guard is not None)
+        return set().union(guard.bound.vars() for guard in self.guards() if guard is not None)
 
     def substitute(self, subst: "Substitution") -> "Choice":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute elements recursively
         elements = (element.substitute(subst) for element in self.elements)
     
         # substitute guard terms recursively
-        lcomp = (self.lcomp[0], self.lcomp[1].substitute(subst))
-        rcomp = (self.rcomp[0], self.rcomp[1].substitute(subst))
+        guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
 
-        return Choice(elements, lcomp, rcomp)
+        return Choice(elements, guards)
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for choice expressions not supported yet.")
@@ -141,6 +173,9 @@ class ChoiceFact(Fact):
         raise Exception("Safety characterization for choice facts not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceFact":
+        if self.ground:
+            return deepcopy(self)
+
         return ChoiceFact(self.head.substitute(subst))
 
     def match(self, other: Expr) -> Set["Substitution"]:
@@ -191,6 +226,9 @@ class ChoiceRule(Rule):
         raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":
+        if self.ground:
+            return deepcopy(self)
+
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))
 
     def match(self, other: Expr) -> Set["Substitution"]:

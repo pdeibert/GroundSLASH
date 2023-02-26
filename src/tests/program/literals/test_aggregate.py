@@ -3,8 +3,8 @@ import unittest
 import aspy
 from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
-from aspy.program.terms import TermTuple, Number, Variable, ArithVariable, Minus, String, Infimum, Supremum
-from aspy.program.literals import Naf, PredicateLiteral, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral, LiteralTuple
+from aspy.program.terms import TermTuple, Number, Variable, Minus, String, Infimum, Supremum, ArithVariable
+from aspy.program.literals import Naf, PredicateLiteral, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral, LiteralTuple, Guard
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
 
@@ -265,26 +265,26 @@ class TestAggregate(unittest.TestCase):
         aggregate = AggregateCount(*elements)
 
         # no guards
-        self.assertRaises(ValueError, AggregateLiteral, aggregate)
+        self.assertRaises(ValueError, AggregateLiteral, aggregate, tuple())
         # left guard only
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.LESS, Number(3)))
-        self.assertEqual(literal.lcomp, (RelOp.LESS, Number(3)))
-        self.assertEqual(literal.rcomp, None)
-        self.assertEqual(literal.guards, ((RelOp.LESS, Number(3)), None))
+        literal = AggregateLiteral(aggregate, guards=Guard(RelOp.LESS, Number(3), False))
+        self.assertEqual(literal.lguard, Guard(RelOp.LESS, Number(3), False))
+        self.assertEqual(literal.rguard, None)
+        self.assertEqual(literal.guards, (Guard(RelOp.LESS, Number(3), False), None))
         self.assertFalse(literal.eval())
         self.assertEqual(str(literal), '3 < #count{5:p("str"),not q;-3:not p("str")}')
         # right guard only
-        literal = AggregateLiteral(aggregate, rcomp=(RelOp.LESS, Number(3)))
-        self.assertEqual(literal.lcomp, None)
-        self.assertEqual(literal.rcomp, (RelOp.LESS, Number(3)))
-        self.assertEqual(literal.guards, (None, (RelOp.LESS, Number(3))))
+        literal = AggregateLiteral(aggregate, Guard(RelOp.LESS, Number(3), True))
+        self.assertEqual(literal.lguard, None)
+        self.assertEqual(literal.rguard, Guard(RelOp.LESS, Number(3), True))
+        self.assertEqual(literal.guards, (None, Guard(RelOp.LESS, Number(3), True)))
         self.assertTrue(literal.eval())
         self.assertEqual(str(literal), '#count{5:p("str"),not q;-3:not p("str")} < 3')
         # both guards
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.LESS, Number(3)), rcomp=(RelOp.LESS, Number(3)))
-        self.assertEqual(literal.lcomp, (RelOp.LESS, Number(3)))
-        self.assertEqual(literal.rcomp, (RelOp.LESS, Number(3)))
-        self.assertEqual(literal.guards, ((RelOp.LESS, Number(3)), (RelOp.LESS, Number(3))))
+        literal = AggregateLiteral(aggregate, guards=(Guard(RelOp.LESS, Number(3), False), Guard(RelOp.LESS, Number(3), True)))
+        self.assertEqual(literal.lguard, Guard(RelOp.LESS, Number(3), False))
+        self.assertEqual(literal.rguard, Guard(RelOp.LESS, Number(3), True))
+        self.assertEqual(literal.guards, (Guard(RelOp.LESS, Number(3), False), Guard(RelOp.LESS, Number(3), True)))
         self.assertFalse(literal.eval())
         self.assertEqual(str(literal), '3 < #count{5:p("str"),not q;-3:not p("str")} < 3')
 
@@ -308,7 +308,7 @@ class TestAggregate(unittest.TestCase):
             )
         )
         aggregate = AggregateCount(*elements)
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.LESS, Variable('Y')))
+        literal = AggregateLiteral(aggregate, guards=Guard(RelOp.LESS, Variable('Y'), False))
         self.assertEqual(literal.invars(), {Variable('X')})
         self.assertEqual(literal.outvars(), {Variable('Y')})
         self.assertEqual(literal.vars(), {Variable('X'), Variable('Y')})
@@ -318,7 +318,7 @@ class TestAggregate(unittest.TestCase):
 
         self.assertEqual(literal.safety(global_vars={Variable('X')}), SafetyTriplet(unsafe={Variable('X')}))
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet())
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.LESS, Variable('X')))
+        literal = AggregateLiteral(aggregate, Guard(RelOp.LESS, Variable('X'), False))
         self.assertEqual(literal.safety(global_vars={Variable('X')}), SafetyTriplet(unsafe={Variable('X')}))
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet())
 
@@ -333,11 +333,11 @@ class TestAggregate(unittest.TestCase):
                     TermTuple(Number(-3)),
                     LiteralTuple(Naf(PredicateLiteral('p', String('str'))))
                 )
-            )), lcomp=(RelOp.LESS, Number(1)))
-        )
+            )), guards=Guard(RelOp.LESS, Number(1), False)
+        ))
         # TODO: match
 
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.EQUAL, Variable('Y')))
+        literal = AggregateLiteral(aggregate, guards=Guard(RelOp.EQUAL, Variable('Y'), False))
         # aggr_global_invars = {'X'}
         # aggr_global_vars = {'X','Y'} -> unsafe
         # rules = { ('Y', {'X'}) }
@@ -347,7 +347,7 @@ class TestAggregate(unittest.TestCase):
         # rules = { ('Y', {}) } -> makes 'Y' safe
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet(safe={Variable('Y')}))
 
-        literal = AggregateLiteral(aggregate, lcomp=(RelOp.EQUAL, Variable('X')))
+        literal = AggregateLiteral(aggregate, guards=Guard(RelOp.EQUAL, Variable('X'), False))
         # aggr_global_invars = {'X'}
         # aggr_global_vars = {'X'} -> unsafe
         # rules = { ('X', {'X'}) } -> removes (without making 'X' safe)
@@ -358,6 +358,11 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(literal.safety(global_vars={Variable('Y')}), SafetyTriplet(safe={Variable('X')}))
 
         # TODO: safety characterization for case with two guards
+
+        aggregate = AggregateCount(AggregateElement(TermTuple(Number(5)), LiteralTuple(PredicateLiteral('p', Minus(Variable('X'))), Naf(PredicateLiteral('q')))))
+        literal = Naf(AggregateLiteral(aggregate, Guard(RelOp.EQUAL, Minus(Variable('X')), True)))
+        # replace arithmetic terms
+        self.assertEqual(LiteralTuple(PredicateLiteral('p', Number(0), Variable('X')), PredicateLiteral('q', Minus(Variable('Y')))).replace_arith(VariableTable()), LiteralTuple(PredicateLiteral('p', Number(0), Variable('X')), PredicateLiteral('q', ArithVariable(0, Minus(Variable('Y'))))))
 
 
 if __name__ == "__main__":

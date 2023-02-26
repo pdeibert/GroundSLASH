@@ -37,25 +37,32 @@ class TestComponentGraph(unittest.TestCase):
 
         u1_comp     = [component for component in graph.nodes if component.nodes == {u1}].pop()
         self.assertTrue(u1_comp.nodes == {u1} and len(u1_comp.pos_edges) == len(u1_comp.neg_edges) == 0)
+        self.assertTrue(u1_comp.stratified)
 
         u2_comp     = [component for component in graph.nodes if component.nodes == {u2}].pop()
         self.assertTrue(u2_comp.nodes == {u2} and len(u2_comp.pos_edges) == len(u2_comp.neg_edges) == 0)
+        self.assertTrue(u2_comp.stratified)
 
         v2_comp     = [component for component in graph.nodes if component.nodes == {v2}].pop()
         self.assertTrue(v2_comp.nodes == {v2} and len(v2_comp.pos_edges) == len(v2_comp.neg_edges) == 0)
+        self.assertTrue(v2_comp.stratified)
 
         v3_comp     = [component for component in graph.nodes if component.nodes == {v3}].pop()
         self.assertTrue(v3_comp.nodes == {v3} and len(v3_comp.pos_edges) == len(v3_comp.neg_edges) == 0)
+        self.assertTrue(v3_comp.stratified)
 
         pX_qX_comp  = [component for component in graph.nodes if component.nodes == {pX,qX}].pop()
         self.assertTrue(pX_qX_comp.nodes == {pX,qX} and pX_qX_comp.pos_edges == {(qX,pX)} and pX_qX_comp.neg_edges == {(pX,qX)})
+        self.assertFalse(pX_qX_comp.stratified)
 
         x_comp      = [component for component in graph.nodes if component.nodes == {x}].pop()
         self.assertTrue(x_comp.nodes == {x} and len(x_comp.pos_edges) == len(x_comp.neg_edges) == 0)
+        self.assertFalse(x_comp.stratified)
 
         y_comp      = [component for component in graph.nodes if component.nodes == {y}].pop()
-        self.assertTrue(y_comp.nodes == {y} and len(y_comp.pos_edges) == len(y_comp.neg_edges) == 0)        
-    
+        self.assertTrue(y_comp.nodes == {y} and len(y_comp.pos_edges) == len(y_comp.neg_edges) == 0)
+        self.assertFalse(y_comp.stratified)
+
         # check inter-component edges
         self.assertTrue(len(graph.edges), 6) # no extra edges
         self.assertTrue( (pX_qX_comp, u1_comp) in graph.pos_edges)

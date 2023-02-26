@@ -4,7 +4,7 @@ import aspy
 from aspy.program.substitution import Substitution
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.terms import Functional, Number, Variable, String
+from aspy.program.terms import Functional, Number, Variable, String, Minus, ArithVariable
 
 
 class TestFunctional(unittest.TestCase):
@@ -38,8 +38,7 @@ class TestFunctional(unittest.TestCase):
         self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
         self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable('X')})
         # replace arithmetic terms
-        self.assertEqual(ground_term.replace_arith(VariableTable()), ground_term)
-        self.assertEqual(var_term.replace_arith(VariableTable()), var_term)
+        self.assertEqual(Functional('f', Minus(Variable('X')), String('x')).replace_arith(VariableTable()), Functional('f', ArithVariable(0, Minus(Variable('X'))), String('x')))
         # safety characterizatin
         self.assertEqual(ground_term.safety(), SafetyTriplet())
         self.assertEqual(var_term.safety(), SafetyTriplet({Variable('X')}))

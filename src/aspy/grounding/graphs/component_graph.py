@@ -10,10 +10,11 @@ if TYPE_CHECKING:
 
 
 class Component():
-    def __init__(self, rules: Set["Statement"], pos_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, neg_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None) -> None:
+    def __init__(self, rules: Set["Statement"], pos_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, neg_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, stratified: bool=False) -> None:
         self.nodes = rules
         self.pos_edges = pos_edges if pos_edges is not None else set()
         self.neg_edges = neg_edges if neg_edges is not None else set()
+        self.stratified = stratified
 
     @property
     def edges(self) -> Set[Tuple["Statement","Statement"]]:
@@ -81,9 +82,9 @@ class ComponentGraph(object):
                 neg_edges.add( (src, dst) )
 
         graph = object.__new__(cls)
-        
-        # create component instances (i.e., nodes)
-        components = {Component(set(scc), *scc_edges[scc]) for scc in sccs}
+
+        # create component instances (i.e., nodes), marking components as UNstratified where possible (if they negatively depend on themselves)
+        components = {Component(set(scc), *scc_edges[scc], stratified=not bool(scc_edges[scc][1])) for scc in sccs}
 
         # map rules to actual components
         rule2component = dict()
@@ -95,6 +96,27 @@ class ComponentGraph(object):
         graph.nodes = components
         graph.pos_edges = {(rule2component[src], rule2component[dst]) for (src, dst) in pos_edges}
         graph.neg_edges = {(rule2component[src], rule2component[dst]) for (src, dst) in neg_edges}
+
+        # indicate whether or not component are stratified
+        converged = False
+        # group components
+        stratified_components = {component for component in components if component.stratified}
+        unstratified_components = set()
+
+        for component in components:
+            (stratified_components if component.stratified else unstratified_components).add(component)
+
+        while not converged:
+
+            converged = True
+
+            for component in stratified_components.copy():
+                for (src_component, dst_component) in graph.edges:
+                    # if component depends on an UNstratified component, mark it as UNstratisfied
+                    if src_component == component and dst_component not in stratified_components:
+                        component.stratified = False
+                        stratified_components.remove(component)
+                        converged = False
 
         return graph
 

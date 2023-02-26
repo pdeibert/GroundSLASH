@@ -1,5 +1,6 @@
 from typing import Set, Optional, TYPE_CHECKING
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.literals import LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
@@ -59,6 +60,9 @@ class WeakConstraint(Statement):
         raise Exception("Safety characterization for weak constraints not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "WeakConstraint":
+        if self.ground:
+            return deepcopy(self)
+
         return WeakConstraint(
             self.literals.substitute(subst),
             self.weight.substitute(subst),

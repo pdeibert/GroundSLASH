@@ -1,5 +1,6 @@
 from typing import Set, Optional, TYPE_CHECKING
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.literals import LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
@@ -52,6 +53,9 @@ class Constraint(Statement):
         raise Exception("Safety characterization for constraints not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "Constraint":
+        if self.ground:
+            return deepcopy(self)
+
         return Constraint(self.literals.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:

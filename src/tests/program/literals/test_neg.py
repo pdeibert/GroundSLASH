@@ -4,7 +4,7 @@ import aspy
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Number, Variable, ArithVariable, Minus, String
-from aspy.program.literals import Neg, PredicateLiteral, Equal, AggregateLiteral, AggregateCount
+from aspy.program.literals import Neg, PredicateLiteral, Equal, AggregateLiteral, AggregateCount, Guard
 from aspy.program.operators import RelOp
 
 
@@ -24,7 +24,7 @@ class TestNaf(unittest.TestCase):
         self.assertTrue(Neg(PredicateLiteral('p', Number(0), Variable('Y')), True).neg)
 
         # aggregate literal
-        self.assertRaises(ValueError, Neg, AggregateLiteral(AggregateCount(), (RelOp.LESS, Number(3))))
+        self.assertRaises(ValueError, Neg, AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False)))
 
         # builtin literal
         self.assertRaises(ValueError, Neg, Equal(Number(0), Variable('Y')))

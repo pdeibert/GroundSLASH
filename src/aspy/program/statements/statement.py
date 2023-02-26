@@ -1,7 +1,9 @@
 from typing import Any, Set, Optional, Tuple, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from functools import cached_property
 
+from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
 from aspy.program.symbol_table import SymbolTable
 from aspy.program.expression import Expr
@@ -69,8 +71,14 @@ class Rule(Statement, ABC):
     def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
         pass
 
+    @cached_property
+    def contains_aggregates(self) -> bool:
+        return any(isinstance(literal, AggregateLiteral) for literal in self.body)
+
 
 class Fact(Rule, ABC):
     """Abstract base class for all facts."""
+    contains_aggregates: bool=False
+
     def rewrite(self) -> Tuple["Fact"]:
         return (deepcopy(self), )

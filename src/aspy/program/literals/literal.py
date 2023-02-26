@@ -2,6 +2,7 @@ from typing import Tuple, Set, Optional, Union, Iterator, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.expression import Expr
 from aspy.program.substitution import Substitution, AssignmentError
@@ -47,14 +48,15 @@ class LiteralTuple:
         if len(self) != len(other):
             return False
 
-        for l1, l2 in zip(self, other):
-            if l1 != l2:
-                return False
-
-        return True
+        return frozenset(self.literals) == frozenset(other.literals)
+        #for l1, l2 in zip(self, other):
+        #    if l1 != l2:
+        #        return False
+        #
+        #return True
 
     def __hash__(self) -> int:
-        return hash(self.literals)
+        return hash( ("literal tuple", frozenset(self.literals)) )
 
     def __iter__(self) -> Iterator[Literal]:
         return iter(self.literals)
@@ -81,7 +83,13 @@ class LiteralTuple:
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
         return tuple(literal.safety() for literal in self.literals)
 
+    def without(self, *literals: Literal) -> "LiteralTuple":
+        return LiteralTuple(*(literal for literal in self.literals if not literal in literals))
+
     def substitute(self, subst: "Substitution") -> "LiteralTuple":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute literals recursively
         literals = (literal.substitute(subst) for literal in self)
 

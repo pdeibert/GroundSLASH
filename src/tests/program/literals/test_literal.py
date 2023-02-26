@@ -29,6 +29,8 @@ class TestLiteral(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(literals.replace_arith(VariableTable()), LiteralTuple(PredicateLiteral('p', Number(0), Variable('X')), PredicateLiteral('q', ArithVariable(0, Minus(Variable('Y'))))))
         self.assertEqual(literals.safety(), (literals[0].safety(), literals[1].safety()))
+        # safety characterization
+        self.assertEqual(literals.safety(), (literals[0].safety(), literals[1].safety()))
 
         # substitute
         self.assertEqual(LiteralTuple(PredicateLiteral('p', String('f'), Variable('X'))).substitute(Substitution({String('f'): Number(0), Variable('X'): Number(1)})), LiteralTuple(PredicateLiteral('p', String('f'), Number(1)))) # NOTE: substitution is invalid
@@ -40,6 +42,9 @@ class TestLiteral(unittest.TestCase):
 
         # combining literal tuples
         self.assertEqual(literals + LiteralTuple(PredicateLiteral('u')), LiteralTuple(PredicateLiteral('p', Number(0), Variable('X')), PredicateLiteral('q', Minus(Variable('Y'))), PredicateLiteral('u')))
+        # without
+        self.assertEqual(literals.without(PredicateLiteral('p', Number(0), Variable('X'))), LiteralTuple(PredicateLiteral('q', Minus(Variable('Y')))))
+        self.assertEqual(literals.without(PredicateLiteral('p', Number(1), Variable('X'))), literals) # not part of original literal tuple
         # TODO: iter
 
 

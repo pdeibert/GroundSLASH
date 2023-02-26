@@ -1,5 +1,6 @@
 from typing import Set, Union, Tuple, Optional, TYPE_CHECKING
 from functools import cached_property
+from copy import deepcopy
 
 import aspy
 from aspy.program.symbol_table import SymbolTable
@@ -68,6 +69,9 @@ class DisjunctiveFact(Fact):
         return self.head.ground
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveFact":
+        if self.ground:
+            return deepcopy(self)
+
         return DisjunctiveFact(*self.head.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:
@@ -128,6 +132,9 @@ class DisjunctiveRule(Rule):
         return self.head.ground and self.body.ground
 
     def substitute(self, subst: "Substitution") -> "DisjunctiveRule":
+        if self.ground:
+            return deepcopy(self)
+
         return DisjunctiveRule(self.head.substitute(subst), *self.literals.substitute(subst))
 
     def match(self, other: "Expr") -> Set["Substitution"]:

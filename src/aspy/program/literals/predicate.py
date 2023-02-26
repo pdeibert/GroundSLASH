@@ -1,5 +1,6 @@
 from typing import Tuple, Optional, Union, Set, TYPE_CHECKING
 from functools import cached_property
+from copy import deepcopy
 
 import aspy
 from aspy.program.safety_characterization import SafetyTriplet
@@ -19,22 +20,22 @@ if TYPE_CHECKING:
 
 class PredicateLiteral(Literal):
     """Predicate."""
-    def __init__(self, name: str, *terms: "Term") -> None:
-        super().__init__(False)
+    def __init__(self, name: str, *terms: "Term", neg: bool=False, naf: bool=False) -> None:
+        super().__init__(naf)
 
         # check if predicate name is valid
         if aspy.debug() and not SYM_CONST_RE.fullmatch(name):
             raise ValueError(f"Invalid value for {type(self)}: {name}")
 
         self.name = name
-        self.neg = False
+        self.neg = neg
         self.terms = TermTuple(*terms)
 
     def __eq__(self, other: "Expr") -> bool:
-        return self.name == self.name and self.terms == self.terms and self.neg == other.neg and self.naf == other.naf
+        return isinstance(other, PredicateLiteral) and self.name == other.name and self.terms == other.terms and self.neg == other.neg and self.naf == other.naf
 
     def __hash__(self) -> int:
-        return hash( (self.naf, self.neg, self.name, *self.terms) )
+        return hash( ("predicate literal", self.naf, self.neg, self.name, *self.terms) )
 
     def __str__(self) -> str:
         terms_str = (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
@@ -61,20 +62,14 @@ class PredicateLiteral(Literal):
         if self.naf:
             return set()
 
-        literal = PredicateLiteral(self.name, *self.terms.terms)
-        literal.set_neg(self.neg)
-
-        return {literal}
+        return {PredicateLiteral(self.name, *self.terms.terms, neg=self.neg)}
 
     def neg_occ(self) -> Set["Literal"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
-        literal = PredicateLiteral(self.name, *self.terms.terms)
-        literal.set_neg(self.neg)
-
-        return {literal}
+        return {PredicateLiteral(self.name, *self.terms.terms, neg=self.neg)}
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return set().union(self.terms.vars(global_only))
@@ -90,16 +85,11 @@ class PredicateLiteral(Literal):
         return None
 
     def substitute(self, subst: Substitution) -> "PredicateLiteral":
-        # substitute terms recursively
-        literal = PredicateLiteral(self.name, *tuple((term.substitute(subst) for term in self.terms)))
-        literal.set_neg(self.neg)
-        literal.set_naf(self.naf)
+        if self.ground:
+            return deepcopy(self)
 
-        return literal
+        # substitute terms recursively
+        return PredicateLiteral(self.name, *tuple((term.substitute(subst) for term in self.terms)), neg=self.neg, naf=self.naf)
 
     def replace_arith(self, var_table: "VariableTable") -> "PredicateLiteral":
-        literal = PredicateLiteral(self.name, *tuple(term.replace_arith(var_table) for term in self.terms))
-        literal.set_neg(self.neg)
-        literal.set_naf(self.naf)
-
-        return literal
+        return PredicateLiteral(self.name, *self.terms.replace_arith(var_table), neg=self.neg, naf=self.naf)

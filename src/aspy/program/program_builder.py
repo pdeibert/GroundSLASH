@@ -6,7 +6,7 @@ from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
 from aspy.program.terms import TermTuple, Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
-from aspy.program.literals import Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
+from aspy.program.literals import Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, Guard, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
 from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
 from aspy.program.program import Program
 from aspy.program.operators import ArithOp, RelOp, AggrOp
@@ -210,11 +210,11 @@ class ProgramBuilder(ASPCoreVisitor):
             choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)?
         """
         moving_index = 0
-        lcomp, rcomp = None, None
+        lguard, rguard = None, None
 
         # term relop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lcomp = (self.visitRelop(ctx.children[1]), self.visitTerm(self[0]))
+            lguard = Guard(self.visitRelop(ctx.children[1]), self.visitTerm(self.children[0]), False)
             moving_index += 3 # skip CURLY_OPEN as well
 
         # CURLY_OPEN CURLY_CLOSE
@@ -228,9 +228,9 @@ class ProgramBuilder(ASPCoreVisitor):
 
         # relop term
         if moving_index < len(ctx.children)-1:
-            rcomp = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
+            rguard = Guard(self.visitRelop(ctx.children[moving_index]), self.visitTerm(self.children[moving_index+1]), True)
 
-        return Choice(elements, lcomp, rcomp)
+        return Choice(elements, lguard, rguard)
 
 
     # Visit a parse tree produced by ASPCoreParser#choice_elements.
@@ -282,11 +282,11 @@ class ProgramBuilder(ASPCoreVisitor):
             aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)?
         """
         moving_index = 0
-        lcomp, rcomp = None, None
+        lguard, rguard = None, None
 
         # term relop
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lcomp = (self.visitRelop(ctx.children[1]), self.visitTerm(self[0]))
+            lguard = (self.visitRelop(ctx.children[1]), self.visitTerm(self.children[0]), False)
             moving_index += 2
         
         # aggregate_function
@@ -304,7 +304,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
         # relop term
         if moving_index < len(ctx.children)-1:
-            rcomp = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self[moving_index+1]))
+            rguard = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self.children[moving_index+1]), True)
 
         if(aggregate_function == "COUNT"):
             Aggregate = AggregateCount
@@ -315,7 +315,7 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             Aggregate = AggregateMin
 
-        return Aggregate(elements, lcomp, rcomp)
+        return Aggregate(elements, (lguard, rguard))
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_elements.

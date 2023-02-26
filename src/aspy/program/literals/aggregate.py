@@ -1,15 +1,18 @@
-from typing import Tuple, Optional, Union, Dict, Set, TYPE_CHECKING
+from typing import Tuple, Optional, Union, List, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from functools import cached_property
+from functools import cached_property, reduce
 
 from aspy.program.expression import Expr
+from aspy.program.symbol_table import SpecialChar
 from aspy.program.terms import Infimum, Supremum, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
+#from aspy.program.statements import EpsRule, EtaRule
 
+from .guard import Guard
 from .literal import Literal, LiteralTuple
+from .special import AlphaLiteral
 
 if TYPE_CHECKING:
-    from aspy.program.operators import RelOp
     from aspy.program.terms import Term, Variable
     from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
@@ -19,6 +22,7 @@ if TYPE_CHECKING:
     from .predicate import PredicateLiteral
 
 # TODO: what if aggregate element has no terms ???
+
 
 class AggregateElement(Expr):
     """Represents an aggregate element."""
@@ -59,6 +63,10 @@ class AggregateElement(Expr):
             return self.terms[0].val
 
         return 0
+
+    def satisfied(self, literals: Set["Literal"]) -> bool:
+        # check if all condition literals are part of the specified set
+        return all(literal in literals for literal in self.literals)
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.head.vars(global_only).union(self.body.vars(global_only))
@@ -108,6 +116,9 @@ class Aggregate(Expr, ABC):
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregates not supported yet.")
 
+    def replace_arith(self, var_table: "VariableTable") -> "Aggregate":
+        return type(self)( *tuple(element.replace_arith(var_table) for element in self.elements) )
+
 
 class AggregateCount(Aggregate):
     """Represents a 'count' aggregate."""
@@ -134,10 +145,7 @@ class AggregateCount(Aggregate):
         elements = tuple(element.substitute(subst) for element in self.elements)
 
         return AggregateCount(*elements)
-
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateCount":
-        return AggregateCount( *tuple(element.replace_arith(var_table) for element in self.elements) )
-
+ 
 
 class AggregateSum(Aggregate):
     """Represents a 'sum' aggregate."""
@@ -171,9 +179,6 @@ class AggregateSum(Aggregate):
 
         return AggregateSum(*elements)
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateSum":
-        return AggregateSum( *tuple(element.replace_arith(var_table) for element in self.elements) )
-
 
 class AggregateMin(Aggregate):
     """Represents a 'minimum' aggregate."""
@@ -188,8 +193,8 @@ class AggregateMin(Aggregate):
 
     def eval(self) -> Number:
         if self.elements:
-            # TODO: correct?
-            return min(element.terms[0] for element in self.elements)
+            # TODO: what about elements with no terms?
+            return reduce(lambda e1, e2: e2.terms[0] if not e1.terms[0].precedes(e2.terms[0]) else e1.terms[0], self.elements) # min
         else:
             return self.base()
 
@@ -205,9 +210,6 @@ class AggregateMin(Aggregate):
 
         return AggregateMin(*elements)
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateMin":
-        return AggregateMin( *tuple(element.replace_arith(var_table) for element in self.elements) )
-
 
 class AggregateMax(Aggregate):
     """Represents a 'maximum' aggregate."""
@@ -222,8 +224,8 @@ class AggregateMax(Aggregate):
 
     def eval(self) -> Number:
         if self.elements:
-            # TODO: correct?
-            return max(element.terms[0] for element in self.elements)
+            # TODO: what about elements with no terms?
+            return reduce(lambda e1, e2: e2.terms[0] if not e2.terms[0].precedes(e1.terms[0]) else e1.terms[0], self.elements) # max
         else:
             return self.base()
 
@@ -239,28 +241,45 @@ class AggregateMax(Aggregate):
 
         return AggregateMax(*elements)
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateMax":
-        return AggregateMax( *tuple(element.replace_arith(var_table) for element in self.elements) )
-
 
 class AggregateLiteral(Literal):
     """Represents an aggregate literal."""
-    def __init__(self, func: Aggregate, lcomp: Optional[Tuple["RelOp", "Term"]]=None, rcomp: Optional[Tuple["RelOp", "Term"]]=None, naf: bool=False) -> None:
+    def __init__(self, func: Aggregate, guards: Union[Guard, Tuple[Guard, ...]], naf: bool=False) -> None:
         super().__init__(naf)
 
-        if(lcomp is None and rcomp is None):
-            raise ValueError("Aggregate requires either a left- or right-comparison.")
+        # initialize left and right guard to 'None'
+        self.lguard, self.rguard = None, None
+
+        # single guard specified
+        if isinstance(guards, Guard):
+            # wrap in tuple
+            guards = (guards, )
+        # guard tuple specified
+        elif isinstance(guards, Tuple) and len(guards) not in {1,2}:
+            raise ValueError("Aggregate requires at least one and at most two guards to be specified.")
+
+        # process guards
+        for guard in guards:
+            if guard is None:
+                continue
+
+            if guard.right:
+                if self.rguard is not None:
+                    raise ValueError("Multiple right guards specified for aggregate.")
+                self.rguard = guard
+            else:
+                if self.lguard is not None:
+                    raise ValueError("Multiple right guards specified for aggregate.")
+                self.lguard = guard
 
         self.func = func
-        self.lcomp = lcomp
-        self.rcomp = rcomp
 
     def __str__(self) -> str:
-        return ("not " if self.naf else '') + f"{f'{str(self.lcomp[1])} {self.lcomp[0]} ' if self.lcomp is not None else ''}{str(self.func)}{f' {str(self.rcomp[0])} {str(self.rcomp[1])}' if self.rcomp is not None else ''}"
+        return ("not " if self.naf else '') + f"{f'{str(self.lguard.bound)} {self.lguard.op} ' if self.lguard is not None else ''}{str(self.func)}{f' {str(self.rguard.op)} {str(self.rguard.bound)}' if self.rguard is not None else ''}"
 
     @cached_property
     def ground(self) -> bool:
-        return self.func.ground and (self.lcomp[1] if self.lcomp is not None else True) and (self.rcomp[1] if self.rcomp is not None else True)
+        return self.func.ground and (self.lguard.bound.ground if self.lguard is not None else True) and (self.rguard.bound.ground if self.rguard is not None else True)
 
     def set_naf(self, value: bool=True) -> None:
         self.naf = value
@@ -272,24 +291,27 @@ class AggregateLiteral(Literal):
         return self.func.neg_occ()
 
     @property
-    def guards(self) -> Tuple[Tuple["RelOp", "Term"], Tuple["RelOp", "Term"]]:
-        return (self.lcomp, self.rcomp)
+    def guards(self) -> Tuple[Union[Guard, None], Union[Guard, None]]:
+        return (self.lguard, self.rguard)
 
     def invars(self) -> Set["Variable"]:
         return self.func.vars()
 
     def outvars(self) -> Set["Variable"]:
-        return set().union(*tuple(guard[1].vars() for guard in self.guards if guard is not None))
+        return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
 
     def vars(self, global_only: bool=False) -> Set["Variable"]:
         return self.outvars() if global_only else self.invars().union(self.outvars())
 
     def eval(self) -> bool:
+        if not self.ground:
+            raise ValueError("Cannot evaluate non-ground aggregate.")
+
         # evaluate aggregate function
         aggr_term = self.func.eval()
 
         # check guards
-        return (self.lcomp[0].eval(self.lcomp[1], aggr_term) if self.lcomp is not None else True) and (self.rcomp[0].eval(aggr_term, self.rcomp[1]) if self.rcomp is not None else True)
+        return (self.lguard.op.eval(self.lguard.bound, aggr_term) if self.lguard is not None else True) and (self.rguard.op.eval(aggr_term, self.rguard.bound) if self.rguard is not None else True)
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
 
@@ -306,18 +328,18 @@ class AggregateLiteral(Literal):
 
         guard_safeties = []
 
-        for comp in (self.lcomp, self.rcomp):
-            # guard specified
-            if(comp is None):
+        for guard in self.guards:
+            # guard not specified
+            if(guard is None):
                 continue
-            elif(str(comp[0]) != "="): # TODO: cannot compare to enum directly due to circular imports
+            elif(str(guard.op) != "="): # TODO: cannot compare to enum directly due to circular imports
                 guard_safeties.append(SafetyTriplet(unsafe=aggr_global_vars))
             else:
                 # compute safety characterization w.r.t. left term guard
                 guard_safeties.append(
                     SafetyTriplet(
                         unsafe=aggr_global_vars, # global inner variables and variables in guard term
-                        rules=set([SafetyRule(var, aggr_global_invars) for var in comp[1].safety().safe])
+                        rules=set([SafetyRule(var, aggr_global_invars) for var in guard.bound.safety().safe])
                     ).normalize()
                 )
 
@@ -330,19 +352,15 @@ class AggregateLiteral(Literal):
 
     def substitute(self, subst: "Substitution") -> "AggregateLiteral":
         # substitute guard terms recursively
-        lcomp = (self.lcomp[0], self.lcomp[1].substitute(subst)) if self.lcomp is not None else None
-        rcomp = (self.rcomp[0], self.rcomp[1].substitute(subst)) if self.rcomp is not None else None
+        guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
 
-        literal = AggregateLiteral(self.func.substitute(subst), lcomp, rcomp)
-        literal.set_naf(self.naf)
-
-        return literal
+        return AggregateLiteral(self.func.substitute(subst), guards, naf=self.naf)
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate literals not supported yet.")
 
     def replace_arith(self, var_table: "VariableTable") -> "AggregateLiteral":
         # replace guards
-        guards = (None if comp is None else (comp[0], comp[1].replace_arith(var_table)) for comp in self.guards())
+        guards = (None if guard is None else guard.replace_arith(var_table) for guard in self.guards())
 
         return AggregateLiteral(self.func.replace_arith(var_table), *guards, self.naf)

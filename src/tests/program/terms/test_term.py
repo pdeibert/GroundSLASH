@@ -4,7 +4,7 @@ import aspy
 from aspy.program.variable_table import VariableTable
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
-from aspy.program.terms import Infimum, Supremum, Variable, AnonVariable, Number, SymbolicConstant, String, TermTuple
+from aspy.program.terms import Infimum, Supremum, Variable, AnonVariable, Number, SymbolicConstant, String, TermTuple, Minus, ArithVariable
 
 
 class TestTerm(unittest.TestCase):
@@ -55,7 +55,7 @@ class TestTerm(unittest.TestCase):
         self.assertTrue(term.ground)
         # variables
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        # replacing arithmetic terms
+        # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
         self.assertEqual(term.safety(), SafetyTriplet())
@@ -195,7 +195,7 @@ class TestTerm(unittest.TestCase):
         self.assertTrue(term.ground)
         # variables
         self.assertTrue(term.vars() == term.vars(global_only=True) == set())
-        # replacing arithmetic terms
+        # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
         self.assertEqual(term.safety(), SafetyTriplet())
@@ -255,7 +255,7 @@ class TestTerm(unittest.TestCase):
         # variables
         self.assertTrue(terms.vars() == terms.vars(global_only=True) == {Variable('X')})
         # replace arithmetic terms
-        self.assertEqual(terms.replace_arith(VariableTable()), terms)
+        self.assertEqual(TermTuple(Number(0), Minus(Variable('X'))).replace_arith(VariableTable()), TermTuple(Number(0), ArithVariable(0, Minus(Variable('X')))))
         # safety characterization
         self.assertEqual(terms.safety(), (terms[0].safety(), terms[1].safety()))
 

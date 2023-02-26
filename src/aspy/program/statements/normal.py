@@ -1,12 +1,11 @@
-from typing import Tuple, Set, Optional, TYPE_CHECKING
+from typing import Tuple, Set, Dict, Optional, TYPE_CHECKING
 from functools import cached_property
 from collections import deque
 from copy import deepcopy
 
 from aspy.program.symbol_table import SymbolTable, SpecialChar
 from aspy.program.variable_table import VariableTable
-from aspy.program.literals import Equal, Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral
-from aspy.program.terms import ArithVariable
+from aspy.program.literals import Equal, Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral, AlphaLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import AssignmentError
 
@@ -15,9 +14,10 @@ from .statement import Fact, Rule
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
-    from aspy.program.literals import PredicateLiteral, Literal
+    from aspy.program.literals import PredicateLiteral, Literal, AlphaLiteral
     from aspy.program.terms import Variable
-
+    from aspy.program import Program
+    from .special import EpsRule, EtaRule
 
 class NormalFact(Fact):
     """Normal fact.
@@ -61,6 +61,9 @@ class NormalFact(Fact):
         return self.atom.ground
 
     def substitute(self, subst: "Substitution") -> "NormalFact":
+        if self.ground:
+            return deepcopy(self)
+
         return NormalFact(self.atom.substitute(subst))
 
     def match(self, other: "Expr") -> Optional["Substitution"]:
@@ -74,6 +77,9 @@ class NormalFact(Fact):
             return None
 
         return match
+
+    def replace_arith(self) -> "NormalFact":
+        return NormalFact(self.atom.replace_arith(self.var_table))
 
 
 class NormalRule(Rule):
@@ -125,6 +131,9 @@ class NormalRule(Rule):
         return self.atom.ground and self.body.ground
 
     def substitute(self, subst: "Substitution") -> "NormalRule":
+        if self.ground:
+            return deepcopy(self)
+
         return NormalRule(self.atom.substitute(subst), *self.literals.substitute(subst))
 
     def match(self, other: "Expr") -> Optional["Substitution"]:
@@ -153,24 +162,18 @@ class NormalRule(Rule):
 
         return subst
 
-    def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
+    def replace_arith(self) -> "NormalRule":
+        return NormalRule(self.atom.replace_arith(self.var_table), *self.literals.replace_arith(self.var_table))
 
+    def rewrite(self):
+        pass
+
+    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "NormalRule":
         if self.ground:
             return deepcopy(self)
 
-        # make a copy of the current variable table
-        var_table = deepcopy(self.var_table)
-
-        # first replace all non-ground arithmetic terms with new variables
-        rule = NormalRule(self.atom.replace_arith(var_table), self.body.replace_arith(var_table))
-
         # global variables
         glob_vars = self.vars(global_only=True)
-
-        # get arithmetic variables
-        arith_vars = rule.var_table.arith_vars()
-        # create check literals for arithmetic variables and the terms they replaced
-        arith_checks = tuple(Equal(var, var.orig_term) for var in arith_vars)
 
         # group literals
         non_aggr_literals = []
@@ -179,83 +182,31 @@ class NormalRule(Rule):
         for literal in self.body:
             (aggr_literals if isinstance(AggregateLiteral) else non_aggr_literals).append(literal)
 
-        rules = deque()
-        # map aggregate literals to replacement predicate literals
+        # mapping from original literals to alpha literals
+        alpha_map = dict()
+        # mapping from aggregate ID to corresponding alpha literal, epsilon rule and eta rules
         aggr_map = dict()
 
-        # rewrite all aggregate literals
+        # local import due to circular import
+        from .rewrite import rewrite_aggregate
+
         for literal in aggr_literals:
-            # rewrite all aggregate literal
+            # rewrite aggregate literal
+            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(literal, aggr_counter, glob_vars, non_aggr_literals)
 
-            # get global variables occurring in aggregate
-            # TODO: is outvars enough?
-            aggr_glob_vars = glob_vars.intersection(literal.vars())
+            # map original aggregate literal to new alpha literal
+            alpha_map[literal] = alpha_literal
 
-            n = len(aggr_glob_vars)
+            # store aggregate information
+            aggr_map[aggr_counter] = (literal, alpha_literal, eps_rule, eta_rules)
 
-            # ----- create predicate literal for each aggregate occurrence -----
-            alpha_symbol = sym_table.create(SpecialChar.ALPHA, n)
-            # append to rewritten literals (not only at end???)
-            new_literal = PredicateLiteral(alpha_symbol, vars)
+            # increase aggregate counter
+            aggr_counter += 1
 
-            if literal.naf:
-                new_literal = Naf(new_literal)
+        # replace original rule with modified one
+        alpha_rule = NormalRule(
+            self.head,
+            LiteralTuple(tuple(alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body)) # NOTE: restores original order of literals
+        )
 
-            aggr_map[literal].append(new_literal)
-
-            # ----- epsilon rule -----
-            eps_symbol = sym_table.create(SpecialChar.EPS, n)
-
-            # process guards
-            guard_literals = []
-            # get base value (aggregate value for empty set of aggregate elements)
-            base_val = literal.base()
-
-            # handle left guard
-            if literal.lcomp is not None:
-                op, term = literal.lcomp
-
-                # create
-                guard_literals.append(op.ast(term, base_val))
-            # handle right guard
-            if literal.rcomp is not None:
-                op, term = literal.rcomp
-
-                guard_literals.append(op.ast(base_val, term))
-            # TODO: defaults? see mu-gringo!
-            else:
-                raise Exception()
-
-            rules.append(
-                NormalRule(
-                    PredicateLiteral(eps_symbol, vars),
-                    LiteralTuple(tuple(guard_literals + non_aggr_literals))
-                )
-            )
-
-            # ----- eta rules -----
-            for element in literal.func.elements:
-                m = len(element.head)
-                eta_symbol = sym_table.create(SpecialChar.ETA, n+m)
-
-                rules.append(
-                    NormalRule(
-                        PredicateLiteral(eta_symbol, element.head + vars),
-                        LiteralTuple(element.body.literals + tuple(non_aggr_literals))
-                    )
-                )
-
-            # ----- replace original rule with modified rule -----
-            rules.insert(0,
-                NormalRule(
-                    self.head,
-                    LiteralTuple(tuple(aggr_map[literal] if isinstance(literal) else literal for literal in self.body)) # TODO: also restores original order
-                )
-            )
-
-        # TODO: what now?
-
-        # TODO: What else to rewrite ??? (see mu-gringo) 
-        # TODO: how does this translate to disjunctive or choice rules ????? same ?????
-
-        return rules
+        return alpha_rule, aggr_map

@@ -1,6 +1,7 @@
 from typing import Set, Tuple, Optional, Union, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from functools import cached_property
+from copy import deepcopy
 
 from aspy.program.terms import ArithTerm, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
@@ -49,6 +50,9 @@ class BuiltinLiteral(Literal, ABC):
     def eval(self) -> bool:
         pass
 
+    def replace_arith(self, var_table: "VariableTable") -> "BuiltinLiteral":
+        return type(self)(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
+
 
 class Equal(BuiltinLiteral):
     """Represents an equality comparison between terms."""
@@ -92,14 +96,13 @@ class Equal(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "Equal":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return Equal(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "Equal":
-        return Equal(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
-
 
 class Unequal(BuiltinLiteral):
     """Represents an unequality comparison between terms."""
@@ -129,14 +132,13 @@ class Unequal(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "Unequal":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return Unequal(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "Unequal":
-        return Unequal(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
-
 
 class Less(BuiltinLiteral):
     """Represents a less-than comparison between terms."""
@@ -166,14 +168,13 @@ class Less(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "Less":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return Less(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "Less":
-        return Less(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
-
 
 class Greater(BuiltinLiteral):
     """Represents a greater-than comparison between terms."""
@@ -203,13 +204,13 @@ class Greater(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "Greater":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return Greater(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "Greater":
-        return Greater(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
 
 
 class LessEqual(BuiltinLiteral):
@@ -240,13 +241,13 @@ class LessEqual(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "LessEqual":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return LessEqual(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "LessEqual":
-        return LessEqual(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
 
 
 class GreaterEqual(BuiltinLiteral):
@@ -277,10 +278,10 @@ class GreaterEqual(BuiltinLiteral):
         return None
 
     def substitute(self, subst: Substitution) -> "GreaterEqual":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return GreaterEqual(*operands)
-
-    def replace_arith(self, var_table: "VariableTable") -> "GreaterEqual":
-        return GreaterEqual(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, List, Iterable, Set, TYPE_CHECKING
+from typing import Optional, Union, Tuple, Iterable, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from functools import cached_property
 from copy import deepcopy
@@ -20,14 +20,6 @@ class Term(Expr, ABC):
     @abstractmethod
     def __eq__(self, other: Expr) -> bool:
         pass
-
-    def __lt__(self, other: Expr) -> bool:
-        # for 'min'
-        return self.precedes(other) and not other.precedes(self)
-
-    def __gt__(self, other: Expr) -> bool:
-        # for 'max'
-        return not self.precedes(other) and other.precedes(self)
 
     @abstractmethod
     def precedes(self, other: "Term") -> bool:
@@ -63,7 +55,7 @@ class Infimum(Term):
         return isinstance(other, Infimum)
 
     def __hash__(self) -> int:
-        return hash(("inf", ))
+        return hash( ("inf", ) )
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -83,7 +75,7 @@ class Supremum(Term):
         return isinstance(other, Supremum)
 
     def __hash__(self) -> int:
-        return hash(("sup", ))
+        return hash( ("sup", ) )
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -110,7 +102,7 @@ class Variable(Term):
         return isinstance(other, Variable) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash(("var", self.val))
+        return hash( ("var", self.val) )
 
     def precedes(self, other: Term) -> bool:
         raise Exception("Total ordering is undefined for non-ground terms.")
@@ -148,7 +140,7 @@ class AnonVariable(Variable):
         return isinstance(other, AnonVariable) and other.val == self.val and other.id == self.id
 
     def __hash__(self) -> int:
-        return hash(("anon var", self.val))
+        return hash( ("anon var", self.val) )
 
     def simplify(self) -> "Number":
         """Used in arithmetical terms."""
@@ -187,7 +179,7 @@ class Number(Term):
         return isinstance(other, Number) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash((self.val, ))
+        return hash( ("num", self.val) )
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -230,7 +222,7 @@ class SymbolicConstant(Term):
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash(("const", self.val))
+        return hash( ("symbolic const", self.val) )
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -258,7 +250,7 @@ class String(Term):
         return isinstance(other, String) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash(("str", self.val))
+        return hash( ("str", self.val) )
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -291,7 +283,7 @@ class TermTuple:
         return True
 
     def __hash__(self) -> int:
-        return hash(self.terms)
+        return hash( ("term tuple", self.terms) )
 
     def __iter__(self) -> Iterable[Term]:
         return iter(self.terms)
@@ -307,6 +299,9 @@ class TermTuple:
         return all(term.ground for term in self.terms)
 
     def substitute(self, subst: "Substitution") -> "TermTuple":
+        if self.ground:
+            return deepcopy(self)
+
         # substitute terms recursively
         terms = (term.substitute(subst) for term in self)
 

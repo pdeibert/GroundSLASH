@@ -1,8 +1,6 @@
 from typing import Optional, Dict, TYPE_CHECKING
 from copy import deepcopy
-from functools import reduce
-
-from .expression import Expr
+from functools import cached_property, reduce
 
 if TYPE_CHECKING:
     from aspy.program.terms import Variable, Term
@@ -11,11 +9,6 @@ if TYPE_CHECKING:
 class AssignmentError(Exception):
     def __init__(self, subst_1: "Substitution", subst_2: "Substitution") -> None:
         super().__init__(f"Substitution {subst_1} is inconsistent with substitution {subst_2}.")
-
-
-#class MatchError(Exception):
-#    def __init__(self, candidate: "Expr", target: "Expr") -> None:
-#        super().__init__(f"{candidate} cannot be matched to {target}.")
 
 
 class Substitution(dict):
@@ -27,6 +20,9 @@ class Substitution(dict):
     def __getitem__(self, var: "Variable") -> "Term":
         # map variables to themselves if no substitution specified
         return deepcopy(dict.__getitem__(self, var)) if var in self else deepcopy(var)
+
+    def __str__(self) -> str:
+        return f"{{{','.join([f'{str(var)}:{str(target)}' for var, target in self.items()])}}}"
 
     def __eq__(self, other: "Substitution") -> bool:
         return isinstance(other, Substitution) and super(Substitution, self).__eq__(other)
@@ -46,6 +42,10 @@ class Substitution(dict):
         
         return Substitution(subst)
 
+    @cached_property
+    def ground(self) -> bool:
+        return all(target.ground for target in self.values())
+
     def compose(self, other: "Substitution") -> "Substitution":
 
         # apply other substitution to substituted values
@@ -58,3 +58,6 @@ class Substitution(dict):
     @classmethod
     def composition(cls, *substitutions: "Substitution") -> "Substitution":
         return reduce(lambda s1, s2: s1.compose(s2), substitutions)
+
+    def is_identity(self) -> bool:
+        return all(var == target for (var, target) in self.items())
