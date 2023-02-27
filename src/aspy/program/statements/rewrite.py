@@ -17,10 +17,11 @@ def rewrite_aggregate(literal: "AggregateLiteral", aggr_counter: int, glob_vars:
         alpha_literal = AlphaLiteral(aggr_counter, aggr_glob_vars, naf=literal.naf)
 
         # ----- epsilon rule -----
-        eps_rule = EpsRule(
+        eps_rule = EpsRule.from_scratch(
             aggr_counter,
             TermTuple(*aggr_glob_vars),
-            literal.guards,
+            *literal.guards,
+            literal.func.base(),
             LiteralTuple(*body_literals)
         )
 
@@ -29,7 +30,7 @@ def rewrite_aggregate(literal: "AggregateLiteral", aggr_counter: int, glob_vars:
 
         for element_counter, element in enumerate(literal.func.elements):
             eta_rules.append(
-                EtaRule(
+                EtaRule.from_scratch(
                     aggr_counter,
                     element_counter,
                     TermTuple(aggr_glob_vars),

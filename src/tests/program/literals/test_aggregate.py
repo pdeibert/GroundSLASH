@@ -69,7 +69,60 @@ class TestAggregate(unittest.TestCase):
         # evaluation
         self.assertEqual(aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(2))
 
-        # TODO: propagation
+        # ----- propagation -----
+        element_instances = {
+            AggregateElement(
+                TermTuple(Number(0)),
+                LiteralTuple(PredicateLiteral('p', Number(0)))
+            ),
+            AggregateElement(
+                TermTuple(Number(1)),
+                LiteralTuple(PredicateLiteral('p', Number(1))),
+            )
+        }
+
+        # >, >=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, B, A) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, B, A) )
+
+        # <, <=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, A, B) ) 
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, B, A) ) 
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, B, A) ) 
+
+        # =
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # !=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # TODO: two different guards at a time
+        # TODO: special cases?
 
     def test_aggregate_sum(self):
 
@@ -88,7 +141,60 @@ class TestAggregate(unittest.TestCase):
         # evaluation
         self.assertEqual(aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(2))
 
-        # TODO: propagation
+        # ----- propagation -----
+        element_instances = {
+            AggregateElement(
+                TermTuple(Number(0)),
+                LiteralTuple(PredicateLiteral('p', Number(0)))
+            ),
+            AggregateElement(
+                TermTuple(Number(1)),
+                LiteralTuple(PredicateLiteral('p', Number(1))),
+            )
+        }
+
+        # >, >=
+        # TODO: correct ???
+        I = {PredicateLiteral('p', Number(0))}
+        J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, I, J) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, I, J) )
+        # J subset I
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, J, I) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, J, I) )
+
+        # <, <=
+        # TODO: correct ???
+        I = {PredicateLiteral('p', Number(0))}
+        J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, I, J) )
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, I, J) )
+        # J subset I
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, J, I) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, J, I) )
+
+        # =
+        # TODO: correct ???
+        I = {PredicateLiteral('p', Number(0))}
+        J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, I, J) )
+        # J subset I
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, J, I) )
+
+        # !=
+        # TODO: correct ???
+        I = {PredicateLiteral('p', Number(0))}
+        J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, I, J) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, J, I) )
+
+        # TODO: two different guards at a time
+        # TODO: special cases?
 
     def test_aggregate_max(self):
 
@@ -107,7 +213,60 @@ class TestAggregate(unittest.TestCase):
         # evaluation
         self.assertEqual(aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(5))
 
-        # TODO: propagation
+        # ----- propagation -----
+        element_instances = {
+            AggregateElement(
+                TermTuple(Number(0)),
+                LiteralTuple(PredicateLiteral('p', Number(0)))
+            ),
+            AggregateElement(
+                TermTuple(Number(1)),
+                LiteralTuple(PredicateLiteral('p', Number(1))),
+            )
+        }
+
+        # >, >=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, B, A) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, B, A) )
+
+        # <, <=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, B, A) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, B, A) )
+
+        # =
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # !=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue(  aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # TODO: two different guards at a time
+        # TODO: special cases?
 
     def test_aggregate_min(self):
 
@@ -126,7 +285,60 @@ class TestAggregate(unittest.TestCase):
         # evaluation
         self.assertEqual(aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(-3))
 
-        # TODO: propagation
+        # ----- propagation -----
+        element_instances = {
+            AggregateElement(
+                TermTuple(Number(0)),
+                LiteralTuple(PredicateLiteral('p', Number(0)))
+            ),
+            AggregateElement(
+                TermTuple(Number(1)),
+                LiteralTuple(PredicateLiteral('p', Number(1))),
+            )
+        }
+
+        # >, >=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, B, A) )
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, B, A) )
+
+        # <, <=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, A, B) )
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.LESS_OR_EQ, Number(1), True), None), element_instances, B, A) )
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.LESS,       Number(1), True), None), element_instances, B, A) )
+
+        # =
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # !=
+        # TODO: correct ???
+        A = {PredicateLiteral('p', Number(0))}
+        B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
+        # I subset J
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, A, B) )
+        # J subset I
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, B, A) )
+
+        # TODO: two different guards at a time
+        # TODO: special cases?
 
     def test_aggregate_literal(self):
 

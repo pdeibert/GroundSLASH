@@ -152,22 +152,26 @@ class AggregateCount(AggregateFunction):
                 J_elements = {element for element in elements if element.satisfied(J)}
             return J_elements
 
-        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+        def get_propagation_result(op: RelOp, bound: "Term", domain: Set["AggregateElement"]) -> bool:
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+                propagation_cache[(op, bound)] = op2rel[op](self.eval({element.terms for element in domain}), bound).eval()
             return propagation_cache[(op, bound)]
 
         # running boolean tracking the current result of the propagation
         res = True
 
-        for (op, bound) in guards:
+        for guard in guards:
+            if guard is None: continue
             if res == False: break
+
+            op, bound, right = guard
+
             if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
-            if not op.right: op = -op
+            if not right: op = -op
 
             if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
                 # check upper bound
@@ -234,11 +238,11 @@ class AggregateSum(AggregateFunction):
                 J_elements = {element for element in elements if element.satisfied(J)}
             return J_elements
 
-        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+        def get_propagation_result(op: RelOp, bound: "Term", domain: Set["AggregateElement"]) -> bool:
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+                propagation_cache[(op, bound)] = op2rel[op](self.eval({element.terms for element in domain}), bound).eval()
             return propagation_cache[(op, bound)]
 
         def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
@@ -253,27 +257,31 @@ class AggregateSum(AggregateFunction):
         # running boolean tracking the current result of the propagation
         res = True
 
-        for (op, bound) in guards:
+        for guard in guards:
+            if guard is None: continue
             if res == False: break
+
+            op, bound, right = guard
+
             if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
-            if not op.right: op = -op
+            if not right: op = -op
 
             if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
-                res &= get_propagation_result(op, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements())
+                res &= get_propagation_result(op, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements())
             elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
-                res &= get_propagation_result(op, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements())
+                res &= get_propagation_result(op, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements())
             elif op == RelOp.EQUAL:
                 # check upper and lower bound
-                res &= get_propagation_result(RelOp.GREATER_OR_EQ, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) and \
-                       get_propagation_result(RelOp.LESS_OR_EQ, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) and \
-                       propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements()) and \
+                       get_propagation_result(   RelOp.LESS_OR_EQ, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements()) and \
+                       propagate_subset(RelOp.EQUAL, bound, get_J_elements(), get_I_elements())
             elif op == RelOp.UNEQUAL:
                 # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
-                res &= get_propagation_result(RelOp.GREATER, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) or \
-                       get_propagation_result(RelOp.LESS, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) or \
-                   not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+                res &= get_propagation_result(RelOp.GREATER, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements()) or \
+                       get_propagation_result(   RelOp.LESS, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements()) or \
+                   not propagate_subset(RelOp.EQUAL, bound, get_I_elements(), get_J_elements())
 
         return res
 
@@ -319,11 +327,11 @@ class AggregateMin(AggregateFunction):
                 J_elements = {element for element in elements if element.satisfied(J)}
             return J_elements
 
-        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+        def get_propagation_result(op: RelOp, bound: "Term", domain: Set["AggregateElement"]) -> bool:
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+                propagation_cache[(op, bound)] = op2rel[op](self.eval({element.terms for element in domain}), bound).eval()
             return propagation_cache[(op, bound)]
 
         def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
@@ -338,12 +346,16 @@ class AggregateMin(AggregateFunction):
         # running boolean tracking the current result of the propagation
         res = True
 
-        for (op, bound) in guards:
+        for guard in guards:
+            if guard is None: continue
             if res == False: break
+
+            op, bound, right = guard
+
             if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
-            if not op.right: op = -op
+            if not right: op = -op
 
             if op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
                 # check upper bound
@@ -406,11 +418,11 @@ class AggregateMax(AggregateFunction):
                 J_elements = {element for element in elements if element.satisfied(J)}
             return J_elements
 
-        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+        def get_propagation_result(op: RelOp, bound: "Term", domain: Set["AggregateElement"]) -> bool:
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+                propagation_cache[(op, bound)] = op2rel[op](self.eval({element.terms for element in domain}), bound).eval()
             return propagation_cache[(op, bound)]
 
         def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
@@ -419,17 +431,21 @@ class AggregateMax(AggregateFunction):
             # get all elements that would change the baseline value (to reduce number of possible subsets to test)
             candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
             # test all combinations of subsets of candidates
-            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+            return any(op2rel[op](bound, self.eval({element.terms for element in J_elements.union(X)})).eval() for X in powerset(candidates))
 
         # running boolean tracking the current result of the propagation
         res = True
 
-        for (op, bound) in guards:
+        for guard in guards:
+            if guard is None: continue
             if res == False: break
+
+            op, bound, right = guard
+
             if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
-            if not op.right: op = -op
+            if not right: op = -op
 
             if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
                 # check upper bound
