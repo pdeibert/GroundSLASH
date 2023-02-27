@@ -14,10 +14,11 @@ from .statement import Fact, Rule
 if TYPE_CHECKING:
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
-    from aspy.program.literals import PredicateLiteral, Literal, AlphaLiteral
+    from aspy.program.literals import PredicateLiteral, Literal
     from aspy.program.terms import Variable
     from aspy.program import Program
     from .special import EpsRule, EtaRule
+
 
 class NormalFact(Fact):
     """Normal fact.
@@ -210,3 +211,6 @@ class NormalRule(Rule):
         )
 
         return alpha_rule, aggr_map
+
+    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "NormalRule":
+        return NormalRule(self.atom, *tuple(literal if not isinstance(literal, AlphaLiteral) else assembling_map[literal] for literal in self.body))

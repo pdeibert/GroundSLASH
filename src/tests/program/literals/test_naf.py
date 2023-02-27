@@ -24,13 +24,13 @@ class TestNaf(unittest.TestCase):
         self.assertTrue(Naf(PredicateLiteral('p', Number(0), Variable('Y')), True).naf)
 
         # aggregate literal
-        literal = AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False))
+        literal = AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False))
         self.assertFalse(literal.naf)
-        literal_ = Naf(AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False)))
+        literal_ = Naf(AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)))
         self.assertTrue(literal_.naf)
         self.assertTrue(literal.func == literal_.func and literal.guards == literal_.guards)
-        self.assertFalse(Naf(AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False)), False).naf)
-        self.assertTrue(Naf(AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False)), True).naf)
+        self.assertFalse(Naf(AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)), False).naf)
+        self.assertTrue(Naf(AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)), True).naf)
 
         # builtin literal
         self.assertRaises(ValueError, Naf, Equal(Number(0), Variable('Y')))

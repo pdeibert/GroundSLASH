@@ -6,6 +6,7 @@ from copy import deepcopy
 from aspy.program.terms import ArithTerm, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
 from aspy.program.substitution import Substitution
+from aspy.program.operators import RelOp
 
 from .literal import Literal
 
@@ -285,3 +286,14 @@ class GreaterEqual(BuiltinLiteral):
         operands = (operand.substitute(subst) for operand in self.operands)
 
         return GreaterEqual(*operands)
+
+
+# maps relational operators to their corresponding AST constructs
+op2rel = {
+    RelOp.EQUAL: Equal,
+    RelOp.UNEQUAL: Unequal,
+    RelOp.LESS: Less,
+    RelOp.GREATER: Greater,
+    RelOp.LESS_OR_EQ: LessEqual,
+    RelOp.GREATER_OR_EQ: GreaterEqual
+}

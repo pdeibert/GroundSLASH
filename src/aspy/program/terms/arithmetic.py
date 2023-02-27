@@ -6,6 +6,7 @@ from functools import cached_property
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.operators import ArithOp
 
 from .term import Term, Number, Variable
 from .special import ArithVariable
@@ -428,3 +429,12 @@ class Div(ArithTerm):
 
         # else return an instance of a simplified division
         return Div(loperand, roperand)
+
+
+# maps arithmetic operators to their corresponding AST constructs
+op2arith = {
+    ArithOp.PLUS: Add,
+    ArithOp.MINUS: Sub,
+    ArithOp.TIMES: Mult,
+    ArithOp.DIV: Div
+}

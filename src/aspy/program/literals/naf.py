@@ -8,6 +8,6 @@ def Naf(literal: Union[PredicateLiteral, AggregateLiteral], value: bool=True) ->
     if not isinstance(literal, (PredicateLiteral, AggregateLiteral)):
         raise ValueError("Negation as failure is only applicable to predicate and aggregate literals.")
 
-    literal.naf = value
+    literal.set_naf(value)
 
     return literal

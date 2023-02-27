@@ -1,16 +1,19 @@
-from typing import Tuple, Optional, Union, List, Set, TYPE_CHECKING
+from typing import Tuple, Optional, Union, Iterable, Iterator, Any, List, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from functools import cached_property, reduce
+from itertools import chain, combinations
 
 from aspy.program.expression import Expr
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.terms import Infimum, Supremum, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
 #from aspy.program.statements import EpsRule, EtaRule
+from aspy.program.operators import RelOp, AggrOp
+from aspy.program.literals.builtin import op2rel
 
 from .guard import Guard
 from .literal import Literal, LiteralTuple
-from .special import AlphaLiteral
+#from .special import AlphaLiteral
 
 if TYPE_CHECKING:
     from aspy.program.terms import Term, Variable
@@ -21,7 +24,11 @@ if TYPE_CHECKING:
 
     from .predicate import PredicateLiteral
 
-# TODO: what if aggregate element has no terms ???
+
+def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
+    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes."""
+    elements = list(element_iterable)
+    return chain.from_iterable(combinations(elements, n_elements) for n_elements in range(len(elements)+1))
 
 
 class AggregateElement(Expr):
@@ -87,164 +94,366 @@ class AggregateElement(Expr):
         return AggregateElement(TermTuple(*self.terms.replace_arith(var_table)), LiteralTuple(*self.literals.replace_arith(var_table)))
 
 
-class Aggregate(Expr, ABC):
-    """Abstract base class for all aggregates"""
-    def __init__(self, *elements: AggregateElement) -> None:
-        self.elements = tuple(elements)
-
-    @cached_property
-    def ground(self) -> bool:
-        return all(element.ground for element in self.elements)
-
+class AggregateFunction(ABC):
+    """Abstract base class for all aggregate functions."""
     def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
         return set().union(*tuple(element.vars() for element in self.elements)) if not (bound_only or global_only) else set()  # TODO: does not quite follow the definition in ASP-Core-2?
 
     @abstractmethod
-    def eval(self) -> Number:
+    def eval(self, elements: Set["TermTuple"]) -> Number:
         pass
 
     @abstractmethod
     def base(self) -> "Term":
         pass
 
-    def pos_occ(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(element.pos_occ() for element in self.elements))
-
-    def neg_occ(self) -> Set["PredicateLiteral"]:
-        return set().union(*tuple(element.neg_occ() for element in self.elements))
-
-    def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for aggregates not supported yet.")
-
-    def replace_arith(self, var_table: "VariableTable") -> "Aggregate":
-        return type(self)( *tuple(element.replace_arith(var_table) for element in self.elements) )
+    @abstractmethod
+    def propagate(self) -> bool:
+        pass
 
 
-class AggregateCount(Aggregate):
+class AggregateCount(AggregateFunction):
     """Represents a 'count' aggregate."""
     def __str__(self) -> str:
-        return f"#count{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#count"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateCount) and self.elements == other.elements
+        return isinstance(other, AggregateCount)
 
     def __hash__(self) -> int:
-        return hash( ("count", self.elements) )
+        return hash( ("aggregate count") )
 
-    def eval(self) -> int:
-        return Number(len(self.elements))
+    def eval(self, elements: Set["TermTuple"]) -> Number:
+        """Returns the number of satisfied aggregate elements."""
+        return Number(len(elements))
 
     def base(self) -> Number:
         return Number(0)
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
-        raise ValueError("Safety characterization for aggregate is undefined without context.")
+    def propagate(self, guards: Tuple[Optional[Guard], Optional[Guard]], elements: Set["AggregateElement"], I: Set["Literal"], J: Set["Literal"]) -> bool:
 
-    def substitute(self, subst: "Substitution") -> "AggregateCount":
-        # substitute elements recursively
-        elements = tuple(element.substitute(subst) for element in self.elements)
+        # cache holding intermediate results (to avoid recomputation)
+        propagation_cache = dict()
+        # elements that are satisfied by I and J, respectively (initialize to None)
+        I_elements = None
+        J_elements = None
 
-        return AggregateCount(*elements)
- 
+        def get_I_elements() -> Set["AggregateElement"]:
+            nonlocal I_elements
 
-class AggregateSum(Aggregate):
+            if I_elements is None:
+                I_elements = {element for element in elements if element.satisfied(I)}
+            return I_elements
+
+        def get_J_elements() -> Set["AggregateElement"]:
+            nonlocal J_elements
+
+            if J_elements is None:
+                J_elements = {element for element in elements if element.satisfied(J)}
+            return J_elements
+
+        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+            nonlocal propagation_cache
+
+            if (op, bound) not in propagation_cache:
+                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+            return propagation_cache[(op, bound)]
+
+        # running boolean tracking the current result of the propagation
+        res = True
+
+        for (op, bound) in guards:
+            if res == False: break
+            if op is None: continue
+
+            # move operator to right-hand side (for canonical processing)
+            if not op.right: op = -op
+
+            if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                # check upper bound
+                res &= get_propagation_result(op, bound, get_J_elements())
+            elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
+                # check lower bound
+                res &= get_propagation_result(op, bound, get_I_elements())
+            elif op == RelOp.EQUAL:
+                # check upper and lower bound
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, bound, get_J_elements()) and \
+                       get_propagation_result(   RelOp.LESS_OR_EQ, bound, get_I_elements())
+            elif op == RelOp.UNEQUAL:
+                # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
+                res &= get_propagation_result(RelOp.GREATER, bound, get_J_elements()) or \
+                       get_propagation_result(   RelOp.LESS, bound, get_I_elements()) or \
+                       bool(get_J_elements()-get_I_elements())
+
+        return res
+
+
+class AggregateSum(AggregateFunction):
     """Represents a 'sum' aggregate."""
     def __str__(self) -> str:
-        return f"#sum{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#sum"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateSum) and self.elements == other.elements
+        return isinstance(other, AggregateSum)
 
     def __hash__(self) -> int:
-        return hash( ("sum", self.elements) )
+        return hash( ("aggregate sum") )
 
-    def eval(self) -> Number:
+    def eval(self, elements: Set["TermTuple"]) -> Number:
+
         # empty tuple set
-        if not self.elements:
-            return self.base
+        if not elements:
+            return self.base()
 
         # non-empty set
-        return Number(sum(element.weight for element in self.elements))
+        return Number(sum(element.weight for element in elements))
 
     def base(self) -> Number:
         # TODO: correct?
         return Number(0)
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
-        raise ValueError("Safety characterization for aggregate is undefined without context.")
+    def propagate(self, guards: Tuple[Optional[Guard], Optional[Guard]], elements: Set["AggregateElement"], I: Set["Literal"], J: Set["Literal"]) -> bool:
 
-    def substitute(self, subst: "Substitution") -> "AggregateSum":
-        # substitute elements recursively
-        elements = (element.substitute(subst) for element in self.elements)
+        # cache holding intermediate results (to avoid recomputation)
+        propagation_cache = dict()
+        # elements that are satisfied by I and J, respectively (initialize to None)
+        I_elements = None
+        J_elements = None
 
-        return AggregateSum(*elements)
+        def get_I_elements() -> Set["AggregateElement"]:
+            nonlocal I_elements
+
+            if I_elements is None:
+                I_elements = {element for element in elements if element.satisfied(I)}
+            return I_elements
+
+        def get_J_elements() -> Set["AggregateElement"]:
+            nonlocal J_elements
+
+            if J_elements is None:
+                J_elements = {element for element in elements if element.satisfied(J)}
+            return J_elements
+
+        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+            nonlocal propagation_cache
+
+            if (op, bound) not in propagation_cache:
+                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+            return propagation_cache[(op, bound)]
+
+        def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
+            # compute baseline value
+            baseline = self.eval({element.terms for element in J})
+            # get all elements that would change the baseline value (to reduce number of possible subsets to test)
+            candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
+
+            # test all combinations of subsets of candidates
+            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+
+        # running boolean tracking the current result of the propagation
+        res = True
+
+        for (op, bound) in guards:
+            if res == False: break
+            if op is None: continue
+
+            # move operator to right-hand side (for canonical processing)
+            if not op.right: op = -op
+
+            if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                res &= get_propagation_result(op, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements())
+            elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
+                res &= get_propagation_result(op, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements())
+            elif op == RelOp.EQUAL:
+                # check upper and lower bound
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) and \
+                       get_propagation_result(RelOp.LESS_OR_EQ, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) and \
+                       propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+            elif op == RelOp.UNEQUAL:
+                # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
+                res &= get_propagation_result(RelOp.GREATER, Number(bound.val + sum(min(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) or \
+                       get_propagation_result(RelOp.LESS, Number(bound.val + sum(max(element.weight, 0) for element in I_elements)), get_I_elements(), get_J_elements()) or \
+                   not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+
+        return res
 
 
-class AggregateMin(Aggregate):
+class AggregateMin(AggregateFunction):
     """Represents a 'minimum' aggregate."""
     def __str__(self) -> str:
-        return f"#min{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#min"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateMin) and self.elements == other.elements
+        return isinstance(other, AggregateMin)
 
     def __hash__(self) -> int:
-        return hash( ("min", self.elements) )
+        return hash( ("aggregate min") )
 
-    def eval(self) -> Number:
-        if self.elements:
-            # TODO: what about elements with no terms?
-            return reduce(lambda e1, e2: e2.terms[0] if not e1.terms[0].precedes(e2.terms[0]) else e1.terms[0], self.elements) # min
-        else:
-            return self.base()
+    def eval(self, elements: Set["TermTuple"]) -> Number:
+        # return minimum first term across all non-empty elements
+        # NOTE: includes 'Supremum' in case all elements are empty
+        return reduce(lambda t1, t2: t2 if not t1.precedes(t2) else t1, (self.base(), *tuple(element[0] for element in elements if element)))
 
     def base(self) -> Supremum:
-        return Supremum
+        return Supremum()
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
-        raise ValueError("Safety characterization for aggregate is undefined without context.")
+    def propagate(self, guards: Tuple[Optional[Guard], Optional[Guard]], elements: Set["AggregateElement"], I: Set["Literal"], J: Set["Literal"]) -> bool:
 
-    def substitute(self, subst: "Substitution") -> "AggregateMin":
-        # substitute elements recursively
-        elements = (element.substitute(subst) for element in self.elements)
+        # cache holding intermediate results (to avoid recomputation)
+        propagation_cache = dict()
+        # elements that are satisfied by I and J, respectively (initialize to None)
+        I_elements = None
+        J_elements = None
 
-        return AggregateMin(*elements)
+        def get_I_elements() -> Set["AggregateElement"]:
+            nonlocal I_elements
+
+            if I_elements is None:
+                I_elements = {element for element in elements if element.satisfied(I)}
+            return I_elements
+
+        def get_J_elements() -> Set["AggregateElement"]:
+            nonlocal J_elements
+
+            if J_elements is None:
+                J_elements = {element for element in elements if element.satisfied(J)}
+            return J_elements
+
+        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+            nonlocal propagation_cache
+
+            if (op, bound) not in propagation_cache:
+                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+            return propagation_cache[(op, bound)]
+
+        def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
+            # compute baseline value
+            baseline = self.eval({element.terms for element in J})
+            # get all elements that would change the baseline value (to reduce number of possible subsets to test)
+            candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
+
+            # test all combinations of subsets of candidates
+            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+
+        # running boolean tracking the current result of the propagation
+        res = True
+
+        for (op, bound) in guards:
+            if res == False: break
+            if op is None: continue
+
+            # move operator to right-hand side (for canonical processing)
+            if not op.right: op = -op
+
+            if op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
+                # check upper bound
+                res &= get_propagation_result(op, bound, get_J_elements())
+            elif op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                # check lower bound
+                res &= get_propagation_result(op, bound, get_I_elements())
+            elif op == RelOp.EQUAL:
+                # check upper and lower bound
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, bound, get_I_elements()) and \
+                       get_propagation_result(   RelOp.LESS_OR_EQ, bound, get_J_elements()) and \
+                       propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+            elif op == RelOp.UNEQUAL:
+                # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
+                res &= get_propagation_result(RelOp.GREATER, bound, get_I_elements()) or \
+                       get_propagation_result(   RelOp.LESS, bound, get_J_elements()) or \
+                   not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+
+        return res
 
 
-class AggregateMax(Aggregate):
+class AggregateMax(AggregateFunction):
     """Represents a 'maximum' aggregate."""
     def __str__(self) -> str:
-        return f"#max{{{';'.join([str(element) for element in self.elements])}}}"
+        return f"#max"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateMax) and self.elements == other.elements
+        return isinstance(other, AggregateMax)
 
     def __hash__(self) -> int:
-        return hash( ("max", self.elements) )
+        return hash( ("aggregate max") )
 
-    def eval(self) -> Number:
-        if self.elements:
-            # TODO: what about elements with no terms?
-            return reduce(lambda e1, e2: e2.terms[0] if not e2.terms[0].precedes(e1.terms[0]) else e1.terms[0], self.elements) # max
-        else:
-            return self.base()
+    def eval(self, elements: Set["TermTuple"]) -> Number:
+        # return maximum first term across all non-empty elements
+        # NOTE: includes 'Infimum' in case all elements are empty
+        return reduce(lambda t1, t2: t2 if not t2.precedes(t1) else t1, (self.base(), *tuple(element[0] for element in elements if element)))
 
     def base(self) -> Infimum:
-        return Infimum
+        return Infimum()
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
-        raise ValueError("Safety characterization for aggregate is undefined without context.")
+    def propagate(self, guards: Tuple[Optional[Guard], Optional[Guard]], elements: Set["AggregateElement"], I: Set["Literal"], J: Set["Literal"]) -> bool:
 
-    def substitute(self, subst: "Substitution") -> "AggregateMax":
-        # substitute elements recursively
-        elements = (element.substitute(subst) for element in self.elements)
+        # cache holding intermediate results (to avoid recomputation)
+        propagation_cache = dict()
+        # elements that are satisfied by I and J, respectively (initialize to None)
+        I_elements = None
+        J_elements = None
 
-        return AggregateMax(*elements)
+        def get_I_elements() -> Set["AggregateElement"]:
+            nonlocal I_elements
+
+            if I_elements is None:
+                I_elements = {element for element in elements if element.satisfied(I)}
+            return I_elements
+
+        def get_J_elements() -> Set["AggregateElement"]:
+            nonlocal J_elements
+
+            if J_elements is None:
+                J_elements = {element for element in elements if element.satisfied(J)}
+            return J_elements
+
+        def get_propagation_result(op: RelOp, bound: Term, domain: Set["AggregateElement"]) -> bool:
+            nonlocal propagation_cache
+
+            if (op, bound) not in propagation_cache:
+                propagation_cache[(op, bound)] = op2rel[op](bound, self.eval({element.terms for element in domain})).eval()
+            return propagation_cache[(op, bound)]
+
+        def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
+            # compute baseline value
+            baseline = self.eval({element.terms for element in J})
+            # get all elements that would change the baseline value (to reduce number of possible subsets to test)
+            candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
+            # test all combinations of subsets of candidates
+            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+
+        # running boolean tracking the current result of the propagation
+        res = True
+
+        for (op, bound) in guards:
+            if res == False: break
+            if op is None: continue
+
+            # move operator to right-hand side (for canonical processing)
+            if not op.right: op = -op
+
+            if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                # check upper bound
+                res &= get_propagation_result(op, bound, get_J_elements())
+            elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
+                # check lower bound
+                res &= get_propagation_result(op, bound, get_I_elements())
+            elif op == RelOp.EQUAL:
+                # check upper and lower bound
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, bound, get_J_elements()) and \
+                       get_propagation_result(   RelOp.LESS_OR_EQ, bound, get_I_elements()) and \
+                       propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+            elif op == RelOp.UNEQUAL:
+                # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
+                res &= get_propagation_result(RelOp.GREATER, bound, get_J_elements()) or \
+                       get_propagation_result(   RelOp.LESS, bound, get_I_elements()) or \
+                   not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+
+        return res
 
 
 class AggregateLiteral(Literal):
     """Represents an aggregate literal."""
-    def __init__(self, func: Aggregate, guards: Union[Guard, Tuple[Guard, ...]], naf: bool=False) -> None:
+    def __init__(self, func: AggregateFunction, elements: Tuple[AggregateElement, ...], guards: Union[Guard, Tuple[Guard, ...]], naf: bool=False) -> None:
         super().__init__(naf)
 
         # initialize left and right guard to 'None'
@@ -273,29 +482,36 @@ class AggregateLiteral(Literal):
                 self.lguard = guard
 
         self.func = func
+        self.elements = elements
 
     def __str__(self) -> str:
-        return ("not " if self.naf else '') + f"{f'{str(self.lguard.bound)} {self.lguard.op} ' if self.lguard is not None else ''}{str(self.func)}{f' {str(self.rguard.op)} {str(self.rguard.bound)}' if self.rguard is not None else ''}"
+        return ("not " if self.naf else '') + f"{f'{str(self.lguard.bound)} {self.lguard.op} ' if self.lguard is not None else ''}{str(self.func)}{{{';'.join([str(element) for element in self.elements])}}}{f' {str(self.rguard.op)} {str(self.rguard.bound)}' if self.rguard is not None else ''}"
+
+    def __eq__(self, other: "Expr") -> bool:
+        return isinstance(other, AggregateLiteral) and self.func == other.func and set(self.elements) == set(other.elements) and self.guards == other.guards
+
+    def __hash__(self) -> int:
+        return hash( ("aggr literal", self.func, self.elements, self.guards) )
 
     @cached_property
     def ground(self) -> bool:
-        return self.func.ground and (self.lguard.bound.ground if self.lguard is not None else True) and (self.rguard.bound.ground if self.rguard is not None else True)
+        return (self.lguard.bound.ground if self.lguard is not None else True) and (self.rguard.bound.ground if self.rguard is not None else True) and all(element.ground for element in self.elements)
 
     def set_naf(self, value: bool=True) -> None:
         self.naf = value
 
     def pos_occ(self) -> Set["PredicateLiteral"]:
-        return self.func.pos_occ()
+        return set().union(*tuple(element.pos_occ() for element in self.elements))
 
     def neg_occ(self) -> Set["PredicateLiteral"]:
-        return self.func.neg_occ()
+        return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     @property
     def guards(self) -> Tuple[Union[Guard, None], Union[Guard, None]]:
         return (self.lguard, self.rguard)
 
     def invars(self) -> Set["Variable"]:
-        return self.func.vars()
+        return set().union(*tuple(element.vars() for element in self.elements)) # TODO: does not quite follow the definition in ASP-Core-2?
 
     def outvars(self) -> Set["Variable"]:
         return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
@@ -308,10 +524,10 @@ class AggregateLiteral(Literal):
             raise ValueError("Cannot evaluate non-ground aggregate.")
 
         # evaluate aggregate function
-        aggr_term = self.func.eval()
+        aggr_term = self.func.eval({element.terms for element in self.elements})
 
         # check guards
-        return (self.lguard.op.eval(self.lguard.bound, aggr_term) if self.lguard is not None else True) and (self.rguard.op.eval(aggr_term, self.rguard.bound) if self.rguard is not None else True)
+        return (op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval() if self.lguard is not None else True) and (op2rel[self.rguard.op](aggr_term, self.rguard.bound).eval() if self.rguard is not None else True)
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
 
@@ -354,13 +570,22 @@ class AggregateLiteral(Literal):
         # substitute guard terms recursively
         guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
 
-        return AggregateLiteral(self.func.substitute(subst), guards, naf=self.naf)
+        return AggregateLiteral(self.func, tuple(element.substitute(subst) for element in self.elements), guards, naf=self.naf)
 
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate literals not supported yet.")
 
     def replace_arith(self, var_table: "VariableTable") -> "AggregateLiteral":
         # replace guards
-        guards = (None if guard is None else guard.replace_arith(var_table) for guard in self.guards())
+        guards = (None if guard is None else guard.replace_arith(var_table) for guard in self.guards)
 
-        return AggregateLiteral(self.func.replace_arith(var_table), *guards, self.naf)
+        return AggregateLiteral(self.func, tuple(element.replace_arith(var_table) for element in self.elements), guards, self.naf)
+
+
+# maps aggregate operators/functions to their corresponding AST constructs
+op2aggr = {
+    AggrOp.COUNT: AggregateCount,
+    AggrOp.SUM: AggregateSum,
+    AggrOp.MIN: AggregateMin,
+    AggrOp.MAX: AggregateMax
+}

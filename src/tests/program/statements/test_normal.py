@@ -48,6 +48,10 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), String('f'))).match(NormalFact(PredicateLiteral('p', Number(1), String('g')))), None) # ground terms don't match
         self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), Variable('X'))).match(NormalFact(PredicateLiteral('p', Number(1), String('f')))), None) # assignment conflict
 
+        # TODO: rewrite aggregates
+        # TODO: assemble
+        # TODO: propagate
+
     def test_normal_rule(self):
 
         ground_rule = NormalRule(PredicateLiteral('p', Number(0)), PredicateLiteral('q'))
@@ -81,7 +85,7 @@ class TestNormal(unittest.TestCase):
         self.assertFalse(ground_rule.contains_aggregates)
         self.assertFalse(unsafe_var_rule.contains_aggregates)
         self.assertFalse(safe_var_rule.contains_aggregates)
-        self.assertTrue(NormalRule(PredicateLiteral('p', Variable('X')), AggregateLiteral(AggregateCount(), Guard(RelOp.EQUAL, Number(1), False))).contains_aggregates)
+        self.assertTrue(NormalRule(PredicateLiteral('p', Variable('X')), AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False))).contains_aggregates)
         # variables
         self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
         self.assertTrue(unsafe_var_rule.vars() == unsafe_var_rule.vars(True) == {Variable('X')})
@@ -96,6 +100,10 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('g')), PredicateLiteral('q', Number(1)))), None) # ground terms don't match
         self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(0)))), None) # assignment conflict
         self.assertEqual(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('q', Number(1)), PredicateLiteral('u', Number(0))).match(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('u', Number(0)), PredicateLiteral('q', Number(1)))), None) # different order of body literals
+
+        # TODO: rewrite aggregates
+        # TODO: assemble
+        # TODO: propagate
 
 
 if __name__ == "__main__":

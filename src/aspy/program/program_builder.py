@@ -10,11 +10,14 @@ from aspy.program.literals import Naf, Neg, PredicateLiteral, Equal, Unequal, Le
 from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
 from aspy.program.program import Program
 from aspy.program.operators import ArithOp, RelOp, AggrOp
+from aspy.program.literals.builtin import op2rel
+from aspy.program.literals.aggregate import op2aggr
+from aspy.program.terms.arithmetic import op2arith
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
     from aspy.program.terms import Term
-    from aspy.program.literals import Literal, BuiltinLiteral, Aggregate
+    from aspy.program.literals import Literal, BuiltinLiteral, AggregateFunction
     from aspy.program.statements import OptimizeStatement
 
 
@@ -172,8 +175,8 @@ class ProgramBuilder(ASPCoreVisitor):
             literals = tuple([self.visitNaf_literal(ctx.children[0])])
         # NAF? aggregate
         else:
-            # NAF aggregate (true) or aggregate (false)
-            literals = tuple([ Naf(AggregateLiteral(self.visitAggregate(ctx.children[1])), value=isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode)) ])
+            # NAF aggregate | aggregate
+            literals = tuple([ Naf(self.visitAggregate(ctx.children[1]), value=isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode)) ])
         # COMMA body
         if len(ctx.children) > 2:
             # append literals
@@ -274,7 +277,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate.
-    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> "Aggregate":
+    def visitAggregate(self, ctx:ASPCoreParser.AggregateContext) -> "AggregateLiteral":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
@@ -290,7 +293,7 @@ class ProgramBuilder(ASPCoreVisitor):
             moving_index += 2
         
         # aggregate_function
-        aggregate_function = self.visitAggregate_function(ctx.children[moving_index])
+        func = op2aggr[self.visitAggregate_function(ctx.children[moving_index])]()
         moving_index += 2 # skip CURLY_OPEN as well
 
         # CURLY_OPEN CURLY_CLOSE
@@ -306,16 +309,7 @@ class ProgramBuilder(ASPCoreVisitor):
         if moving_index < len(ctx.children)-1:
             rguard = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self.children[moving_index+1]), True)
 
-        if(aggregate_function == "COUNT"):
-            Aggregate = AggregateCount
-        elif(aggregate_function == "SUM"):
-            Aggregate = AggregateSum
-        elif(aggregate_function == "MAX"):
-            Aggregate = AggregateMax
-        else:
-            Aggregate = AggregateMin
-
-        return Aggregate(elements, (lguard, rguard))
+        return AggregateLiteral(func, elements, (lguard, rguard))
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_elements.
@@ -568,21 +562,7 @@ class ProgramBuilder(ASPCoreVisitor):
         """
         comp_op = self.visitRelop(ctx.children[1])
 
-        # select correct comparison construct
-        if(comp_op == RelOp.EQUAL):
-            Comp = Equal
-        if(comp_op == RelOp.UNEQUAL):
-            Comp = Unequal
-        if(comp_op == RelOp.LESS):
-            Comp = Less
-        if(comp_op == RelOp.GREATER):
-            Comp = Greater
-        if(comp_op == RelOp.LESS_OR_EQ):
-            Comp = LessEqual
-        else:
-            Comp = GreaterEqual
-
-        return Comp(self.visitTerm(ctx.children[0]), self.visitTerm(ctx.children[2]))
+        return op2rel[comp_op](self.visitTerm(ctx.children[0]), self.visitTerm(ctx.children[2]))
 
 
     # Visit a parse tree produced by ASPCoreParser#relop.
@@ -719,7 +699,7 @@ class ProgramBuilder(ASPCoreVisitor):
             roperand = self.visitArith_prod(ctx.children[2])
 
             # PLUS | MINUS
-            return ArithOp(token.text).ast(loperand, roperand)
+            return op2arith[ArithOp(token.text)](loperand, roperand)
         # arith_prod
         else:
             return self.visitArith_prod(ctx.children[0])
@@ -745,7 +725,7 @@ class ProgramBuilder(ASPCoreVisitor):
             roperand = self.visitArith_atom(ctx.children[2])
 
             # TIMES | DIV
-            return ArithOp(token.text).ast(loperand, roperand)
+            return op2arith[ArithOp(token.text)](loperand, roperand)
         # arith_atom
         else:
             return self.visitArith_atom(ctx.children[0])

@@ -1,4 +1,4 @@
-from typing import Any, Set, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Set, Optional, Tuple, Dict, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
@@ -11,6 +11,7 @@ from aspy.program.expression import Expr
 if TYPE_CHECKING:
     from aspy.program.terms import Variable
     from aspy.program.safety_characterization import SafetyTriplet
+    from aspy.program.literals import AlphaLiteral
 
 
 class Statement(Expr, ABC):
@@ -82,3 +83,6 @@ class Fact(Rule, ABC):
 
     def rewrite(self) -> Tuple["Fact"]:
         return (deepcopy(self), )
+
+    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Fact":
+        return deepcopy(self)

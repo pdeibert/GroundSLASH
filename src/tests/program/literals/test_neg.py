@@ -24,7 +24,7 @@ class TestNaf(unittest.TestCase):
         self.assertTrue(Neg(PredicateLiteral('p', Number(0), Variable('Y')), True).neg)
 
         # aggregate literal
-        self.assertRaises(ValueError, Neg, AggregateLiteral(AggregateCount(), Guard(RelOp.LESS, Number(3), False)))
+        self.assertRaises(ValueError, Neg, AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)))
 
         # builtin literal
         self.assertRaises(ValueError, Neg, Equal(Number(0), Variable('Y')))

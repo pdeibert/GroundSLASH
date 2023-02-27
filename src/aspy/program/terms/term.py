@@ -336,3 +336,11 @@ class TermTuple:
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
         return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))
+
+    @cached_property
+    def weight(self) -> int:
+        """Used in aggregates."""
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return self.terms[0].val
+
+        return 0

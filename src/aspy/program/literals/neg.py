@@ -8,6 +8,6 @@ def Neg(literal: Union[PredicateLiteral, AggregateLiteral], value: bool=True) ->
     if not isinstance(literal, PredicateLiteral):
         raise ValueError("Classical negation only applicable to predicate literals.")
 
-    literal.neg = value
+    literal.set_neg(value)
 
     return literal
