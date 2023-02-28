@@ -199,7 +199,31 @@ class TestNormal(unittest.TestCase):
             )
         )
 
-        # TODO: assemble
+        # assembling
+        target_rule = NormalRule(
+            PredicateLiteral('p', Variable('X'), Number(0)),
+            AlphaLiteral(1, TermTuple(Variable('X')), TermTuple(Variable('X'))),
+            PredicateLiteral('q', Variable('X')),
+            Equal(Number(0), Variable('X')),
+            AlphaLiteral(2, TermTuple(), TermTuple())
+        )
+        elements_1 = (AggregateElement(TermTuple(Variable('Y')), LiteralTuple(PredicateLiteral('p', Variable('Y')))), AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('p', Number(0)))))
+        elements_2 = (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('q', Number(0)))),)
+        
+        self.assertEqual(
+            target_rule.assemble_aggregates({
+                AlphaLiteral(1, TermTuple(Variable('X')), TermTuple(Variable('X'))): AggregateLiteral(AggregateCount(), (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('p', Number(0)))), AggregateElement(TermTuple(String('f')), LiteralTuple())), Guard(RelOp.GREATER_OR_EQ, Number(-1), False)),
+                AlphaLiteral(2, TermTuple(), TermTuple()): AggregateLiteral(AggregateCount(), (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('q', Number(0)))),), Guard(RelOp.LESS_OR_EQ, Number(0), True)),
+            }),
+            NormalRule(
+                PredicateLiteral('p', Variable('X'), Number(0)),
+                AggregateLiteral(AggregateCount(), (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('p', Number(0)))), AggregateElement(TermTuple(String('f')), LiteralTuple())), Guard(RelOp.GREATER_OR_EQ, Number(-1), False)),
+                PredicateLiteral('q', Variable('X')),
+                Equal(Number(0), Variable('X')),
+                AggregateLiteral(AggregateCount(), (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('q', Number(0)))),), Guard(RelOp.LESS_OR_EQ, Number(0), True))
+            )
+        )
+
         # TODO: propagate
 
 
