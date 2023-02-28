@@ -214,4 +214,4 @@ class NormalRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "NormalRule":
-        return NormalRule(self.atom, *tuple(literal if not isinstance(literal, AlphaLiteral) else assembling_map[literal] for literal in self.body))
+        return NormalRule(self.atom, *tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body))

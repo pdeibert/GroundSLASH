@@ -17,7 +17,7 @@ class RelOp(Enum):
     def __str__(self) -> str:
         return self._value_
 
-    def __minus__(self) -> "RelOp":
+    def __neg__(self) -> "RelOp":
         """Inverts the comparison operator for switched operands."""
         if(self == RelOp.EQUAL or self == RelOp.UNEQUAL):
             return self
