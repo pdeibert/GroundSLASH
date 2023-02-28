@@ -27,7 +27,7 @@ class AlphaLiteral(AuxLiteral):
         if len(global_vars) != len(terms):
             raise ValueError(f"Number of global variables for {type(self)} does not match number of specified terms.")
 
-        super().__init__(f"{SpecialChar.ALPHA}{aggr_id}", *terms, naf=naf)
+        super().__init__(f"{SpecialChar.ALPHA.value}{aggr_id}", *terms, naf=naf)
         self.aggr_id = aggr_id
         self.global_vars = global_vars
 
@@ -75,7 +75,7 @@ class EpsLiteral(AuxLiteral):
         if len(global_vars) != len(terms):
             raise ValueError(f"Number of global variables for {type(self)} does not match number of specified terms.")
 
-        super().__init__(f"{SpecialChar.EPS}{aggr_id}", *terms)
+        super().__init__(f"{SpecialChar.EPS.value}{aggr_id}", *terms)
         self.aggr_id = aggr_id
         # store tuple to have a fixed reference order for variables
         self.global_vars = global_vars
@@ -127,7 +127,7 @@ class EtaLiteral(AuxLiteral):
         if len(global_vars) + len(local_vars) != len(terms):
             raise ValueError(f"Number of global/local variables for {type(self)} does not match number of specified terms.")
 
-        super().__init__(f"{SpecialChar.ETA}{aggr_id}_{element_id}", *terms)
+        super().__init__(f"{SpecialChar.ETA.value}{aggr_id}_{element_id}", *terms)
         self.aggr_id = aggr_id
         self.element_id = element_id
         # store tuples to have a fixed reference order for variables

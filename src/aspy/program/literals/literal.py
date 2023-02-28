@@ -45,15 +45,7 @@ class LiteralTuple:
         return len(self.literals)
 
     def __eq__(self, other: "LiteralTuple") -> bool:
-        if len(self) != len(other):
-            return False
-
-        return frozenset(self.literals) == frozenset(other.literals)
-        #for l1, l2 in zip(self, other):
-        #    if l1 != l2:
-        #        return False
-        #
-        #return True
+        return isinstance(other, LiteralTuple) and len(self) == len(other) and frozenset(self.literals) == frozenset(other.literals)
 
     def __hash__(self) -> int:
         return hash( ("literal tuple", frozenset(self.literals)) )

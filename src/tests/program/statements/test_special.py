@@ -36,8 +36,8 @@ class TestSpecial(unittest.TestCase):
         # correct initialization
         self.assertTrue(ground_rule.aggr_id == var_rule.aggr_id == 1)
         # string representation
-        self.assertEqual(str(ground_rule), f"{SpecialChar.EPS}{1}(10,3) :- -1>=0, 0<=10, p(2,3).")
-        self.assertEqual(str(var_rule), f"{SpecialChar.EPS}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y).")
+        self.assertEqual(str(ground_rule), f"{SpecialChar.EPS.value}{1}(10,3) :- -1>=0, 0<=10, p(2,3).")
+        self.assertEqual(str(var_rule), f"{SpecialChar.EPS.value}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y).")
         # equality
         self.assertEqual(len(ground_rule.body), 3)
         self.assertEqual(ground_rule.body[0], GreaterEqual(Number(-1), Number(0))) # NOTE: order of operands in built-in terms
@@ -93,8 +93,8 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(ground_rule.element_id == var_rule.element_id == 3)
         self.assertTrue(ground_rule.element == var_rule.element == element)
         # string representation
-        self.assertEqual(str(ground_rule), f"{SpecialChar.ETA}{1}_{3}(5,10,3) :- p(5), p(2,3).")
-        self.assertEqual(str(var_rule), f"{SpecialChar.ETA}{1}_{3}(L,X,Y) :- p(L), p(2,Y).")
+        self.assertEqual(str(ground_rule), f"{SpecialChar.ETA.value}{1}_{3}(5,10,3) :- p(5), p(2,3).")
+        self.assertEqual(str(var_rule), f"{SpecialChar.ETA.value}{1}_{3}(L,X,Y) :- p(L), p(2,Y).")
         # equality
         self.assertEqual(len(ground_rule.body), 2)
         self.assertEqual(ground_rule.body[0], PredicateLiteral('p', Number(5)))

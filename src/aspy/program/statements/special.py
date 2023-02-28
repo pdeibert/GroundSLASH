@@ -43,17 +43,17 @@ class EpsRule(NormalRule):
         if aspy.debug():
             if not isinstance(global_vars, TermTuple):
                 raise ValueError(f"Argument 'global_vars' for {cls} must be of type {TermTuple}.")
-            if lguard.right or not rguard.right:
+            if (lguard is not None and lguard.right) or (rguard is not None and not rguard.right):
                 raise ValueError(f"Left or right guard for {cls} must indicate the correct side.")
 
         # create head atom/literal
-        atom = EpsLiteral(aggr_id, global_vars, global_vars.copy())
+        atom = EpsLiteral(aggr_id, global_vars, deepcopy(global_vars))
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
         rguard_literal = op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
-        guard_literals = LiteralTuple(*tuple(guard_literal for guard_literal in (lguard_literal, rguard_literal) if guard_literal is not None)),
+        guard_literals = LiteralTuple(*tuple(guard_literal for guard_literal in (lguard_literal, rguard_literal) if guard_literal is not None))
 
-        return EtaRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
+        return EpsRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
 
     def substitute(self, subst: "Substitution") -> "EpsRule":
         if self.ground:

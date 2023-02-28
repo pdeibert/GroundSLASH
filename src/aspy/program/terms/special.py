@@ -20,7 +20,7 @@ class ArithVariable(Variable):
         if aspy.debug() and id < 0:
             raise ValueError(f"Invalid value for {type(self)}: {id}")
 
-        self.val = f"{SpecialChar.TAU}{id}"
+        self.val = f"{SpecialChar.TAU.value}{id}"
         self.id = id
         self.orig_term = orig_term
 

@@ -2,11 +2,11 @@ import unittest
 
 import aspy
 from aspy.program.substitution import Substitution
-from aspy.program.terms import Number, Variable, String
-from aspy.program.literals import Naf, Neg, PredicateLiteral, LiteralTuple, AggregateLiteral, AggregateCount, Guard
+from aspy.program.terms import Number, Variable, String, TermTuple
+from aspy.program.literals import EpsLiteral, EtaLiteral, AlphaLiteral, Naf, Neg, PredicateLiteral, LiteralTuple, AggregateElement, AggregateLiteral, AggregateCount, Guard, Equal, GreaterEqual, LessEqual
 from aspy.program.operators import RelOp
 
-from aspy.program.statements import NormalFact, NormalRule
+from aspy.program.statements import NormalFact, NormalRule, EtaRule, EpsRule
 
 
 class TestNormal(unittest.TestCase):
@@ -49,10 +49,14 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), Variable('X'))).match(NormalFact(PredicateLiteral('p', Number(1), String('f')))), None) # assignment conflict
 
         # TODO: rewrite aggregates
+        
         # TODO: assemble
         # TODO: propagate
 
     def test_normal_rule(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
 
         ground_rule = NormalRule(PredicateLiteral('p', Number(0)), PredicateLiteral('q'))
         unsafe_var_rule = NormalRule(PredicateLiteral('p', Variable('X')), PredicateLiteral('q'))
@@ -101,7 +105,100 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(0)))), None) # assignment conflict
         self.assertEqual(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('q', Number(1)), PredicateLiteral('u', Number(0))).match(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('u', Number(0)), PredicateLiteral('q', Number(1)))), None) # different order of body literals
 
-        # TODO: rewrite aggregates
+        # rewrite aggregates
+        elements_1 = (AggregateElement(TermTuple(Variable('Y')), LiteralTuple(PredicateLiteral('p', Variable('Y')))), AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('p', Number(0)))))
+        elements_2 = (AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('q', Number(0)))),)
+        rule = NormalRule(
+            PredicateLiteral('p', Variable('X'), Number(0)), 
+            AggregateLiteral(AggregateCount(), elements_1, Guard(RelOp.GREATER_OR_EQ, Variable('X'), False)),
+            PredicateLiteral('q', Variable('X')),
+            Equal(Number(0), Variable('X')),
+            AggregateLiteral(AggregateCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True))
+        )
+        target_rule = NormalRule(
+            PredicateLiteral('p', Variable('X'), Number(0)),
+            AlphaLiteral(1, TermTuple(Variable('X')), TermTuple(Variable('X'))),
+            PredicateLiteral('q', Variable('X')),
+            Equal(Number(0), Variable('X')),
+            AlphaLiteral(2, TermTuple(), TermTuple())
+        )
+        aggr_map = dict()
+
+        self.assertEqual(rule.rewrite_aggregates(1, aggr_map), target_rule)
+        self.assertEqual(len(aggr_map), 2)
+
+        aggr_literal, alpha_literal, eps_rule, eta_rules = aggr_map[1]
+        self.assertEqual(aggr_literal, rule.body[0])
+        self.assertEqual(alpha_literal, target_rule.body[0])
+        self.assertEqual(
+            eps_rule,
+            EpsRule(
+                EpsLiteral(1, TermTuple(Variable('X')), TermTuple(Variable('X'))),
+                Guard(RelOp.GREATER_OR_EQ, Variable('X'), False),
+                None,
+                LiteralTuple(
+                    GreaterEqual(Variable('X'), AggregateCount().base()),
+                    PredicateLiteral('q', Variable('X')),
+                    Equal(Number(0), Variable('X'))
+                )
+            )
+        )
+        self.assertEqual(len(eta_rules), 2)
+        self.assertEqual(
+            eta_rules[0],
+            EtaRule(
+                EtaLiteral(1, 0, TermTuple(Variable('Y')), TermTuple(Variable('X')), TermTuple(Variable('Y'), Variable('X'))),
+                elements_1[0],
+                LiteralTuple(
+                    PredicateLiteral('p', Variable('Y')),
+                    PredicateLiteral('q', Variable('X')),
+                    Equal(Number(0), Variable('X'))
+                )
+            )
+        )
+        self.assertEqual(
+            eta_rules[1],
+            EtaRule(
+                EtaLiteral(1, 1, TermTuple(), TermTuple(Variable('X')), TermTuple(Variable('X'))),
+                elements_1[1],
+                LiteralTuple(
+                    PredicateLiteral('p', Number(0)),
+                    PredicateLiteral('q', Variable('X')),
+                    Equal(Number(0), Variable('X'))
+                )
+            )
+        )
+
+        aggr_literal, alpha_literal, eps_rule, eta_rules = aggr_map[2]
+        self.assertEqual(aggr_literal, rule.body[-1])
+        self.assertEqual(alpha_literal, target_rule.body[-1])
+        self.assertEqual(
+            eps_rule,
+            EpsRule(
+                EpsLiteral(2, TermTuple(), TermTuple()),
+                None,
+                Guard(RelOp.LESS_OR_EQ, Number(0), True),
+                LiteralTuple(
+                    LessEqual(AggregateCount().base(), Number(0)),
+                    PredicateLiteral('q', Variable('X')),
+                    Equal(Number(0), Variable('X'))
+                )
+            )
+        )
+        self.assertEqual(len(eta_rules), 1)
+        self.assertEqual(
+            eta_rules[0],
+            EtaRule(
+                EtaLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
+                elements_2[0],
+                LiteralTuple(
+                    PredicateLiteral('q', Number(0)),
+                    PredicateLiteral('q', Variable('X')),
+                    Equal(Number(0), Variable('X'))
+                )
+            )
+        )
+
         # TODO: assemble
         # TODO: propagate
 

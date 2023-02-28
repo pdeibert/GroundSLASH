@@ -23,7 +23,7 @@ class TestSpecial(unittest.TestCase):
         # hashing
         self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable('X'), Number(1)))))
         # string representation
-        self.assertEqual(str(var), f"{SpecialChar.TAU}0")
+        self.assertEqual(str(var), f"{SpecialChar.TAU.value}0")
         # total order for terms
         self.assertRaises(Exception, var.precedes, Number(1))
         # ground

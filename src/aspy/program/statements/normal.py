@@ -4,6 +4,7 @@ from collections import deque
 from copy import deepcopy
 
 from aspy.program.symbol_table import SymbolTable, SpecialChar
+from aspy.program.terms import TermTuple
 from aspy.program.variable_table import VariableTable
 from aspy.program.literals import Equal, Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral, AlphaLiteral
 from aspy.program.safety_characterization import SafetyTriplet
@@ -181,12 +182,12 @@ class NormalRule(Rule):
         aggr_literals = []
 
         for literal in self.body:
-            (aggr_literals if isinstance(AggregateLiteral) else non_aggr_literals).append(literal)
+            (aggr_literals if isinstance(literal, AggregateLiteral) else non_aggr_literals).append(literal)
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
         # mapping from aggregate ID to corresponding alpha literal, epsilon rule and eta rules
-        aggr_map = dict()
+        #aggr_map = dict()
 
         # local import due to circular import
         from .rewrite import rewrite_aggregate
@@ -206,11 +207,11 @@ class NormalRule(Rule):
 
         # replace original rule with modified one
         alpha_rule = NormalRule(
-            self.head,
-            LiteralTuple(tuple(alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body)) # NOTE: restores original order of literals
+            self.atom,
+            *tuple(alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body) # NOTE: restores original order of literals
         )
 
-        return alpha_rule, aggr_map
+        return alpha_rule
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "NormalRule":
         return NormalRule(self.atom, *tuple(literal if not isinstance(literal, AlphaLiteral) else assembling_map[literal] for literal in self.body))

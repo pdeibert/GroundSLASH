@@ -24,8 +24,8 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(literal.global_vars == naf_literal.global_vars == vars)
         self.assertTrue(literal.terms == naf_literal.terms == TermTuple(Number(1), Variable('Y')))
         # string representation
-        self.assertEqual(str(literal), f'{SpecialChar.ALPHA}{1}(1,Y)')
-        self.assertEqual(str(naf_literal), f'not {SpecialChar.ALPHA}{1}(1,Y)')
+        self.assertEqual(str(literal), f'{SpecialChar.ALPHA.value}{1}(1,Y)')
+        self.assertEqual(str(naf_literal), f'not {SpecialChar.ALPHA.value}{1}(1,Y)')
         # equality
         self.assertEqual(literal, AlphaLiteral(1, vars, TermTuple(Number(1), Variable('Y'))))
         # hashing
@@ -33,7 +33,7 @@ class TestSpecial(unittest.TestCase):
         # arity
         self.assertEqual(literal.arity, 2)
         # predicate tuple
-        self.assertEqual(literal.pred(), (f'{SpecialChar.ALPHA}{1}', 2))
+        self.assertEqual(literal.pred(), (f'{SpecialChar.ALPHA.value}{1}', 2))
         # ground
         self.assertTrue(literal.ground == naf_literal.ground == False)
         # TODO: variables
@@ -75,7 +75,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.global_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable('Y')))
         # string representation
-        self.assertEqual(str(literal), f'{SpecialChar.EPS}{1}(1,Y)')
+        self.assertEqual(str(literal), f'{SpecialChar.EPS.value}{1}(1,Y)')
         # equality
         self.assertEqual(literal, EpsLiteral(1, vars, TermTuple(Number(1), Variable('Y'))))
         # hashing
@@ -83,7 +83,7 @@ class TestSpecial(unittest.TestCase):
         # arity
         self.assertEqual(literal.arity, 2)
         # predicate tuple
-        self.assertEqual(literal.pred(), (f'{SpecialChar.EPS}{1}', 2))
+        self.assertEqual(literal.pred(), (f'{SpecialChar.EPS.value}{1}', 2))
         # ground
         self.assertFalse(literal.ground, False)
         # TODO: variables
@@ -125,7 +125,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.global_vars, global_vars)
         self.assertEqual(literal.terms, TermTuple(Variable('L'), Number(1), Variable('Y')))
         # string representation
-        self.assertEqual(str(literal), f'{SpecialChar.ETA}{1}_{3}(L,1,Y)')
+        self.assertEqual(str(literal), f'{SpecialChar.ETA.value}{1}_{3}(L,1,Y)')
         # equality
         self.assertEqual(literal, EtaLiteral(1, 3, local_vars, global_vars, TermTuple(Variable('L'), Number(1), Variable('Y'))))
         # hashing
@@ -133,7 +133,7 @@ class TestSpecial(unittest.TestCase):
         # arity
         self.assertEqual(literal.arity, 3)
         # predicate tuple
-        self.assertEqual(literal.pred(), (f'{SpecialChar.ETA}{1}_{3}', 3))
+        self.assertEqual(literal.pred(), (f'{SpecialChar.ETA.value}{1}_{3}', 3))
         # ground
         self.assertFalse(literal.ground, False)
         # TODO: variables
