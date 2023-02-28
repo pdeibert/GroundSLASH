@@ -48,9 +48,11 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), String('f'))).match(NormalFact(PredicateLiteral('p', Number(1), String('g')))), None) # ground terms don't match
         self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), Variable('X'))).match(NormalFact(PredicateLiteral('p', Number(1), String('f')))), None) # assignment conflict
 
-        # TODO: rewrite aggregates
-        
-        # TODO: assemble
+        # rewrite aggregates
+        self.assertEqual(rule, rule.rewrite_aggregates(0, dict()))
+        # assembling
+        self.assertEqual(rule, rule.assemble_aggregates(dict()))
+
         # TODO: propagate
 
     def test_normal_rule(self):

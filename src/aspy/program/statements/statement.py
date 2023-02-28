@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from aspy.program.terms import Variable
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.literals import AlphaLiteral
+    from aspy.program.statements import EpsRule, EtaRule
 
 
 class Statement(Expr, ABC):
@@ -83,6 +84,9 @@ class Fact(Rule, ABC):
 
     def rewrite(self) -> Tuple["Fact"]:
         return (deepcopy(self), )
+
+    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "Fact":
+        return deepcopy(self)
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Fact":
         return deepcopy(self)
