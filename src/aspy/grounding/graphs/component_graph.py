@@ -16,6 +16,9 @@ class Component():
         self.neg_edges = neg_edges if neg_edges is not None else set()
         self.stratified = stratified
 
+    def __str__(self) -> str:
+        return '\n'.join(tuple(str(node) for node in self.nodes))
+
     @property
     def edges(self) -> Set[Tuple["Statement","Statement"]]:
         return self.pos_edges.union(self.neg_edges)
@@ -24,9 +27,33 @@ class Component():
     def stratified(self) -> bool:
         return bool(self.neg_edges)
 
-    def sequence(self) -> List["Statement"]:
+    def sequence(self) -> List[Tuple["Statement", ...]]:
+
+        # compute strong connected components (convert to tuples for dict hashing)
+        sccs = [tuple(component) for component in compute_SCCs(self.nodes, self.pos_edges)]
+
+        # map rules to SCC (for sorting edges)
+        rule2scc = dict()
+
+        for node in self.nodes:
+            for scc in sccs:
+                if node in scc:
+                    rule2scc[node] = scc
+
+        # inter-component edges
+        pos_edges = set()
+
+        # group positive edges
+        for (src, dst) in self.pos_edges:
+            src_component = rule2scc[src]
+            dst_component = rule2scc[dst]
+
+            if src_component is not dst_component:
+                pos_edges.add( (src, dst) )
+
         """Returns the refined instantiation sequence for the component."""
-        seq = topological_sort(self.nodes, self.pos_edges)
+        #seq = topological_sort(self.nodes, self.pos_edges)
+        seq = topological_sort(set(sccs), pos_edges)
         # reverse order
         seq.reverse()
 

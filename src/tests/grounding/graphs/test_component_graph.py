@@ -79,13 +79,13 @@ class TestComponentGraph(unittest.TestCase):
         self.assertTrue(set(inst_sequence[5:]) == {x_comp, y_comp})
 
         # check refined rule sequence for components
-        self.assertEqual(u1_comp.sequence(), [u1])
-        self.assertEqual(u2_comp.sequence(), [u2])
-        self.assertEqual(v2_comp.sequence(), [v2])
-        self.assertEqual(v3_comp.sequence(), [v3])
-        self.assertEqual(pX_qX_comp.sequence(), [pX,qX])
-        self.assertEqual(x_comp.sequence(), [x])
-        self.assertEqual(y_comp.sequence(), [y])
+        self.assertEqual(u1_comp.sequence(), [(u1, )])
+        self.assertEqual(u2_comp.sequence(), [(u2, )])
+        self.assertEqual(v2_comp.sequence(), [(v2, )])
+        self.assertEqual(v3_comp.sequence(), [(v3, )])
+        self.assertEqual(set(pX_qX_comp.sequence()), {(pX, ), (qX, )})
+        self.assertEqual(x_comp.sequence(), [(x, )])
+        self.assertEqual(y_comp.sequence(), [(y, )])
 
 
 if __name__ == "__main__":
