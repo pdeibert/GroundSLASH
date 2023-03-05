@@ -37,7 +37,7 @@
 
 from typing import Tuple, Set, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.statements import Statement
 
 

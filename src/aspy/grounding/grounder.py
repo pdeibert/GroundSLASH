@@ -12,7 +12,7 @@ from aspy.program.program import Program
 from .propagation import Propagator
 from .graphs import ComponentGraph
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.statements import Statement
     from aspy.program.literals import Literal, LiteralTuple
 

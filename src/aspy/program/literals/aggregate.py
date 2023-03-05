@@ -1,5 +1,5 @@
 from typing import Tuple, Optional, Union, Iterable, Iterator, Any, List, Set, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from functools import cached_property, reduce
 from itertools import chain, combinations
 
@@ -12,7 +12,7 @@ from aspy.program.literals.builtin import op2rel
 from .guard import Guard
 from .literal import Literal, LiteralTuple
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Term, Variable
     from aspy.program.substitution import Substitution
     from aspy.program.statements import Statement
@@ -101,15 +101,15 @@ class AggregateFunction(ABC):
     def vars(self, global_only: bool=False, bound_only: bool=False) -> Set["Variable"]:
         return set().union(*tuple(element.vars() for element in self.elements)) if not (bound_only or global_only) else set()  # TODO: does not quite follow the definition in ASP-Core-2?
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def eval(self, elements: Set["TermTuple"]) -> Number:
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def base(self) -> "Term":
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def propagate(self) -> bool:
         pass
 

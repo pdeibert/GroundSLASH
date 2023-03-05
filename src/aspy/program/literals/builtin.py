@@ -1,5 +1,5 @@
 from typing import Set, Tuple, Optional, Union, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from functools import cached_property
 from copy import deepcopy
 
@@ -10,7 +10,7 @@ from aspy.program.operators import RelOp
 
 from .literal import Literal
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.terms import Term, Variable
     from aspy.program.statements import Statement
@@ -47,7 +47,7 @@ class BuiltinLiteral(Literal, ABC):
     def operands(self) -> Tuple["Term","Term"]:
         return (self.loperand, self.roperand)
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def eval(self) -> bool:
         pass
 

@@ -2,7 +2,7 @@ from typing import Optional, Set, Iterable, TYPE_CHECKING
 from dataclasses import dataclass
 from copy import deepcopy
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from .terms import Variable
 
 

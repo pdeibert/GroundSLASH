@@ -14,7 +14,7 @@ from aspy.program.literals.aggregate import op2aggr
 from aspy.program.terms.arithmetic import op2arith
 from aspy.program.variable_table import VariableTable
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Term
     from aspy.program.literals import Literal, BuiltinLiteral
     from aspy.program.statements import OptimizeStatement

@@ -11,7 +11,7 @@ from aspy.program.substitution import Substitution
 
 from .normal import NormalRule
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.terms import Term
     from aspy.program.literals import Guard, AggregateElement

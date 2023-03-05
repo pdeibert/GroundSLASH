@@ -1,5 +1,5 @@
 from typing import Any, Set, Optional, Tuple, Dict, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from copy import deepcopy
 from functools import cached_property
 
@@ -8,7 +8,7 @@ from aspy.program.variable_table import VariableTable
 from aspy.program.symbol_table import SymbolTable
 from aspy.program.expression import Expr
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.literals import AlphaLiteral
@@ -20,27 +20,27 @@ class Statement(Expr, ABC):
     def __init__(self, var_table: Optional["VariableTable"]=None, *args, **kwargs) -> None:
         self.__var_table = var_table
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def __str__(self) -> str:
         pass
 
     @property
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def head(self) -> Any:
         pass
 
     @property
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def body(self) -> Any:
         pass
 
     @property
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def safe(self) -> bool:
         pass
 
     @property
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def ground(self) -> bool:
         pass
 
@@ -69,7 +69,7 @@ class Statement(Expr, ABC):
 
 class Rule(Statement, ABC):
     """Abstract base class for all rules."""
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
         pass
 

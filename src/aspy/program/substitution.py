@@ -2,7 +2,7 @@ from typing import Optional, Dict, TYPE_CHECKING
 from copy import deepcopy
 from functools import cached_property, reduce
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable, Term
 
 

@@ -4,7 +4,7 @@ from aspy.program.terms import TermTuple
 from aspy.program.literals import AlphaLiteral, LiteralTuple
 from .special import EpsRule, EtaRule
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable
     from aspy.program.literals import Literal, AggregateLiteral, LiteralTuple
 

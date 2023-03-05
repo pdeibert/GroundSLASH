@@ -9,7 +9,7 @@ from .program_builder import ProgramBuilder
 
 #from .statements import Fact, Rule, Constraint, WeakConstraint
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from .literals import AlphaLiteral
     from .statements import Statement, EtaRule, EpsRule
     from .query import Query

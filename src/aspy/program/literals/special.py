@@ -7,7 +7,7 @@ from aspy.program.literals import PredicateLiteral
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.substitution import Substitution
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable, Term
     from aspy.program.variable_table import VariableTable
     from aspy.program.expression import Expr

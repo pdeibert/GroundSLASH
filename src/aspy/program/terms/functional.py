@@ -9,7 +9,7 @@ from aspy.program.symbol_table import SYM_CONST_RE
 
 from .term import Term, TermTuple, Infimum, Number, SymbolicConstant, String
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.terms import Variable
     from aspy.program.statements import Statement

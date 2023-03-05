@@ -1,5 +1,5 @@
 from typing import Optional, Union, Tuple, Iterable, Set, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from functools import cached_property
 from copy import deepcopy
 
@@ -9,7 +9,7 @@ from aspy.program.substitution import Substitution, AssignmentError
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.symbol_table import VARIABLE_RE, SYM_CONST_RE
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.statements import Statement
     from aspy.program.query import Query
     from aspy.program.variable_table import VariableTable
@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 
 class Term(Expr, ABC):
     """Abstract base class for all terms."""
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def __eq__(self, other: Expr) -> bool:
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def precedes(self, other: "Term") -> bool:
         """Defines the total ordering operator defined for terms in ASP-Core-2."""
         pass

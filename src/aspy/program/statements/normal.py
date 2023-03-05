@@ -12,7 +12,7 @@ from aspy.program.substitution import AssignmentError
 
 from .statement import Fact, Rule
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
     from aspy.program.literals import PredicateLiteral, Literal

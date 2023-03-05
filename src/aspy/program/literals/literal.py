@@ -1,5 +1,5 @@
 from typing import Tuple, Set, Optional, Union, Iterator, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from dataclasses import dataclass
 from functools import cached_property
 from copy import deepcopy
@@ -7,7 +7,7 @@ from copy import deepcopy
 from aspy.program.expression import Expr
 from aspy.program.substitution import Substitution, AssignmentError
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.statements import Statement
@@ -24,11 +24,11 @@ class Literal(Expr, ABC):
     """
     naf: bool = False
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def pos_occ(self) -> Set["Literal"]:
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def neg_occ(self) -> Set["Literal"]:
         pass
 

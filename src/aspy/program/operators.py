@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from enum import Enum
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Term
 
 

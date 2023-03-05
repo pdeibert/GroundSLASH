@@ -7,7 +7,7 @@ from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, TermTuple, Variable

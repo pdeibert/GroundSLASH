@@ -1,5 +1,5 @@
 from typing import Set, Union,Optional, Union, Tuple, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # pragma: no cover
 from copy import deepcopy
 from functools import cached_property
 
@@ -11,7 +11,7 @@ from aspy.program.operators import ArithOp
 from .term import Term, Number, Variable
 from .special import ArithVariable
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.statements import Statement
     from aspy.program.query import Query
@@ -29,11 +29,11 @@ class ArithTerm(Term, ABC):
 
         return Number(self.eval()).precedes(other)
 
-    @ abstractmethod
+    @ abstractmethod # pragma: no cover
     def simplify(self) -> "ArithTerm":
         pass
 
-    @abstractmethod
+    @abstractmethod # pragma: no cover
     def eval(self) -> int:
         pass
     

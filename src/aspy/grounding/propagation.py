@@ -4,7 +4,7 @@ from itertools import chain
 from aspy.program.statements import EpsRule, EtaRule
 from aspy.program.literals import AlphaLiteral, AggregateLiteral
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Term, Number
     from aspy.program.literals import AggregateFunction, AggregateCount, AggregateMin, AggregateMax, AggregateSum, AggregateElement, Literal, Unequal
     from aspy.program.operators import RelOp

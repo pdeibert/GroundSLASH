@@ -2,7 +2,7 @@ from typing import Set, Union, Optional, TYPE_CHECKING
 
 from .expression import Expr
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.terms import Variable
     
     from .safety_characterization import SafetyTriplet

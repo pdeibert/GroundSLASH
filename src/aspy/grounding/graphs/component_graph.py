@@ -5,7 +5,7 @@ from .dependency_graph import DependencyGraph
 from .scc import compute_SCCs
 from .topological_sort import topological_sort
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from aspy.program.statements import Statement
 
 
