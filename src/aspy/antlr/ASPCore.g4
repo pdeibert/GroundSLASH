@@ -37,8 +37,10 @@ aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_el
 
 aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)? ;
 
-// can be empty
-aggregate_element   :   terms? (COLON naf_literals?)? ;
+aggregate_element   :   terms COLON?
+                    |   COLON naf_literals?
+                    |   terms COLON naf_literals
+                    ;
 
 aggregate_function  :   COUNT
                     |   MAX
@@ -86,7 +88,7 @@ term                :   ID
                     ;
 
 // functional terms
-func_term           :   ID PAREN_OPEN terms PAREN_CLOSE ;
+func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE ;
 
 // arithmetical terms (operator precedences built into the grammar)
 arith_term          :   arith_sum ;
@@ -112,7 +114,7 @@ arith_atom          :  NUMBER
 NAF                 :   'not' ; // define before ID to have precedence
 ID                  :   [a-z][A-Za-z0-9_]* ;
 VARIABLE            :   [A-Z][A-Za-z0-9_]* ;
-STRING              :   '"' ( . | '\\"' )*? '"' ;
+STRING              :   '"' ( ~["] | ('\\"') )* '"' ;
 NUMBER              :   '0' | [1-9][0-9]* ;
 ANONYMOUS_VARIABLE  :   '_' ;
 DOT                 :   '.' ;

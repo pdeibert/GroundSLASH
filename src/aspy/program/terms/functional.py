@@ -29,7 +29,7 @@ class Functional(Term):
         self.terms = TermTuple(*terms)
 
     def __str__(self) -> str:
-        return self.symbol + (f"({','.join([str(term) for term in self.terms])})" if self.terms else '')
+        return self.symbol + (f"({','.join([str(term) for term in self.terms])})")
 
     def __eq__(self, other: "Expr") -> str:
         return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms

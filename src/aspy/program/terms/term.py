@@ -246,7 +246,7 @@ class String(Term):
     def __str__(self) -> str:
         return f'"{self.val}"'
 
-    def __eq__(self, other: Expr) -> str:
+    def __eq__(self, other: Expr) -> bool:
         return isinstance(other, String) and other.val == self.val
 
     def __hash__(self) -> int:

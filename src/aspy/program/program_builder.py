@@ -323,7 +323,8 @@ class ProgramBuilder(ASPCoreVisitor):
             aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)?
         """
         # aggregate_element
-        elements = tuple([self.visitAggregate_element(ctx.children[0])])
+        element = self.visitAggregate_element(ctx.children[0])
+        elements = tuple([element]) if element is not None else tuple()
 
         # SEMICOLON aggregate_elements
         if len(ctx.children) > 1:
@@ -334,24 +335,26 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_element.
-    def visitAggregate_element(self, ctx:ASPCoreParser.Aggregate_elementContext) -> AggregateElement:
+    def visitAggregate_element(self, ctx:ASPCoreParser.Aggregate_elementContext) -> Optional[AggregateElement]:
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
 
-            aggregate_element   :   terms? (COLON naf_literals?)?
+            aggregate_element   :   terms COLON?
+                                |   COLON? naf_literals?
+                                |   terms COLON naf_literals
         """
+
         # terms
-        terms = self.visitTerms(ctx.children[0])
+        terms = self.visitTerms(ctx.children[0]) if isinstance(ctx.children[0], ASPCoreParser.TermsContext) else tuple()
 
-        # COLON naf_literals
-        if len(ctx.children) > 2:
-            literals = self.visitNaf_literals(ctx.children[2])
-        # COLON?
+        # literals
+        literals = self.visitNaf_literals(ctx.children[-1]) if isinstance(ctx.children[-1], ASPCoreParser.Naf_literalsContext) else tuple()
+
+        if not terms and not literals:
+            return None
         else:
-            literals = tuple()
-
-        return AggregateElement(TermTuple(*terms), LiteralTuple(*literals))
+            return AggregateElement(TermTuple(*terms), LiteralTuple(*literals))
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_function.
@@ -631,7 +634,7 @@ class ProgramBuilder(ASPCoreVisitor):
                 return SymbolicConstant(token.text) # TODO: predicate or function ?!
             # STRING
             elif(token_type == "STRING"):
-                return String(token.text)
+                return String(token.text[1:-1])
             # VARIABLE
             elif(token_type == "VARIABLE"):
                 return self.var_table.create(token.text, register=False)
@@ -661,12 +664,13 @@ class ProgramBuilder(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            func_term           :   ID PAREN_OPEN terms PAREN_CLOSE
+            func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE
         """
-        # parse terms
-        terms = self.visitTerms(ctx.children[2])
 
-        return Functional(ctx.children[0].getSymbol().text, terms)
+        # parse terms
+        terms = tuple() if len(ctx.children) < 4 else self.visitTerms(ctx.children[2])
+
+        return Functional(ctx.children[0].getSymbol().text, *terms)
 
 
     # Visit a parse tree produced by ASPCoreParser#arith_term.
