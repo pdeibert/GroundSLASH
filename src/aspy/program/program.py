@@ -1,6 +1,12 @@
 from typing import Tuple, Set, Dict, List, Optional, TYPE_CHECKING
 from functools import cached_property
 
+import antlr4  # type: ignore
+from aspy.antlr.ASPCoreLexer import ASPCoreLexer
+from aspy.antlr.ASPCoreParser import ASPCoreParser
+
+from .program_builder import ProgramBuilder
+
 #from .statements import Fact, Rule, Constraint, WeakConstraint
 
 if TYPE_CHECKING:
@@ -55,6 +61,24 @@ class Program:
     @cached_property
     def safe(self) -> bool:
         return all(statement.safe for statement in self.statements) # TODO: query?
+
+    @classmethod
+    def from_string(cls, prog_str: str) -> "Program":
+
+        input_stream = antlr4.InputStream(prog_str) # type: ignore
+
+        # tokenize input program
+        lexer = ASPCoreLexer(input_stream)
+        stream = antlr4.CommonTokenStream(lexer) # type: ignore
+        stream.fill()
+
+        parser = ASPCoreParser(stream)
+        tree = parser.program()
+
+        # traverse parse tree using visitor
+        statements, query = ProgramBuilder().visit(tree)
+
+        return Program(tuple(statements), query)
     """
     @property
     def rules(self) -> Tuple[Rule, ...]:

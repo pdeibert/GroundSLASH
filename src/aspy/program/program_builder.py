@@ -1,14 +1,13 @@
-from typing import Tuple, Union, List, TYPE_CHECKING
+from typing import Tuple, Union, List, Optional, TYPE_CHECKING
 
 import antlr4  # type: ignore
 from aspy.antlr.ASPCoreLexer import ASPCoreLexer
 from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
-from aspy.program.terms import TermTuple, Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
-from aspy.program.literals import LiteralTuple, Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, Guard, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
-from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
-from aspy.program.program import Program
+from aspy.program.terms import TermTuple, Number, String, SymbolicConstant, Functional, Minus
+from aspy.program.literals import LiteralTuple, Naf, Neg, PredicateLiteral, Guard, AggregateElement, AggregateLiteral
+from aspy.program.statements import Statement, NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
 from aspy.program.operators import ArithOp, RelOp, AggrOp
 from aspy.program.literals.builtin import op2rel
 from aspy.program.literals.aggregate import op2aggr
@@ -17,7 +16,7 @@ from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
     from aspy.program.terms import Term
-    from aspy.program.literals import Literal, BuiltinLiteral, AggregateFunction
+    from aspy.program.literals import Literal, BuiltinLiteral
     from aspy.program.statements import OptimizeStatement
 
 
@@ -27,14 +26,14 @@ class ProgramBuilder(ASPCoreVisitor):
         self.simplify_arithmetic = simplify_arithmetic
 
     # Visit a parse tree produced by ASPCoreParser#program.
-    def visitProgram(self, ctx:ASPCoreParser.ProgramContext) -> Program:
+    def visitProgram(self, ctx:ASPCoreParser.ProgramContext) -> Tuple[List[Statement], Optional[PredicateLiteral]]:
         """Visits 'program'.
         
         Handles the following rule(s):
 
             program             :   statements? query? EOF
         """
-        statements = tuple()
+        statements = []
         query = None
 
         for child in ctx.children[:-1]:
@@ -45,7 +44,7 @@ class ProgramBuilder(ASPCoreVisitor):
             elif isinstance(child, ASPCoreParser.QueryContext):
                 query = self.visitQuery(child)
 
-        return Program(statements, query)
+        return (statements, query)
 
 
     # Visit a parse tree produced by ASPCoreParser#statements.
@@ -60,7 +59,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
 
     # Visit a parse tree produced by ASPCoreParser#query.
-    def visitQuery(self, ctx:ASPCoreParser.QueryContext):
+    def visitQuery(self, ctx:ASPCoreParser.QueryContext) -> PredicateLiteral:
         """Visits 'query'.
         
         Handles the following rule(s):
@@ -763,19 +762,3 @@ class ProgramBuilder(ASPCoreVisitor):
         # PAREN_OPEN arith_sum PAREN_CLOSE
         else:
             return self.visitArith_sum(ctx.children[1])
-
-    @classmethod
-    def from_string(cls, prog_str: str) -> "Program":
-
-        input_stream = antlr4.InputStream(prog_str) # type: ignore
-
-        # tokenize input program
-        lexer = ASPCoreLexer(input_stream)
-        stream = antlr4.CommonTokenStream(lexer) # type: ignore
-        stream.fill()
-
-        parser = ASPCoreParser(stream)
-        tree = parser.program()
-
-        # traverse parse tree using visitor
-        return ProgramBuilder().visit(tree)

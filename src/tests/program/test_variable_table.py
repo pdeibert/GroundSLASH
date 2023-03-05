@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program import ProgramBuilder
+from aspy.program import Program
 from aspy.program.terms import AnonVariable, Variable, ArithVariable
 from aspy.program.literals import Naf, LiteralTuple, PredicateLiteral
 from aspy.program.statements import NormalRule
@@ -15,7 +15,7 @@ class TestVariableTable(unittest.TestCase):
 
         input = r"""p(X) :- not q(_), u(_), v(Y).""" #, Z < #count{A}."""
 
-        prog = ProgramBuilder.from_string(input)
+        prog = Program.from_string(input)
 
         self.assertEqual(len(prog.statements), 1) # make sure we have no extra statements
 

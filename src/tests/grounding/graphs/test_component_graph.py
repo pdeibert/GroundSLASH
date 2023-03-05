@@ -2,7 +2,7 @@ import unittest
 
 import aspy
 from aspy.grounding.graphs.component_graph import ComponentGraph, Component
-from aspy.program import ProgramBuilder
+from aspy.program import Program
 
 
 class TestComponentGraph(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestComponentGraph(unittest.TestCase):
         y :- not q(3).
         """
 
-        prog = ProgramBuilder.from_string(input)
+        prog = Program.from_string(input)
 
         self.assertEqual(len(prog.statements), 8) # make sure we have no extra statements
         u1, u2, v2, v3, pX, qX, x, y = prog.statements

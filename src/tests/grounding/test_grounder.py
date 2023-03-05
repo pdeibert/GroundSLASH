@@ -11,7 +11,6 @@ from aspy.program.operators import RelOp
 from aspy.program.substitution import Substitution
 from aspy.program.statements import NormalFact, NormalRule
 from aspy.program.program import Program
-from aspy.program.program_builder import ProgramBuilder
 
 
 def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
@@ -169,7 +168,7 @@ class TestGrounder(unittest.TestCase):
         '''
 
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -199,7 +198,7 @@ class TestGrounder(unittest.TestCase):
         '''
 
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -232,7 +231,7 @@ class TestGrounder(unittest.TestCase):
         '''
 
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -263,7 +262,7 @@ class TestGrounder(unittest.TestCase):
         '''
         
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -311,7 +310,7 @@ class TestGrounder(unittest.TestCase):
         # TODO: something wrong with SUM propagation!
 
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -357,7 +356,7 @@ class TestGrounder(unittest.TestCase):
         '''
 
         # build & ground program
-        prog = ProgramBuilder.from_string(prog_str)
+        prog = Program.from_string(prog_str)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
