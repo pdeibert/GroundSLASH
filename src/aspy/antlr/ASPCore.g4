@@ -66,7 +66,7 @@ classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)? ;
 
 builtin_atom        :   term relop term ;
 
-relop              :   EQUAL
+relop               :   EQUAL
                     |   UNEQUAL
                     |   LESS
                     |   GREATER
@@ -81,7 +81,6 @@ term                :   ID
                     |   VARIABLE
                     |   ANONYMOUS_VARIABLE
                     |   PAREN_OPEN term PAREN_CLOSE
-                    |   MINUS term
                     |   func_term
                     |   arith_term
                     ;
@@ -102,8 +101,10 @@ arith_prod          :   arith_atom
                     |   arith_prod DIV arith_atom 
                     ;
 
-arith_atom          :   (PLUS | MINUS)* (NUMBER | VARIABLE)
-                    |   PAREN_OPEN arith_sum PAREN_CLOSE
+arith_atom          :  NUMBER
+                    |  VARIABLE
+                    |  MINUS arith_atom
+                    |  PAREN_OPEN arith_sum PAREN_CLOSE
                     ;
 
 /* lexer rules */

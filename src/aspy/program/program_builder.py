@@ -6,7 +6,7 @@ from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 
 from aspy.program.terms import TermTuple, Number, String, SymbolicConstant, Functional, Minus, Add, Sub, Mult, Div
-from aspy.program.literals import Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, Guard, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
+from aspy.program.literals import LiteralTuple, Naf, Neg, PredicateLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual, Guard, AggregateElement, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral
 from aspy.program.statements import NormalFact, NormalRule, DisjunctiveFact, DisjunctiveRule, ChoiceElement, Choice, Constraint, OptimizeElement, MaximizeStatement, MinimizeStatement, ChoiceFact, ChoiceRule
 from aspy.program.program import Program
 from aspy.program.operators import ArithOp, RelOp, AggrOp
@@ -173,10 +173,13 @@ class ProgramBuilder(ASPCoreVisitor):
         # naf_literal
         if isinstance(ctx.children[0], ASPCoreParser.Naf_literalContext):
             literals = tuple([self.visitNaf_literal(ctx.children[0])])
-        # NAF? aggregate
+        # NAF aggregate
+        elif isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
+            literals = tuple([ Naf(self.visitAggregate(ctx.children[1])) ])
+        # aggregate
         else:
-            # NAF aggregate | aggregate
-            literals = tuple([ Naf(self.visitAggregate(ctx.children[1]), value=isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode)) ])
+            literals = tuple([ self.visitAggregate(ctx.children[0]) ])
+            
         # COMMA body
         if len(ctx.children) > 2:
             # append literals
@@ -288,26 +291,26 @@ class ProgramBuilder(ASPCoreVisitor):
         lguard, rguard = None, None
 
         # term relop
-        if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-            lguard = (self.visitRelop(ctx.children[1]), self.visitTerm(self.children[0]), False)
-            moving_index += 2
-        
+        if isinstance(ctx.children[0], ASPCoreParser.TermContext):
+            lguard = Guard(self.visitRelop(ctx.children[1]), self.visitTerm(ctx.children[0]), False)
+            moving_index += 2 # should now point to 'aggregate_function'
+
         # aggregate_function
         func = op2aggr[self.visitAggregate_function(ctx.children[moving_index])]()
-        moving_index += 2 # skip CURLY_OPEN as well
+        moving_index += 2 # skip CURLY_OPEN as well; should now point to 'aggregate_elements' or 'CURLY_CLOSE'
 
         # CURLY_OPEN CURLY_CLOSE
         if isinstance(ctx.children[moving_index], antlr4.tree.Tree.TerminalNode):
             elements = tuple()
-            moving_index += 1
+            moving_index += 1 # should now point to 'relop' or be out of bounds
         # CURLY_OPEN choice_elements CURLY_CLOSE
         else:
-            elements = self.visitAggregate_elements(ctx.children[moving_index+1])
-            moving_index += 2
+            elements = self.visitAggregate_elements(ctx.children[moving_index])
+            moving_index += 2 # skip CURLY_OPEN as well; should now point to 'relop' or be out of bounds
 
         # relop term
         if moving_index < len(ctx.children)-1:
-            rguard = (self.visitRelop(ctx.children[moving_index]), self.visitTerm(self.children[moving_index+1]), True)
+            rguard = Guard(self.visitRelop(ctx.children[moving_index]), self.visitTerm(ctx.children[moving_index+1]), True)
 
         return AggregateLiteral(func, elements, (lguard, rguard))
 
@@ -349,7 +352,7 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             literals = tuple()
 
-        return AggregateElement(terms, literals)
+        return AggregateElement(TermTuple(*terms), LiteralTuple(*literals))
 
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_function.
@@ -640,7 +643,7 @@ class ProgramBuilder(ASPCoreVisitor):
             elif(token_type == "PAREN_OPEN"):
                 return self.visitTerm(ctx.children[1]) # parse term
             else:
-                raise Exception("TODO: REMOVE RULE.")
+                raise Exception(f"TODO: REMOVE RULE: TOKEN {token_type}.")
         # func_term
         elif isinstance(ctx.children[0], ASPCoreParser.Func_termContext):
             return self.visitFunc_term(ctx.children[0])
@@ -737,7 +740,9 @@ class ProgramBuilder(ASPCoreVisitor):
 
         Handles the following rule(s):
 
-            arith_atom          :   (PLUS | MINUS)* (NUMBER | VARIABLE)
+            arith_atom          :   NUMBER
+                                |   VARIABLE
+                                |   MINUS arith_atom
                                 |   PAREN_OPEN arith_sum PAREN_CLOSE
         """
         # TODO: what about anonymous variables ?
@@ -746,36 +751,18 @@ class ProgramBuilder(ASPCoreVisitor):
         token = ctx.children[0].getSymbol()
         token_type = ASPCoreParser.symbolicNames[token.type]
 
+        # NUMBER
+        if(token_type == "NUMBER"):
+            return Number(int(token.text))
+        # VARIABLE
+        elif(token_type == "VARIABLE"):
+            return self.var_table.create(token.text, register=False)
+        # MINUS arith_atom
+        elif(token_type == "MINUS"):
+            return Minus(self.visitArith_atom(ctx.children[1]))
         # PAREN_OPEN arith_sum PAREN_CLOSE
-        if(token_type == "PAREN_OPEN"):
-            return self.visitArith_sum(ctx.children[1])
-        # (PLUS | MINUS)* (NUMBER | VARIABLE)
         else:
-            # get all tokens (avoid getting first token again)
-            tokens = [token] + [child.getSymbol() for child in ctx.children[1:]]
-
-            # TODO: remove?
-            # count minuses (pluses can be ignored)
-            n_minuses = 0
-
-            for sign in tokens[:-1]:
-                sign_type = ASPCoreParser.symbolicNames[sign.type]
-
-                if(sign_type == "MINUS"):
-                    n_minuses = 0
-
-            # NUMBER
-            if(ASPCoreParser.symbolicNames[tokens[-1].type] == "NUMBER"):
-                operand = Number(int(tokens[-1].text))
-            # VARIABLE
-            else:
-                operand = self.var_table.create(tokens[-1].text, register=False)
-
-            # odd number of minuses
-            if(n_minuses % 2 > 0):
-                operand = Minus(operand)
-
-            return operand
+            return self.visitArith_sum(ctx.children[1])
 
     @classmethod
     def from_string(cls, prog_str: str) -> "Program":
