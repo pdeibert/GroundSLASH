@@ -344,3 +344,19 @@ class TermTuple:
             return self.terms[0].val
 
         return 0
+
+    @cached_property
+    def pos_weight(self) -> int:
+        """Used in aggregates."""
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return max(self.terms[0].val, 0)
+
+        return 0
+
+    @cached_property
+    def neg_weight(self) -> int:
+        """Used in aggregates."""
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return min(self.terms[0].val, 0)
+
+        return 0

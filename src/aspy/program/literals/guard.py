@@ -13,6 +13,12 @@ class Guard(NamedTuple):
     bound: "Term"
     right: bool
 
+    def __str__(self) -> str:
+        if self.right:
+            return f"({str(self.op)} {str(self.bound)})"
+        else:
+            return f"({str(self.bound)} {str(self.op)})"
+
     def __eq__(self, other: "Expr") -> bool:
         return isinstance(other, Guard) and self.right == other.right and self.op == other.op and self.bound == other.bound
 

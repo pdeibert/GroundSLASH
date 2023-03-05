@@ -158,10 +158,10 @@ class TestAggregate(unittest.TestCase):
         I = {PredicateLiteral('p', Number(0))}
         J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
         # I subset J
-        self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, I, J) )
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, I, J) )
         self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, I, J) )
         # J subset I
-        self.assertTrue(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, J, I) )
+        self.assertFalse(  aggr_func.propagate((Guard(RelOp.GREATER_OR_EQ, Number(1), True), None), element_instances, J, I) )
         self.assertFalse( aggr_func.propagate((Guard(RelOp.GREATER,       Number(1), True), None), element_instances, J, I) )
 
         # <, <=
@@ -180,9 +180,9 @@ class TestAggregate(unittest.TestCase):
         I = {PredicateLiteral('p', Number(0))}
         J = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
         # I subset J
-        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, I, J) )
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, I, J) )
         # J subset I
-        self.assertTrue(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, J, I) )
+        self.assertFalse(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, J, I) )
 
         # !=
         # TODO: correct ???
@@ -252,7 +252,7 @@ class TestAggregate(unittest.TestCase):
         A = {PredicateLiteral('p', Number(0))}
         B = {PredicateLiteral('p', Number(0)), PredicateLiteral('p', Number(1))}
         # I subset J
-        self.assertFalse( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, A, B) )
+        self.assertTrue( aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, A, B) )
         # J subset I
         self.assertFalse(  aggr_func.propagate((Guard(RelOp.EQUAL, Number(1), True), None), element_instances, B, A) )
 

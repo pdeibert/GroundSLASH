@@ -168,7 +168,7 @@ class TestPropagation(unittest.TestCase):
             PredicateLiteral('q', Number(0)),
             PredicateLiteral('q', Number(1))
         }
-        J_alpha = propagator.propagate(eps_instances, eta_instances, domain, domain)
+        J_alpha = propagator.propagate(eps_instances, eta_instances, domain, domain, set())
         self.assertEqual(J_alpha,
             {
                 AlphaLiteral(1, TermTuple(Variable('X')), TermTuple(Number(0))),

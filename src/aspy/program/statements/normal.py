@@ -105,7 +105,7 @@ class NormalRule(Rule):
         self.literals = LiteralTuple(*body)
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, NormalRule) and self.atom == other.atom and self.literals == other.literals
+        return isinstance(other, NormalRule) and self.atom == other.atom and set(self.literals) == set(other.literals)
 
     def __hash__(self) -> int:
         return hash( ("normal rule", self.atom, self.literals) )
@@ -171,8 +171,8 @@ class NormalRule(Rule):
         pass
 
     def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "NormalRule":
-        if self.ground:
-            return deepcopy(self)
+        #if self.ground:
+        #    return deepcopy(self)
 
         # global variables
         glob_vars = self.vars(global_only=True)

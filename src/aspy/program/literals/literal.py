@@ -73,7 +73,7 @@ class LiteralTuple:
         return set().union(*tuple(literal.vars(global_only) for literal in self.literals))
 
     def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
-        return tuple(literal.safety() for literal in self.literals)
+        return tuple(literal.safety(rule=rule, global_vars=global_vars) for literal in self.literals)
 
     def without(self, *literals: Literal) -> "LiteralTuple":
         return LiteralTuple(*(literal for literal in self.literals if not literal in literals))

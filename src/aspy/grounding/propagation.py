@@ -16,7 +16,7 @@ class Propagator():
         self.aggr_map = aggr_map
         self.instance_map = dict()
 
-    def propagate(self, eps_instances, eta_instances, I: Set["Literal"], J: Set["Literal"]) -> Set[AlphaLiteral]:
+    def propagate(self, eps_instances, eta_instances, I: Set["Literal"], J: Set["Literal"], J_alpha: Set["Literal"]) -> Set[AlphaLiteral]:
 
         for rule in chain(eps_instances, eta_instances):
 
@@ -53,8 +53,10 @@ class Propagator():
         possible_alpha_literals = set()
 
         for ground_alpha_literal, (aggr_func, ground_elements, ground_guards) in self.instance_map.items():
-            # skip alpha literal if already derived (TODO: can this even happen?)
-            if ground_alpha_literal in J: continue
+            # skip alpha literal if already derived (in previous iteration)
+            if ground_alpha_literal in J_alpha:
+                possible_alpha_literals.add(ground_alpha_literal)
+                continue
 
             # propagate aggregate function to check satisfiability
             satisfiable = aggr_func.propagate(ground_guards, ground_elements, I, J)
@@ -65,8 +67,6 @@ class Propagator():
         return possible_alpha_literals
 
     def assemble(self, rules: Set["Statement"]) -> Set["Statement"]:
-        # TODO: remove atoms in grounding from domain
-
         # map ground alpha literals to corresponding assembled aggregate literals to be replaced with
         assembling_map = {
             alpha_literal: AggregateLiteral(aggr_func, tuple(elements), guards, naf=alpha_literal.naf) for alpha_literal, (aggr_func, elements, guards) in self.instance_map.items()

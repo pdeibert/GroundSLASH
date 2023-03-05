@@ -4,16 +4,13 @@ from functools import cached_property, reduce
 from itertools import chain, combinations
 
 from aspy.program.expression import Expr
-from aspy.program.symbol_table import SpecialChar
 from aspy.program.terms import Infimum, Supremum, Number, TermTuple
 from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
-#from aspy.program.statements import EpsRule, EtaRule
 from aspy.program.operators import RelOp, AggrOp
 from aspy.program.literals.builtin import op2rel
 
 from .guard import Guard
 from .literal import Literal, LiteralTuple
-#from .special import AlphaLiteral
 
 if TYPE_CHECKING:
     from aspy.program.terms import Term, Variable
@@ -64,12 +61,17 @@ class AggregateElement(Expr):
     def neg_occ(self) -> Set["PredicateLiteral"]:
         return self.literals.neg_occ()
 
-    @cached_property
+    @property
     def weight(self) -> int:
-        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
-            return self.terms[0].val
+        return self.terms.weight
+    
+    @property
+    def pos_weight(self) -> int:
+        return self.terms.pos_weight
 
-        return 0
+    @property
+    def neg_weight(self) -> int:
+        return self.terms.neg_weight
 
     def satisfied(self, literals: Set["Literal"]) -> bool:
         # check if all condition literals are part of the specified set
@@ -168,8 +170,6 @@ class AggregateCount(AggregateFunction):
 
             op, bound, right = guard
 
-            if op is None: continue
-
             # move operator to right-hand side (for canonical processing)
             if not right: op = -op
 
@@ -186,8 +186,7 @@ class AggregateCount(AggregateFunction):
             elif op == RelOp.UNEQUAL:
                 # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
                 res &= get_propagation_result(RelOp.GREATER, bound, get_J_elements()) or \
-                       get_propagation_result(   RelOp.LESS, bound, get_I_elements()) or \
-                       bool(get_J_elements()-get_I_elements())
+                       get_propagation_result(   RelOp.LESS, bound, get_I_elements())
 
         return res
 
@@ -203,14 +202,14 @@ class AggregateSum(AggregateFunction):
     def __hash__(self) -> int:
         return hash( ("aggregate sum") )
 
-    def eval(self, elements: Set["TermTuple"]) -> Number:
+    def eval(self, elements: Set["TermTuple"], positive: bool=True, negative: bool=True) -> Number:
 
         # empty tuple set
-        if not elements:
+        if not elements or (positive == negative == False):
             return self.base()
 
         # non-empty set
-        return Number(sum(element.weight for element in elements))
+        return Number(sum( (element.pos_weight if positive else 0) + (element.neg_weight if negative else 0) for element in elements))
 
     def base(self) -> Number:
         # TODO: correct?
@@ -238,21 +237,22 @@ class AggregateSum(AggregateFunction):
                 J_elements = {element for element in elements if element.satisfied(J)}
             return J_elements
 
-        def get_propagation_result(op: RelOp, bound: "Term", domain: Set["AggregateElement"]) -> bool:
+        def get_propagation_result(op: RelOp, bound: "Term", adjust: int, domain: Set["AggregateElement"], positive: bool=True, negative: bool=True) -> bool:
             nonlocal propagation_cache
 
-            if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](self.eval({element.terms for element in domain}), bound).eval()
-            return propagation_cache[(op, bound)]
+            if (op, bound, adjust, positive, negative) not in propagation_cache:
+                propagation_cache[(op, bound, adjust, positive, negative)] = op2rel[op](Number(self.eval({element.terms for element in domain}, positive, negative).val + adjust), bound).eval()
+            return propagation_cache[(op, bound, adjust, positive, negative)]
 
-        def propagate_subset(op, bound, I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
+        def propagate_subset(op, bound: "Term", I_elements: Set["AggregateElement"], J_elements: Set["AggregateElement"]) -> bool:
             # compute baseline value
-            baseline = self.eval({element.terms for element in J})
+            J_terms = {element.terms for element in J_elements}
+            baseline = self.eval(J_terms)
             # get all elements that would change the baseline value (to reduce number of possible subsets to test)
-            candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
+            candidate_terms = {element.terms for element in I_elements if (element not in J and element.weight != 0)} - J_terms
 
             # test all combinations of subsets of candidates
-            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+            return any(op2rel[op](bound, baseline + self.eval(X)).eval() for X in powerset(candidate_terms))
 
         # running boolean tracking the current result of the propagation
         res = True
@@ -263,24 +263,22 @@ class AggregateSum(AggregateFunction):
 
             op, bound, right = guard
 
-            if op is None: continue
-
             # move operator to right-hand side (for canonical processing)
             if not right: op = -op
 
             if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
-                res &= get_propagation_result(op, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements())
+                res &= get_propagation_result(op, bound, sum(min(element.weight, 0) for element in get_I_elements()), get_J_elements(), negative=False)
             elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
-                res &= get_propagation_result(op, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements())
+                res &= get_propagation_result(op, bound, sum(max(element.weight, 0) for element in get_I_elements()), get_J_elements(), positive=False)
             elif op == RelOp.EQUAL:
                 # check upper and lower bound
-                res &= get_propagation_result(RelOp.GREATER_OR_EQ, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements()) and \
-                       get_propagation_result(   RelOp.LESS_OR_EQ, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements()) and \
+                res &= get_propagation_result(RelOp.GREATER_OR_EQ, bound, sum(min(element.weight, 0) for element in get_I_elements()), get_J_elements(), negative=False) and \
+                       get_propagation_result(   RelOp.LESS_OR_EQ, bound, sum(max(element.weight, 0) for element in get_I_elements()), get_J_elements(), positive=False) and \
                        propagate_subset(RelOp.EQUAL, bound, get_J_elements(), get_I_elements())
             elif op == RelOp.UNEQUAL:
                 # check upper or lower bound as well as whether or not J satisfies any elements that are not satisfied under I
-                res &= get_propagation_result(RelOp.GREATER, Number(bound.val + sum(min(element.weight, 0) for element in get_J_elements())), get_I_elements()) or \
-                       get_propagation_result(   RelOp.LESS, Number(bound.val + sum(max(element.weight, 0) for element in get_J_elements())), get_I_elements()) or \
+                res &= get_propagation_result(RelOp.GREATER, bound, sum(min(element.weight, 0) for element in get_I_elements()), get_J_elements(), negative=False) or \
+                       get_propagation_result(   RelOp.LESS, bound, sum(max(element.weight, 0) for element in get_I_elements()), get_J_elements(), positive=False) or \
                    not propagate_subset(RelOp.EQUAL, bound, get_I_elements(), get_J_elements())
 
         return res
@@ -341,7 +339,13 @@ class AggregateMin(AggregateFunction):
             candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
 
             # test all combinations of subsets of candidates
-            return any(op2rel[op](bound, self.eval(J_elements.union(X))).eval() for X in powerset(candidates))
+            for X in powerset(candidates):
+                value = self.eval({element.terms for element in X})
+
+                if op2rel[op](bound, (value if not baseline.precedes(value) else baseline)).eval():
+                    return True
+
+            return False
 
         # running boolean tracking the current result of the propagation
         res = True
@@ -351,8 +355,6 @@ class AggregateMin(AggregateFunction):
             if res == False: break
 
             op, bound, right = guard
-
-            if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
             if not right: op = -op
@@ -430,19 +432,25 @@ class AggregateMax(AggregateFunction):
             baseline = self.eval({element.terms for element in J})
             # get all elements that would change the baseline value (to reduce number of possible subsets to test)
             candidates = {element for element in I_elements if (element.terms and not element.terms[0].precedes(baseline))}
+
             # test all combinations of subsets of candidates
-            return any(op2rel[op](bound, self.eval({element.terms for element in J_elements.union(X)})).eval() for X in powerset(candidates))
+            for X in powerset(candidates):
+                value = self.eval({element.terms for element in X})
+
+                if op2rel[op](bound, (value if not value.precedes(baseline) else baseline)).eval():
+                    return True
+
+            return False
 
         # running boolean tracking the current result of the propagation
         res = True
 
         for guard in guards:
+
             if guard is None: continue
             if res == False: break
 
             op, bound, right = guard
-
-            if op is None: continue
 
             # move operator to right-hand side (for canonical processing)
             if not right: op = -op
