@@ -34,6 +34,8 @@ class DisjunctiveFact(Fact):
     Semantically, any answer set must include exactly one classical atom h_i.
     """
 
+    deterministic: bool = False
+
     def __init__(self, *atoms: PredicateLiteral, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -93,6 +95,8 @@ class DisjunctiveRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
     """
+
+    deterministic: bool = False
 
     def __init__(
         self,

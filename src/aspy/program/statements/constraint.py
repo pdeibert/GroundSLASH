@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Set, Tuple
 
 from aspy.program.literals import AggregateLiteral, LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
@@ -12,7 +12,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AlphaLiteral, Literal
     from aspy.program.statements import EpsRule, EtaRule
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Variable
 
 
 class Constraint(Statement):
@@ -24,6 +23,8 @@ class Constraint(Statement):
 
     for literals b_1,...,b_n.
     """
+
+    deterministic: bool = True
 
     def __init__(self, *literals: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)

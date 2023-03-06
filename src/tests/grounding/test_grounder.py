@@ -269,6 +269,23 @@ class TestGrounder(unittest.TestCase):
 
         # TODO
 
+    def compare_to_clingo(self, prog_str: str) -> None:
+        """Helper method (not a test case on its own)."""
+
+        # build & ground program
+        prog = Program.from_string(prog_str)
+        grounder = Grounder(prog)
+        ground_prog = grounder.ground()
+
+        # solve our ground program using clingo
+        our_sat, our_models = solve_using_clingo(str(ground_prog))
+        # ground & solve original program using clingo
+        gringo_sat, gringo_models = solve_using_clingo(prog_str)
+
+        self.assertEqual(our_sat, gringo_sat)
+        self.assertEqual(len(our_models), len(gringo_models))
+        self.assertEqual(our_models, gringo_models)
+
     def test_example_1(self):
 
         # make sure debug mode is enabled
@@ -282,19 +299,7 @@ class TestGrounder(unittest.TestCase):
         y :- not q(3).
         """
 
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(str(prog))
-
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        self.compare_to_clingo(prog_str)
 
     def test_example_2(self):
 
@@ -312,19 +317,7 @@ class TestGrounder(unittest.TestCase):
         d :- not b.
         """
 
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(str(prog))
-
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        self.compare_to_clingo(prog_str)
 
     def test_example_3(self):
 
@@ -345,19 +338,7 @@ class TestGrounder(unittest.TestCase):
         d :- not b.
         """
 
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(prog_str)
-
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        self.compare_to_clingo(prog_str)
 
     def test_example_4(self):
 
@@ -376,19 +357,7 @@ class TestGrounder(unittest.TestCase):
         d :- #count { X: p(X); X: q(X) } != 3.
         """
 
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(prog_str)
-
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        self.compare_to_clingo(prog_str)
 
     def test_example_5(self):
 
@@ -422,21 +391,7 @@ class TestGrounder(unittest.TestCase):
         gh(B) :- b(B), not h(B).
         """
 
-        # TODO: something wrong with SUM propagation!
-
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(prog_str)
-
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        self.compare_to_clingo(prog_str)
 
     def test_example_6(self):
 
@@ -470,19 +425,46 @@ class TestGrounder(unittest.TestCase):
         g(B) :- b(B), not f(B).
         """
 
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
+        self.compare_to_clingo(prog_str)
 
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(prog_str)
+    def test_example_7(self):
 
-        self.assertTrue(our_sat == gringo_sat == True)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
+        u(1).
+        u(2).
+        v(2).
+        v(3).
+
+        p(X) :- u(X).
+        q(X) :- v(X).
+
+        :- p(X), q(X).
+        """
+
+        with self.assertWarns(Warning):
+            self.compare_to_clingo(prog_str)
+
+    def test_example_8(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
+        u(1).
+        u(2).
+        v(2).
+        v(3).
+
+        p(X) | p(X+1) :- u(X).
+        q(X) | q(X+1) :- v(X).
+
+        :- p(X), q(X).
+        """
+
+        self.compare_to_clingo(prog_str)
 
 
 if __name__ == "__main__":

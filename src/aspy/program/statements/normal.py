@@ -32,6 +32,8 @@ class NormalFact(Fact):
     Semantically, any answer set must include h.
     """
 
+    deterministic: bool = True
+
     def __init__(self, atom: "PredicateLiteral", **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -83,6 +85,8 @@ class NormalRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include h.
     """
+
+    deterministic: bool = True
 
     def __init__(self, head: "PredicateLiteral", *body: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)

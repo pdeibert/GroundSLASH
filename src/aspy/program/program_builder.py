@@ -122,7 +122,7 @@ class ProgramBuilder(ASPCoreVisitor):
             if token_type == "CONS":
                 # body
                 if n_children > 2:
-                    statement = Constraint(self.visitBody(ctx.children[1]))
+                    statement = Constraint(*self.visitBody(ctx.children[1]))
                 else:
                     # TODO: empty constraint?
                     raise Exception("Empty constraints not supported yet.")
@@ -144,7 +144,7 @@ class ProgramBuilder(ASPCoreVisitor):
             if n_children < 4:
                 # disjunctive fact
                 if len(head) > 1:
-                    statement = DisjunctiveFact(head)
+                    statement = DisjunctiveFact(*head)
                 # normal fact
                 elif isinstance(head[0], PredicateLiteral):
                     statement = NormalFact(head[0])
@@ -157,7 +157,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
                 # disjunctive rule
                 if len(head) > 1:
-                    statement = DisjunctiveRule(TermTuple(*head), *body)
+                    statement = DisjunctiveRule(head, body)
                 # normal rule
                 elif isinstance(head[0], PredicateLiteral):
                     statement = NormalRule(head[0], *body)

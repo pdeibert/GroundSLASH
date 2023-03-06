@@ -1,3 +1,4 @@
+import warnings
 from collections import defaultdict
 from copy import deepcopy
 from typing import TYPE_CHECKING, Optional, Set
@@ -10,6 +11,7 @@ from aspy.program.literals import (
     PredicateLiteral,
 )
 from aspy.program.program import Program
+from aspy.program.statements import Constraint
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable
 
@@ -288,13 +290,22 @@ class Grounder:
                 possible_literals = set().union(*tuple(inst.head.pos_occ() for inst in possible_inst))
 
                 # compute certain instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
-                certain_inst.update(
-                    self.ground_component(ref_component_prog.reduct(open_preds), possible_literals, certain_literals)
+                instances = self.ground_component(
+                    ref_component_prog.reduct(open_preds), possible_literals, certain_literals
                 )
 
-                # compute possible instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
+                # check if any constraint was derived (resulting in an unsatisfiable program)
+                if any(isinstance(inst, Constraint) for inst in instances):
+                    warnings.warn("Derived certain constraint instance. Program is unsatisfiable")
+                # update certain instances
+                certain_inst.update(instances)
+
+                # compute & update possible instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
-                certain_literals = set().union(*tuple(inst.head.pos_occ() for inst in certain_inst))
+                # TODO: DETERMINISM
+                certain_literals = set().union(
+                    *tuple(inst.head.pos_occ() for inst in certain_inst if inst.deterministic)
+                )
 
                 possible_inst.update(self.ground_component(ref_component_prog, certain_literals, possible_literals))
 
