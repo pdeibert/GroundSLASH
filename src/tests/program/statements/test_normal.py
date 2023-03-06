@@ -88,7 +88,7 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(unsafe_var_rule.body, LiteralTuple(PredicateLiteral("q")))
         self.assertEqual(safe_var_rule.head, LiteralTuple(PredicateLiteral("p", Variable("X"))))
         self.assertEqual(safe_var_rule.body, LiteralTuple(PredicateLiteral("q", Variable("X"))))
-        # TODO: hashing
+        # hashing
         self.assertEqual(hash(ground_rule), hash(NormalRule(PredicateLiteral("p", Number(0)), PredicateLiteral("q"))))
         self.assertEqual(
             hash(unsafe_var_rule), hash(NormalRule(PredicateLiteral("p", Variable("X")), PredicateLiteral("q")))

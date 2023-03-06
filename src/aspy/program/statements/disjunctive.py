@@ -54,7 +54,7 @@ class DisjunctiveFact(Fact):
         return hash(("disjunctive fact", self.atoms))
 
     def __str__(self) -> str:
-        return "|".join([str(atom) for atom in self.head]) + "."
+        return f"{' | '.join([str(atom) for atom in self.head])}."
 
     @property
     def head(self) -> LiteralTuple:
@@ -122,7 +122,7 @@ class DisjunctiveRule(Rule):
         return hash(("disjunctive rule", self.atoms, self.literals))
 
     def __str__(self) -> str:
-        return f"{'|'.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
+        return f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
 
     @property
     def head(self) -> LiteralTuple:
@@ -188,7 +188,7 @@ class DisjunctiveRule(Rule):
         # replace original rule with modified one
         alpha_rule = DisjunctiveRule(
             deepcopy(self.atoms),
-            *tuple(
+            tuple(
                 alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
             ),  # NOTE: restores original order of literals
         )
