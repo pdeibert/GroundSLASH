@@ -1,4 +1,14 @@
-from .term import Term, TermTuple, Infimum, Supremum, Variable, AnonVariable, Number, SymbolicConstant, String
+from .arithmetic import Add, ArithTerm, Div, Minus, Mult, Sub
 from .functional import Functional
-from .arithmetic import ArithTerm, Minus, Add, Sub, Mult, Div
 from .special import ArithVariable
+from .term import (
+    AnonVariable,
+    Infimum,
+    Number,
+    String,
+    Supremum,
+    SymbolicConstant,
+    Term,
+    TermTuple,
+    Variable,
+)

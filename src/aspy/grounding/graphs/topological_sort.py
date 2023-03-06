@@ -1,10 +1,10 @@
-from typing import Set, Hashable, Tuple, List
 from collections import defaultdict
+from typing import Hashable, List, Set, Tuple
 
 
 def topological_sort(nodes: Set[Hashable], edges: Set[Tuple[Hashable, Hashable]]) -> List[Hashable]:
     """Implements Kahns's algorithm for topological sorting.
-    
+
     See Kahn (1962): "Topological sorting of large networks" for details.
     """
 
@@ -42,7 +42,7 @@ def topological_sort(nodes: Set[Hashable], edges: Set[Tuple[Hashable, Hashable]]
             # add child to queue for processing all parents have been processed
             if in_degrees[child] == 0:
                 queue.append(child)
-    
+
         # increase node counter
         count += 1
 
@@ -50,4 +50,4 @@ def topological_sort(nodes: Set[Hashable], edges: Set[Tuple[Hashable, Hashable]]
     if count != len(nodes):
         raise ValueError("Graph cannot be topolically sorted.")
 
-    return sequence    
+    return sequence

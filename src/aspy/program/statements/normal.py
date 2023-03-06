@@ -1,16 +1,22 @@
-from typing import Tuple, Set, Dict, TYPE_CHECKING
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Dict, Set, Tuple
 
-from aspy.program.literals import LiteralTuple, AggregateLiteral, PredicateLiteral, AlphaLiteral
+from aspy.program.literals import (
+    AggregateLiteral,
+    AlphaLiteral,
+    LiteralTuple,
+    PredicateLiteral,
+)
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
+    from aspy.program.literals import Literal, PredicateLiteral
     from aspy.program.substitution import Substitution
-    from aspy.program.literals import PredicateLiteral, Literal
+
     from .special import EpsRule, EtaRule
 
 
@@ -25,6 +31,7 @@ class NormalFact(Fact):
 
     Semantically, any answer set must include h.
     """
+
     def __init__(self, atom: "PredicateLiteral", **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -37,7 +44,7 @@ class NormalFact(Fact):
         return isinstance(other, NormalFact) and self.atom == other.atom
 
     def __hash__(self) -> int:
-        return hash( ("normal fact", self.atom) )
+        return hash(("normal fact", self.atom))
 
     @property
     def head(self) -> LiteralTuple:
@@ -76,6 +83,7 @@ class NormalRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include h.
     """
+
     def __init__(self, head: "PredicateLiteral", *body: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -89,7 +97,7 @@ class NormalRule(Rule):
         return isinstance(other, NormalRule) and self.atom == other.atom and set(self.literals) == set(other.literals)
 
     def __hash__(self) -> int:
-        return hash( ("normal rule", self.atom, self.literals) )
+        return hash(("normal rule", self.atom, self.literals))
 
     def __str__(self) -> str:
         return f"{str(self.atom)} :- {', '.join([str(literal) for literal in self.body])}."
@@ -122,7 +130,11 @@ class NormalRule(Rule):
     def replace_arith(self) -> "NormalRule":
         return NormalRule(self.atom.replace_arith(self.var_table), *self.literals.replace_arith(self.var_table))
 
-    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "NormalRule":
+    def rewrite_aggregates(
+        self,
+        aggr_counter: int,
+        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+    ) -> "NormalRule":
 
         # global variables
         glob_vars = self.vars(global_only=True)
@@ -157,10 +169,15 @@ class NormalRule(Rule):
         # replace original rule with modified one
         alpha_rule = NormalRule(
             self.atom,
-            *tuple(alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body) # NOTE: restores original order of literals
+            *tuple(
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
+            ),  # NOTE: restores original order of literals
         )
 
         return alpha_rule
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "NormalRule":
-        return NormalRule(self.atom, *tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body))
+        return NormalRule(
+            self.atom,
+            *tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body),
+        )

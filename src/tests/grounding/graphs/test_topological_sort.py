@@ -10,20 +10,11 @@ class TestSCC(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        nodes = {'A', 'B', 'C', 'D', 'E'}
-        edges = {
-            ('A', 'C'),
-            ('B', 'C'),
-            ('B', 'E'),
-            ('C', 'D')
-        }
+        nodes = {"A", "B", "C", "D", "E"}
+        edges = {("A", "C"), ("B", "C"), ("B", "E"), ("C", "D")}
 
         sequence = topological_sort(nodes, edges)
-        valid_sequences = [
-            ['A','B','C','D','E'],
-            ['A','B','E','C','D'],
-            ['B','E','A','C','D']
-        ]
+        valid_sequences = [["A", "B", "C", "D", "E"], ["A", "B", "E", "C", "D"], ["B", "E", "A", "C", "D"]]
 
         self.assertTrue(sequence in valid_sequences)
 
@@ -32,14 +23,8 @@ class TestSCC(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        nodes = {'A', 'B', 'C', 'D', 'E'}
-        edges = {
-            ('A', 'C'),
-            ('B', 'C'),
-            ('C', 'D'),
-            ('C', 'E'),
-            ('E', 'B')
-        }
+        nodes = {"A", "B", "C", "D", "E"}
+        edges = {("A", "C"), ("B", "C"), ("C", "D"), ("C", "E"), ("E", "B")}
 
         self.assertRaises(ValueError, topological_sort, nodes, edges)
 

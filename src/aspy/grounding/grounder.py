@@ -1,18 +1,24 @@
-from typing import Set, Optional, TYPE_CHECKING
 from collections import defaultdict
 from copy import deepcopy
+from typing import TYPE_CHECKING, Optional, Set
 
-from aspy.program.literals import Naf, PredicateLiteral, BuiltinLiteral, AggregateLiteral, Equal
-from aspy.program.terms import ArithVariable
-from aspy.program.substitution import Substitution
+from aspy.program.literals import (
+    AggregateLiteral,
+    BuiltinLiteral,
+    Equal,
+    Naf,
+    PredicateLiteral,
+)
 from aspy.program.program import Program
+from aspy.program.substitution import Substitution
+from aspy.program.terms import ArithVariable
 
-from .propagation import Propagator
 from .graphs import ComponentGraph
+from .propagation import Propagator
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.statements import Statement
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal, LiteralTuple
+    from aspy.program.statements import Statement
 
 
 class Grounder:
@@ -24,7 +30,7 @@ class Grounder:
         self.prog = prog
 
     @classmethod
-    def select(cls, literals: "LiteralTuple", subst: Optional[Substitution]=None) -> "Literal":
+    def select(cls, literals: "LiteralTuple", subst: Optional[Substitution] = None) -> "Literal":
         if subst is None:
             # initialize with empty/identity substitution
             subst = Substitution()
@@ -42,7 +48,13 @@ class Grounder:
         raise ValueError("Tuple of literals does not contain any appropriate literals for 'select'.")
 
     @classmethod
-    def matches(cls, literal: "Literal", certain: Optional[Set["Literal"]]=None, possible: Optional[Set["Literal"]]=None, subst: Optional["Substitution"]=None) -> Set["Substitution"]:
+    def matches(
+        cls,
+        literal: "Literal",
+        certain: Optional[Set["Literal"]] = None,
+        possible: Optional[Set["Literal"]] = None,
+        subst: Optional["Substitution"] = None,
+    ) -> Set["Substitution"]:
         # initialize optional arguments
         if subst is None:
             subst = Substitution()
@@ -84,7 +96,16 @@ class Grounder:
         raise ValueError(f"{cls.matches} undefined for literal {str(literal)}.")
 
     @classmethod
-    def ground_statement(cls, statement: "Statement", literals: Optional["LiteralTuple"]=None, certain: Optional[Set["Literal"]]=None, possible: Optional[Set["Literal"]]=None, prev_possible: Optional[Set["Literal"]]=None, subst: Optional["Substitution"]=None, duplicate: bool=False,) -> Set["Statement"]:
+    def ground_statement(
+        cls,
+        statement: "Statement",
+        literals: Optional["LiteralTuple"] = None,
+        certain: Optional[Set["Literal"]] = None,
+        possible: Optional[Set["Literal"]] = None,
+        prev_possible: Optional[Set["Literal"]] = None,
+        subst: Optional["Substitution"] = None,
+        duplicate: bool = False,
+    ) -> Set["Statement"]:
         """Algorithm 1 from TODO."""
         if statement.contains_aggregates:
             raise ValueError(f"{cls.ground_statement} requires statement to be free of aggregates.")
@@ -111,7 +132,12 @@ class Grounder:
 
             # compute matches for selected literal and move on to grounding remaining literals
             return set().union(
-                *tuple(cls.ground_statement(statement, literals.without(literal), certain, possible, prev_possible, match, duplicate) for match in cls.matches(literal, certain, possible, subst))
+                *tuple(
+                    cls.ground_statement(
+                        statement, literals.without(literal), certain, possible, prev_possible, match, duplicate
+                    )
+                    for match in cls.matches(literal, certain, possible, subst)
+                )
             )
         else:
             # check replaced arithmetic terms
@@ -130,7 +156,9 @@ class Grounder:
         # duplicate instantiation
         return set()
 
-    def ground_component(self, component: Program, I: Optional[Set["Literal"]]=None, J: Optional[Set["Literal"]]=None) -> Set["Statement"]:
+    def ground_component(
+        self, component: Program, I: Optional[Set["Literal"]] = None, J: Optional[Set["Literal"]] = None
+    ) -> Set["Statement"]:
         if not component.statements:
             return set()
 
@@ -165,15 +193,38 @@ class Grounder:
         while not converged:
 
             # ground epsilon rules (encode the satisfiability of aggregates without any element instances)
-            eps_instances.update( set().union(*tuple(self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate) for rule in prog_eps.statements)) )
+            eps_instances.update(
+                set().union(
+                    *tuple(
+                        self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate)
+                        for rule in prog_eps.statements
+                    )
+                )
+            )
             # ground eta rules (encode the satisfiability of aggregate elements)
-            eta_instances.update( set().union(*tuple(self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate) for rule in prog_eta.statements)) )
+            eta_instances.update(
+                set().union(
+                    *tuple(
+                        self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate)
+                        for rule in prog_eta.statements
+                    )
+                )
+            )
 
             # propagate aggregates
             J_alpha = propagator.propagate(eps_instances, eta_instances, I, J, J_alpha)
 
             # ground remaining rules (including non-aggregate rules)
-            alpha_instances.update( set().union(*tuple(self.ground_statement(rule, rule.body, I, J.union(J_alpha), prev_J.union(prev_J_alpha), Substitution(), duplicate) for rule in prog_alpha.statements)) )
+            alpha_instances.update(
+                set().union(
+                    *tuple(
+                        self.ground_statement(
+                            rule, rule.body, I, J.union(J_alpha), prev_J.union(prev_J_alpha), Substitution(), duplicate
+                        )
+                        for rule in prog_alpha.statements
+                    )
+                )
+            )
 
             # update state
             duplicate = True
@@ -188,7 +239,7 @@ class Grounder:
             K.update(head_literals)
 
             # enough to check lengths instead of elements (much cheaper)
-            if len(J) == len(prev_J): 
+            if len(J) == len(prev_J):
                 converged = True
 
         # assemble aggregates (if present)
@@ -200,7 +251,7 @@ class Grounder:
     def ground(self) -> Program:
 
         # compute component graph for rules/facts only
-        component_graph = ComponentGraph(self.prog.statements) # rules/facts only???
+        component_graph = ComponentGraph(self.prog.statements)  # rules/facts only???
 
         # compute component instantiation sequence
         inst_sequence = component_graph.sequence()
@@ -214,7 +265,7 @@ class Grounder:
         possible_literals = set()
 
         for component in inst_sequence:
-            # compute counter of occurring head predicates (used to indicate which predicates 
+            # compute counter of occurring head predicates (used to indicate which predicates
             pred_counter = defaultdict(int)
 
             for statement in component.nodes:
@@ -227,7 +278,7 @@ class Grounder:
 
             for ref_component in ref_component_seq:
                 # wrap refined component in 'Program' object
-                ref_component_prog = Program(tuple(ref_component)) # TODO: correct ?
+                ref_component_prog = Program(tuple(ref_component))  # TODO: correct ?
 
                 # predicates which are still open (have not been fully processed yet)
                 open_preds = {var for (var, count) in pred_counter.items() if count > 0}
@@ -237,13 +288,15 @@ class Grounder:
                 possible_literals = set().union(*tuple(inst.head.pos_occ() for inst in possible_inst))
 
                 # compute certain instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
-                certain_inst.update( self.ground_component(ref_component_prog.reduct(open_preds), possible_literals, certain_literals))
+                certain_inst.update(
+                    self.ground_component(ref_component_prog.reduct(open_preds), possible_literals, certain_literals)
+                )
 
                 # compute possible instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
                 certain_literals = set().union(*tuple(inst.head.pos_occ() for inst in certain_inst))
 
-                possible_inst.update( self.ground_component(ref_component_prog, certain_literals, possible_literals) )
+                possible_inst.update(self.ground_component(ref_component_prog, certain_literals, possible_literals))
 
                 for statement in ref_component:
                     # TODO: decrease pred_counter?

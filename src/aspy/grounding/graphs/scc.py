@@ -1,20 +1,21 @@
-from typing import Set, Hashable, List
 from dataclasses import dataclass
+from typing import Hashable, List, Set
 
 
 def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashable]]:
     """Implements Tarjan's algorithm for finding strongly connected components.
-    
+
     See Tarjan (1972): "Depth-First Search and Linear Graph Algorithms" for details.
     """
 
     @dataclass
     class SCCNode:
         """Helper class that wraps original nodes with additional information."""
+
         node: Hashable
-        id: int=-1 # ID of exploration (-1: unexplored)
-        low_id: int=-1 # lowest ID of node on stack reachable from this node (including itself; -1: unexplored)
-        on_stack: bool=False
+        id: int = -1  # ID of exploration (-1: unexplored)
+        low_id: int = -1  # lowest ID of node on stack reachable from this node (including itself; -1: unexplored)
+        on_stack: bool = False
 
     # map original nodes to wrapped counterparts
     node_map = {node: SCCNode(node) for node in nodes}
@@ -52,13 +53,13 @@ def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashabl
             dst = node_map[dst]
 
             # if target node not visited yet
-            if(dst.id == -1):
+            if dst.id == -1:
                 # perform DFS from this node
                 scc_dfs(dst)
                 # update lowest reachable id on stack
                 node.low_id = min(node.low_id, dst.low_id)
             # target node visited, but not assigned to an SCC yet (part of current SCC being built)
-            elif(dst.on_stack):
+            elif dst.on_stack:
                 # update lowest reachable id on stack
                 node.low_id = min(node.low_id, dst.id)
 
@@ -86,7 +87,7 @@ def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashabl
     # iterate over nodes
     for node in node_map.values():
         # if node has not been visited yet
-        if(node.id == -1):
+        if node.id == -1:
             # perform DFS from this node
             scc_dfs(node)
 

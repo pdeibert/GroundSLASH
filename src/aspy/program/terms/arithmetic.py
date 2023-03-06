@@ -1,39 +1,40 @@
-from typing import Set, Union,Optional, Union, Tuple, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
+from aspy.program.operators import ArithOp
+from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.operators import ArithOp
 
-from .term import Term, Number, Variable
 from .special import ArithVariable
+from .term import Number, Term, Variable
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.statements import Statement
     from aspy.program.variable_table import VariableTable
 
 
 class ArithTerm(Term, ABC):
     """Abstract base class for all arithmetic terms."""
+
     def precedes(self, other: Term) -> bool:
         if not self.ground:
             raise Exception("Total order is not defined for non-ground arithmetic terms.")
 
         return Number(self.eval()).precedes(other)
 
-    @ abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def simplify(self) -> "ArithTerm":
         pass
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def eval(self) -> int:
         pass
-    
+
     def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
         if not (self.ground and other.ground):
@@ -45,7 +46,7 @@ class ArithTerm(Term, ABC):
 
         if not self.simplify() == other:
             return None
-        
+
         return Substitution()
 
     def replace_arith(self, var_table: "VariableTable") -> Union["ArithTerm", ArithVariable]:
@@ -59,6 +60,7 @@ class ArithTerm(Term, ABC):
 
 class Minus(ArithTerm):
     """Represents a negation of an arithmetic term."""
+
     def __init__(self, operand: Union[ArithTerm, Number, "Variable"]) -> None:
         self.operand = operand
 
@@ -66,7 +68,7 @@ class Minus(ArithTerm):
         return isinstance(other, Minus) and self.operand == other.operand
 
     def __hash__(self) -> int:
-        return hash( ("minus", self.operand) )
+        return hash(("minus", self.operand))
 
     def __str__(self) -> str:
         return f"-{f'({str(self.operand)})' if isinstance(self.operand, (Add, Sub, Mult, Div)) else str(self.operand)}"
@@ -75,10 +77,12 @@ class Minus(ArithTerm):
     def ground(self) -> bool:
         return self.operand.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.operand.vars(global_only)
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.operand.vars())
 
     def eval(self) -> int:
@@ -110,7 +114,10 @@ class Minus(ArithTerm):
 
 class Add(ArithTerm):
     """Represents an addition of arithmetic terms."""
-    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+
+    def __init__(
+        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+    ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
@@ -118,7 +125,7 @@ class Add(ArithTerm):
         return isinstance(other, Add) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("add", self.loperand, self.roperand) )
+        return hash(("add", self.loperand, self.roperand))
 
     def __str__(self) -> str:
         loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
@@ -130,10 +137,12 @@ class Add(ArithTerm):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
 
     @property
@@ -162,7 +171,7 @@ class Add(ArithTerm):
 
         # if both operands can be simplified to numbers, add them
         if isinstance(loperand, Number) and isinstance(roperand, Number):
-            return Number(loperand.val+roperand.val)
+            return Number(loperand.val + roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
             # left operand does not add anything
@@ -180,7 +189,10 @@ class Add(ArithTerm):
 
 class Sub(ArithTerm):
     """Represents a subtraction of arithmetic terms."""
-    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+
+    def __init__(
+        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+    ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
@@ -188,7 +200,7 @@ class Sub(ArithTerm):
         return isinstance(other, Sub) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("sub", self.loperand, self.roperand) )
+        return hash(("sub", self.loperand, self.roperand))
 
     def __str__(self) -> str:
         loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
@@ -200,10 +212,12 @@ class Sub(ArithTerm):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
 
     @property
@@ -232,7 +246,7 @@ class Sub(ArithTerm):
 
         # if both operands can be simplified to numbers, subtract them
         if isinstance(loperand, Number) and isinstance(roperand, Number):
-            return Number(loperand.val-roperand.val)
+            return Number(loperand.val - roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
             # left operand does not add anything
@@ -251,7 +265,10 @@ class Sub(ArithTerm):
 
 class Mult(ArithTerm):
     """Represents a multiplication of arithmetic terms."""
-    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+
+    def __init__(
+        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+    ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
@@ -259,7 +276,7 @@ class Mult(ArithTerm):
         return isinstance(other, Mult) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("mult", self.loperand, self.roperand) )
+        return hash(("mult", self.loperand, self.roperand))
 
     def __str__(self) -> str:
         loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
@@ -271,10 +288,12 @@ class Mult(ArithTerm):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
 
     @property
@@ -303,7 +322,7 @@ class Mult(ArithTerm):
 
         # if both operands can be simplified to numbers, multiply them
         if isinstance(loperand, Number) and isinstance(roperand, Number):
-            return Number(loperand.val*roperand.val)
+            return Number(loperand.val * roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
             # multiplication by zero
@@ -345,7 +364,10 @@ class Mult(ArithTerm):
 
 class Div(ArithTerm):
     """Represents a division of arithmetic terms."""
-    def __init__(self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]) -> None:
+
+    def __init__(
+        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+    ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
@@ -353,7 +375,7 @@ class Div(ArithTerm):
         return isinstance(other, Div) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("div", self.loperand, self.roperand) )
+        return hash(("div", self.loperand, self.roperand))
 
     def __str__(self) -> str:
         loperand_str = f"{f'({str(self.loperand)})' if isinstance(self.loperand, (Add, Sub, Mult, Div, Minus)) else str(self.loperand)}"
@@ -365,10 +387,12 @@ class Div(ArithTerm):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
 
     @property
@@ -429,9 +453,4 @@ class Div(ArithTerm):
 
 
 # maps arithmetic operators to their corresponding AST constructs
-op2arith = {
-    ArithOp.PLUS: Add,
-    ArithOp.MINUS: Sub,
-    ArithOp.TIMES: Mult,
-    ArithOp.DIV: Div
-}
+op2arith = {ArithOp.PLUS: Add, ArithOp.MINUS: Sub, ArithOp.TIMES: Mult, ArithOp.DIV: Div}

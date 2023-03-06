@@ -1,24 +1,25 @@
-from typing import Union, Set, Optional, TYPE_CHECKING
 from copy import deepcopy
 from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set, Union
 
 import aspy
-from aspy.program.substitution import Substitution
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SYM_CONST_RE
 
-from .term import Term, TermTuple, Infimum, Number, SymbolicConstant, String
+from .term import Infimum, Number, String, SymbolicConstant, Term, TermTuple
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.terms import Variable
-    from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.statements import Statement
+    from aspy.program.terms import Variable
     from aspy.program.variable_table import VariableTable
 
 
 class Functional(Term):
     """Represents a functional term."""
+
     def __init__(self, symbol: str, *terms: Term) -> None:
 
         # check if functor name is valid
@@ -35,7 +36,7 @@ class Functional(Term):
         return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms
 
     def __hash__(self) -> int:
-        return hash( ("functional", self.symbol, self.terms) )
+        return hash(("functional", self.symbol, self.terms))
 
     @property
     def arity(self) -> int:
@@ -59,15 +60,17 @@ class Functional(Term):
                         # other_term < self_term
                         if other_term.precedes(self_term) and not self_term.precedes(other_term):
                             return False
-                    
+
                     return True
 
         return False
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.terms.vars(global_only)
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet.closure(*self.terms.safety())
 
     def match(self, other: "Expr") -> Optional[Substitution]:

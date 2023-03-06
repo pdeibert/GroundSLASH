@@ -1,10 +1,10 @@
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.terms import Term
-    from aspy.program.substitution import Substitution
     from aspy.program.operators import RelOp
+    from aspy.program.substitution import Substitution
+    from aspy.program.terms import Term
     from aspy.program.variable_table import VariableTable
 
 
@@ -20,10 +20,12 @@ class Guard(NamedTuple):
             return f"({str(self.bound)} {str(self.op)})"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Guard) and self.right == other.right and self.op == other.op and self.bound == other.bound
+        return (
+            isinstance(other, Guard) and self.right == other.right and self.op == other.op and self.bound == other.bound
+        )
 
     def __hash__(self) -> int:
-        return hash( ("guard", self.op, self.bound, self.right) )
+        return hash(("guard", self.op, self.bound, self.right))
 
     def to_left(self) -> "Guard":
         if self.right:

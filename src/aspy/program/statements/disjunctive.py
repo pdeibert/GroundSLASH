@@ -1,25 +1,30 @@
-from typing import Set, Union, Tuple, Optional, Dict, TYPE_CHECKING
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, Union
 
 import aspy
-from aspy.program.literals import LiteralTuple, PredicateLiteral, AggregateLiteral, AlphaLiteral
+from aspy.program.literals import (
+    AggregateLiteral,
+    AlphaLiteral,
+    LiteralTuple,
+    PredicateLiteral,
+)
 from aspy.program.safety_characterization import SafetyTriplet
 
-from .statement import Fact, Rule
 from .normal import NormalFact, NormalRule
+from .statement import Fact, Rule
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.terms import Variable
-    from aspy.program.substitution import Substitution
-    from aspy.program.statements import Statement, EpsRule, EtaRule
     from aspy.program.literals import Literal
+    from aspy.program.statements import EpsRule, EtaRule, Statement
+    from aspy.program.substitution import Substitution
+    from aspy.program.terms import Variable
 
 
 class DisjunctiveFact(Fact):
     """Disjunctive fact.
-    
+
     Rule of form
 
         h_1 | ... | h_m :- .
@@ -28,6 +33,7 @@ class DisjunctiveFact(Fact):
 
     Semantically, any answer set must include exactly one classical atom h_i.
     """
+
     def __init__(self, *atoms: PredicateLiteral, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -35,7 +41,9 @@ class DisjunctiveFact(Fact):
             raise ValueError(f"Head for {type(self)} requires at least two literals. Use {NormalFact} instead.")
 
         if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms):
-            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}.")
+            raise ValueError(
+                f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}."
+            )
 
         self.atoms = LiteralTuple(*atoms)
 
@@ -43,10 +51,10 @@ class DisjunctiveFact(Fact):
         return isinstance(other, DisjunctiveFact) and self.atoms == other.atoms
 
     def __hash__(self) -> int:
-        return hash( ("disjunctive fact", self.atoms) )
+        return hash(("disjunctive fact", self.atoms))
 
     def __str__(self) -> str:
-        return '|'.join([str(atom) for atom in self.head]) + '.'
+        return "|".join([str(atom) for atom in self.head]) + "."
 
     @property
     def head(self) -> LiteralTuple:
@@ -56,7 +64,7 @@ class DisjunctiveFact(Fact):
     def body(self) -> LiteralTuple:
         return LiteralTuple()
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception()
 
     @cached_property
@@ -76,7 +84,7 @@ class DisjunctiveFact(Fact):
 
 class DisjunctiveRule(Rule):
     """Disjunctive rule.
-    
+
     Rule of form:
 
         h_1 | ... | h_m :- b_1,...,b_n .
@@ -85,7 +93,13 @@ class DisjunctiveRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
     """
-    def __init__(self, head: Union[LiteralTuple, Tuple["Literal", ...]], body: Union[LiteralTuple, Tuple["Literal", ...]], **kwargs) -> None:
+
+    def __init__(
+        self,
+        head: Union[LiteralTuple, Tuple["Literal", ...]],
+        body: Union[LiteralTuple, Tuple["Literal", ...]],
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
 
         if len(head) < 2:
@@ -94,7 +108,9 @@ class DisjunctiveRule(Rule):
             raise ValueError(f"Body for {type(self)} may not be empty. Use {DisjunctiveFact} instead.")
 
         if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in head):
-            raise ValueError(f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}.")
+            raise ValueError(
+                f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}."
+            )
 
         self.atoms = head if isinstance(head, LiteralTuple) else LiteralTuple(*head)
         self.literals = body if isinstance(body, LiteralTuple) else LiteralTuple(*body)
@@ -103,7 +119,7 @@ class DisjunctiveRule(Rule):
         return isinstance(other, DisjunctiveRule) and self.atoms == other.atoms and self.literals == other.literals
 
     def __hash__(self) -> int:
-        return hash( ("disjunctive rule", self.atoms, self.literals) )
+        return hash(("disjunctive rule", self.atoms, self.literals))
 
     def __str__(self) -> str:
         return f"{'|'.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
@@ -133,7 +149,11 @@ class DisjunctiveRule(Rule):
 
         return DisjunctiveRule(self.head.substitute(subst), self.literals.substitute(subst))
 
-    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "DisjunctiveRule":
+    def rewrite_aggregates(
+        self,
+        aggr_counter: int,
+        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+    ) -> "DisjunctiveRule":
 
         # global variables
         glob_vars = self.vars(global_only=True)
@@ -168,10 +188,15 @@ class DisjunctiveRule(Rule):
         # replace original rule with modified one
         alpha_rule = DisjunctiveRule(
             deepcopy(self.atoms),
-            *tuple(alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body) # NOTE: restores original order of literals
+            *tuple(
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
+            ),  # NOTE: restores original order of literals
         )
 
         return alpha_rule
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "DisjunctiveRule":
-        return DisjunctiveRule(deepcopy(self.atoms), tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body))
+        return DisjunctiveRule(
+            deepcopy(self.atoms),
+            tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body),
+        )

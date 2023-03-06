@@ -1,7 +1,24 @@
+from .aggregate import (
+    AggregateCount,
+    AggregateElement,
+    AggregateFunction,
+    AggregateLiteral,
+    AggregateMax,
+    AggregateMin,
+    AggregateSum,
+    Guard,
+)
+from .builtin import (
+    BuiltinLiteral,
+    Equal,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+    Unequal,
+)
 from .literal import Literal, LiteralTuple
-from .predicate import PredicateLiteral
-from .builtin import BuiltinLiteral, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual
-from .aggregate import AggregateElement, AggregateFunction, AggregateCount, AggregateSum, AggregateMax, AggregateMin, AggregateLiteral, Guard
-from .special import AlphaLiteral, EpsLiteral, EtaLiteral
 from .naf import Naf
 from .neg import Neg
+from .predicate import PredicateLiteral
+from .special import AlphaLiteral, EpsLiteral, EtaLiteral

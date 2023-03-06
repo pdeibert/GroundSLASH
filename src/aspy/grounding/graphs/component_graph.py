@@ -1,26 +1,32 @@
-from typing import Set, List, Tuple, Optional, TYPE_CHECKING
 from functools import cached_property
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 from .dependency_graph import DependencyGraph
 from .scc import compute_SCCs
 from .topological_sort import topological_sort
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.statements import Statement
 
 
-class Component():
-    def __init__(self, rules: Set["Statement"], pos_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, neg_edges: Optional[Set[Tuple["Statement", "Statement"]]]=None, stratified: bool=False) -> None:
+class Component:
+    def __init__(
+        self,
+        rules: Set["Statement"],
+        pos_edges: Optional[Set[Tuple["Statement", "Statement"]]] = None,
+        neg_edges: Optional[Set[Tuple["Statement", "Statement"]]] = None,
+        stratified: bool = False,
+    ) -> None:
         self.nodes = rules
         self.pos_edges = pos_edges if pos_edges is not None else set()
         self.neg_edges = neg_edges if neg_edges is not None else set()
         self.stratified = stratified
 
     def __str__(self) -> str:
-        return '\n'.join(tuple(str(node) for node in self.nodes))
+        return "\n".join(tuple(str(node) for node in self.nodes))
 
     @property
-    def edges(self) -> Set[Tuple["Statement","Statement"]]:
+    def edges(self) -> Set[Tuple["Statement", "Statement"]]:
         return self.pos_edges.union(self.neg_edges)
 
     @cached_property
@@ -49,10 +55,10 @@ class Component():
             dst_component = rule2scc[dst]
 
             if src_component is not dst_component:
-                pos_edges.add( (src, dst) )
+                pos_edges.add((src, dst))
 
         """Returns the refined instantiation sequence for the component."""
-        #seq = topological_sort(self.nodes, self.pos_edges)
+        # seq = topological_sort(self.nodes, self.pos_edges)
         seq = topological_sort(set(sccs), pos_edges)
         # reverse order
         seq.reverse()
@@ -94,9 +100,9 @@ class ComponentGraph(object):
             dst_component = rule2scc[dst]
 
             if src_component is dst_component:
-                scc_edges[src_component][0].add( (src, dst) )
+                scc_edges[src_component][0].add((src, dst))
             else:
-                pos_edges.add( (src, dst) )
+                pos_edges.add((src, dst))
 
         # group negative edges
         for (src, dst) in dep_graph.neg_edges:
@@ -104,9 +110,9 @@ class ComponentGraph(object):
             dst_scc = rule2scc[dst]
 
             if src_scc is dst_scc:
-                scc_edges[src_scc][1].add( (src, dst) )
+                scc_edges[src_scc][1].add((src, dst))
             else:
-                neg_edges.add( (src, dst) )
+                neg_edges.add((src, dst))
 
         graph = object.__new__(cls)
 
@@ -148,7 +154,7 @@ class ComponentGraph(object):
         return graph
 
     @property
-    def edges(self) -> Set[Tuple["Statement","Statement"]]:
+    def edges(self) -> Set[Tuple["Statement", "Statement"]]:
         return self.pos_edges.union(self.neg_edges)
 
     def sequence(self) -> List[Component]:

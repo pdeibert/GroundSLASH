@@ -1,13 +1,13 @@
-from typing import Optional, Set, TYPE_CHECKING
-from dataclasses import dataclass
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Optional, Set
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from .terms import Variable
 
 
 @dataclass
-class SafetyRule():
+class SafetyRule:
     depender: "Variable"
     dependees: Set["Variable"]
 
@@ -15,14 +15,19 @@ class SafetyRule():
         return self.depender == other.depender and self.dependees == other.dependees
 
     def __hash__(self) -> int:
-        return hash( (self.depender, frozenset(self.dependees)) )
+        return hash((self.depender, frozenset(self.dependees)))
 
 
 class SafetyTriplet:
-    def __init__(self, safe: Optional[Set["Variable"]]=None, unsafe: Optional[Set["Variable"]]=None, rules: Optional[Set[SafetyRule]]=None) -> None:
-        self.safe   = safe if safe is not None else set()
+    def __init__(
+        self,
+        safe: Optional[Set["Variable"]] = None,
+        unsafe: Optional[Set["Variable"]] = None,
+        rules: Optional[Set[SafetyRule]] = None,
+    ) -> None:
+        self.safe = safe if safe is not None else set()
         self.unsafe = unsafe if unsafe is not None else set()
-        self.rules  = rules if rules is not None else set()
+        self.rules = rules if rules is not None else set()
 
     def __eq__(self, other: "SafetyTriplet") -> bool:
         return self.safe == other.safe and self.unsafe == self.unsafe and self.rules == other.rules
@@ -52,7 +57,7 @@ class SafetyTriplet:
                 if rule.depender in rule.dependees:
                     # mark rule for removal
                     remove.append(rule)
-            
+
             for rule in remove:
                 safety.rules.remove(rule)
             remove.clear()
@@ -73,7 +78,7 @@ class SafetyTriplet:
                         safety.safe.add(rule.depender)
                         # mark rule for removal
                         remove.append(rule)
-            
+
             for rule in remove:
                 safety.rules.remove(rule)
             remove.clear()

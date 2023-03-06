@@ -1,25 +1,26 @@
-from typing import Set, Tuple, Optional, Union, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
-from aspy.program.terms import ArithTerm, Number, TermTuple
-from aspy.program.safety_characterization import SafetyTriplet, SafetyRule
-from aspy.program.substitution import Substitution
 from aspy.program.operators import RelOp
+from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
+from aspy.program.substitution import Substitution
+from aspy.program.terms import ArithTerm, Number, TermTuple
 
 from .literal import Literal
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.terms import Term, Variable
-    from aspy.program.statements import Statement
     from aspy.program.query import Query
+    from aspy.program.statements import Statement
+    from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
 
 
 class BuiltinLiteral(Literal, ABC):
     """Abstract base class for all built-in literals."""
+
     def __init__(self, loperand: "Term", roperand: "Term") -> None:
         # built-in literals are always positive
         super().__init__(naf=False)
@@ -37,17 +38,19 @@ class BuiltinLiteral(Literal, ABC):
     def neg_occ(self) -> Set["Literal"]:
         return set()
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.vars())
 
     @property
-    def operands(self) -> Tuple["Term","Term"]:
+    def operands(self) -> Tuple["Term", "Term"]:
         return (self.loperand, self.roperand)
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def eval(self) -> bool:
         pass
 
@@ -57,6 +60,7 @@ class BuiltinLiteral(Literal, ABC):
 
 class Equal(BuiltinLiteral):
     """Represents an equality comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}={str(self.roperand)}"
 
@@ -64,9 +68,11 @@ class Equal(BuiltinLiteral):
         return isinstance(other, Equal) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("equal", self.loperand, self.roperand) )
+        return hash(("equal", self.loperand, self.roperand))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         # overrides inherited safety method
 
         # get variables
@@ -76,14 +82,16 @@ class Equal(BuiltinLiteral):
         lsafety = self.loperand.safety()
         rsafety = self.roperand.safety()
 
-        rules = {SafetyRule(var, lvars.copy()) for var in rsafety.safe}.union({SafetyRule(var, rvars.copy()) for var in lsafety.safe})
+        rules = {SafetyRule(var, lvars.copy()) for var in rsafety.safe}.union(
+            {SafetyRule(var, rvars.copy()) for var in lsafety.safe}
+        )
 
         return SafetyTriplet(unsafe=lvars.union(rvars), rules=rules).normalize()
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
@@ -105,8 +113,10 @@ class Equal(BuiltinLiteral):
 
         return Equal(*operands)
 
+
 class Unequal(BuiltinLiteral):
     """Represents an unequality comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}!={str(self.roperand)}"
 
@@ -114,16 +124,16 @@ class Unequal(BuiltinLiteral):
         return isinstance(other, Unequal) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("unequal", self.loperand, self.roperand) )
+        return hash(("unequal", self.loperand, self.roperand))
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
-        return not ( loperand.precedes(roperand) and roperand.precedes(loperand) )
+        return not (loperand.precedes(roperand) and roperand.precedes(loperand))
 
     def match(self, other: "Expr") -> Set[Substitution]:
         """Tries to match the expression with another one."""
@@ -141,8 +151,10 @@ class Unequal(BuiltinLiteral):
 
         return Unequal(*operands)
 
+
 class Less(BuiltinLiteral):
     """Represents a less-than comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}<{str(self.roperand)}"
 
@@ -150,12 +162,12 @@ class Less(BuiltinLiteral):
         return isinstance(other, Less) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("less", self.loperand, self.roperand) )
+        return hash(("less", self.loperand, self.roperand))
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
@@ -177,8 +189,10 @@ class Less(BuiltinLiteral):
 
         return Less(*operands)
 
+
 class Greater(BuiltinLiteral):
     """Represents a greater-than comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}>{str(self.roperand)}"
 
@@ -186,12 +200,12 @@ class Greater(BuiltinLiteral):
         return isinstance(other, Greater) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("greater", self.loperand, self.roperand) )
+        return hash(("greater", self.loperand, self.roperand))
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
@@ -216,6 +230,7 @@ class Greater(BuiltinLiteral):
 
 class LessEqual(BuiltinLiteral):
     """Represents a less-or-equal-than comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}<={str(self.roperand)}"
 
@@ -223,12 +238,12 @@ class LessEqual(BuiltinLiteral):
         return isinstance(other, LessEqual) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("less equal", self.loperand, self.roperand) )
+        return hash(("less equal", self.loperand, self.roperand))
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
@@ -253,6 +268,7 @@ class LessEqual(BuiltinLiteral):
 
 class GreaterEqual(BuiltinLiteral):
     """Represents a greater-or-equal-than comparison between terms."""
+
     def __str__(self) -> str:
         return f"{str(self.loperand)}>={str(self.roperand)}"
 
@@ -260,12 +276,12 @@ class GreaterEqual(BuiltinLiteral):
         return isinstance(other, GreaterEqual) and self.loperand == other.loperand and self.roperand == other.roperand
 
     def __hash__(self) -> int:
-        return hash( ("greater equal", self.loperand, self.roperand) )
+        return hash(("greater equal", self.loperand, self.roperand))
 
     def eval(self) -> bool:
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
-        
+
         loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
         roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
 
@@ -295,5 +311,5 @@ op2rel = {
     RelOp.LESS: Less,
     RelOp.GREATER: Greater,
     RelOp.LESS_OR_EQ: LessEqual,
-    RelOp.GREATER_OR_EQ: GreaterEqual
+    RelOp.GREATER_OR_EQ: GreaterEqual,
 }

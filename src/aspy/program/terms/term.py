@@ -1,35 +1,38 @@
-from typing import Optional, Union, Tuple, Iterable, Set, TYPE_CHECKING
 from abc import ABC, abstractmethod
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Iterable, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.expression import Expr
-from aspy.program.substitution import Substitution, AssignmentError
 from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.symbol_table import VARIABLE_RE, SYM_CONST_RE
+from aspy.program.substitution import AssignmentError, Substitution
+from aspy.program.symbol_table import SYM_CONST_RE, VARIABLE_RE
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.statements import Statement
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query
+    from aspy.program.statements import Statement
     from aspy.program.variable_table import VariableTable
 
 
 class Term(Expr, ABC):
     """Abstract base class for all terms."""
-    @abstractmethod # pragma: no cover
+
+    @abstractmethod  # pragma: no cover
     def __eq__(self, other: Expr) -> bool:
         pass
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def precedes(self, other: "Term") -> bool:
         """Defines the total ordering operator defined for terms in ASP-Core-2."""
         pass
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return set()
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet()
 
     def replace_arith(self, var_table: "VariableTable") -> "Term":
@@ -46,7 +49,8 @@ class Term(Expr, ABC):
 
 class Infimum(Term):
     """Least element in the total ordering for terms."""
-    ground: bool=True
+
+    ground: bool = True
 
     def __str__(self) -> str:
         return "#inf"
@@ -55,7 +59,7 @@ class Infimum(Term):
         return isinstance(other, Infimum)
 
     def __hash__(self) -> int:
-        return hash( ("inf", ) )
+        return hash(("inf",))
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -66,7 +70,8 @@ class Infimum(Term):
 
 class Supremum(Term):
     """Greatest element in the total ordering for terms."""
-    ground: bool=True
+
+    ground: bool = True
 
     def __str__(self) -> str:
         return "#sup"
@@ -75,7 +80,7 @@ class Supremum(Term):
         return isinstance(other, Supremum)
 
     def __hash__(self) -> int:
-        return hash( ("sup", ) )
+        return hash(("sup",))
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -86,7 +91,8 @@ class Supremum(Term):
 
 class Variable(Term):
     """Represents a variable."""
-    ground: bool=False
+
+    ground: bool = False
 
     def __init__(self, val: str) -> None:
         # check if variable name is valid
@@ -102,15 +108,17 @@ class Variable(Term):
         return isinstance(other, Variable) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash( ("var", self.val) )
+        return hash(("var", self.val))
 
     def precedes(self, other: Term) -> bool:
         raise Exception("Total ordering is undefined for non-ground terms.")
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return {self}
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> SafetyTriplet:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
         return SafetyTriplet({self})
 
     def simplify(self) -> "Number":
@@ -127,6 +135,7 @@ class Variable(Term):
 
 class AnonVariable(Variable):
     """Represents an anonymous variable."""
+
     def __init__(self, id: int) -> None:
 
         # check if id is valid
@@ -140,7 +149,7 @@ class AnonVariable(Variable):
         return isinstance(other, AnonVariable) and other.val == self.val and other.id == self.id
 
     def __hash__(self) -> int:
-        return hash( ("anon var", self.val) )
+        return hash(("anon var", self.val))
 
     def simplify(self) -> "Number":
         """Used in arithmetical terms."""
@@ -149,7 +158,8 @@ class AnonVariable(Variable):
 
 class Number(Term):
     """Represents a number."""
-    ground: bool=True
+
+    ground: bool = True
 
     def __init__(self, val: int) -> None:
         self.val = val
@@ -179,7 +189,7 @@ class Number(Term):
         return isinstance(other, Number) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash( ("num", self.val) )
+        return hash(("num", self.val))
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -202,12 +212,13 @@ class Number(Term):
 
 class SymbolicConstant(Term):
     """Represents a symbolic constant."""
-    ground: bool=True
+
+    ground: bool = True
 
     def __init__(self, val: str) -> None:
 
         # check if symbolic constant name is valid
-        if aspy.debug() and not SYM_CONST_RE.fullmatch(val): # TODO: alpha, eta, eps?
+        if aspy.debug() and not SYM_CONST_RE.fullmatch(val):  # TODO: alpha, eta, eps?
             raise ValueError(f"Invalid value for {type(self)}: {val}")
 
         self.val = val
@@ -222,7 +233,7 @@ class SymbolicConstant(Term):
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash( ("symbolic const", self.val) )
+        return hash(("symbolic const", self.val))
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -238,7 +249,8 @@ class SymbolicConstant(Term):
 
 class String(Term):
     """Represents a string."""
-    ground: bool=True
+
+    ground: bool = True
 
     def __init__(self, val: str) -> None:
         self.val = val
@@ -250,7 +262,7 @@ class String(Term):
         return isinstance(other, String) and other.val == self.val
 
     def __hash__(self) -> int:
-        return hash( ("str", self.val) )
+        return hash(("str", self.val))
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
@@ -266,6 +278,7 @@ class String(Term):
 
 class TermTuple:
     """Represents a collection of terms."""
+
     def __init__(self, *terms: Term) -> None:
         self.terms = tuple(terms)
 
@@ -283,7 +296,7 @@ class TermTuple:
         return True
 
     def __hash__(self) -> int:
-        return hash( ("term tuple", self.terms) )
+        return hash(("term tuple", self.terms))
 
     def __iter__(self) -> Iterable[Term]:
         return iter(self.terms)
@@ -308,7 +321,7 @@ class TermTuple:
         return TermTuple(*terms)
 
     def match(self, other: Expr) -> Optional[Substitution]:
-        #raise Exception("Matching for term tuples is not supported yet.")
+        # raise Exception("Matching for term tuples is not supported yet.")
 
         if not (isinstance(other, TermTuple) and len(self) == len(other)):
             return None
@@ -328,10 +341,12 @@ class TermTuple:
 
         return subst
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return set().union(*tuple(term.vars(global_only) for term in self.terms))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> Tuple["SafetyTriplet", ...]:
         return tuple(term.safety() for term in self.terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":

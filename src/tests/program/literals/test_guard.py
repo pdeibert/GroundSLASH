@@ -1,11 +1,10 @@
 import unittest
 
 import aspy
-from aspy.program.substitution import Substitution
-from aspy.program.variable_table import VariableTable
-from aspy.program.terms import Variable, Minus, ArithVariable
 from aspy.program.literals import Guard
 from aspy.program.operators import RelOp
+from aspy.program.terms import ArithVariable, Minus, Variable
+from aspy.program.variable_table import VariableTable
 
 
 class TestGuard(unittest.TestCase):
@@ -14,7 +13,10 @@ class TestGuard(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         # TODO
-        self.assertEqual(Guard(RelOp.EQUAL, Minus(Variable('X')), True).replace_arith(VariableTable()), Guard(RelOp.EQUAL, ArithVariable(0, Minus(Variable('X'))), True))
+        self.assertEqual(
+            Guard(RelOp.EQUAL, Minus(Variable("X")), True).replace_arith(VariableTable()),
+            Guard(RelOp.EQUAL, ArithVariable(0, Minus(Variable("X"))), True),
+        )
 
 
 if __name__ == "__main__":

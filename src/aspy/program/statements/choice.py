@@ -1,6 +1,6 @@
-from typing import Optional, Tuple, Set, Union, TYPE_CHECKING
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
 from aspy.program.expression import Expr
 from aspy.program.literals import LiteralTuple
@@ -8,17 +8,18 @@ from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
+    from aspy.program.literals import Guard, PredicateLiteral
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
-    from aspy.program.literals import PredicateLiteral, Guard
 
     from .statement import Statement
 
 
 class ChoiceElement(Expr):
     """Choice element."""
-    def __init__(self, atom: "PredicateLiteral", literals: Optional["LiteralTuple"]=None) -> None:
+
+    def __init__(self, atom: "PredicateLiteral", literals: Optional["LiteralTuple"] = None) -> None:
         if literals is None:
             literals = LiteralTuple()
 
@@ -42,14 +43,14 @@ class ChoiceElement(Expr):
     def ground(self) -> bool:
         return self.atom.ground and all(literal.ground for literal in self.literals)
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         # TODO: global
         if global_only:
             raise Exception()
 
         return set().union(literal.vars() for literal in self.literals)
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception()
 
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
@@ -58,7 +59,12 @@ class ChoiceElement(Expr):
 
 class Choice(Expr):
     """Choice."""
-    def __init__(self, elements: Optional[Tuple[ChoiceElement]]=None, guards: Optional[Union["Guard", Tuple["Guard", ...]]]=None):
+
+    def __init__(
+        self,
+        elements: Optional[Tuple[ChoiceElement]] = None,
+        guards: Optional[Union["Guard", Tuple["Guard", ...]]] = None,
+    ):
         if guards is None:
             guards = tuple()
 
@@ -68,7 +74,7 @@ class Choice(Expr):
         # single guard specified
         if isinstance(guards, Guard):
             # wrap in tuple
-            guards = (guards, )
+            guards = (guards,)
         # no guards specified
         elif guards is None:
             # TODO: set default guards
@@ -96,7 +102,11 @@ class Choice(Expr):
         self.elements = elements
 
     def __str__(self) -> str:
-        return (f"{str(self.lguard.bound)} {str(self.lguard.op)}" if self.lguard else "") + f"{{{';'.join([str(literal) for literal in self.elements])}}}" + (f"{str(self.rguard.op)} {str(self.rguard.bound)}" if self.lguard else "")
+        return (
+            (f"{str(self.lguard.bound)} {str(self.lguard.op)}" if self.lguard else "")
+            + f"{{{';'.join([str(literal) for literal in self.elements])}}}"
+            + (f"{str(self.rguard.op)} {str(self.rguard.bound)}" if self.lguard else "")
+        )
 
     @cached_property
     def ground(self) -> bool:
@@ -105,7 +115,7 @@ class Choice(Expr):
     def guards(self) -> Tuple[Union["Guard", None], Union["Guard", None]]:
         return (self.lguard, self.rguard)
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         # TODO: global
         if global_only:
             raise Exception()
@@ -118,7 +128,7 @@ class Choice(Expr):
 
         # substitute elements recursively
         elements = (element.substitute(subst) for element in self.elements)
-    
+
         # substitute guard terms recursively
         guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
 
@@ -140,6 +150,7 @@ class ChoiceFact(Fact):
 
     Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
     """
+
     def __init__(self, head: Choice, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -151,7 +162,7 @@ class ChoiceFact(Fact):
     def body(self) -> LiteralTuple:
         return LiteralTuple()
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception()
 
     @cached_property
@@ -162,7 +173,7 @@ class ChoiceFact(Fact):
     def ground(self) -> bool:
         return self.head.ground
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice facts not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceFact":
@@ -183,6 +194,7 @@ class ChoiceRule(Rule):
 
     Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
     """
+
     def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -212,7 +224,7 @@ class ChoiceRule(Rule):
     def ground(self) -> bool:
         return self.head.ground and self.body.ground
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":

@@ -1,23 +1,23 @@
-from typing import Tuple, Optional, Set, TYPE_CHECKING
 from abc import ABC
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set, Tuple
 
 from aspy.program.expression import Expr
-from aspy.program.terms import TermTuple
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.terms import TermTuple
 
 from .statement import Statement
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
+    from aspy.program.literals import LiteralTuple
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
-    from aspy.program.literals import LiteralTuple
 
 
 class OptimizeElement(Expr):
     """Optimization element for optimize statements.
-    
+
     Expression of form:
 
         w @ l,t_1,...,t_m : b_1,...,b_n
@@ -25,6 +25,7 @@ class OptimizeElement(Expr):
     for terms w,l,t_1,...,t_m and literals b_1,...,b_n.
     '@ l' may be omitted if l=0.
     """
+
     def __init__(self, weight: "Term", level: "Term", terms: TermTuple, literals: "LiteralTuple") -> None:
         self.weight = weight
         self.level = level
@@ -46,10 +47,15 @@ class OptimizeElement(Expr):
     def ground(self) -> bool:
         return self.weight.ground and self.level.ground and self.terms.ground and self.literals.ground
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return set().union(self.weight.vars(global_only), self.level.vars(global_only), self.terms.vars(global_only), self.literals.vars(global_only))
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
+        return set().union(
+            self.weight.vars(global_only),
+            self.level.vars(global_only),
+            self.terms.vars(global_only),
+            self.literals.vars(global_only),
+        )
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for optimize elements not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "OptimizeElement":
@@ -58,6 +64,7 @@ class OptimizeElement(Expr):
 
 class OptimizeStatement(Statement, ABC):
     """Abstract base class for all optimize statement."""
+
     def __init__(self, elements: Tuple[OptimizeElement, ...], minimize: bool, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -82,7 +89,7 @@ class OptimizeStatement(Statement, ABC):
     def ground(self) -> bool:
         return all(element.ground for element in self.elements)
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for optimize statements not supported yet.")
 
 
@@ -101,6 +108,7 @@ class MinimizeStatement(OptimizeStatement):
         ...
         :~ b_{k1},...,b_{kn}. [w_k@l_1,t_{k1},...,t_{km}]
     """
+
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, True)
 
@@ -113,7 +121,7 @@ class MinimizeStatement(OptimizeStatement):
 
         # substitute elements recursively
         elements = (element.substitute(subst) for element in self.elements)
-    
+
         return MinimizeStatement(elements)
 
 
@@ -132,6 +140,7 @@ class MaximizeStatement(OptimizeStatement):
         ...
         :~ b_{k1},...,b_{kn}. [-w_k@l_1,t_{k1},...,t_{km}]
     """
+
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, False)
 

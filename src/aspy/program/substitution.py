@@ -1,9 +1,9 @@
-from typing import Optional, Dict, TYPE_CHECKING
 from copy import deepcopy
 from functools import cached_property, reduce
+from typing import TYPE_CHECKING, Dict, Optional
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.terms import Variable, Term
+if TYPE_CHECKING:  # pragma: no cover
+    from aspy.program.terms import Term, Variable
 
 
 class AssignmentError(Exception):
@@ -13,7 +13,8 @@ class AssignmentError(Exception):
 
 class Substitution(dict):
     """Maps variables to terms replacing those variables"""
-    def __init__(self, subst_dict: Optional[Dict["Variable", "Term"]]=None) -> None:
+
+    def __init__(self, subst_dict: Optional[Dict["Variable", "Term"]] = None) -> None:
         if subst_dict is not None:
             self.update(subst_dict)
 
@@ -28,7 +29,7 @@ class Substitution(dict):
         return isinstance(other, Substitution) and super(Substitution, self).__eq__(other)
 
     def __hash__(self) -> int:
-        return hash( ("substitution", frozenset(self.items())) )
+        return hash(("substitution", frozenset(self.items())))
 
     def __add__(self, other: "Substitution") -> "Substitution":
         subst = dict(self.items())
@@ -39,7 +40,7 @@ class Substitution(dict):
                     raise AssignmentError(self, other)
             else:
                 subst[var] = target
-        
+
         return Substitution(subst)
 
     @cached_property

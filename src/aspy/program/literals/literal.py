@@ -1,17 +1,17 @@
-from typing import Tuple, Set, Optional, Union, Iterator, TYPE_CHECKING
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
-from copy import deepcopy
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from aspy.program.expression import Expr
-from aspy.program.substitution import Substitution, AssignmentError
+from aspy.program.substitution import AssignmentError, Substitution
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.terms import Variable
+if TYPE_CHECKING:  # pragma: no cover
+    from aspy.program.query import Query
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.statements import Statement
-    from aspy.program.query import Query
+    from aspy.program.terms import Variable
     from aspy.program.variable_table import VariableTable
 
 
@@ -22,17 +22,18 @@ class Literal(Expr, ABC):
     Literals are either aggregates, predicate literals or built-in literals.
     Predicate literals can additionally be indicated with Negation-as-Failure (NaF).
     """
+
     naf: bool = False
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def pos_occ(self) -> Set["Literal"]:
         pass
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def neg_occ(self) -> Set["Literal"]:
         pass
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
         pass
@@ -40,6 +41,7 @@ class Literal(Expr, ABC):
 
 class LiteralTuple:
     """Represents a collection of literals."""
+
     def __init__(self, *literals: Literal) -> None:
         self.literals = tuple(literals)
 
@@ -50,10 +52,14 @@ class LiteralTuple:
         return len(self.literals)
 
     def __eq__(self, other: "LiteralTuple") -> bool:
-        return isinstance(other, LiteralTuple) and len(self) == len(other) and frozenset(self.literals) == frozenset(other.literals)
+        return (
+            isinstance(other, LiteralTuple)
+            and len(self) == len(other)
+            and frozenset(self.literals) == frozenset(other.literals)
+        )
 
     def __hash__(self) -> int:
-        return hash( ("literal tuple", frozenset(self.literals)) )
+        return hash(("literal tuple", frozenset(self.literals)))
 
     def __iter__(self) -> Iterator[Literal]:
         return iter(self.literals)
@@ -77,7 +83,9 @@ class LiteralTuple:
     def vars(self, global_only=False) -> Set["Variable"]:
         return set().union(*tuple(literal.vars(global_only) for literal in self.literals))
 
-    def safety(self, rule: Optional[Union["Statement","Query"]]=None, global_vars: Optional[Set["Variable"]]=None) -> Tuple["SafetyTriplet", ...]:
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> Tuple["SafetyTriplet", ...]:
         return tuple(literal.safety(rule=rule, global_vars=global_vars) for literal in self.literals)
 
     def without(self, *literals: Literal) -> "LiteralTuple":
@@ -93,7 +101,7 @@ class LiteralTuple:
         return LiteralTuple(*literals)
 
     def match(self, other: Expr) -> Optional["Substitution"]:
-        #raise Exception("Matching for term tuples is not supported yet.")
+        # raise Exception("Matching for term tuples is not supported yet.")
 
         if not (isinstance(other, LiteralTuple) and len(self) == len(other)):
             return None
@@ -114,4 +122,4 @@ class LiteralTuple:
         return subst
 
     def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
-        return LiteralTuple( *tuple(literal.replace_arith(var_table) for literal in self.literals) )
+        return LiteralTuple(*tuple(literal.replace_arith(var_table) for literal in self.literals))

@@ -1,10 +1,10 @@
-from typing import Tuple, Set, TYPE_CHECKING
+from typing import TYPE_CHECKING, Set, Tuple
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.statements import Statement
 
 
-class DependencyGraph():
+class DependencyGraph:
     def __init__(self, rules: Tuple["Statement", ...]) -> None:
         self.nodes = rules
 
@@ -26,11 +26,11 @@ class DependencyGraph():
 
                 # positive dependency
                 if head_predicates.intersection(pos_body_predicates):
-                    self.pos_edges.add( (depender, dependee) )
+                    self.pos_edges.add((depender, dependee))
 
                 # negative dependency
                 if head_predicates.intersection(neg_body_predicates):
-                    self.neg_edges.add( (depender, dependee) )
+                    self.neg_edges.add((depender, dependee))
 
     @property
     def edges(self) -> Set[Tuple["Statement", "Statement"]]:

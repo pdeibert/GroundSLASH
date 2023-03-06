@@ -1,29 +1,29 @@
-from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
+from typing import TYPE_CHECKING, Optional
 
 import aspy
-from aspy.program.terms import TermTuple
 from aspy.program.literals import EpsLiteral, EtaLiteral, LiteralTuple
 from aspy.program.literals.builtin import op2rel
 from aspy.program.substitution import Substitution
+from aspy.program.terms import TermTuple
 
 from .normal import NormalRule
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
+    from aspy.program.literals import AggregateElement, Guard
     from aspy.program.terms import Term
-    from aspy.program.literals import Guard, AggregateElement
     from aspy.program.variable_table import VariableTable
 
 
 class EpsRule(NormalRule):
     """TODO."""
-    def __init__(self, atom: EpsLiteral, lguard: Optional["Guard"], rguard: Optional["Guard"], literals: "LiteralTuple") -> None:
 
-        super().__init__(
-            atom,
-            *literals
-        )
+    def __init__(
+        self, atom: EpsLiteral, lguard: Optional["Guard"], rguard: Optional["Guard"], literals: "LiteralTuple"
+    ) -> None:
+
+        super().__init__(atom, *literals)
         self.guards = (lguard, rguard)
 
     @property
@@ -33,9 +33,17 @@ class EpsRule(NormalRule):
     @property
     def global_vars(self) -> TermTuple:
         return self.atom.global_vars
-    
+
     @classmethod
-    def from_scratch(cls, aggr_id: int, global_vars: TermTuple, lguard: Optional["Guard"], rguard: Optional["Guard"], base_value: "Term", non_aggr_literals: "LiteralTuple") -> "EpsRule":
+    def from_scratch(
+        cls,
+        aggr_id: int,
+        global_vars: TermTuple,
+        lguard: Optional["Guard"],
+        rguard: Optional["Guard"],
+        base_value: "Term",
+        non_aggr_literals: "LiteralTuple",
+    ) -> "EpsRule":
 
         # check if global vars is tuple (important for FIXED order)
         if aspy.debug():
@@ -49,7 +57,9 @@ class EpsRule(NormalRule):
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
         rguard_literal = op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
-        guard_literals = LiteralTuple(*tuple(guard_literal for guard_literal in (lguard_literal, rguard_literal) if guard_literal is not None))
+        guard_literals = LiteralTuple(
+            *tuple(guard_literal for guard_literal in (lguard_literal, rguard_literal) if guard_literal is not None)
+        )
 
         return EpsRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
 
@@ -70,24 +80,30 @@ class EpsRule(NormalRule):
 
 class EtaRule(NormalRule):
     """TODO."""
+
     def __init__(self, atom: EtaLiteral, element: "AggregateElement", literals: "LiteralTuple") -> None:
         super().__init__(atom, *literals)
         self.element = element
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, EtaRule) and self.atom == other.atom and self.literals == other.literals and self.element == other.element
+        return (
+            isinstance(other, EtaRule)
+            and self.atom == other.atom
+            and self.literals == other.literals
+            and self.element == other.element
+        )
 
     def __hash__(self) -> int:
-        return hash( ("eta rule", self.atom, self.literals, self.element) )
+        return hash(("eta rule", self.atom, self.literals, self.element))
 
     @property
     def aggr_id(self) -> int:
         return self.atom.aggr_id
-    
+
     @property
     def element_id(self) -> int:
         return self.atom.element_id
-    
+
     @property
     def local_vars(self) -> int:
         return self.atom.local_vars
@@ -97,7 +113,14 @@ class EtaRule(NormalRule):
         return self.atom.global_vars
 
     @classmethod
-    def from_scratch(cls, aggr_id: int, element_id: int, global_vars: TermTuple, element: "AggregateElement", non_aggr_literals: "LiteralTuple") -> "EtaRule":
+    def from_scratch(
+        cls,
+        aggr_id: int,
+        element_id: int,
+        global_vars: TermTuple,
+        element: "AggregateElement",
+        non_aggr_literals: "LiteralTuple",
+    ) -> "EtaRule":
 
         # compute local variables
         local_vars = TermTuple(*tuple(var for var in element.vars() if var not in global_vars))

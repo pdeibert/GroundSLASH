@@ -1,45 +1,46 @@
-from typing import Any, Set, Optional, Tuple, Dict, TYPE_CHECKING
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple
 
+from aspy.program.expression import Expr
 from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
-from aspy.program.expression import Expr
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.terms import Variable
-    from aspy.program.safety_characterization import SafetyTriplet
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AlphaLiteral
+    from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.statements import EpsRule, EtaRule
+    from aspy.program.terms import Variable
 
 
 class Statement(Expr, ABC):
     """Abstract base class for all statements."""
-    def __init__(self, var_table: Optional["VariableTable"]=None, *args, **kwargs) -> None:
+
+    def __init__(self, var_table: Optional["VariableTable"] = None, *args, **kwargs) -> None:
         self.__var_table = var_table
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def __str__(self) -> str:
         pass
 
     @property
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def head(self) -> Any:
         pass
 
     @property
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def body(self) -> Any:
         pass
 
     @property
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def safe(self) -> bool:
         pass
 
     @property
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def ground(self) -> bool:
         pass
 
@@ -50,10 +51,12 @@ class Statement(Expr, ABC):
 
         return self.__var_table
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.var_table.vars(global_only)
 
-    def safety(self, rule: Optional["Statement"]=None, global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(
+        self, rule: Optional["Statement"] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> "SafetyTriplet":
         raise Exception()
 
     def __init_var_table(self) -> None:
@@ -63,19 +66,26 @@ class Statement(Expr, ABC):
         self.__var_table.update(self.body.vars())
 
         # mark global variables
-        self.__var_table.update({var: True for var in self.head.vars(global_only=True).union(self.body.vars(global_only=True))})
+        self.__var_table.update(
+            {var: True for var in self.head.vars(global_only=True).union(self.body.vars(global_only=True))}
+        )
 
-    @abstractmethod # pragma: no cover
-    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "Statement":
+    @abstractmethod  # pragma: no cover
+    def rewrite_aggregates(
+        self,
+        aggr_counter: int,
+        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+    ) -> "Statement":
         pass
 
-    @abstractmethod # pragma: no cover
+    @abstractmethod  # pragma: no cover
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Statement":
         pass
 
 
 class Rule(Statement, ABC):
     """Abstract base class for all rules."""
+
     @cached_property
     def contains_aggregates(self) -> bool:
         return any(isinstance(literal, AggregateLiteral) for literal in self.body)
@@ -83,12 +93,17 @@ class Rule(Statement, ABC):
 
 class Fact(Rule, ABC):
     """Abstract base class for all facts."""
-    contains_aggregates: bool=False
+
+    contains_aggregates: bool = False
 
     def rewrite(self) -> Tuple["Fact"]:
-        return (deepcopy(self), )
+        return (deepcopy(self),)
 
-    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "Fact":
+    def rewrite_aggregates(
+        self,
+        aggr_counter: int,
+        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+    ) -> "Fact":
         return deepcopy(self)
 
     def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Fact":

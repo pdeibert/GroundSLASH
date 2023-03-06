@@ -1,10 +1,9 @@
 import unittest
 
 import aspy
-
-from aspy.program.terms import Number, Variable, Minus, Add, ArithVariable
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
+from aspy.program.terms import Add, ArithVariable, Minus, Number, Variable
 
 
 class TestSpecial(unittest.TestCase):
@@ -14,14 +13,14 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         # invalid initialization
-        self.assertRaises(ValueError, ArithVariable, -1, Add(Variable('X'), Number(1)))
+        self.assertRaises(ValueError, ArithVariable, -1, Add(Variable("X"), Number(1)))
 
         # valid initialization
-        var = ArithVariable(0, Add(Variable('X'), Number(1)))
+        var = ArithVariable(0, Add(Variable("X"), Number(1)))
         # equality
-        self.assertEqual(var, ArithVariable(0, Add(Variable('X'), Number(1))))
+        self.assertEqual(var, ArithVariable(0, Add(Variable("X"), Number(1))))
         # hashing
-        self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable('X'), Number(1)))))
+        self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable("X"), Number(1)))))
         # string representation
         self.assertEqual(str(var), f"{SpecialChar.TAU.value}0")
         # total order for terms
@@ -30,10 +29,22 @@ class TestSpecial(unittest.TestCase):
         self.assertFalse(var.ground)
 
         # substitute
-        self.assertEqual(ArithVariable(0, Add(Variable('X'), Number(1))).substitute(Substitution({ArithVariable(0, Add(Variable('X'), Number(1))): Number(0), Variable('X'): Number(1)})), Number(0), Number(1)) # NOTE: substitution is invalid
+        self.assertEqual(
+            ArithVariable(0, Add(Variable("X"), Number(1))).substitute(
+                Substitution({ArithVariable(0, Add(Variable("X"), Number(1))): Number(0), Variable("X"): Number(1)})
+            ),
+            Number(0),
+            Number(1),
+        )  # NOTE: substitution is invalid
         # match
-        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(ArithVariable(0, Minus(Variable('X')))), Substitution())
-        self.assertEqual(ArithVariable(0, Minus(Variable('X'))).match(Number(1)), Substitution({ArithVariable(0, Minus(Variable('X'))): Number(1)}))
+        self.assertEqual(
+            ArithVariable(0, Minus(Variable("X"))).match(ArithVariable(0, Minus(Variable("X")))), Substitution()
+        )
+        self.assertEqual(
+            ArithVariable(0, Minus(Variable("X"))).match(Number(1)),
+            Substitution({ArithVariable(0, Minus(Variable("X"))): Number(1)}),
+        )
+
     """
     def test_replace_arith(self):
 
@@ -169,6 +180,7 @@ class TestSpecial(unittest.TestCase):
 
         # ----- statements -----
     """
+
 
 if __name__ == "__main__":
     unittest.main()

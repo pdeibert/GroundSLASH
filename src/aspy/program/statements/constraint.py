@@ -1,15 +1,15 @@
-from typing import Set, Optional, TYPE_CHECKING
-from functools import cached_property
 from copy import deepcopy
+from functools import cached_property
+from typing import TYPE_CHECKING, Optional, Set
 
 from aspy.program.literals import LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
 
-if TYPE_CHECKING: # pragma: no cover
-    from aspy.program.terms import Variable
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.substitution import Substitution
+    from aspy.program.terms import Variable
 
 
 class Constraint(Statement):
@@ -21,6 +21,7 @@ class Constraint(Statement):
 
     for literals b_1,...,b_n.
     """
+
     def __init__(self, literals: LiteralTuple, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -48,7 +49,7 @@ class Constraint(Statement):
     def ground(self) -> bool:
         return all(literal.ground for literal in self.literals)
 
-    def safety(self, rule: Optional[Statement], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
+    def safety(self, rule: Optional[Statement], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for constraints not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "Constraint":

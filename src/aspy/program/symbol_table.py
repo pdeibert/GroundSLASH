@@ -1,16 +1,18 @@
-from enum import Enum
 import re
+from enum import Enum
 
 
 class SpecialChar(Enum):
-    ALPHA  = '\u03b1' # α
-    EPS    = '\u03b5' # ε
-    ETA    = '\u03b7' # η
-    TAU    = '\u03C4' # τ
+    ALPHA = "\u03b1"  # α
+    EPS = "\u03b5"  # ε
+    ETA = "\u03b7"  # η
+    TAU = "\u03C4"  # τ
 
 
-VARIABLE_RE  = re.compile(fr"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")
-SYM_CONST_RE = re.compile(fr"^[a-z{SpecialChar.ALPHA.value}{SpecialChar.EPS.value}{SpecialChar.ETA.value}][a-zA-Z0-1_]*")
+VARIABLE_RE = re.compile(fr"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")
+SYM_CONST_RE = re.compile(
+    fr"^[a-z{SpecialChar.ALPHA.value}{SpecialChar.EPS.value}{SpecialChar.ETA.value}][a-zA-Z0-1_]*"
+)
 
 
 class SymbolTable:
@@ -20,7 +22,7 @@ class SymbolTable:
         self.epsilon_counter = 0
         self.eta_counter = 0
 
-    def __contains__(self, symbol: str, arity: int=-1) -> bool:
+    def __contains__(self, symbol: str, arity: int = -1) -> bool:
 
         # ignore arity and only check if predicate symbol present
         if arity == -1:
@@ -50,7 +52,7 @@ class SymbolTable:
             symbol = f"{symbol}_{id}"
 
             # register new symbol
-            self.symbols.add( (symbol, arity) )
+            self.symbols.add((symbol, arity))
         # ε
         elif symbol == SpecialChar.EPS:
             # get current id for epsilon symbols
@@ -62,7 +64,7 @@ class SymbolTable:
             symbol = f"{symbol}_{id}"
 
             # register new symbol
-            self.symbols.add( (symbol, arity) )
+            self.symbols.add((symbol, arity))
         # η
         elif symbol == SpecialChar.ETA:
             # get current id for eta symbols
@@ -74,11 +76,11 @@ class SymbolTable:
             symbol = f"{symbol}_{id}"
 
             # register new symbol
-            self.symbols.add( (symbol, arity) )
+            self.symbols.add((symbol, arity))
         # regular symbol
         else:
             # register new symbol
-            self.symbols.add( (symbol, arity) )
+            self.symbols.add((symbol, arity))
 
         # return symbol string
         return symbol

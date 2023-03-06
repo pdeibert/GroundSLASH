@@ -6,7 +6,7 @@ from aspy.program.terms.term import Term
 
 from .term import Variable
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.terms import ArithTerm
 
@@ -15,6 +15,7 @@ class ArithVariable(Variable):
     ground: bool = False
 
     """Variable replacing an arithmetic term"""
+
     def __init__(self, id: int, orig_term: "ArithTerm") -> None:
         # check if id is valid
         if aspy.debug() and id < 0:
@@ -34,4 +35,4 @@ class ArithVariable(Variable):
         return isinstance(other, ArithVariable) and other.val == self.val and self.orig_term == other.orig_term
 
     def __hash__(self) -> int:
-        return hash( ("arith var", self.val, self.orig_term) )
+        return hash(("arith var", self.val, self.orig_term))
