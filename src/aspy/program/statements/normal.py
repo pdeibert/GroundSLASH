@@ -148,7 +148,6 @@ class NormalRule(Rule):
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
-        # mapping from aggregate ID to corresponding alpha literal, epsilon rule and eta rules
 
         # local import due to circular import
         from .rewrite import rewrite_aggregate

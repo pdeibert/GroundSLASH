@@ -116,13 +116,19 @@ class DisjunctiveRule(Rule):
         self.literals = body if isinstance(body, LiteralTuple) else LiteralTuple(*body)
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, DisjunctiveRule) and self.atoms == other.atoms and self.literals == other.literals
+        return (
+            isinstance(other, DisjunctiveRule)
+            and set(self.atoms) == set(other.atoms)
+            and set(self.literals) == set(other.literals)
+        )
 
     def __hash__(self) -> int:
-        return hash(("disjunctive rule", self.atoms, self.literals))
+        return hash(("disjunctive rule", frozenset(self.atoms), frozenset(self.literals)))
 
     def __str__(self) -> str:
-        return f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
+        return (
+            f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
+        )
 
     @property
     def head(self) -> LiteralTuple:
@@ -167,7 +173,6 @@ class DisjunctiveRule(Rule):
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
-        # mapping from aggregate ID to corresponding alpha literal, epsilon rule and eta rules
 
         # local import due to circular import
         from .rewrite import rewrite_aggregate

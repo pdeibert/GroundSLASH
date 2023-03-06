@@ -1,11 +1,24 @@
 import unittest
 
 import aspy
-from aspy.program.literals import LiteralTuple, PredicateLiteral, AggregateLiteral, AggregateCount, EtaLiteral, EpsLiteral, AlphaLiteral, Guard, AggregateElement, Equal, GreaterEqual, LessEqual
-from aspy.program.statements import DisjunctiveFact, DisjunctiveRule, EtaRule, EpsRule
-from aspy.program.substitution import Substitution
-from aspy.program.terms import Number, String, Variable, TermTuple
+from aspy.program.literals import (
+    AggregateCount,
+    AggregateElement,
+    AggregateLiteral,
+    AlphaLiteral,
+    EpsLiteral,
+    Equal,
+    EtaLiteral,
+    GreaterEqual,
+    Guard,
+    LessEqual,
+    LiteralTuple,
+    PredicateLiteral,
+)
 from aspy.program.operators import RelOp
+from aspy.program.statements import DisjunctiveFact, DisjunctiveRule, EpsRule, EtaRule
+from aspy.program.substitution import Substitution
+from aspy.program.terms import Number, String, TermTuple, Variable
 
 
 class TestDisjunctive(unittest.TestCase):
@@ -15,7 +28,7 @@ class TestDisjunctive(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         # invalid initialization
-        self.assertRaises(ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0))) # not enough atoms
+        self.assertRaises(ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0)))  # not enough atoms
 
         ground_rule = DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0)))
         var_rule = DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X")))
@@ -24,13 +37,22 @@ class TestDisjunctive(unittest.TestCase):
         self.assertEqual(str(ground_rule), "p(1) | p(0).")
         self.assertEqual(str(var_rule), "p(1) | p(X).")
         # equality
-        self.assertEqual(ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))))
+        self.assertEqual(
+            ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0)))
+        )
         self.assertEqual(ground_rule.body, LiteralTuple())
-        self.assertEqual(var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))))
+        self.assertEqual(
+            var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X")))
+        )
         self.assertEqual(var_rule.body, LiteralTuple())
         # hashing
-        self.assertEqual(hash(ground_rule), hash(DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0)))))
-        self.assertEqual(hash(var_rule), hash(DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable('X')))))
+        self.assertEqual(
+            hash(ground_rule), hash(DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))))
+        )
+        self.assertEqual(
+            hash(var_rule),
+            hash(DisjunctiveFact(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X")))),
+        )
         # ground
         self.assertTrue(ground_rule.ground)
         self.assertFalse(var_rule.ground)
@@ -62,32 +84,62 @@ class TestDisjunctive(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         # invalid initialization
-        self.assertRaises(ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0))) # not enough atoms
+        self.assertRaises(ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0)))  # not enough atoms
         # not enough literals
 
-        ground_rule = DisjunctiveRule( (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))), (PredicateLiteral("q"), ))
-        unsafe_var_rule = DisjunctiveRule( (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q"), ))
-        safe_var_rule = DisjunctiveRule( (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q", Variable("X")), ))
+        ground_rule = DisjunctiveRule(
+            (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))), (PredicateLiteral("q"),)
+        )
+        unsafe_var_rule = DisjunctiveRule(
+            (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q"),)
+        )
+        safe_var_rule = DisjunctiveRule(
+            (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))),
+            (PredicateLiteral("q", Variable("X")),),
+        )
 
         # string representation
         self.assertEqual(str(ground_rule), "p(1) | p(0) :- q.")
         self.assertEqual(str(unsafe_var_rule), "p(1) | p(X) :- q.")
         self.assertEqual(str(safe_var_rule), "p(1) | p(X) :- q(X).")
         # equality
-        self.assertEqual(ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))))
+        self.assertEqual(
+            ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0)))
+        )
         self.assertEqual(ground_rule.body, LiteralTuple(PredicateLiteral("q")))
-        self.assertEqual(unsafe_var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))))
+        self.assertEqual(
+            unsafe_var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X")))
+        )
         self.assertEqual(unsafe_var_rule.body, LiteralTuple(PredicateLiteral("q")))
-        self.assertEqual(safe_var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))))
+        self.assertEqual(
+            safe_var_rule.head, LiteralTuple(PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X")))
+        )
         self.assertEqual(safe_var_rule.body, LiteralTuple(PredicateLiteral("q", Variable("X"))))
         # hashing
-        self.assertEqual(hash(ground_rule), hash(DisjunctiveRule((PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))), (PredicateLiteral("q"), ))))
         self.assertEqual(
-            hash(unsafe_var_rule), hash(DisjunctiveRule((PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q"), )))
+            hash(ground_rule),
+            hash(
+                DisjunctiveRule(
+                    (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))), (PredicateLiteral("q"),)
+                )
+            ),
+        )
+        self.assertEqual(
+            hash(unsafe_var_rule),
+            hash(
+                DisjunctiveRule(
+                    (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q"),)
+                )
+            ),
         )
         self.assertEqual(
             hash(safe_var_rule),
-            hash(DisjunctiveRule((PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))), (PredicateLiteral("q", Variable("X")), ))),
+            hash(
+                DisjunctiveRule(
+                    (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))),
+                    (PredicateLiteral("q", Variable("X")),),
+                )
+            ),
         )
         # ground
         self.assertTrue(ground_rule.ground)
@@ -104,7 +156,7 @@ class TestDisjunctive(unittest.TestCase):
         self.assertTrue(
             DisjunctiveRule(
                 (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"))),
-                (AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)), ),
+                (AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),),
             ).contains_aggregates
         )
         # variables
@@ -114,10 +166,16 @@ class TestDisjunctive(unittest.TestCase):
         # TODO: replace arithmetic terms
 
         # substitution
-        rule = DisjunctiveRule((PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"), Number(0))), (PredicateLiteral("q", Variable("X")), ))
+        rule = DisjunctiveRule(
+            (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Variable("X"), Number(0))),
+            (PredicateLiteral("q", Variable("X")),),
+        )
         self.assertEqual(
             rule.substitute(Substitution({Variable("X"): Number(1), Number(0): String("f")})),
-            DisjunctiveRule((PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(1), Number(0))), (PredicateLiteral("q", Number(1)), )),
+            DisjunctiveRule(
+                (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(1), Number(0))),
+                (PredicateLiteral("q", Number(1)),),
+            ),
         )  # NOTE: substitution is invalid
 
         # rewrite aggregates
