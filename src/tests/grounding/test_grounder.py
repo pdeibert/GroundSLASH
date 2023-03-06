@@ -433,6 +433,33 @@ class TestGrounder(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         prog_str = r"""
+        p(0) | p(1).
+
+        :- p(0), q(1).
+        """
+
+        self.compare_to_clingo(prog_str)
+
+    def test_example_8(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
+        p(0). p(1).
+
+        :- p(0), p(1).
+        """
+
+        with self.assertWarns(Warning):
+            self.compare_to_clingo(prog_str)
+
+    def test_example_9(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
         u(1).
         u(2).
         v(2).
@@ -447,7 +474,7 @@ class TestGrounder(unittest.TestCase):
         with self.assertWarns(Warning):
             self.compare_to_clingo(prog_str)
 
-    def test_example_8(self):
+    def test_example_10(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
@@ -462,6 +489,29 @@ class TestGrounder(unittest.TestCase):
         q(X) | q(X+1) :- v(X).
 
         :- p(X), q(X).
+        """
+
+        self.compare_to_clingo(prog_str)
+
+    def test_example_11(self):
+
+        # from "Answer Set Solving in Practice"
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
+        road(berlin,potsdam).
+        road(potsdam,werder).
+        road(werder,brandenburg).
+        road(X,Y) :- road(Y,X).
+
+        blocked(werder,brandenburg).
+
+        route(X,Y) :- road(X,Y), not blocked(X,Y).
+        route(X,Y) :- route(X,Z), route(Z,Y).
+
+        drive(X) :- route(berlin,X).
         """
 
         self.compare_to_clingo(prog_str)
