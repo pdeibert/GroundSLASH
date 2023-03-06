@@ -10,9 +10,8 @@ from .statement import Fact, Rule
 
 if TYPE_CHECKING: # pragma: no cover
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Term, Variable
+    from aspy.program.terms import Variable
     from aspy.program.literals import PredicateLiteral, Guard
-    from aspy.program.operators import RelOp
 
     from .statement import Statement
 

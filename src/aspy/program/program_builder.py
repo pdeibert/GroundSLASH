@@ -1,7 +1,6 @@
 from typing import Tuple, Union, List, Optional, TYPE_CHECKING
 
 import antlr4  # type: ignore
-from aspy.antlr.ASPCoreLexer import ASPCoreLexer
 from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 

@@ -1,10 +1,9 @@
 from typing import Dict, Set, Union, Optional, TYPE_CHECKING
-from abc import ABC, abstractmethod # pragma: no cover
+from abc import ABC, abstractmethod
 
 if TYPE_CHECKING: # pragma: no cover
     from .statements import Statement
     from .terms import Term, Variable
-    from .substitution import Substitution
     from .safety_characterization import SafetyTriplet
     from .query import Query
 

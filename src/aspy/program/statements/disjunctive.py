@@ -3,8 +3,7 @@ from functools import cached_property
 from copy import deepcopy
 
 import aspy
-from aspy.program.symbol_table import SymbolTable
-from aspy.program.literals import LiteralTuple, PredicateLiteral, AggregateLiteral, AlphaLiteral, EpsLiteral, EtaLiteral
+from aspy.program.literals import LiteralTuple, PredicateLiteral, AggregateLiteral, AlphaLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule

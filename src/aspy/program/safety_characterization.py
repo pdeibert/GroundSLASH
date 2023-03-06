@@ -1,4 +1,4 @@
-from typing import Optional, Set, Iterable, TYPE_CHECKING
+from typing import Optional, Set, TYPE_CHECKING
 from dataclasses import dataclass
 from copy import deepcopy
 

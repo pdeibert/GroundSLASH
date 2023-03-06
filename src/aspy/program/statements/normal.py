@@ -1,14 +1,9 @@
-from typing import Tuple, Set, Dict, Optional, TYPE_CHECKING
+from typing import Tuple, Set, Dict, TYPE_CHECKING
 from functools import cached_property
-from collections import deque
 from copy import deepcopy
 
-from aspy.program.symbol_table import SymbolTable, SpecialChar
-from aspy.program.terms import TermTuple
-from aspy.program.variable_table import VariableTable
-from aspy.program.literals import Equal, Naf, LiteralTuple, AggregateLiteral, PredicateLiteral, BuiltinLiteral, AlphaLiteral
+from aspy.program.literals import LiteralTuple, AggregateLiteral, PredicateLiteral, AlphaLiteral
 from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import AssignmentError
 
 from .statement import Fact, Rule
 
@@ -16,8 +11,6 @@ if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.substitution import Substitution
     from aspy.program.literals import PredicateLiteral, Literal
-    from aspy.program.terms import Variable
-    from aspy.program import Program
     from .special import EpsRule, EtaRule
 
 

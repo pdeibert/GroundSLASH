@@ -1,5 +1,5 @@
-from typing import Tuple, Optional, Union, Iterable, Iterator, Any, List, Set, TYPE_CHECKING
-from abc import ABC, abstractmethod # pragma: no cover
+from typing import Tuple, Optional, Union, Iterable, Iterator, Any, Set, TYPE_CHECKING
+from abc import ABC, abstractmethod
 from functools import cached_property, reduce
 from itertools import chain, combinations
 

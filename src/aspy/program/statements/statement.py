@@ -1,11 +1,10 @@
 from typing import Any, Set, Optional, Tuple, Dict, TYPE_CHECKING
-from abc import ABC, abstractmethod # pragma: no cover
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
 
 from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
-from aspy.program.symbol_table import SymbolTable
 from aspy.program.expression import Expr
 
 if TYPE_CHECKING: # pragma: no cover

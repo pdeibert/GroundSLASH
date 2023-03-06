@@ -1,12 +1,10 @@
-from typing import Optional, Set, TYPE_CHECKING
-from itertools import chain
+from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 
 import aspy
 from aspy.program.terms import TermTuple
 from aspy.program.literals import EpsLiteral, EtaLiteral, LiteralTuple
 from aspy.program.literals.builtin import op2rel
-from aspy.program.symbol_table import SpecialChar
 from aspy.program.substitution import Substitution
 
 from .normal import NormalRule

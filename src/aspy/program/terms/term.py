@@ -1,5 +1,5 @@
 from typing import Optional, Union, Tuple, Iterable, Set, TYPE_CHECKING
-from abc import ABC, abstractmethod # pragma: no cover
+from abc import ABC, abstractmethod
 from functools import cached_property
 from copy import deepcopy
 

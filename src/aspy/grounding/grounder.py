@@ -1,10 +1,8 @@
-from typing import Tuple, Set, Optional, Dict, List, TYPE_CHECKING
+from typing import Set, Optional, TYPE_CHECKING
 from collections import defaultdict
 from copy import deepcopy
-from itertools import chain
 
-from aspy.program.statements import Rule, Fact, Constraint, WeakConstraint, OptimizeStatement, EpsRule, EtaRule
-from aspy.program.literals import Naf, PredicateLiteral, BuiltinLiteral, AggregateLiteral, Equal, AlphaLiteral
+from aspy.program.literals import Naf, PredicateLiteral, BuiltinLiteral, AggregateLiteral, Equal
 from aspy.program.terms import ArithVariable
 from aspy.program.substitution import Substitution
 from aspy.program.program import Program

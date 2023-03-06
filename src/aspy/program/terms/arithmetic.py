@@ -1,5 +1,5 @@
 from typing import Set, Union,Optional, Union, Tuple, TYPE_CHECKING
-from abc import ABC, abstractmethod # pragma: no cover
+from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
 
@@ -16,9 +16,6 @@ if TYPE_CHECKING: # pragma: no cover
     from aspy.program.statements import Statement
     from aspy.program.query import Query
     from aspy.program.variable_table import VariableTable
-
-
-# TODO: restrictions when substituting ground terms? (or only handle during match?)
 
 
 class ArithTerm(Term, ABC):
