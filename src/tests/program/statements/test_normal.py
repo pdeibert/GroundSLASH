@@ -13,8 +13,6 @@ from aspy.program.literals import (
     Guard,
     LessEqual,
     LiteralTuple,
-    Naf,
-    Neg,
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
