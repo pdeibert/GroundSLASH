@@ -167,12 +167,7 @@ class NormalRule(Rule):
     def replace_arith(self) -> "NormalRule":
         return NormalRule(self.atom.replace_arith(self.var_table), *self.literals.replace_arith(self.var_table))
 
-    def rewrite(self):
-        pass
-
     def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "NormalRule":
-        #if self.ground:
-        #    return deepcopy(self)
 
         # global variables
         glob_vars = self.vars(global_only=True)
@@ -187,7 +182,6 @@ class NormalRule(Rule):
         # mapping from original literals to alpha literals
         alpha_map = dict()
         # mapping from aggregate ID to corresponding alpha literal, epsilon rule and eta rules
-        #aggr_map = dict()
 
         # local import due to circular import
         from .rewrite import rewrite_aggregate

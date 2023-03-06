@@ -1,10 +1,10 @@
-from typing import Set, Union, Tuple, Optional, TYPE_CHECKING
+from typing import Set, Union, Tuple, Optional, Dict, TYPE_CHECKING
 from functools import cached_property
 from copy import deepcopy
 
 import aspy
 from aspy.program.symbol_table import SymbolTable
-from aspy.program.literals import LiteralTuple, PredicateLiteral
+from aspy.program.literals import LiteralTuple, PredicateLiteral, AggregateLiteral, AlphaLiteral, EpsLiteral, EtaLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Fact, Rule
@@ -14,7 +14,7 @@ if TYPE_CHECKING: # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.terms import Variable
     from aspy.program.substitution import Substitution
-    from aspy.program.statements import Statement
+    from aspy.program.statements import Statement, EpsRule, EtaRule
     from aspy.program.literals import Literal
 
 
@@ -140,5 +140,8 @@ class DisjunctiveRule(Rule):
     def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for disjunctive rules not supported yet.")
 
-    def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
-        raise Exception("Rewritten for disjunctive rules not supported yet.")
+    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "DisjunctiveRule":
+        raise Exception("Rewriting of aggregates not supported yet for disjunctive rules.")
+
+    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "DisjunctiveRule":
+        raise Exception("Assembling of aggregates not supported yet for disjunctive rules.")

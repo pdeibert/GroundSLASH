@@ -66,13 +66,17 @@ class Statement(Expr, ABC):
         # mark global variables
         self.__var_table.update({var: True for var in self.head.vars(global_only=True).union(self.body.vars(global_only=True))})
 
+    @abstractmethod # pragma: no cover
+    def rewrite_aggregates(self, aggr_counter: int, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]]) -> "Statement":
+        pass
+
+    @abstractmethod # pragma: no cover
+    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Statement":
+        pass
+
 
 class Rule(Statement, ABC):
     """Abstract base class for all rules."""
-    @abstractmethod # pragma: no cover
-    def rewrite(self, sym_table: SymbolTable) -> Tuple["Rule"]:
-        pass
-
     @cached_property
     def contains_aggregates(self) -> bool:
         return any(isinstance(literal, AggregateLiteral) for literal in self.body)
