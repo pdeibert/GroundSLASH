@@ -43,10 +43,6 @@ class TestNormal(unittest.TestCase):
         # substitution
         rule = NormalFact(PredicateLiteral('p', Variable('X'), Number(0)))
         self.assertEqual(rule.substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), NormalFact(PredicateLiteral('p', Number(1), Number(0)))) # NOTE: substitution is invalid
-        # match
-        self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), String('f'))).match(NormalFact(PredicateLiteral('p', Number(1), String('f')))), Substitution({Variable('X'): Number(1)}))
-        self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), String('f'))).match(NormalFact(PredicateLiteral('p', Number(1), String('g')))), None) # ground terms don't match
-        self.assertEqual(NormalFact(PredicateLiteral('p', Variable('X'), Variable('X'))).match(NormalFact(PredicateLiteral('p', Number(1), String('f')))), None) # assignment conflict
 
         # rewrite aggregates
         self.assertEqual(rule, rule.rewrite_aggregates(0, dict()))
@@ -101,11 +97,6 @@ class TestNormal(unittest.TestCase):
         # substitution
         rule = NormalRule(PredicateLiteral('p', Variable('X'), Number(0)), PredicateLiteral('q', Variable('X')))
         self.assertEqual(rule.substitute(Substitution({Variable('X'): Number(1), Number(0): String('f')})), NormalRule(PredicateLiteral('p', Number(1), Number(0)), PredicateLiteral('q', Number(1)))) # NOTE: substitution is invalid
-        # match
-        self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(1)))), Substitution({Variable('X'): Number(1)}))
-        self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('g')), PredicateLiteral('q', Number(1)))), None) # ground terms don't match
-        self.assertEqual(NormalRule(PredicateLiteral('p', Variable('X'), String('f')), PredicateLiteral('q', Variable('X'))).match(NormalRule(PredicateLiteral('p', Number(1), String('f')), PredicateLiteral('q', Number(0)))), None) # assignment conflict
-        self.assertEqual(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('q', Number(1)), PredicateLiteral('u', Number(0))).match(NormalRule(PredicateLiteral('p', Number(0), String('f')), PredicateLiteral('u', Number(0)), PredicateLiteral('q', Number(1)))), None) # different order of body literals
 
         # rewrite aggregates
         elements_1 = (AggregateElement(TermTuple(Variable('Y')), LiteralTuple(PredicateLiteral('p', Variable('Y')))), AggregateElement(TermTuple(Number(0)), LiteralTuple(PredicateLiteral('p', Number(0)))))

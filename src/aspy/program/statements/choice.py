@@ -56,9 +56,6 @@ class ChoiceElement(Expr):
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
         raise Exception("Substitution for choice elements not supported yet.")
 
-    def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for choice elements not supported yet.")
-
 
 class Choice(Expr):
     """Choice."""
@@ -128,9 +125,6 @@ class Choice(Expr):
 
         return Choice(elements, guards)
 
-    def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for choice expressions not supported yet.")
-
 
 class ChoiceFact(Fact):
     """Choice fact.
@@ -177,9 +171,6 @@ class ChoiceFact(Fact):
             return deepcopy(self)
 
         return ChoiceFact(self.head.substitute(subst))
-
-    def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for choice facts not supported yet.")
 
 
 class ChoiceRule(Rule):
@@ -230,6 +221,3 @@ class ChoiceRule(Rule):
             return deepcopy(self)
 
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))
-
-    def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for choice rules not supported yet.")

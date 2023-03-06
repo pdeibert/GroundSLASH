@@ -32,6 +32,11 @@ class Literal(Expr, ABC):
     def neg_occ(self) -> Set["Literal"]:
         pass
 
+    @abstractmethod # pragma: no cover
+    def match(self, other: "Expr") -> Optional["Substitution"]:
+        """Tries to match the expression with another one."""
+        pass
+
 
 class LiteralTuple:
     """Represents a collection of literals."""

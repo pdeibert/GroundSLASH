@@ -68,18 +68,6 @@ class NormalFact(Fact):
 
         return NormalFact(self.atom.substitute(subst))
 
-    def match(self, other: "Expr") -> Optional["Substitution"]:
-        if not isinstance(other, NormalFact):
-            return None
-
-        # match head
-        match = self.atom.match(other.atom)
-
-        if match is None:
-            return None
-
-        return match
-
     def replace_arith(self) -> "NormalFact":
         return NormalFact(self.atom.replace_arith(self.var_table))
 
@@ -99,7 +87,7 @@ class NormalRule(Rule):
         super().__init__(**kwargs)
 
         if len(body) == 0:
-            raise ValueError(f"Body for {type(self)} may not be empty.")
+            raise ValueError(f"Body for {type(self)} may not be empty. Use {NormalFact} instead.")
 
         self.atom = head
         self.literals = LiteralTuple(*body)
@@ -137,32 +125,6 @@ class NormalRule(Rule):
             return deepcopy(self)
 
         return NormalRule(self.atom.substitute(subst), *self.literals.substitute(subst))
-
-    def match(self, other: "Expr") -> Optional["Substitution"]:
-        # TODO: so far can only match body literals in order
-        if not isinstance(other, NormalRule):
-            return None
-
-        # match head
-        match = self.atom.match(other.atom)
-
-        if match is None:
-            return None
-        subst = match
-
-        # match body
-        match = self.body.match(other.body)
-
-        if match is None:
-            return None
-
-        # combine substitutions
-        try:
-            subst = subst + match
-        except AssignmentError:
-            return None
-
-        return subst
 
     def replace_arith(self) -> "NormalRule":
         return NormalRule(self.atom.replace_arith(self.var_table), *self.literals.replace_arith(self.var_table))

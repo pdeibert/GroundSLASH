@@ -69,6 +69,3 @@ class WeakConstraint(Statement):
             self.level.substitute(subst),
             self.terms.substitute(subst)
         )
-
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for weak constraints not supported yet.")

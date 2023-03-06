@@ -55,9 +55,6 @@ class OptimizeElement(Expr):
     def substitute(self, subst: "Substitution") -> "OptimizeElement":
         raise Exception("Substitution for optimize elements not supported yet.")
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for optimize elements not supported yet.")
-
 
 class OptimizeStatement(Statement, ABC):
     """Abstract base class for all optimize statement."""
@@ -87,9 +84,6 @@ class OptimizeStatement(Statement, ABC):
 
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]]=None) -> "SafetyTriplet":
         raise Exception("Safety characterization for optimize statements not supported yet.")
-
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for optimize statements not supported yet.")
 
 
 class MinimizeStatement(OptimizeStatement):

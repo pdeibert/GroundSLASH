@@ -57,6 +57,3 @@ class Constraint(Statement):
             return deepcopy(self)
 
         return Constraint(self.literals.substitute(subst))
-
-    def match(self, other: "Expr") -> Set["Substitution"]:
-        raise Exception("Matching for constraints not supported yet.")

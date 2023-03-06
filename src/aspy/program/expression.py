@@ -25,8 +25,3 @@ class Expr(ABC):
     def substitute(self, subst: Dict[str, "Term"]) -> "Expr": # type: ignore
         """Substitutes the expression by replacing variables with their assigned terms."""
         pass
-
-    @abstractmethod # pragma: no cover
-    def match(self, other: "Expr") -> Optional["Substitution"]:
-        """Tries to match the expression with another one."""
-        pass
