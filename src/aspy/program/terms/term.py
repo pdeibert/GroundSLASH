@@ -276,27 +276,19 @@ class String(Term):
             return True
 
 
-class TermTuple:
+class TermTuple():
     """Represents a collection of terms."""
-
     def __init__(self, *terms: Term) -> None:
-        self.terms = tuple(terms)
+        self.terms = terms
 
     def __len__(self) -> int:
         return len(self.terms)
 
     def __eq__(self, other: "TermTuple") -> bool:
-        if len(self) != len(other):
-            return False
-
-        for t1, t2 in zip(self, other):
-            if t1 != t2:
-                return False
-
-        return True
+        return isinstance(other, TermTuple) and len(self) == len(other) and all(t1 == t2 for t1, t2 in zip(self, other))
 
     def __hash__(self) -> int:
-        return hash(("term tuple", self.terms))
+        return hash( ("term tuple", *self.terms) )
 
     def __iter__(self) -> Iterable[Term]:
         return iter(self.terms)
