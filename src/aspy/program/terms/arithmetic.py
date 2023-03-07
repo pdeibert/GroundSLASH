@@ -43,7 +43,7 @@ class ArithTerm(Term, ABC):
         return set().union(*tuple(operand.vars() for operand in self.operands))
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=set().union(*tuple(operand.vars() for operand in self.operands)))
 

@@ -82,7 +82,7 @@ class PredicateLiteral(Literal):
         return set().union(self.terms.vars())
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple[SafetyTriplet, ...]:
         return SafetyTriplet.closure(*self.terms.safety()) if not self.naf else SafetyTriplet(unsafe=self.vars())
 

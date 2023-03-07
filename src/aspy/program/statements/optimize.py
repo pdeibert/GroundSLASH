@@ -63,7 +63,7 @@ class OptimizeElement(Expr):
             self.literals.global_vars(),
         )
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for optimize elements not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "OptimizeElement":
@@ -97,7 +97,7 @@ class OptimizeStatement(Statement, ABC):
     def ground(self) -> bool:
         return all(element.ground for element in self.elements)
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for optimize statements not supported yet.")
 
 

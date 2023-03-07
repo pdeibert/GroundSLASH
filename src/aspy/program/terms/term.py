@@ -34,7 +34,7 @@ class Term(Expr, ABC):
         return self.vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         return SafetyTriplet()
 
@@ -120,7 +120,7 @@ class Variable(Term):
         return {self}
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         return SafetyTriplet({self})
 
@@ -149,7 +149,7 @@ class AnonVariable(Variable):
         self.id = id
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         return SafetyTriplet()
 
@@ -348,9 +348,9 @@ class TermTuple():
         return self.vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple["SafetyTriplet", ...]:
-        return tuple(term.safety(rule=rule, global_vars=global_vars) for term in self.terms)
+        return tuple(term.safety(rule=rule) for term in self.terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
         return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))

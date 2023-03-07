@@ -116,10 +116,7 @@ class NormalRule(Rule):
 
     @cached_property
     def safe(self) -> bool:
-        glob_vars = self.global_vars(self)
-        body_safety = self.body.safety(global_vars=glob_vars)
-
-        return body_safety == SafetyTriplet(glob_vars)
+        return self.body.safety(self) == SafetyTriplet(self.global_vars())
 
     @cached_property
     def ground(self) -> bool:

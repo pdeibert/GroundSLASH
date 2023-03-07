@@ -51,7 +51,7 @@ class Constraint(Statement):
     @cached_property
     def safe(self) -> bool:
         global_vars = self.global_vars()
-        body_safety = self.body.safety(global_vars=global_vars)
+        body_safety = self.body.safety(self)
 
         return body_safety == SafetyTriplet(global_vars)
 

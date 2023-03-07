@@ -23,7 +23,7 @@ class Expr(ABC):
 
     @abstractmethod  # pragma: no cover
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         pass
 

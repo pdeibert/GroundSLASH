@@ -47,9 +47,9 @@ class Guard(NamedTuple):
         return self.bound.global_vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
-        return self.bound.safety(rule, global_vars)
+        return self.bound.safety(rule)
 
     def ground(self) -> bool:
         return self.bound.ground

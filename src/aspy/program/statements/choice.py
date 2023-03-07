@@ -51,7 +51,7 @@ class ChoiceElement(Expr):
 
         return set().union(literal.vars() for literal in self.literals)
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception()
 
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
@@ -141,7 +141,7 @@ class Choice(Expr):
         #)
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         raise Exception()
 
@@ -207,7 +207,7 @@ class ChoiceFact(Fact):
     def extended_body(self) -> LiteralTuple:
         return self.choice.literals
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception()
 
     @cached_property
@@ -218,7 +218,7 @@ class ChoiceFact(Fact):
     def ground(self) -> bool:
         return self.head.ground
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice facts not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceFact":
@@ -267,7 +267,7 @@ class ChoiceRule(Rule):
         raise Exception()
 
         global_vars = self.global_vars(self)
-        body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
+        body_safety = SafetyTriplet.closure(self.body.safety(self))
 
         return body_safety == SafetyTriplet(global_vars)
 
@@ -275,7 +275,7 @@ class ChoiceRule(Rule):
     def ground(self) -> bool:
         return self.head.ground and self.body.ground
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":

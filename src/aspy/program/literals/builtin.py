@@ -42,7 +42,7 @@ class BuiltinLiteral(Literal, ABC):
         return self.loperand.vars().union(self.roperand.vars())
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         return SafetyTriplet(unsafe=self.vars())
 
@@ -71,7 +71,7 @@ class Equal(BuiltinLiteral):
         return hash(("equal", self.loperand, self.roperand))
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         # overrides inherited safety method
 

@@ -90,7 +90,7 @@ class AggregateElement(Expr):
         return self.head.global_vars().union(self.body.global_vars())
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         raise ValueError("Safety characterization for aggregate elements is undefined without context.")
 
@@ -129,7 +129,7 @@ class AggregateCount(AggregateFunction):
     """Represents a 'count' aggregate."""
 
     def __str__(self) -> str:
-        return f"#count"
+        return "#count"
 
     def __eq__(self, other: Expr) -> bool:
         return isinstance(other, AggregateCount)
@@ -719,17 +719,16 @@ class AggregateLiteral(Literal):
         )
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
 
-        if global_vars is None:
-            if rule is None:
-                raise AttributeError(
-                    "Computing safety characterization for 'AggregateLiteral' requires a reference to the encompassing rule or the set of global variables in it."
-                )
+        if rule is None:
+            raise AttributeError(
+                "Computing safety characterization for 'AggregateLiteral' requires a reference to the encompassing rule or the set of global variables in it."
+            )
 
-            # get global variables from rule
-            global_vars = rule.global_vars()
+        # get global variables from rule
+        global_vars = rule.global_vars()
 
         # set of global variables that appear inside the aggregate
         aggr_global_invars = self.invars().intersection(global_vars)

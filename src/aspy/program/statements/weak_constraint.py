@@ -49,10 +49,7 @@ class WeakConstraint(Statement):
 
     @cached_property
     def safe(self) -> bool:
-        global_vars = self.global_vars(self)
-        body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
-
-        return body_safety == SafetyTriplet(global_vars)
+        return self.body.safety(self) == SafetyTriplet(self.global_vars())
 
     @cached_property
     def ground(self) -> bool:
@@ -63,7 +60,7 @@ class WeakConstraint(Statement):
             and all(literal.ground for literal in self.literals)
         )
 
-    def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for weak constraints not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "WeakConstraint":

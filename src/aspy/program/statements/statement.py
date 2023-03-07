@@ -58,7 +58,7 @@ class Statement(Expr, ABC):
         return self.var_table.global_vars()
 
     def safety(
-        self, rule: Optional["Statement"] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional["Statement"] = None
     ) -> "SafetyTriplet":
         raise Exception()
 

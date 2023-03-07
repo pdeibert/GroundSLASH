@@ -27,6 +27,6 @@ class Query(Expr):
         return self.atom.global_vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+        self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         return self.atom.safety()

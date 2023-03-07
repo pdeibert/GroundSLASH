@@ -1,3 +1,4 @@
+from typing import Set
 import unittest
 
 import aspy
@@ -13,6 +14,7 @@ from aspy.program.literals import (
     Naf,
     PredicateLiteral,
 )
+from aspy.program.statements import Statement
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
 from aspy.program.substitution import Substitution
@@ -27,6 +29,14 @@ from aspy.program.terms import (
     Variable,
 )
 from aspy.program.variable_table import VariableTable
+
+
+class DummyRule:
+    def __init__(self, vars: Set["Variable"]) -> None:
+        self.vars = vars
+
+    def global_vars(self) -> Set["Variable"]:
+        return self.vars
 
 
 class TestAggregate(unittest.TestCase):
@@ -481,17 +491,17 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(var_literal.neg_occ(), {PredicateLiteral("p", String("str")), PredicateLiteral("q")})
 
         # safety characterization
-        self.assertEqual(var_literal.safety(global_vars={Variable("X")}), SafetyTriplet(unsafe={Variable("X")}))
-        self.assertEqual(var_literal.safety(global_vars={Variable("Y")}), SafetyTriplet())
+        self.assertEqual(var_literal.safety(DummyRule({Variable("X")})), SafetyTriplet(unsafe={Variable("X")}))
+        self.assertEqual(var_literal.safety(DummyRule({Variable("Y")})), SafetyTriplet())
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, Guard(RelOp.LESS, Variable("X"), False)).safety(
-                global_vars={Variable("X")}
+                DummyRule({Variable("X")})
             ),
             SafetyTriplet(unsafe={Variable("X")}),
         )
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, Guard(RelOp.LESS, Variable("X"), False)).safety(
-                global_vars={Variable("Y")}
+                DummyRule({Variable("Y")})
             ),
             SafetyTriplet(),
         )
@@ -500,7 +510,7 @@ class TestAggregate(unittest.TestCase):
         # rules = { ('Y', {'X'}) }
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("Y"), False)).safety(
-                global_vars={Variable("X"), Variable("Y")}
+                DummyRule({Variable("X"), Variable("Y")})
             ),
             SafetyTriplet(unsafe={Variable("X"), Variable("Y")}, rules={SafetyRule(Variable("Y"), {Variable("X")})}),
         )
@@ -509,7 +519,7 @@ class TestAggregate(unittest.TestCase):
         # rules = { ('Y', {}) } -> makes 'Y' safe
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("Y"), False)).safety(
-                global_vars={Variable("Y")}
+                DummyRule({Variable("Y")})
             ),
             SafetyTriplet(safe={Variable("Y")}),
         )
@@ -518,7 +528,7 @@ class TestAggregate(unittest.TestCase):
         # rules = { ('X', {'X'}) } -> removes (without making 'X' safe)
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("X"), False)).safety(
-                global_vars={Variable("X")}
+                DummyRule({Variable("X")})
             ),
             SafetyTriplet(unsafe={Variable("X")}),
         )
@@ -527,7 +537,7 @@ class TestAggregate(unittest.TestCase):
         # rules = { ('X', {}) } -> makes 'X' safe
         self.assertEqual(
             AggregateLiteral(aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("X"), False)).safety(
-                global_vars={Variable("Y")}
+                DummyRule({Variable("Y")})
             ),
             SafetyTriplet(safe={Variable("X")}),
         )
