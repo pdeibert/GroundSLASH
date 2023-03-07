@@ -36,7 +36,9 @@ class Component:
     def sequence(self) -> List[Tuple["Statement", ...]]:
 
         # compute strong connected components (convert to tuples for dict hashing)
-        sccs = [tuple(component) for component in compute_SCCs(self.nodes, self.pos_edges)]
+        sccs = [
+            tuple(component) for component in compute_SCCs(self.nodes, self.pos_edges)
+        ]
 
         # map rules to SCC (for sorting edges)
         rule2scc = dict()
@@ -78,7 +80,10 @@ class ComponentGraph(object):
     def from_dependency_graph(cls, dep_graph: DependencyGraph) -> "ComponentGraph":
 
         # compute strong connected components (convert to tuples for dict hashing)
-        sccs = [tuple(component) for component in compute_SCCs(dep_graph.nodes, dep_graph.edges)]
+        sccs = [
+            tuple(component)
+            for component in compute_SCCs(dep_graph.nodes, dep_graph.edges)
+        ]
 
         # map rules to SCC (for sorting edges)
         rule2scc = dict()
@@ -117,7 +122,10 @@ class ComponentGraph(object):
         graph = object.__new__(cls)
 
         # create component instances (i.e., nodes), marking components as UNstratified where possible (if they negatively depend on themselves)
-        components = {Component(set(scc), *scc_edges[scc], stratified=not bool(scc_edges[scc][1])) for scc in sccs}
+        components = {
+            Component(set(scc), *scc_edges[scc], stratified=not bool(scc_edges[scc][1]))
+            for scc in sccs
+        }
 
         # map rules to actual components
         rule2component = dict()
@@ -127,17 +135,27 @@ class ComponentGraph(object):
                 rule2component[rule] = component
 
         graph.nodes = components
-        graph.pos_edges = {(rule2component[src], rule2component[dst]) for (src, dst) in pos_edges}
-        graph.neg_edges = {(rule2component[src], rule2component[dst]) for (src, dst) in neg_edges}
+        graph.pos_edges = {
+            (rule2component[src], rule2component[dst]) for (src, dst) in pos_edges
+        }
+        graph.neg_edges = {
+            (rule2component[src], rule2component[dst]) for (src, dst) in neg_edges
+        }
 
         # indicate whether or not component are stratified
         converged = False
         # group components
-        stratified_components = {component for component in components if component.stratified}
+        stratified_components = {
+            component for component in components if component.stratified
+        }
         unstratified_components = set()
 
         for component in components:
-            (stratified_components if component.stratified else unstratified_components).add(component)
+            (
+                stratified_components
+                if component.stratified
+                else unstratified_components
+            ).add(component)
 
         while not converged:
 
@@ -146,7 +164,10 @@ class ComponentGraph(object):
             for component in stratified_components.copy():
                 for (src_component, dst_component) in graph.edges:
                     # if component depends on an UNstratified component, mark it as UNstratisfied
-                    if src_component == component and dst_component not in stratified_components:
+                    if (
+                        src_component == component
+                        and dst_component not in stratified_components
+                    ):
                         component.stratified = False
                         stratified_components.remove(component)
                         converged = False

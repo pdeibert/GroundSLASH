@@ -32,7 +32,9 @@ class Constraint(Statement):
         self.literals = LiteralTuple(*literals)
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Constraint) and set(self.literals) == set(other.literals)
+        return isinstance(other, Constraint) and set(self.literals) == set(
+            other.literals
+        )
 
     def __hash__(self) -> int:
         return hash(("constraint", frozenset(self.literals)))
@@ -72,7 +74,9 @@ class Constraint(Statement):
     def rewrite_aggregates(
         self,
         aggr_counter: int,
-        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
     ) -> "Constraint":
 
         # global variables
@@ -83,7 +87,11 @@ class Constraint(Statement):
         aggr_literals = []
 
         for literal in self.body:
-            (aggr_literals if isinstance(literal, AggregateLiteral) else non_aggr_literals).append(literal)
+            (
+                aggr_literals
+                if isinstance(literal, AggregateLiteral)
+                else non_aggr_literals
+            ).append(literal)
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
@@ -93,7 +101,9 @@ class Constraint(Statement):
 
         for literal in aggr_literals:
             # rewrite aggregate literal
-            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(literal, aggr_counter, glob_vars, non_aggr_literals)
+            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(
+                literal, aggr_counter, glob_vars, non_aggr_literals
+            )
 
             # map original aggregate literal to new alpha literal
             alpha_map[literal] = alpha_literal
@@ -107,13 +117,19 @@ class Constraint(Statement):
         # replace original rule with modified one
         alpha_rule = Constraint(
             *tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                for literal in self.body
             ),  # NOTE: restores original order of literals
         )
 
         return alpha_rule
 
-    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Constraint":
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "Constraint":
         return Constraint(
-            *tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body),
+            *tuple(
+                literal if literal not in assembling_map else assembling_map[literal]
+                for literal in self.body
+            ),
         )

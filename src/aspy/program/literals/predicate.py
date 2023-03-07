@@ -21,7 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover
 class PredicateLiteral(Literal):
     """Predicate."""
 
-    def __init__(self, name: str, *terms: "Term", neg: bool = False, naf: bool = False) -> None:
+    def __init__(
+        self, name: str, *terms: "Term", neg: bool = False, naf: bool = False
+    ) -> None:
         super().__init__(naf)
 
         # check if predicate name is valid
@@ -45,7 +47,9 @@ class PredicateLiteral(Literal):
         return hash(("predicate literal", self.naf, self.neg, self.name, *self.terms))
 
     def __str__(self) -> str:
-        terms_str = f"({','.join([str(term) for term in self.terms])})" if self.terms else ""
+        terms_str = (
+            f"({','.join([str(term) for term in self.terms])})" if self.terms else ""
+        )
         return f"{('not ' if self.naf else '')}{('-' if self.neg else '')}{self.name}{terms_str}"
 
     @property
@@ -84,7 +88,11 @@ class PredicateLiteral(Literal):
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple[SafetyTriplet, ...]:
-        return SafetyTriplet.closure(*self.terms.safety()) if not self.naf else SafetyTriplet(unsafe=self.vars())
+        return (
+            SafetyTriplet.closure(*self.terms.safety())
+            if not self.naf
+            else SafetyTriplet(unsafe=self.vars())
+        )
 
     def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
@@ -104,8 +112,13 @@ class PredicateLiteral(Literal):
 
         # substitute terms recursively
         return PredicateLiteral(
-            self.name, *tuple((term.substitute(subst) for term in self.terms)), neg=self.neg, naf=self.naf
+            self.name,
+            *tuple((term.substitute(subst) for term in self.terms)),
+            neg=self.neg,
+            naf=self.naf,
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "PredicateLiteral":
-        return PredicateLiteral(self.name, *self.terms.replace_arith(var_table), neg=self.neg, naf=self.naf)
+        return PredicateLiteral(
+            self.name, *self.terms.replace_arith(var_table), neg=self.neg, naf=self.naf
+        )

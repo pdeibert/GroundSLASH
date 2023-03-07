@@ -11,7 +11,6 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
-from .normal import NormalFact, NormalRule
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -19,7 +18,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
     from aspy.program.statements import EpsRule, EtaRule, Statement
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Variable
 
 
 class DisjunctiveFact(Fact):
@@ -40,11 +38,17 @@ class DisjunctiveFact(Fact):
         super().__init__(**kwargs)
 
         if len(atoms) < 2:
-            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {NormalFact} instead.")
-
-        if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms):
             raise ValueError(
-                f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}."
+                (f"Head for {type(self)} requires at least two literals."
+                  " Use {NormalFact} instead.")
+            )
+
+        if aspy.debug() and not all(
+            isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms
+        ):
+            raise ValueError(
+                (f"Head literals for {type(self)} must all be"
+                  " positive literals of type {PredicateLiteral}.")
             )
 
         self.atoms = LiteralTuple(*atoms)
@@ -107,13 +111,22 @@ class DisjunctiveRule(Rule):
         super().__init__(**kwargs)
 
         if len(head) < 2:
-            raise ValueError(f"Head for {type(self)} requires at least two literals. Use {NormalRule} instead.")
-        if len(body) == 0:
-            raise ValueError(f"Body for {type(self)} may not be empty. Use {DisjunctiveFact} instead.")
-
-        if aspy.debug() and not all(isinstance(atom, PredicateLiteral) and not atom.naf for atom in head):
             raise ValueError(
-                f"Head literals for {type(self)} must all be positive literals of type {PredicateLiteral}."
+                (f"Head for {type(self)} requires at least two literals."
+                  " Use {NormalRule} instead.")
+            )
+        if len(body) == 0:
+            raise ValueError(
+                (f"Body for {type(self)} may not be empty. "
+                  "Use {DisjunctiveFact} instead.")
+            )
+
+        if aspy.debug() and not all(
+            isinstance(atom, PredicateLiteral) and not atom.naf for atom in head
+        ):
+            raise ValueError(
+                (f"Head literals for {type(self)} must all be"
+                  " positive literals of type {PredicateLiteral}.")
             )
 
         self.atoms = head if isinstance(head, LiteralTuple) else LiteralTuple(*head)
@@ -127,12 +140,13 @@ class DisjunctiveRule(Rule):
         )
 
     def __hash__(self) -> int:
-        return hash(("disjunctive rule", frozenset(self.atoms), frozenset(self.literals)))
+        return hash(
+            ("disjunctive rule", frozenset(self.atoms), frozenset(self.literals))
+        )
 
     def __str__(self) -> str:
-        return (
-            f"{' | '.join([str(atom) for atom in self.head])} :- {', '.join([str(literal) for literal in self.body])}."
-        )
+        literals_str = ', '.join([str(literal) for literal in self.body])
+        return f"{' | '.join([str(atom) for atom in self.head])} :- {literals_str}."
 
     @property
     def head(self) -> LiteralTuple:
@@ -154,12 +168,16 @@ class DisjunctiveRule(Rule):
         if self.ground:
             return deepcopy(self)
 
-        return DisjunctiveRule(self.head.substitute(subst), self.literals.substitute(subst))
+        return DisjunctiveRule(
+            self.head.substitute(subst), self.literals.substitute(subst)
+        )
 
     def rewrite_aggregates(
         self,
         aggr_counter: int,
-        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
     ) -> "DisjunctiveRule":
 
         # global variables
@@ -170,7 +188,11 @@ class DisjunctiveRule(Rule):
         aggr_literals = []
 
         for literal in self.body:
-            (aggr_literals if isinstance(literal, AggregateLiteral) else non_aggr_literals).append(literal)
+            (
+                aggr_literals
+                if isinstance(literal, AggregateLiteral)
+                else non_aggr_literals
+            ).append(literal)
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
@@ -180,7 +202,9 @@ class DisjunctiveRule(Rule):
 
         for literal in aggr_literals:
             # rewrite aggregate literal
-            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(literal, aggr_counter, glob_vars, non_aggr_literals)
+            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(
+                literal, aggr_counter, glob_vars, non_aggr_literals
+            )
 
             # map original aggregate literal to new alpha literal
             alpha_map[literal] = alpha_literal
@@ -195,14 +219,20 @@ class DisjunctiveRule(Rule):
         alpha_rule = DisjunctiveRule(
             deepcopy(self.atoms),
             tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                for literal in self.body
             ),  # NOTE: restores original order of literals
         )
 
         return alpha_rule
 
-    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "DisjunctiveRule":
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "DisjunctiveRule":
         return DisjunctiveRule(
             deepcopy(self.atoms),
-            tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body),
+            tuple(
+                literal if literal not in assembling_map else assembling_map[literal]
+                for literal in self.body
+            ),
         )

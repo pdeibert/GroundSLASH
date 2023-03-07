@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Optional
 
 from aspy.program.literals import LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
@@ -8,11 +8,8 @@ from aspy.program.safety_characterization import SafetyTriplet
 from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import LiteralTuple
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Term, TermTuple, Variable
-
-    from .statement import Statement
+    from aspy.program.terms import Term, TermTuple
 
 
 class WeakConstraint(Statement):
@@ -27,7 +24,13 @@ class WeakConstraint(Statement):
     """
 
     def __init__(
-        self, literals: "LiteralTuple", weight: "Term", level: "Term", terms: "TermTuple", *args, **kwargs
+        self,
+        literals: "LiteralTuple",
+        weight: "Term",
+        level: "Term",
+        terms: "TermTuple",
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
 
@@ -37,7 +40,9 @@ class WeakConstraint(Statement):
         self.terms = terms
 
     def __str__(self) -> str:
-        return f":~ {', '.join([str(literal) for literal in self.body])}. [{str(self.weight)}@{str(self.level)}, {', '.join([str(term) for term in self.terms])}]"
+        body_str = ', '.join([str(literal) for literal in self.body])
+        terms_str = ', '.join([str(term) for term in self.terms])
+        return f":~ {body_str}. [{str(self.weight)}@{str(self.level)}, {terms_str}]"
 
     @property
     def head(self) -> LiteralTuple:
@@ -61,7 +66,9 @@ class WeakConstraint(Statement):
         )
 
     def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception("Safety characterization for weak constraints not supported yet.")
+        raise Exception(
+            "Safety characterization for weak constraints not supported yet."
+        )
 
     def substitute(self, subst: "Substitution") -> "WeakConstraint":
         if self.ground:

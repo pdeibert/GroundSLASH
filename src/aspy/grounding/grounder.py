@@ -32,7 +32,9 @@ class Grounder:
         self.prog = prog
 
     @classmethod
-    def select(cls, literals: "LiteralTuple", subst: Optional[Substitution] = None) -> "Literal":
+    def select(
+        cls, literals: "LiteralTuple", subst: Optional[Substitution] = None
+    ) -> "Literal":
         if subst is None:
             # initialize with empty/identity substitution
             subst = Substitution()
@@ -41,13 +43,17 @@ class Grounder:
         for literal in literals:
             if isinstance(literal, AggregateLiteral):
                 # TODO: raise exception (should have been replaced)
-                raise ValueError(f"Aggregate literals should be replaced before calling {cls.select} during grounding.")
+                raise ValueError(
+                    f"Aggregate literals should be replaced before calling {cls.select} during grounding."
+                )
 
             # either literal is positive (pos_occ() is non-empy) or the literal is ground under the substitution (all variables in 'literal' are replaced by 'subst')
             if literal.pos_occ() or all(subst[var].ground for var in literal.vars()):
                 return literal
 
-        raise ValueError("Tuple of literals does not contain any appropriate literals for 'select'.")
+        raise ValueError(
+            "Tuple of literals does not contain any appropriate literals for 'select'."
+        )
 
     @classmethod
     def matches(
@@ -88,7 +94,9 @@ class Grounder:
             # ground negative predicate literal
             elif literal.ground:
                 # literal does not contradict set of certain (positive) literals (used as a check)
-                return {subst} if Naf(deepcopy(literal), False) not in certain else set()
+                return (
+                    {subst} if Naf(deepcopy(literal), False) not in certain else set()
+                )
         # ground built-in literal
         elif isinstance(literal, BuiltinLiteral) and literal.ground:
             # relation holds (used as a check)
@@ -110,9 +118,13 @@ class Grounder:
     ) -> Set["Statement"]:
         """Algorithm 1 from TODO."""
         if statement.contains_aggregates:
-            raise ValueError(f"{cls.ground_statement} requires statement to be free of aggregates.")
+            raise ValueError(
+                f"{cls.ground_statement} requires statement to be free of aggregates."
+            )
         if not statement.safe:
-            raise ValueError(f"{cls.ground_statement} can only instantiate safe statements.")
+            raise ValueError(
+                f"{cls.ground_statement} can only instantiate safe statements."
+            )
 
         # initialize optional arguments
         if subst is None:
@@ -136,7 +148,13 @@ class Grounder:
             return set().union(
                 *tuple(
                     cls.ground_statement(
-                        statement, literals.without(literal), certain, possible, prev_possible, match, duplicate
+                        statement,
+                        literals.without(literal),
+                        certain,
+                        possible,
+                        prev_possible,
+                        match,
+                        duplicate,
                     )
                     for match in cls.matches(literal, certain, possible, subst)
                 )
@@ -152,14 +170,19 @@ class Grounder:
             # instantiate final (ground) statement
             ground_statement = statement.substitute(subst)
 
-            if not duplicate or not ground_statement.body.pos_occ().issubset(prev_possible):
+            if not duplicate or not ground_statement.body.pos_occ().issubset(
+                prev_possible
+            ):
                 return {ground_statement}
 
         # duplicate instantiation
         return set()
 
     def ground_component(
-        self, component: Program, I: Optional[Set["Literal"]] = None, J: Optional[Set["Literal"]] = None
+        self,
+        component: Program,
+        I: Optional[Set["Literal"]] = None,
+        J: Optional[Set["Literal"]] = None,
     ) -> Set["Statement"]:
         if not component.statements:
             return set()
@@ -198,7 +221,9 @@ class Grounder:
             eps_instances.update(
                 set().union(
                     *tuple(
-                        self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate)
+                        self.ground_statement(
+                            rule, rule.body, I, K, prev_K, Substitution(), duplicate
+                        )
                         for rule in prog_eps.statements
                     )
                 )
@@ -207,7 +232,9 @@ class Grounder:
             eta_instances.update(
                 set().union(
                     *tuple(
-                        self.ground_statement(rule, rule.body, I, K, prev_K, Substitution(), duplicate)
+                        self.ground_statement(
+                            rule, rule.body, I, K, prev_K, Substitution(), duplicate
+                        )
                         for rule in prog_eta.statements
                     )
                 )
@@ -221,7 +248,13 @@ class Grounder:
                 set().union(
                     *tuple(
                         self.ground_statement(
-                            rule, rule.body, I, J.union(J_alpha), prev_J.union(prev_J_alpha), Substitution(), duplicate
+                            rule,
+                            rule.body,
+                            I,
+                            J.union(J_alpha),
+                            prev_J.union(prev_J_alpha),
+                            Substitution(),
+                            duplicate,
                         )
                         for rule in prog_alpha.statements
                     )
@@ -235,7 +268,9 @@ class Grounder:
             prev_K = K.copy()
 
             # NOTE: 'pos_occ' applicable since all head literals are positive predicate literals
-            head_literals = set().union(*tuple(rule.head.pos_occ() for rule in alpha_instances))
+            head_literals = set().union(
+                *tuple(rule.head.pos_occ() for rule in alpha_instances)
+            )
 
             J.update(head_literals)
             K.update(head_literals)
@@ -287,16 +322,22 @@ class Grounder:
 
                 # can be pre-computed (used for both set updates; NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
-                possible_literals = set().union(*tuple(inst.head.pos_occ() for inst in possible_inst))
+                possible_literals = set().union(
+                    *tuple(inst.head.pos_occ() for inst in possible_inst)
+                )
 
                 # compute certain instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
                 instances = self.ground_component(
-                    ref_component_prog.reduct(open_preds), possible_literals, certain_literals
+                    ref_component_prog.reduct(open_preds),
+                    possible_literals,
+                    certain_literals,
                 )
 
                 # check if any constraint was derived (resulting in an unsatisfiable program)
                 if any(isinstance(inst, Constraint) for inst in instances):
-                    warnings.warn("Derived certain constraint instance. Program is unsatisfiable")
+                    warnings.warn(
+                        "Derived certain constraint instance. Program is unsatisfiable"
+                    )
                 # update certain instances
                 certain_inst.update(instances)
 
@@ -304,10 +345,18 @@ class Grounder:
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
                 # TODO: DETERMINISM
                 certain_literals = set().union(
-                    *tuple(inst.head.pos_occ() for inst in certain_inst if inst.deterministic)
+                    *tuple(
+                        inst.head.pos_occ()
+                        for inst in certain_inst
+                        if inst.deterministic
+                    )
                 )
 
-                possible_inst.update(self.ground_component(ref_component_prog, certain_literals, possible_literals))
+                possible_inst.update(
+                    self.ground_component(
+                        ref_component_prog, certain_literals, possible_literals
+                    )
+                )
 
                 for statement in ref_component:
                     # TODO: decrease pred_counter?

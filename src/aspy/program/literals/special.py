@@ -23,10 +23,14 @@ class AuxLiteral(PredicateLiteral, ABC):
 class AlphaLiteral(AuxLiteral):
     """TODO."""
 
-    def __init__(self, aggr_id: int, glob_vars: TermTuple, terms: TermTuple, naf: bool = False) -> None:
+    def __init__(
+        self, aggr_id: int, glob_vars: TermTuple, terms: TermTuple, naf: bool = False
+    ) -> None:
 
         if len(glob_vars) != len(terms):
-            raise ValueError(f"Number of global variables for {type(self)} does not match number of specified terms.")
+            raise ValueError(
+                f"Number of global variables for {type(self)} does not match number of specified terms."
+            )
 
         super().__init__(f"{SpecialChar.ALPHA.value}{aggr_id}", *terms, naf=naf)
         self.aggr_id = aggr_id
@@ -44,7 +48,9 @@ class AlphaLiteral(AuxLiteral):
         return hash(("alpha literal", self.aggr_id, self.glob_vars, self.terms))
 
     def set_neg(self, value: bool = True) -> None:
-        raise Exception(f"Classical negation cannot be set for literal of type {type(AlphaLiteral)}.")
+        raise Exception(
+            f"Classical negation cannot be set for literal of type {type(AlphaLiteral)}."
+        )
 
     def pos_occ(self) -> Set["AlphaLiteral"]:
         if self.naf:
@@ -76,7 +82,13 @@ class AlphaLiteral(AuxLiteral):
 
     def gather_var_assignment(self) -> Substitution:
         """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
-        return Substitution({var: term for (var, term) in zip(self.glob_vars, self.terms) if var != term})
+        return Substitution(
+            {
+                var: term
+                for (var, term) in zip(self.glob_vars, self.terms)
+                if var != term
+            }
+        )
 
 
 class EpsLiteral(AuxLiteral):
@@ -85,7 +97,9 @@ class EpsLiteral(AuxLiteral):
     def __init__(self, aggr_id: int, glob_vars: TermTuple, terms: TermTuple) -> None:
 
         if len(glob_vars) != len(terms):
-            raise ValueError(f"Number of global variables for {type(self)} does not match number of specified terms.")
+            raise ValueError(
+                f"Number of global variables for {type(self)} does not match number of specified terms."
+            )
 
         super().__init__(f"{SpecialChar.EPS.value}{aggr_id}", *terms)
         self.aggr_id = aggr_id
@@ -104,10 +118,14 @@ class EpsLiteral(AuxLiteral):
         return hash(("eps literal", self.aggr_id, self.glob_vars, self.terms))
 
     def set_naf(self, value: bool = True) -> None:
-        raise Exception(f"Negation as failure cannot be set for literal of type {type(EpsLiteral)}.")
+        raise Exception(
+            f"Negation as failure cannot be set for literal of type {type(EpsLiteral)}."
+        )
 
     def set_neg(self, value: bool = True) -> None:
-        raise Exception(f"Classical negation cannot be set for literal of type {type(EpsLiteral)}.")
+        raise Exception(
+            f"Classical negation cannot be set for literal of type {type(EpsLiteral)}."
+        )
 
     def pos_occ(self) -> Set["EpsLiteral"]:
         if self.naf:
@@ -128,7 +146,9 @@ class EpsLiteral(AuxLiteral):
 
         # substitute terms recursively
         return EpsLiteral(
-            self.aggr_id, self.glob_vars, TermTuple(*tuple((term.substitute(subst) for term in self.terms)))
+            self.aggr_id,
+            self.glob_vars,
+            TermTuple(*tuple((term.substitute(subst) for term in self.terms))),
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "EpsLiteral":
@@ -136,14 +156,25 @@ class EpsLiteral(AuxLiteral):
 
     def gather_var_assignment(self) -> Substitution:
         """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
-        return Substitution({var: term for (var, term) in zip(self.glob_vars, self.terms) if var != term})
+        return Substitution(
+            {
+                var: term
+                for (var, term) in zip(self.glob_vars, self.terms)
+                if var != term
+            }
+        )
 
 
 class EtaLiteral(AuxLiteral):
     """TODO."""
 
     def __init__(
-        self, aggr_id: int, element_id: int, local_vars: "TermTuple", glob_vars: "TermTuple", terms: "TermTuple"
+        self,
+        aggr_id: int,
+        element_id: int,
+        local_vars: "TermTuple",
+        glob_vars: "TermTuple",
+        terms: "TermTuple",
     ) -> None:
 
         if len(glob_vars) + len(local_vars) != len(terms):
@@ -169,26 +200,55 @@ class EtaLiteral(AuxLiteral):
         )
 
     def __hash__(self) -> int:
-        return hash(("eta literal", self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms))
+        return hash(
+            (
+                "eta literal",
+                self.aggr_id,
+                self.element_id,
+                self.local_vars,
+                self.glob_vars,
+                self.terms,
+            )
+        )
 
     def set_naf(self, value: bool = True) -> None:
-        raise Exception(f"Negation as failure cannot be set for literal of type {type(EtaLiteral)}.")
+        raise Exception(
+            f"Negation as failure cannot be set for literal of type {type(EtaLiteral)}."
+        )
 
     def set_neg(self, value: bool = True) -> None:
-        raise Exception(f"Classical negation cannot be set for literal of type {type(EtaLiteral)}.")
+        raise Exception(
+            f"Classical negation cannot be set for literal of type {type(EtaLiteral)}."
+        )
 
     def pos_occ(self) -> Set["EtaLiteral"]:
         if self.naf:
             return set()
 
-        return {EtaLiteral(self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms)}
+        return {
+            EtaLiteral(
+                self.aggr_id,
+                self.element_id,
+                self.local_vars,
+                self.glob_vars,
+                self.terms,
+            )
+        }
 
     def neg_occ(self) -> Set["EtaLiteral"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
-        return {EtaLiteral(self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms)}
+        return {
+            EtaLiteral(
+                self.aggr_id,
+                self.element_id,
+                self.local_vars,
+                self.glob_vars,
+                self.terms,
+            )
+        }
 
     def substitute(self, subst: "Substitution") -> "EtaLiteral":
         if self.ground:
@@ -204,10 +264,16 @@ class EtaLiteral(AuxLiteral):
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "EtaLiteral":
-        return EtaLiteral(self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms)
+        return EtaLiteral(
+            self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms
+        )
 
     def gather_var_assignment(self) -> Substitution:
         """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
         return Substitution(
-            {var: term for (var, term) in zip(self.local_vars + self.glob_vars, self.terms) if var != term}
+            {
+                var: term
+                for (var, term) in zip(self.local_vars + self.glob_vars, self.terms)
+                if var != term
+            }
         )

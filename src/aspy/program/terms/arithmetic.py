@@ -23,7 +23,9 @@ class ArithTerm(Term, ABC):
 
     def precedes(self, other: Term) -> bool:
         if not self.ground:
-            raise Exception("Total order is not defined for non-ground arithmetic terms.")
+            raise Exception(
+                "Total order is not defined for non-ground arithmetic terms."
+            )
 
         return Number(self.eval()).precedes(other)
 
@@ -45,7 +47,9 @@ class ArithTerm(Term, ABC):
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=set().union(*tuple(operand.vars() for operand in self.operands)))
+        return SafetyTriplet(
+            unsafe=set().union(*tuple(operand.vars() for operand in self.operands))
+        )
 
     def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
@@ -61,7 +65,9 @@ class ArithTerm(Term, ABC):
 
         return Substitution()
 
-    def replace_arith(self, var_table: "VariableTable") -> Union["ArithTerm", ArithVariable]:
+    def replace_arith(
+        self, var_table: "VariableTable"
+    ) -> Union["ArithTerm", ArithVariable]:
         # replace ground arithmetic term with its value
         if self.ground:
             return self.simplify()
@@ -124,13 +130,19 @@ class Add(ArithTerm):
     """Represents an addition of arithmetic terms."""
 
     def __init__(
-        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+        self,
+        loperand: Union[ArithTerm, Number, "Variable"],
+        roperand: Union[ArithTerm, Number, "Variable"],
     ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Add) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Add)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("add", self.loperand, self.roperand))
@@ -187,13 +199,19 @@ class Sub(ArithTerm):
     """Represents a subtraction of arithmetic terms."""
 
     def __init__(
-        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+        self,
+        loperand: Union[ArithTerm, Number, "Variable"],
+        roperand: Union[ArithTerm, Number, "Variable"],
     ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Sub) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Sub)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("sub", self.loperand, self.roperand))
@@ -251,13 +269,19 @@ class Mult(ArithTerm):
     """Represents a multiplication of arithmetic terms."""
 
     def __init__(
-        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+        self,
+        loperand: Union[ArithTerm, Number, "Variable"],
+        roperand: Union[ArithTerm, Number, "Variable"],
     ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Mult) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Mult)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("mult", self.loperand, self.roperand))
@@ -338,13 +362,19 @@ class Div(ArithTerm):
     """Represents a division of arithmetic terms."""
 
     def __init__(
-        self, loperand: Union[ArithTerm, Number, "Variable"], roperand: Union[ArithTerm, Number, "Variable"]
+        self,
+        loperand: Union[ArithTerm, Number, "Variable"],
+        roperand: Union[ArithTerm, Number, "Variable"],
     ) -> None:
         self.loperand = loperand
         self.roperand = roperand
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Div) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Div)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("div", self.loperand, self.roperand))
@@ -383,7 +413,9 @@ class Div(ArithTerm):
         # if both operands can be simplified to numbers, divide them
         if isinstance(loperand, Number) and isinstance(roperand, Number):
             if roperand.val == 0:
-                raise ArithmeticError("Division by zero detected while simplifying arithmetical term.")
+                raise ArithmeticError(
+                    "Division by zero detected while simplifying arithmetical term."
+                )
 
             # NOTE: integer division
             return Number(loperand.val // roperand.val)
@@ -398,7 +430,9 @@ class Div(ArithTerm):
         elif isinstance(roperand, Number):
             # division by zero
             if roperand.val == 0:
-                raise ArithmeticError("Division by zero detected while simplifying arithmetical term.")
+                raise ArithmeticError(
+                    "Division by zero detected while simplifying arithmetical term."
+                )
             elif roperand.val == 1:
                 return loperand
             elif roperand.val == -1:
@@ -413,4 +447,9 @@ class Div(ArithTerm):
 
 
 # maps arithmetic operators to their corresponding AST constructs
-op2arith = {ArithOp.PLUS: Add, ArithOp.MINUS: Sub, ArithOp.TIMES: Mult, ArithOp.DIV: Div}
+op2arith = {
+    ArithOp.PLUS: Add,
+    ArithOp.MINUS: Sub,
+    ArithOp.TIMES: Mult,
+    ArithOp.DIV: Div,
+}

@@ -30,7 +30,11 @@ class SafetyTriplet:
         self.rules = rules if rules is not None else set()
 
     def __eq__(self, other: "SafetyTriplet") -> bool:
-        return self.safe == other.safe and self.unsafe == self.unsafe and self.rules == other.rules
+        return (
+            self.safe == other.safe
+            and self.unsafe == self.unsafe
+            and self.rules == other.rules
+        )
 
     def normalize(self) -> "SafetyTriplet":
         """Algorithm 1 in Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition"."""

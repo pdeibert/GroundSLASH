@@ -14,7 +14,11 @@ class TestSCC(unittest.TestCase):
         edges = {("A", "C"), ("B", "C"), ("B", "E"), ("C", "D")}
 
         sequence = topological_sort(nodes, edges)
-        valid_sequences = [["A", "B", "C", "D", "E"], ["A", "B", "E", "C", "D"], ["B", "E", "A", "C", "D"]]
+        valid_sequences = [
+            ["A", "B", "C", "D", "E"],
+            ["A", "B", "E", "C", "D"],
+            ["B", "E", "A", "C", "D"],
+        ]
 
         self.assertTrue(sequence in valid_sequences)
 

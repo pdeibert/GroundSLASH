@@ -20,13 +20,20 @@ class TestPredicate(unittest.TestCase):
 
         # string representation
         self.assertEqual(str(literal), 'p(0,"x")')
-        self.assertEqual(str(Neg(PredicateLiteral("p", Number(0), String("x")))), '-p(0,"x")')
+        self.assertEqual(
+            str(Neg(PredicateLiteral("p", Number(0), String("x")))), '-p(0,"x")'
+        )
         self.assertEqual(str(naf_literal), 'not p(0,"x")')
-        self.assertEqual(str(Naf(Neg(PredicateLiteral("p", Number(0), String("x"))))), 'not -p(0,"x")')
+        self.assertEqual(
+            str(Naf(Neg(PredicateLiteral("p", Number(0), String("x"))))),
+            'not -p(0,"x")',
+        )
         # equality
         self.assertEqual(literal, PredicateLiteral("p", Number(0), String("x")))
         # hashing
-        self.assertEqual(hash(literal), hash(PredicateLiteral("p", Number(0), String("x"))))
+        self.assertEqual(
+            hash(literal), hash(PredicateLiteral("p", Number(0), String("x")))
+        )
         # arity
         self.assertEqual(literal.arity, 2)
         # predicate tuple
@@ -36,23 +43,33 @@ class TestPredicate(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(literal.vars() == literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # replace arithmetic terms
         self.assertEqual(literal.replace_arith(VariableTable()), literal)
         self.assertEqual(var_literal.replace_arith(VariableTable()), var_literal)
         self.assertEqual(
-            PredicateLiteral("p", Number(0), Minus(Number(1))).replace_arith(VariableTable()),
+            PredicateLiteral("p", Number(0), Minus(Number(1))).replace_arith(
+                VariableTable()
+            ),
             PredicateLiteral("p", Number(0), Number(-1)),
         )  # ground arithmetic term should not be replaced (only gets simplified)
         self.assertEqual(
-            PredicateLiteral("p", Number(0), Minus(Variable("X"))).replace_arith(VariableTable()),
+            PredicateLiteral("p", Number(0), Minus(Variable("X"))).replace_arith(
+                VariableTable()
+            ),
             PredicateLiteral("p", Number(0), ArithVariable(0, Minus(Variable("X")))),
         )  # non-ground arithmetic term should be replaced
         # positive/negative literal occurrences
-        self.assertEqual(literal.pos_occ(), {PredicateLiteral("p", Number(0), String("x"))})
+        self.assertEqual(
+            literal.pos_occ(), {PredicateLiteral("p", Number(0), String("x"))}
+        )
         self.assertEqual(literal.neg_occ(), set())
         self.assertEqual(naf_literal.pos_occ(), set())
-        self.assertEqual(naf_literal.neg_occ(), {PredicateLiteral("p", Number(0), String("x"))})
+        self.assertEqual(
+            naf_literal.neg_occ(), {PredicateLiteral("p", Number(0), String("x"))}
+        )
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet({Variable("X")}))
@@ -72,7 +89,9 @@ class TestPredicate(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            PredicateLiteral("p", Variable("X"), String("f")).match(PredicateLiteral("p", Number(1), String("f"))),
+            PredicateLiteral("p", Variable("X"), String("f")).match(
+                PredicateLiteral("p", Number(1), String("f"))
+            ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(

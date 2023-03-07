@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Set, Union
 
 from aspy.program.expression import Expr
-from aspy.program.substitution import AssignmentError, Substitution
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.substitution import AssignmentError, Substitution
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query
@@ -38,7 +38,7 @@ class Literal(Expr, ABC):
         """Tries to match the expression with another one."""
         pass
 
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
         return self.vars()
 
 
@@ -86,16 +86,22 @@ class LiteralTuple:
     def vars(self) -> Set["Variable"]:
         return set().union(*tuple(literal.vars() for literal in self.literals))
 
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
-        return set().union(*tuple(literal.global_vars(statement) for literal in self.literals))
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        return set().union(
+            *tuple(literal.global_vars(statement) for literal in self.literals)
+        )
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
-        return SafetyTriplet.closure(*tuple(literal.safety(rule) for literal in self.literals))
+        return SafetyTriplet.closure(
+            *tuple(literal.safety(rule) for literal in self.literals)
+        )
 
     def without(self, *literals: Literal) -> "LiteralTuple":
-        return LiteralTuple(*(literal for literal in self.literals if not literal in literals))
+        return LiteralTuple(
+            *(literal for literal in self.literals if literal not in literals)
+        )
 
     def substitute(self, subst: "Substitution") -> "LiteralTuple":
         if self.ground:
@@ -128,4 +134,6 @@ class LiteralTuple:
         return subst
 
     def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
-        return LiteralTuple(*tuple(literal.replace_arith(var_table) for literal in self.literals))
+        return LiteralTuple(
+            *tuple(literal.replace_arith(var_table) for literal in self.literals)
+        )

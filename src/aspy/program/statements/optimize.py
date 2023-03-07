@@ -26,7 +26,9 @@ class OptimizeElement(Expr):
     '@ l' may be omitted if l=0.
     """
 
-    def __init__(self, weight: "Term", level: "Term", terms: TermTuple, literals: "LiteralTuple") -> None:
+    def __init__(
+        self, weight: "Term", level: "Term", terms: TermTuple, literals: "LiteralTuple"
+    ) -> None:
         self.weight = weight
         self.level = level
         self.terms = terms
@@ -45,7 +47,12 @@ class OptimizeElement(Expr):
 
     @property
     def ground(self) -> bool:
-        return self.weight.ground and self.level.ground and self.terms.ground and self.literals.ground
+        return (
+            self.weight.ground
+            and self.level.ground
+            and self.terms.ground
+            and self.literals.ground
+        )
 
     def vars(self) -> Set["Variable"]:
         return set().union(
@@ -64,7 +71,9 @@ class OptimizeElement(Expr):
         )
 
     def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception("Safety characterization for optimize elements not supported yet.")
+        raise Exception(
+            "Safety characterization for optimize elements not supported yet."
+        )
 
     def substitute(self, subst: "Substitution") -> "OptimizeElement":
         raise Exception("Substitution for optimize elements not supported yet.")
@@ -73,7 +82,9 @@ class OptimizeElement(Expr):
 class OptimizeStatement(Statement, ABC):
     """Abstract base class for all optimize statement."""
 
-    def __init__(self, elements: Tuple[OptimizeElement, ...], minimize: bool, *args, **kwargs) -> None:
+    def __init__(
+        self, elements: Tuple[OptimizeElement, ...], minimize: bool, *args, **kwargs
+    ) -> None:
         super().__init__(*args, **kwargs)
 
         self.elements = elements
@@ -98,7 +109,9 @@ class OptimizeStatement(Statement, ABC):
         return all(element.ground for element in self.elements)
 
     def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception("Safety characterization for optimize statements not supported yet.")
+        raise Exception(
+            "Safety characterization for optimize statements not supported yet."
+        )
 
 
 class MinimizeStatement(OptimizeStatement):

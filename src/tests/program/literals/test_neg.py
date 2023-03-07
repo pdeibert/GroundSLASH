@@ -24,13 +24,21 @@ class TestNaf(unittest.TestCase):
         self.assertFalse(literal.neg)
         literal_ = Neg(PredicateLiteral("p", Number(0), Variable("Y")))
         self.assertTrue(literal_.neg)
-        self.assertTrue(literal.name == literal_.name and literal.terms == literal_.terms)
-        self.assertFalse(Neg(PredicateLiteral("p", Number(0), Variable("Y")), False).neg)
+        self.assertTrue(
+            literal.name == literal_.name and literal.terms == literal_.terms
+        )
+        self.assertFalse(
+            Neg(PredicateLiteral("p", Number(0), Variable("Y")), False).neg
+        )
         self.assertTrue(Neg(PredicateLiteral("p", Number(0), Variable("Y")), True).neg)
 
         # aggregate literal
         self.assertRaises(
-            ValueError, Neg, AggregateLiteral(AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False))
+            ValueError,
+            Neg,
+            AggregateLiteral(
+                AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)
+            ),
         )
 
         # builtin literal

@@ -110,11 +110,19 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.simplify(), term)
 
         # substitute
-        self.assertEqual(Variable("X").substitute(Substitution({Variable("Y"): Number(0)})), Variable("X"))
-        self.assertEqual(Variable("X").substitute(Substitution({Variable("X"): Number(0)})), Number(0))
+        self.assertEqual(
+            Variable("X").substitute(Substitution({Variable("Y"): Number(0)})),
+            Variable("X"),
+        )
+        self.assertEqual(
+            Variable("X").substitute(Substitution({Variable("X"): Number(0)})),
+            Number(0),
+        )
         # match
         self.assertEqual(Variable("X").match(Variable("X")), Substitution())
-        self.assertEqual(Variable("X").match(Number(1)), Substitution({Variable("X"): Number(1)}))
+        self.assertEqual(
+            Variable("X").match(Number(1)), Substitution({Variable("X"): Number(1)})
+        )
 
     def test_anon_variable(self):
 
@@ -145,11 +153,19 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(term.simplify(), term)
 
         # substitute
-        self.assertEqual(AnonVariable(0).substitute(Substitution({AnonVariable(1): Number(0)})), AnonVariable(0))
-        self.assertEqual(AnonVariable(0).substitute(Substitution({AnonVariable(0): Number(0)})), Number(0))
+        self.assertEqual(
+            AnonVariable(0).substitute(Substitution({AnonVariable(1): Number(0)})),
+            AnonVariable(0),
+        )
+        self.assertEqual(
+            AnonVariable(0).substitute(Substitution({AnonVariable(0): Number(0)})),
+            Number(0),
+        )
         # match
         self.assertEqual(AnonVariable(0).match(AnonVariable(0)), Substitution())
-        self.assertEqual(AnonVariable(0).match(Number(1)), Substitution({AnonVariable(0): Number(1)}))
+        self.assertEqual(
+            AnonVariable(0).match(Number(1)), Substitution({AnonVariable(0): Number(1)})
+        )
 
     def test_number(self):
 
@@ -219,11 +235,16 @@ class TestTerm(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            SymbolicConstant("f").substitute(Substitution({SymbolicConstant("f"): Number(0)})), SymbolicConstant("f")
+            SymbolicConstant("f").substitute(
+                Substitution({SymbolicConstant("f"): Number(0)})
+            ),
+            SymbolicConstant("f"),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(SymbolicConstant("a").match(SymbolicConstant("b")), None)
-        self.assertEqual(SymbolicConstant("a").match(SymbolicConstant("a")), Substitution())
+        self.assertEqual(
+            SymbolicConstant("a").match(SymbolicConstant("a")), Substitution()
+        )
 
     def test_string(self):
 
@@ -292,18 +313,29 @@ class TestTerm(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            TermTuple(Variable("X"), String("f")).match(TermTuple(Number(1), String("f"))),
+            TermTuple(Variable("X"), String("f")).match(
+                TermTuple(Number(1), String("f"))
+            ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            TermTuple(Variable("X"), String("f")).match(TermTuple(Number(1), String("g"))), None
+            TermTuple(Variable("X"), String("f")).match(
+                TermTuple(Number(1), String("g"))
+            ),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            TermTuple(Variable("X"), Variable("X")).match(TermTuple(Number(1), String("f"))), None
+            TermTuple(Variable("X"), Variable("X")).match(
+                TermTuple(Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
         # combining terms
-        self.assertEqual(terms + TermTuple(String("")), TermTuple(Number(0), Variable("X"), String("")))
+        self.assertEqual(
+            terms + TermTuple(String("")),
+            TermTuple(Number(0), Variable("X"), String("")),
+        )
         # TODO: iter
 
 

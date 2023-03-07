@@ -30,7 +30,9 @@ class TestFunctional(unittest.TestCase):
         # equality
         self.assertEqual(ground_term, Functional("f", Number(1), String("x")))
         # hashing
-        self.assertEqual(hash(ground_term), hash(Functional("f", Number(1), String("x"))))
+        self.assertEqual(
+            hash(ground_term), hash(Functional("f", Number(1), String("x")))
+        )
         # arity
         self.assertEqual(ground_term.arity, 2)
         # total order for terms
@@ -46,7 +48,9 @@ class TestFunctional(unittest.TestCase):
         self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(
-            Functional("f", Minus(Variable("X")), String("x")).replace_arith(VariableTable()),
+            Functional("f", Minus(Variable("X")), String("x")).replace_arith(
+                VariableTable()
+            ),
             Functional("f", ArithVariable(0, Minus(Variable("X"))), String("x")),
         )
         # safety characterizatin
@@ -62,14 +66,22 @@ class TestFunctional(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            Functional("f", Variable("X"), String("f")).match(Functional("f", Number(1), String("f"))),
+            Functional("f", Variable("X"), String("f")).match(
+                Functional("f", Number(1), String("f"))
+            ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            Functional("f", Variable("X"), String("f")).match(Functional("f", Number(1), String("g"))), None
+            Functional("f", Variable("X"), String("f")).match(
+                Functional("f", Number(1), String("g"))
+            ),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            Functional("f", Variable("X"), Variable("X")).match(Functional("f", Number(1), String("f"))), None
+            Functional("f", Variable("X"), Variable("X")).match(
+                Functional("f", Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
 

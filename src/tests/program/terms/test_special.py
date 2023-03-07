@@ -20,7 +20,9 @@ class TestSpecial(unittest.TestCase):
         # equality
         self.assertEqual(var, ArithVariable(0, Add(Variable("X"), Number(1))))
         # hashing
-        self.assertEqual(hash(var), hash(ArithVariable(0, Add(Variable("X"), Number(1)))))
+        self.assertEqual(
+            hash(var), hash(ArithVariable(0, Add(Variable("X"), Number(1))))
+        )
         # string representation
         self.assertEqual(str(var), f"{SpecialChar.TAU.value}0")
         # total order for terms
@@ -31,14 +33,22 @@ class TestSpecial(unittest.TestCase):
         # substitute
         self.assertEqual(
             ArithVariable(0, Add(Variable("X"), Number(1))).substitute(
-                Substitution({ArithVariable(0, Add(Variable("X"), Number(1))): Number(0), Variable("X"): Number(1)})
+                Substitution(
+                    {
+                        ArithVariable(0, Add(Variable("X"), Number(1))): Number(0),
+                        Variable("X"): Number(1),
+                    }
+                )
             ),
             Number(0),
             Number(1),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            ArithVariable(0, Minus(Variable("X"))).match(ArithVariable(0, Minus(Variable("X")))), Substitution()
+            ArithVariable(0, Minus(Variable("X"))).match(
+                ArithVariable(0, Minus(Variable("X")))
+            ),
+            Substitution(),
         )
         self.assertEqual(
             ArithVariable(0, Minus(Variable("X"))).match(Number(1)),

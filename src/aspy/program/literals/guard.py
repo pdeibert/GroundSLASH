@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING, Set, Optional, Union, Tuple, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, Optional, Set, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.operators import RelOp
+    from aspy.program.query import Query
+    from aspy.program.safety_characterization import SafetyTriplet
+    from aspy.program.statements import Statement
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
-    from aspy.program.safety_characterization import SafetyTriplet
-    from aspy.program.statements import Statement
-    from aspy.program.query import Query
 
 
 class Guard(NamedTuple):
@@ -18,13 +18,16 @@ class Guard(NamedTuple):
 
     def __str__(self) -> str:
         if self.right:
-            return f"({str(self.op)} {str(self.bound)})"
+            return f"{str(self.op)} {str(self.bound)}"
         else:
-            return f"({str(self.bound)} {str(self.op)})"
+            return f"{str(self.bound)} {str(self.op)}"
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, Guard) and self.right == other.right and self.op == other.op and self.bound == other.bound
+            isinstance(other, Guard)
+            and self.right == other.right
+            and self.op == other.op
+            and self.bound == other.bound
         )
 
     def __hash__(self) -> int:
@@ -43,7 +46,7 @@ class Guard(NamedTuple):
     def vars(self) -> Set["Variable"]:
         return self.bound.vars()
 
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
         return self.bound.global_vars()
 
     def safety(

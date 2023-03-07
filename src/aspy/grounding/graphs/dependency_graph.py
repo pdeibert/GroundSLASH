@@ -21,8 +21,12 @@ class DependencyGraph:
                 if depender is dependee:
                     continue
 
-                pos_body_predicates = set([literal.pred() for literal in depender.body.pos_occ()])
-                neg_body_predicates = set([literal.pred() for literal in depender.body.neg_occ()])
+                pos_body_predicates = set(
+                    [literal.pred() for literal in depender.body.pos_occ()]
+                )
+                neg_body_predicates = set(
+                    [literal.pred() for literal in depender.body.neg_occ()]
+                )
 
                 # positive dependency
                 if head_predicates.intersection(pos_body_predicates):

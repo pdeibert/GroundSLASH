@@ -14,7 +14,9 @@ class TestGuard(unittest.TestCase):
 
         # TODO
         self.assertEqual(
-            Guard(RelOp.EQUAL, Minus(Variable("X")), True).replace_arith(VariableTable()),
+            Guard(RelOp.EQUAL, Minus(Variable("X")), True).replace_arith(
+                VariableTable()
+            ),
             Guard(RelOp.EQUAL, ArithVariable(0, Minus(Variable("X"))), True),
         )
 

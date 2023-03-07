@@ -33,7 +33,11 @@ class Functional(Term):
         return self.symbol + (f"({','.join([str(term) for term in self.terms])})")
 
     def __eq__(self, other: "Expr") -> str:
-        return isinstance(other, Functional) and other.symbol == self.symbol and other.terms == self.terms
+        return (
+            isinstance(other, Functional)
+            and other.symbol == self.symbol
+            and other.terms == self.terms
+        )
 
     def __hash__(self) -> int:
         return hash(("functional", self.symbol, self.terms))
@@ -58,7 +62,9 @@ class Functional(Term):
                 elif self.symbol == other.symbol:
                     for self_term, other_term in zip(self.terms, other.terms):
                         # other_term < self_term
-                        if other_term.precedes(self_term) and not self_term.precedes(other_term):
+                        if other_term.precedes(self_term) and not self_term.precedes(
+                            other_term
+                        ):
                             return False
 
                     return True
@@ -67,7 +73,7 @@ class Functional(Term):
 
     def vars(self) -> Set["Variable"]:
         return self.terms.vars()
-    
+
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
@@ -75,7 +81,11 @@ class Functional(Term):
 
     def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
-        if not (isinstance(other, Functional) and self.symbol == other.symbol and self.arity == other.arity):
+        if not (
+            isinstance(other, Functional)
+            and self.symbol == other.symbol
+            and self.arity == other.arity
+        ):
             return None
 
         return self.terms.match(other.terms)

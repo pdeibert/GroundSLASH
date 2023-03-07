@@ -8,7 +8,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class AssignmentError(Exception):
     def __init__(self, subst_1: "Substitution", subst_2: "Substitution") -> None:
-        super().__init__(f"Substitution {subst_1} is inconsistent with substitution {subst_2}.")
+        super().__init__(
+            f"Substitution {subst_1} is inconsistent with substitution {subst_2}."
+        )
 
 
 class Substitution(dict):
@@ -26,7 +28,9 @@ class Substitution(dict):
         return f"{{{','.join([f'{str(var)}:{str(target)}' for var, target in self.items()])}}}"
 
     def __eq__(self, other: "Substitution") -> bool:
-        return isinstance(other, Substitution) and super(Substitution, self).__eq__(other)
+        return isinstance(other, Substitution) and super(Substitution, self).__eq__(
+            other
+        )
 
     def __hash__(self) -> int:
         return hash(("substitution", frozenset(self.items())))
@@ -52,7 +56,9 @@ class Substitution(dict):
         # apply other substitution to substituted values
         subst = {var: target.substitute(other) for (var, target) in self.items()}
         # add substitution of variables that are not in the original substitution (i.e., originally mapped onto themselves)
-        subst.update({var: target for (var, target) in other.items() if var not in subst})
+        subst.update(
+            {var: target for (var, target) in other.items() if var not in subst}
+        )
 
         return Substitution(subst)
 

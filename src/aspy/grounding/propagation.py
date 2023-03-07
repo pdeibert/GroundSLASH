@@ -10,12 +10,22 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Propagator:
-    def __init__(self, aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", EpsRule, List[EtaRule]]]) -> None:
+    def __init__(
+        self,
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", EpsRule, List[EtaRule]]
+        ],
+    ) -> None:
         self.aggr_map = aggr_map
         self.instance_map = dict()
 
     def propagate(
-        self, eps_instances, eta_instances, I: Set["Literal"], J: Set["Literal"], J_alpha: Set["Literal"]
+        self,
+        eps_instances,
+        eta_instances,
+        I: Set["Literal"],
+        J: Set["Literal"],
+        J_alpha: Set["Literal"],
     ) -> Set[AlphaLiteral]:
 
         for rule in chain(eps_instances, eta_instances):
@@ -33,7 +43,10 @@ class Propagator:
                     self.instance_map[ground_alpha_literal] = (
                         aggr_literal.func,
                         set(),
-                        tuple(guard.substitute(subst) if guard is not None else None for guard in aggr_literal.guards),
+                        tuple(
+                            guard.substitute(subst) if guard is not None else None
+                            for guard in aggr_literal.guards
+                        ),
                     )
             elif isinstance(rule, EtaRule):
                 # gather variables
@@ -45,14 +58,23 @@ class Propagator:
                     self.instance_map[ground_alpha_literal] = (
                         aggr_literal.func,
                         set(),
-                        tuple(guard.substitute(subst) if guard is not None else None for guard in aggr_literal.guards),
+                        tuple(
+                            guard.substitute(subst) if guard is not None else None
+                            for guard in aggr_literal.guards
+                        ),
                     )
 
-                self.instance_map[ground_alpha_literal][1].add(rule.element.substitute(subst))
+                self.instance_map[ground_alpha_literal][1].add(
+                    rule.element.substitute(subst)
+                )
 
         possible_alpha_literals = set()
 
-        for ground_alpha_literal, (aggr_func, ground_elements, ground_guards) in self.instance_map.items():
+        for ground_alpha_literal, (
+            aggr_func,
+            ground_elements,
+            ground_guards,
+        ) in self.instance_map.items():
             # skip alpha literal if already derived (in previous iteration)
             if ground_alpha_literal in J_alpha:
                 possible_alpha_literals.add(ground_alpha_literal)
@@ -69,8 +91,14 @@ class Propagator:
     def assemble(self, rules: Set["Statement"]) -> Set["Statement"]:
         # map ground alpha literals to corresponding assembled aggregate literals to be replaced with
         assembling_map = {
-            alpha_literal: AggregateLiteral(aggr_func, tuple(elements), guards, naf=alpha_literal.naf)
-            for alpha_literal, (aggr_func, elements, guards) in self.instance_map.items()
+            alpha_literal: AggregateLiteral(
+                aggr_func, tuple(elements), guards, naf=alpha_literal.naf
+            )
+            for alpha_literal, (
+                aggr_func,
+                elements,
+                guards,
+            ) in self.instance_map.items()
         }
 
         # return assembled rules

@@ -29,8 +29,8 @@ class Term(Expr, ABC):
 
     def vars(self) -> Set["Variable"]:
         return set()
-    
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
         return self.vars()
 
     def safety(
@@ -66,7 +66,10 @@ class Infimum(Term):
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
-            raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
+            raise ValueError(
+                ("Cannot compare total ordering with non-ground"
+                 " arithmetic terms or variables")
+            )
 
         return True
 
@@ -87,7 +90,10 @@ class Supremum(Term):
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
-            raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
+            raise ValueError(
+                ("Cannot compare total ordering with non-ground"
+                 " arithmetic terms or variables")
+            )
 
         return True if isinstance(other, Supremum) else False
 
@@ -154,7 +160,11 @@ class AnonVariable(Variable):
         return SafetyTriplet()
 
     def __eq__(self, other: Expr) -> str:
-        return isinstance(other, AnonVariable) and other.val == self.val and other.id == self.id
+        return (
+            isinstance(other, AnonVariable)
+            and other.val == self.val
+            and other.id == self.id
+        )
 
     def __hash__(self) -> int:
         return hash(("anon var", self.val))
@@ -201,7 +211,10 @@ class Number(Term):
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
-            raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
+            raise ValueError(
+                ("Cannot compare total ordering with non-ground"
+                 " arithmetic terms or variables")
+            )
 
         if isinstance(other, Infimum):
             return False
@@ -234,9 +247,6 @@ class SymbolicConstant(Term):
     def __str__(self) -> str:
         return self.val
 
-    def __str__(self) -> str:
-        return str(self.val)
-
     def __eq__(self, other: Expr) -> str:
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
@@ -245,7 +255,10 @@ class SymbolicConstant(Term):
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
-            raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
+            raise ValueError(
+                ("Cannot compare total ordering with non-ground"
+                 " arithmetic terms or variables")
+            )
 
         if isinstance(other, (Infimum, Number)):
             return False
@@ -274,7 +287,10 @@ class String(Term):
 
     def precedes(self, other: Term) -> bool:
         if not other.ground:
-            raise ValueError("Cannot compare total ordering with non-ground arithmetic terms or variables")
+            raise ValueError(
+                ("Cannot compare total ordering with non-ground"
+                 " arithmetic terms or variables")
+            )
 
         if isinstance(other, (Infimum, Number, SymbolicConstant)):
             return False
@@ -284,8 +300,9 @@ class String(Term):
             return True
 
 
-class TermTuple():
+class TermTuple:
     """Represents a collection of terms."""
+
     def __init__(self, *terms: Term) -> None:
         self.terms = terms
 
@@ -293,10 +310,14 @@ class TermTuple():
         return len(self.terms)
 
     def __eq__(self, other: "TermTuple") -> bool:
-        return isinstance(other, TermTuple) and len(self) == len(other) and all(t1 == t2 for t1, t2 in zip(self, other))
+        return (
+            isinstance(other, TermTuple)
+            and len(self) == len(other)
+            and all(t1 == t2 for t1, t2 in zip(self, other))
+        )
 
     def __hash__(self) -> int:
-        return hash( ("term tuple", *self.terms) )
+        return hash(("term tuple", *self.terms))
 
     def __iter__(self) -> Iterable[Term]:
         return iter(self.terms)
@@ -343,8 +364,8 @@ class TermTuple():
 
     def vars(self) -> Set["Variable"]:
         return set().union(*tuple(term.vars() for term in self.terms))
-    
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
         return self.vars()
 
     def safety(

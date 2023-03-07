@@ -26,7 +26,9 @@ class TestDependencyGraph(unittest.TestCase):
 
         prog = Program.from_string(input)
 
-        self.assertEqual(len(prog.statements), 8)  # make sure we have no extra statements
+        self.assertEqual(
+            len(prog.statements), 8
+        )  # make sure we have no extra statements
         u1, u2, v2, v3, pX, qX, x, y = prog.statements
 
         # create dependency graph

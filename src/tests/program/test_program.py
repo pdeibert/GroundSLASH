@@ -54,8 +54,14 @@ class TestProgram(unittest.TestCase):
                     AggregateLiteral(
                         AggregateSum(),
                         (
-                            AggregateElement(TermTuple(Number(1)), LiteralTuple(PredicateLiteral("a"))),
-                            AggregateElement(TermTuple(Number(1)), LiteralTuple(PredicateLiteral("c"))),
+                            AggregateElement(
+                                TermTuple(Number(1)),
+                                LiteralTuple(PredicateLiteral("a")),
+                            ),
+                            AggregateElement(
+                                TermTuple(Number(1)),
+                                LiteralTuple(PredicateLiteral("c")),
+                            ),
                         ),
                         Guard(RelOp.EQUAL, Number(1), True),
                     ),
@@ -66,7 +72,9 @@ class TestProgram(unittest.TestCase):
         # TODO: query!
 
         # string representation
-        self.assertEqual(str(prog), "\n".join(tuple(str(statement) for statement in prog.statements)))
+        self.assertEqual(
+            str(prog), "\n".join(tuple(str(statement) for statement in prog.statements))
+        )
         # safety
         self.assertTrue(prog.safe)
         # reduct
@@ -82,8 +90,14 @@ class TestProgram(unittest.TestCase):
                         AggregateLiteral(
                             AggregateSum(),
                             (
-                                AggregateElement(TermTuple(Number(1)), LiteralTuple(PredicateLiteral("a"))),
-                                AggregateElement(TermTuple(Number(1)), LiteralTuple(PredicateLiteral("c"))),
+                                AggregateElement(
+                                    TermTuple(Number(1)),
+                                    LiteralTuple(PredicateLiteral("a")),
+                                ),
+                                AggregateElement(
+                                    TermTuple(Number(1)),
+                                    LiteralTuple(PredicateLiteral("c")),
+                                ),
                             ),
                             Guard(RelOp.EQUAL, Number(1), True),
                         ),
@@ -100,9 +114,13 @@ class TestProgram(unittest.TestCase):
         # NOTE: use normal facts and predicate literals to check (somewhat of a circular test)
 
         # variable
-        self.assertEqual(Program.from_string("p(X).").statements[0].atom.terms[0], Variable("X"))
+        self.assertEqual(
+            Program.from_string("p(X).").statements[0].atom.terms[0], Variable("X")
+        )
         # anonymous variable
-        self.assertEqual(Program.from_string("p(_).").statements[0].atom.terms[0], AnonVariable(0))
+        self.assertEqual(
+            Program.from_string("p(_).").statements[0].atom.terms[0], AnonVariable(0)
+        )
         self.assertEqual(
             Program.from_string("p(_, _).")
             .statements[0]
@@ -116,32 +134,47 @@ class TestProgram(unittest.TestCase):
             .atom.terms[0],  # includes escaped string
             String(r"string: \"internal string\" "),
         )
-        self.assertEqual(Program.from_string(r'p("10").').statements[0].atom.terms[0], String("10"))
+        self.assertEqual(
+            Program.from_string(r'p("10").').statements[0].atom.terms[0], String("10")
+        )
         # number
-        self.assertEqual(Program.from_string("p(-10).").statements[0].atom.terms[0], Number(-10))
+        self.assertEqual(
+            Program.from_string("p(-10).").statements[0].atom.terms[0], Number(-10)
+        )
         # symbolic constant
-        self.assertEqual(Program.from_string("p(p).").statements[0].atom.terms[0], SymbolicConstant("p"))
+        self.assertEqual(
+            Program.from_string("p(p).").statements[0].atom.terms[0],
+            SymbolicConstant("p"),
+        )
         # functional term (empty vs. symbolic constant)
-        self.assertEqual(Program.from_string("p(p()).").statements[0].atom.terms[0], Functional("p"))  # empty
+        self.assertEqual(
+            Program.from_string("p(p()).").statements[0].atom.terms[0], Functional("p")
+        )  # empty
         self.assertEqual(
             Program.from_string('p(p("string", 10)).').statements[0].atom.terms[0],
             Functional("p", String("string"), Number(10)),
         )
         # arithmetic term (add, sub, mult, div, minus)
         self.assertEqual(
-            Program.from_string("p(3+X).").statements[0].atom.terms[0], Add(Number(3), Variable("X"))  # add
+            Program.from_string("p(3+X).").statements[0].atom.terms[0],
+            Add(Number(3), Variable("X")),  # add
         )
         self.assertEqual(
-            Program.from_string("p(3-X).").statements[0].atom.terms[0], Sub(Number(3), Variable("X"))  # sub
+            Program.from_string("p(3-X).").statements[0].atom.terms[0],
+            Sub(Number(3), Variable("X")),  # sub
         )
         self.assertEqual(
-            Program.from_string("p(3*X).").statements[0].atom.terms[0], Mult(Number(3), Variable("X"))  # mult
+            Program.from_string("p(3*X).").statements[0].atom.terms[0],
+            Mult(Number(3), Variable("X")),  # mult
         )
         self.assertEqual(
-            Program.from_string("p(3/X).").statements[0].atom.terms[0], Div(Number(3), Variable("X"))  # div
+            Program.from_string("p(3/X).").statements[0].atom.terms[0],
+            Div(Number(3), Variable("X")),  # div
         )
         self.assertEqual(
-            Program.from_string("p(3+-5*(10-3)).").statements[0].atom.terms[0],  # order of operations
+            Program.from_string("p(3+-5*(10-3)).")
+            .statements[0]
+            .atom.terms[0],  # order of operations
             Number(3 + (-5 * (10 - 3))),
         )
 
@@ -149,68 +182,114 @@ class TestProgram(unittest.TestCase):
         # NOTE: use normal facts and rules to check (somewhat of a circular test)
 
         # predicate literal
-        self.assertEqual(Program.from_string("p().").statements[0].atom, PredicateLiteral("p"))  # zero-ary predicate
+        self.assertEqual(
+            Program.from_string("p().").statements[0].atom, PredicateLiteral("p")
+        )  # zero-ary predicate
         self.assertEqual(
             Program.from_string("p.").statements[0].atom,  # dropped parentheses
             Program.from_string("p().").statements[0].atom,
         )
         self.assertEqual(
-            Program.from_string("-p.").statements[0].atom, Neg(PredicateLiteral("p"))  # classical negation
+            Program.from_string("-p.").statements[0].atom,
+            Neg(PredicateLiteral("p")),  # classical negation
         )
         self.assertEqual(
-            Program.from_string("a :- not p.").statements[0].body[0],  # negation as failure (NAF)
+            Program.from_string("a :- not p.")
+            .statements[0]
+            .body[0],  # negation as failure (NAF)
             Naf(PredicateLiteral("p")),
         )
 
         # builtin literal
-        self.assertEqual(Program.from_string("a :- 1 = 2.").statements[0].body[0], Equal(Number(1), Number(2)))  # equal
         self.assertEqual(
-            Program.from_string("a :- 1 != 2.").statements[0].body[0], Unequal(Number(1), Number(2))  # unequal
+            Program.from_string("a :- 1 = 2.").statements[0].body[0],
+            Equal(Number(1), Number(2)),
+        )  # equal
+        self.assertEqual(
+            Program.from_string("a :- 1 != 2.").statements[0].body[0],
+            Unequal(Number(1), Number(2)),  # unequal
         )
         self.assertEqual(
-            Program.from_string("a :- 1 < 2.").statements[0].body[0], Less(Number(1), Number(2))  # less than
+            Program.from_string("a :- 1 < 2.").statements[0].body[0],
+            Less(Number(1), Number(2)),  # less than
         )
         self.assertEqual(
-            Program.from_string("a :- 1 > 2.").statements[0].body[0], Greater(Number(1), Number(2))  # greater than
+            Program.from_string("a :- 1 > 2.").statements[0].body[0],
+            Greater(Number(1), Number(2)),  # greater than
         )
         self.assertEqual(
-            Program.from_string("a :- 1 <= 2.").statements[0].body[0],  # less than or equal
+            Program.from_string("a :- 1 <= 2.")
+            .statements[0]
+            .body[0],  # less than or equal
             LessEqual(Number(1), Number(2)),
         )
         self.assertEqual(
-            Program.from_string("a :- 1 >= 2.").statements[0].body[0],  # greater than or equal
+            Program.from_string("a :- 1 >= 2.")
+            .statements[0]
+            .body[0],  # greater than or equal
             GreaterEqual(Number(1), Number(2)),
         )
 
         # aggregate literal
         self.assertEqual(
-            Program.from_string(r"a :- 3 = #count{X: p(X)}.").statements[0].body[0],  # only left guard
+            Program.from_string(r"a :- 3 = #count{X: p(X)}.")
+            .statements[0]
+            .body[0],  # only left guard
             AggregateLiteral(
                 AggregateCount(),
-                (AggregateElement(TermTuple(Variable("X")), LiteralTuple(PredicateLiteral("p", Variable("X")))),),
+                (
+                    AggregateElement(
+                        TermTuple(Variable("X")),
+                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                    ),
+                ),
                 (Guard(RelOp.EQUAL, Number(3), False), None),
             ),
         )
         self.assertEqual(
-            Program.from_string(r"a :- #count{X: p(X)} = 3.").statements[0].body[0],  # only right guard
+            Program.from_string(r"a :- #count{X: p(X)} = 3.")
+            .statements[0]
+            .body[0],  # only right guard
             AggregateLiteral(
                 AggregateCount(),
-                (AggregateElement(TermTuple(Variable("X")), LiteralTuple(PredicateLiteral("p", Variable("X")))),),
+                (
+                    AggregateElement(
+                        TermTuple(Variable("X")),
+                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                    ),
+                ),
                 (None, Guard(RelOp.EQUAL, Number(3), True)),
             ),
         )
         self.assertEqual(
-            Program.from_string(r"a :- 5 < #count{X: p(X)} = 3.").statements[0].body[0],  # only right guard
+            Program.from_string(r"a :- 5 < #count{X: p(X)} = 3.")
+            .statements[0]
+            .body[0],  # only right guard
             AggregateLiteral(
                 AggregateCount(),
-                (AggregateElement(TermTuple(Variable("X")), LiteralTuple(PredicateLiteral("p", Variable("X")))),),
-                (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True)),
+                (
+                    AggregateElement(
+                        TermTuple(Variable("X")),
+                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                    ),
+                ),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
-            Program.from_string(r"a :- 5 < #count{} = 3.").statements[0].body[0],  # no elements
+            Program.from_string(r"a :- 5 < #count{} = 3.")
+            .statements[0]
+            .body[0],  # no elements
             AggregateLiteral(
-                AggregateCount(), tuple(), (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True))
+                AggregateCount(),
+                tuple(),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
@@ -220,50 +299,95 @@ class TestProgram(unittest.TestCase):
             AggregateLiteral(
                 AggregateCount(),
                 (AggregateElement(TermTuple(Variable("X")), LiteralTuple()),),
-                (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True)),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
-            Program.from_string(r"a :- 5 < #count{:p(X)} = 3.").statements[0].body[0],  # element without terms
-            AggregateLiteral(
-                AggregateCount(),
-                (AggregateElement(TermTuple(), LiteralTuple(PredicateLiteral("p", Variable("X")))),),
-                (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True)),
-            ),
-        )
-        self.assertEqual(
-            Program.from_string(r"a :- 5 < #count{:} = 3.").statements[0].body[0],  # element without terms or literals
-            AggregateLiteral(
-                AggregateCount(), tuple(), (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True))
-            ),
-        )
-        self.assertEqual(
-            Program.from_string(r"a :- 5 < #count{X: p(X); X: q(X)} = 3.").statements[0].body[0],  # multiple elements
+            Program.from_string(r"a :- 5 < #count{:p(X)} = 3.")
+            .statements[0]
+            .body[0],  # element without terms
             AggregateLiteral(
                 AggregateCount(),
                 (
-                    AggregateElement(TermTuple(Variable("X")), LiteralTuple(PredicateLiteral("p", Variable("X")))),
-                    AggregateElement(TermTuple(Variable("X")), LiteralTuple(PredicateLiteral("q", Variable("X")))),
+                    AggregateElement(
+                        TermTuple(), LiteralTuple(PredicateLiteral("p", Variable("X")))
+                    ),
                 ),
-                (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True)),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
+            ),
+        )
+        self.assertEqual(
+            Program.from_string(r"a :- 5 < #count{:} = 3.")
+            .statements[0]
+            .body[0],  # element without terms or literals
+            AggregateLiteral(
+                AggregateCount(),
+                tuple(),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
+            ),
+        )
+        self.assertEqual(
+            Program.from_string(r"a :- 5 < #count{X: p(X); X: q(X)} = 3.")
+            .statements[0]
+            .body[0],  # multiple elements
+            AggregateLiteral(
+                AggregateCount(),
+                (
+                    AggregateElement(
+                        TermTuple(Variable("X")),
+                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                    ),
+                    AggregateElement(
+                        TermTuple(Variable("X")),
+                        LiteralTuple(PredicateLiteral("q", Variable("X"))),
+                    ),
+                ),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #sum{} = 3.").statements[0].body[0],  # sum
             AggregateLiteral(
-                AggregateSum(), tuple(), (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True))
+                AggregateSum(),
+                tuple(),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #min{} = 3.").statements[0].body[0],  # min
             AggregateLiteral(
-                AggregateMin(), tuple(), (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True))
+                AggregateMin(),
+                tuple(),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #max{} = 3.").statements[0].body[0],  # max
             AggregateLiteral(
-                AggregateMax(), tuple(), (Guard(RelOp.LESS, Number(5), False), Guard(RelOp.EQUAL, Number(3), True))
+                AggregateMax(),
+                tuple(),
+                (
+                    Guard(RelOp.LESS, Number(5), False),
+                    Guard(RelOp.EQUAL, Number(3), True),
+                ),
             ),
         )
 

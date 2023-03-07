@@ -5,7 +5,9 @@ from .terms import AnonVariable, ArithTerm, ArithVariable, Variable
 
 
 class VariableTable:
-    def __init__(self, variables: Optional[Union[Dict[Variable, bool], Set[Variable]]] = None) -> None:
+    def __init__(
+        self, variables: Optional[Union[Dict[Variable, bool], Set[Variable]]] = None
+    ) -> None:
         self.variables = dict()
         self.anon_counter = 0
         self.arith_counter = 0
@@ -51,7 +53,12 @@ class VariableTable:
             elif isinstance(var, ArithVariable):
                 self.arith_counter = max(self.arith_counter, var.id + 1)
 
-    def create(self, symbol: str = "_", register: bool = True, orig_term: Optional["ArithTerm"] = None) -> Variable:
+    def create(
+        self,
+        symbol: str = "_",
+        register: bool = True,
+        orig_term: Optional["ArithTerm"] = None,
+    ) -> Variable:
         # anonymous variable
         if symbol == "_":
             # get current id for anonymous variables
@@ -64,7 +71,9 @@ class VariableTable:
         # special 'arithmetic replacement' variable
         elif symbol == SpecialChar.TAU:
             if orig_term is None:
-                ValueError("Variable table cannot create arithmetic variable without specifying 'orig_term'.")
+                ValueError(
+                    "Variable table cannot create arithmetic variable without specifying 'orig_term'."
+                )
 
             # get current id for arithmetic variables
             id = self.arith_counter

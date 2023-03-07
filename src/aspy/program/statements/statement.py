@@ -17,7 +17,9 @@ if TYPE_CHECKING:  # pragma: no cover
 class Statement(Expr, ABC):
     """Abstract base class for all statements."""
 
-    def __init__(self, var_table: Optional["VariableTable"] = None, *args, **kwargs) -> None:
+    def __init__(
+        self, var_table: Optional["VariableTable"] = None, *args, **kwargs
+    ) -> None:
         self.__var_table = var_table
 
     @abstractmethod  # pragma: no cover
@@ -54,12 +56,10 @@ class Statement(Expr, ABC):
     def vars(self) -> Set["Variable"]:
         return self.var_table.vars()
 
-    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
         return self.var_table.global_vars()
 
-    def safety(
-        self, rule: Optional["Statement"] = None
-    ) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
         raise Exception()
 
     def __init_var_table(self) -> None:
@@ -70,19 +70,28 @@ class Statement(Expr, ABC):
 
         # mark global variables
         self.__var_table.update(
-            {var: True for var in self.head.global_vars(self).union(self.body.global_vars(self))}
+            {
+                var: True
+                for var in self.head.global_vars(self).union(
+                    self.body.global_vars(self)
+                )
+            }
         )
 
     @abstractmethod  # pragma: no cover
     def rewrite_aggregates(
         self,
         aggr_counter: int,
-        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
     ) -> "Statement":
         pass
 
     @abstractmethod  # pragma: no cover
-    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Statement":
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "Statement":
         pass
 
 
@@ -105,9 +114,13 @@ class Fact(Rule, ABC):
     def rewrite_aggregates(
         self,
         aggr_counter: int,
-        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
     ) -> "Fact":
         return deepcopy(self)
 
-    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "Fact":
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "Fact":
         return deepcopy(self)

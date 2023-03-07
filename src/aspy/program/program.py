@@ -19,12 +19,16 @@ if TYPE_CHECKING:  # pragma: no cover
 class Program:
     """Program."""
 
-    def __init__(self, statements: Tuple["Statement", ...], query: Optional["Query"] = None) -> None:
+    def __init__(
+        self, statements: Tuple["Statement", ...], query: Optional["Query"] = None
+    ) -> None:
         self.statements = statements
         self.query = query
 
     def __eq__(self, other: "Program") -> bool:
-        return set(self.statements) == set(other.statements) and self.query == other.query
+        return (
+            set(self.statements) == set(other.statements) and self.query == other.query
+        )
 
     def __str__(self) -> str:
         return "\n".join([str(statement) for statement in self.statements]) + (
@@ -37,16 +41,26 @@ class Program:
             tuple(
                 statement
                 for statement in self.statements
-                if not any(literal.pred() in preds for literal in statement.body.neg_occ())
+                if not any(
+                    literal.pred() in preds for literal in statement.body.neg_occ()
+                )
             )
         )
 
     def replace_arith(self) -> "Program":
-        return Program(tuple(statement.replace_arith() for statement in self.statements), self.query)
+        return Program(
+            tuple(statement.replace_arith() for statement in self.statements),
+            self.query,
+        )
 
     def rewrite_aggregates(
         self,
-    ) -> Tuple["Program", "Program", "Program", Dict[int, Tuple["AlphaLiteral", "EpsRule", List["EtaRule"]]]]:
+    ) -> Tuple[
+        "Program",
+        "Program",
+        "Program",
+        Dict[int, Tuple["AlphaLiteral", "EpsRule", List["EtaRule"]]],
+    ]:
 
         # TODO: get actual counter?
         aggr_counter = 0
@@ -68,7 +82,12 @@ class Program:
 
             alpha_statements.append(alpha_statement)
 
-        return Program(alpha_statements, self.query), Program(eps_statements), Program(eta_statements), aggr_map
+        return (
+            Program(alpha_statements, self.query),
+            Program(eps_statements),
+            Program(eta_statements),
+            aggr_map,
+        )
 
     @cached_property
     def safe(self) -> bool:

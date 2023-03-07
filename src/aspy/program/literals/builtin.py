@@ -55,7 +55,10 @@ class BuiltinLiteral(Literal, ABC):
         pass
 
     def replace_arith(self, var_table: "VariableTable") -> "BuiltinLiteral":
-        return type(self)(self.loperand.replace_arith(var_table), self.roperand.replace_arith(var_table))
+        return type(self)(
+            self.loperand.replace_arith(var_table),
+            self.roperand.replace_arith(var_table),
+        )
 
 
 class Equal(BuiltinLiteral):
@@ -65,7 +68,11 @@ class Equal(BuiltinLiteral):
         return f"{str(self.loperand)}={str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Equal) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Equal)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("equal", self.loperand, self.roperand))
@@ -92,8 +99,16 @@ class Equal(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return loperand.precedes(roperand) and roperand.precedes(loperand)
 
@@ -121,7 +136,11 @@ class Unequal(BuiltinLiteral):
         return f"{str(self.loperand)}!={str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Unequal) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Unequal)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("unequal", self.loperand, self.roperand))
@@ -130,8 +149,16 @@ class Unequal(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return not (loperand.precedes(roperand) and roperand.precedes(loperand))
 
@@ -159,7 +186,11 @@ class Less(BuiltinLiteral):
         return f"{str(self.loperand)}<{str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Less) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Less)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("less", self.loperand, self.roperand))
@@ -168,8 +199,16 @@ class Less(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return loperand.precedes(roperand) and not roperand.precedes(loperand)
 
@@ -197,7 +236,11 @@ class Greater(BuiltinLiteral):
         return f"{str(self.loperand)}>{str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, Greater) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, Greater)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("greater", self.loperand, self.roperand))
@@ -206,8 +249,16 @@ class Greater(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return not loperand.precedes(roperand) and roperand.precedes(loperand)
 
@@ -235,7 +286,11 @@ class LessEqual(BuiltinLiteral):
         return f"{str(self.loperand)}<={str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, LessEqual) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, LessEqual)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("less equal", self.loperand, self.roperand))
@@ -244,8 +299,16 @@ class LessEqual(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return loperand.precedes(roperand)
 
@@ -273,7 +336,11 @@ class GreaterEqual(BuiltinLiteral):
         return f"{str(self.loperand)}>={str(self.roperand)}"
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, GreaterEqual) and self.loperand == other.loperand and self.roperand == other.roperand
+        return (
+            isinstance(other, GreaterEqual)
+            and self.loperand == other.loperand
+            and self.roperand == other.roperand
+        )
 
     def __hash__(self) -> int:
         return hash(("greater equal", self.loperand, self.roperand))
@@ -282,8 +349,16 @@ class GreaterEqual(BuiltinLiteral):
         if not (self.loperand.ground and self.roperand.ground):
             raise ValueError("Cannot evaluate built-in literal with non-ground terms")
 
-        loperand = Number(self.loperand.eval()) if isinstance(self.loperand, ArithTerm) else self.loperand
-        roperand = Number(self.roperand.eval()) if isinstance(self.roperand, ArithTerm) else self.roperand
+        loperand = (
+            Number(self.loperand.eval())
+            if isinstance(self.loperand, ArithTerm)
+            else self.loperand
+        )
+        roperand = (
+            Number(self.roperand.eval())
+            if isinstance(self.roperand, ArithTerm)
+            else self.roperand
+        )
 
         return roperand.precedes(loperand)
 

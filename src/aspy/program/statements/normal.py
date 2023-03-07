@@ -14,7 +14,7 @@ from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.literals import Literal, PredicateLiteral
+    from aspy.program.literals import Literal
     from aspy.program.substitution import Substitution
 
     from .special import EpsRule, EtaRule
@@ -92,19 +92,27 @@ class NormalRule(Rule):
         super().__init__(**kwargs)
 
         if len(body) == 0:
-            raise ValueError(f"Body for {type(self)} may not be empty. Use {NormalFact} instead.")
+            raise ValueError(
+                f"Body for {type(self)} may not be empty. Use {NormalFact} instead."
+            )
 
         self.atom = head
         self.literals = LiteralTuple(*body)
 
     def __eq__(self, other: "Expr") -> bool:
-        return isinstance(other, NormalRule) and self.atom == other.atom and set(self.literals) == set(other.literals)
+        return (
+            isinstance(other, NormalRule)
+            and self.atom == other.atom
+            and set(self.literals) == set(other.literals)
+        )
 
     def __hash__(self) -> int:
         return hash(("normal rule", self.atom, self.literals))
 
     def __str__(self) -> str:
-        return f"{str(self.atom)} :- {', '.join([str(literal) for literal in self.body])}."
+        return (
+            f"{str(self.atom)} :- {', '.join([str(literal) for literal in self.body])}."
+        )
 
     @property
     def head(self) -> LiteralTuple:
@@ -129,12 +137,17 @@ class NormalRule(Rule):
         return NormalRule(self.atom.substitute(subst), *self.literals.substitute(subst))
 
     def replace_arith(self) -> "NormalRule":
-        return NormalRule(self.atom.replace_arith(self.var_table), *self.literals.replace_arith(self.var_table))
+        return NormalRule(
+            self.atom.replace_arith(self.var_table),
+            *self.literals.replace_arith(self.var_table),
+        )
 
     def rewrite_aggregates(
         self,
         aggr_counter: int,
-        aggr_map: Dict[int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]],
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
     ) -> "NormalRule":
 
         # global variables
@@ -145,7 +158,11 @@ class NormalRule(Rule):
         aggr_literals = []
 
         for literal in self.body:
-            (aggr_literals if isinstance(literal, AggregateLiteral) else non_aggr_literals).append(literal)
+            (
+                aggr_literals
+                if isinstance(literal, AggregateLiteral)
+                else non_aggr_literals
+            ).append(literal)
 
         # mapping from original literals to alpha literals
         alpha_map = dict()
@@ -155,7 +172,9 @@ class NormalRule(Rule):
 
         for literal in aggr_literals:
             # rewrite aggregate literal
-            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(literal, aggr_counter, glob_vars, non_aggr_literals)
+            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(
+                literal, aggr_counter, glob_vars, non_aggr_literals
+            )
 
             # map original aggregate literal to new alpha literal
             alpha_map[literal] = alpha_literal
@@ -170,14 +189,20 @@ class NormalRule(Rule):
         alpha_rule = NormalRule(
             self.atom,
             *tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal for literal in self.body
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                for literal in self.body
             ),  # NOTE: restores original order of literals
         )
 
         return alpha_rule
 
-    def assemble_aggregates(self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]) -> "NormalRule":
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "NormalRule":
         return NormalRule(
             self.atom,
-            *tuple(literal if literal not in assembling_map else assembling_map[literal] for literal in self.body),
+            *tuple(
+                literal if literal not in assembling_map else assembling_map[literal]
+                for literal in self.body
+            ),
         )

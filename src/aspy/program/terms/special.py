@@ -26,13 +26,19 @@ class ArithVariable(Variable):
         self.orig_term = orig_term
 
     def precedes(self, other: "Term") -> bool:
-        raise Exception("Total order is not defined for arithmetical (auxiliary) variables.")
+        raise Exception(
+            "Total order is not defined for arithmetical (auxiliary) variables."
+        )
 
     def __str__(self) -> str:
         return self.val
 
     def __eq__(self, other: "Expr") -> str:
-        return isinstance(other, ArithVariable) and other.val == self.val and self.orig_term == other.orig_term
+        return (
+            isinstance(other, ArithVariable)
+            and other.val == self.val
+            and self.orig_term == other.orig_term
+        )
 
     def __hash__(self) -> int:
         return hash(("arith var", self.val, self.orig_term))

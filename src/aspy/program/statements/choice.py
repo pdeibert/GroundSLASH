@@ -9,10 +9,10 @@ from aspy.program.safety_characterization import SafetyTriplet
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import Guard, PredicateLiteral, Literal
+    from aspy.program.literals import Guard, Literal, PredicateLiteral
+    from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
-    from aspy.program.query import Query
 
     from .statement import Statement
 
@@ -20,16 +20,24 @@ if TYPE_CHECKING:  # pragma: no cover
 class ChoiceElement(Expr):
     """Choice element."""
 
-    def __init__(self, atom: "PredicateLiteral", literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]]=None) -> None:
+    def __init__(
+        self,
+        atom: "PredicateLiteral",
+        literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]] = None,
+    ) -> None:
         if literals is None:
             literals = LiteralTuple()
 
         self.atom = atom
-        self.literals = literals if isinstance(literals, LiteralTuple) else LiteralTuple(*literals)
+        self.literals = (
+            literals if isinstance(literals, LiteralTuple) else LiteralTuple(*literals)
+        )
 
     def __str__(self) -> str:
         return str(self.atom) + (
-            f":{','.join([str(literal) for literal in self.literals])}" if self.literals else ""
+            f":{','.join([str(literal) for literal in self.literals])}"
+            if self.literals
+            else ""
         )
 
     @property
@@ -78,7 +86,9 @@ class Choice(Expr):
             guards = (guards,)
         # guard tuple specified
         elif isinstance(guards, Tuple) and len(guards) > 2:
-            raise ValueError("Choice expression requires at least one and at most two guards to be specified.")
+            raise ValueError(
+                "Choice expression requires at least one and at most two guards."
+            )
         else:
             raise ValueError(f"Invalid specification of aggregate guards: {guards}.")
 
@@ -89,11 +99,15 @@ class Choice(Expr):
 
             if guard.right:
                 if self.rguard is not None:
-                    raise ValueError("Multiple right guards specified for choice expression.")
+                    raise ValueError(
+                        "Multiple right guards specified for choice expression."
+                    )
                 self.rguard = guard
             else:
                 if self.lguard is not None:
-                    raise ValueError("Multiple left guards specified for choice expression.")
+                    raise ValueError(
+                        "Multiple left guards specified for choice expression."
+                    )
                 self.lguard = guard
 
         self.elements = elements
@@ -116,13 +130,13 @@ class Choice(Expr):
 
     def invars(self) -> Set["Variable"]:
         # TODO: correct ???
-        return set().union(
-            *tuple(element.vars() for element in self.elements)
-        )
+        return set().union(*tuple(element.vars() for element in self.elements))
 
     def outvars(self) -> Set["Variable"]:
         # TODO: correct ???
-        return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
+        return set().union(
+            *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
+        )
 
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         # TODO: correct ???
@@ -136,9 +150,9 @@ class Choice(Expr):
         # TODO: check if count CAN satisfy bounds
         raise Exception()
         # check guards
-        #return (op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval() if self.lguard is not None else True) and (
+        # return (op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval() if self.lguard is not None else True) and (
         #    op2rel[self.rguard.op](aggr_term, self.rguard.bound).eval() if self.rguard is not None else True
-        #)
+        # )
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
@@ -153,26 +167,12 @@ class Choice(Expr):
         elements = (element.substitute(subst) for element in self.elements)
 
         # substitute guard terms recursively
-        guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
+        guards = tuple(
+            guard.substitute(subst) if guard is not None else None
+            for guard in self.guards
+        )
 
         return Choice(elements, guards)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class ChoiceFact(Fact):
@@ -202,7 +202,7 @@ class ChoiceFact(Fact):
     @property
     def body(self) -> LiteralTuple:
         return LiteralTuple()
-    
+
     @property
     def extended_body(self) -> LiteralTuple:
         return self.choice.literals
@@ -247,7 +247,9 @@ class ChoiceRule(Rule):
         self.literals = body
 
     def __str__(self) -> str:
-        return f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
+        return (
+            f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
+        )
 
     @property
     def head(self) -> Choice:

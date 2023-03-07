@@ -36,7 +36,9 @@ class TestBuiltin(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -48,7 +50,9 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(safety.unsafe, set())
         self.assertEqual(safety.rules, set())
         # replace arithmetic terms
-        self.assertEqual(var_literal.replace_arith(VariableTable()), Equal(Number(0), Variable("X")))
+        self.assertEqual(
+            var_literal.replace_arith(VariableTable()), Equal(Number(0), Variable("X"))
+        )
         self.assertEqual(
             Equal(Variable("X"), Number(0)).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
@@ -81,7 +85,8 @@ class TestBuiltin(unittest.TestCase):
             Equal(Variable("X"), String("f")).match(Equal(Number(1), String("g"))), None
         )  # ground terms don't match
         self.assertEqual(
-            Equal(Variable("X"), Variable("X")).match(Equal(Number(1), String("f"))), None
+            Equal(Variable("X"), Variable("X")).match(Equal(Number(1), String("f"))),
+            None,
         )  # assignment conflict
 
     def test_unequal(self):
@@ -103,7 +108,9 @@ class TestBuiltin(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -112,10 +119,14 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(ground_literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet(unsafe={Variable("X")}))
         self.assertEqual(
-            Unequal(Variable("Y"), Variable("X")).safety(), SafetyTriplet(unsafe={Variable("X"), Variable("Y")})
+            Unequal(Variable("Y"), Variable("X")).safety(),
+            SafetyTriplet(unsafe={Variable("X"), Variable("Y")}),
         )
         # replace arithmetic terms
-        self.assertEqual(var_literal.replace_arith(VariableTable()), Unequal(Number(0), Variable("X")))
+        self.assertEqual(
+            var_literal.replace_arith(VariableTable()),
+            Unequal(Number(0), Variable("X")),
+        )
         self.assertEqual(
             Unequal(Variable("X"), Number(0)).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
@@ -145,10 +156,14 @@ class TestBuiltin(unittest.TestCase):
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            Unequal(Variable("X"), String("f")).match(Unequal(Number(1), String("g"))), None
+            Unequal(Variable("X"), String("f")).match(Unequal(Number(1), String("g"))),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            Unequal(Variable("X"), Variable("X")).match(Unequal(Number(1), String("f"))), None
+            Unequal(Variable("X"), Variable("X")).match(
+                Unequal(Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
     def test_less(self):
@@ -170,7 +185,9 @@ class TestBuiltin(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -179,12 +196,17 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(ground_literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet(unsafe={Variable("X")}))
         self.assertEqual(
-            Less(Variable("Y"), Variable("X")).safety(), SafetyTriplet(unsafe={Variable("X"), Variable("Y")})
+            Less(Variable("Y"), Variable("X")).safety(),
+            SafetyTriplet(unsafe={Variable("X"), Variable("Y")}),
         )
         # replace arithmetic terms
-        self.assertEqual(var_literal.replace_arith(VariableTable()), Less(Number(0), Variable("X")))
         self.assertEqual(
-            Less(Variable("X"), Number(0)).substitute(Substitution({Variable("X"): Number(1), Number(0): String("f")})),
+            var_literal.replace_arith(VariableTable()), Less(Number(0), Variable("X"))
+        )
+        self.assertEqual(
+            Less(Variable("X"), Number(0)).substitute(
+                Substitution({Variable("X"): Number(1), Number(0): String("f")})
+            ),
             Less(Number(1), Number(0)),
         )  # NOTE: substitution is invalid
         self.assertEqual(
@@ -200,7 +222,9 @@ class TestBuiltin(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            Less(Variable("X"), Number(0)).substitute(Substitution({Variable("X"): Number(1), Number(0): String("f")})),
+            Less(Variable("X"), Number(0)).substitute(
+                Substitution({Variable("X"): Number(1), Number(0): String("f")})
+            ),
             Less(Number(1), Number(0)),
         )  # NOTE: substitution is invalid
         # match
@@ -234,7 +258,9 @@ class TestBuiltin(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -243,10 +269,14 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(ground_literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet(unsafe={Variable("X")}))
         self.assertEqual(
-            Greater(Variable("Y"), Variable("X")).safety(), SafetyTriplet(unsafe={Variable("X"), Variable("Y")})
+            Greater(Variable("Y"), Variable("X")).safety(),
+            SafetyTriplet(unsafe={Variable("X"), Variable("Y")}),
         )
         # replace arithmetic terms
-        self.assertEqual(var_literal.replace_arith(VariableTable()), Greater(Number(0), Variable("X")))
+        self.assertEqual(
+            var_literal.replace_arith(VariableTable()),
+            Greater(Number(0), Variable("X")),
+        )
         self.assertEqual(
             Greater(Variable("X"), Number(0)).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
@@ -278,10 +308,14 @@ class TestBuiltin(unittest.TestCase):
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            Greater(Variable("X"), String("f")).match(Greater(Number(1), String("g"))), None
+            Greater(Variable("X"), String("f")).match(Greater(Number(1), String("g"))),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            Greater(Variable("X"), Variable("X")).match(Greater(Number(1), String("f"))), None
+            Greater(Variable("X"), Variable("X")).match(
+                Greater(Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
     def test_less_equal(self):
@@ -303,13 +337,18 @@ class TestBuiltin(unittest.TestCase):
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literals occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # replace arithmetic terms
-        self.assertEqual(var_literal.replace_arith(VariableTable()), LessEqual(Number(0), Variable("X")))
+        self.assertEqual(
+            var_literal.replace_arith(VariableTable()),
+            LessEqual(Number(0), Variable("X")),
+        )
         self.assertEqual(
             LessEqual(Variable("X"), Number(0)).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
@@ -324,7 +363,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertEqual(ground_literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet(unsafe={Variable("X")}))
         self.assertEqual(
-            LessEqual(Variable("Y"), Variable("X")).safety(), SafetyTriplet(unsafe={Variable("X"), Variable("Y")})
+            LessEqual(Variable("Y"), Variable("X")).safety(),
+            SafetyTriplet(unsafe={Variable("X"), Variable("Y")}),
         )
         # evaluation
         self.assertEqual(LessEqual(Number(0), String("x")).eval(), True)
@@ -343,14 +383,22 @@ class TestBuiltin(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            LessEqual(Variable("X"), String("f")).match(LessEqual(Number(1), String("f"))),
+            LessEqual(Variable("X"), String("f")).match(
+                LessEqual(Number(1), String("f"))
+            ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            LessEqual(Variable("X"), String("f")).match(LessEqual(Number(1), String("g"))), None
+            LessEqual(Variable("X"), String("f")).match(
+                LessEqual(Number(1), String("g"))
+            ),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            LessEqual(Variable("X"), Variable("X")).match(LessEqual(Number(1), String("f"))), None
+            LessEqual(Variable("X"), Variable("X")).match(
+                LessEqual(Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
     def test_greater_equal(self):
@@ -366,19 +414,26 @@ class TestBuiltin(unittest.TestCase):
         # equality
         self.assertEqual(ground_literal, GreaterEqual(Number(0), String("x")))
         # hashing
-        self.assertEqual(hash(ground_literal), hash(GreaterEqual(Number(0), String("x"))))
+        self.assertEqual(
+            hash(ground_literal), hash(GreaterEqual(Number(0), String("x")))
+        )
         # ground
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
         self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
-        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
+        self.assertTrue(
+            var_literal.vars() == var_literal.global_vars() == {Variable("X")}
+        )
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # replace arithmetic variables
-        self.assertEqual(var_literal.replace_arith(VariableTable()), GreaterEqual(Number(0), Variable("X")))
+        self.assertEqual(
+            var_literal.replace_arith(VariableTable()),
+            GreaterEqual(Number(0), Variable("X")),
+        )
         self.assertEqual(
             GreaterEqual(Variable("X"), Number(0)).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
@@ -386,21 +441,26 @@ class TestBuiltin(unittest.TestCase):
             GreaterEqual(Number(1), Number(0)),
         )  # NOTE: substitution is invalid
         self.assertEqual(
-            GreaterEqual(Number(0), Minus(Variable(("X")))).replace_arith(VariableTable()),
+            GreaterEqual(Number(0), Minus(Variable(("X")))).replace_arith(
+                VariableTable()
+            ),
             GreaterEqual(Number(0), ArithVariable(0, Minus(Variable("X")))),
         )
         # safety characterization
         self.assertEqual(ground_literal.safety(), SafetyTriplet())
         self.assertEqual(var_literal.safety(), SafetyTriplet(unsafe={Variable("X")}))
         self.assertEqual(
-            GreaterEqual(Variable("Y"), Variable("X")).safety(), SafetyTriplet(unsafe={Variable("X"), Variable("Y")})
+            GreaterEqual(Variable("Y"), Variable("X")).safety(),
+            SafetyTriplet(unsafe={Variable("X"), Variable("Y")}),
         )
         # evaluation
         self.assertEqual(GreaterEqual(Number(0), String("x")).eval(), False)
         self.assertEqual(GreaterEqual(Number(0), Number(1)).eval(), False)
         self.assertEqual(GreaterEqual(Number(0), Number(0)).eval(), True)
         self.assertRaises(ValueError, GreaterEqual(Number(0), Variable("X")).eval)
-        self.assertRaises(ValueError, GreaterEqual(Number(0), Minus(Variable("X"))).eval)
+        self.assertRaises(
+            ValueError, GreaterEqual(Number(0), Minus(Variable("X"))).eval
+        )
 
         # substitute
         self.assertEqual(
@@ -411,14 +471,22 @@ class TestBuiltin(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            GreaterEqual(Variable("X"), String("f")).match(GreaterEqual(Number(1), String("f"))),
+            GreaterEqual(Variable("X"), String("f")).match(
+                GreaterEqual(Number(1), String("f"))
+            ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            GreaterEqual(Variable("X"), String("f")).match(GreaterEqual(Number(1), String("g"))), None
+            GreaterEqual(Variable("X"), String("f")).match(
+                GreaterEqual(Number(1), String("g"))
+            ),
+            None,
         )  # ground terms don't match
         self.assertEqual(
-            GreaterEqual(Variable("X"), Variable("X")).match(GreaterEqual(Number(1), String("f"))), None
+            GreaterEqual(Variable("X"), Variable("X")).match(
+                GreaterEqual(Number(1), String("f"))
+            ),
+            None,
         )  # assignment conflict
 
 

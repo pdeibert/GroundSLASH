@@ -9,9 +9,9 @@ class SpecialChar(Enum):
     TAU = "\u03C4"  # τ
 
 
-VARIABLE_RE = re.compile(fr"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")
+VARIABLE_RE = re.compile(rf"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")
 SYM_CONST_RE = re.compile(
-    fr"^[a-z{SpecialChar.ALPHA.value}{SpecialChar.EPS.value}{SpecialChar.ETA.value}][a-zA-Z0-1_]*"
+    rf"^[a-z{SpecialChar.ALPHA.value}{SpecialChar.EPS.value}{SpecialChar.ETA.value}][a-zA-Z0-1_]*"
 )
 
 

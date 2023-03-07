@@ -11,7 +11,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def rewrite_aggregate(
-    literal: "AggregateLiteral", aggr_counter: int, glob_vars: Set["Variable"], body_literals: Iterable["Literal"]
+    literal: "AggregateLiteral",
+    aggr_counter: int,
+    glob_vars: Set["Variable"],
+    body_literals: Iterable["Literal"],
 ) -> Tuple["AlphaLiteral", "EpsRule", List["EtaRule"]]:
 
     # TODO: if this does not work due to circular imports, provide it as a method in program (or someplace else)
@@ -23,7 +26,11 @@ def rewrite_aggregate(
 
     # ----- epsilon rule -----
     eps_rule = EpsRule.from_scratch(
-        aggr_counter, var_tuple, *literal.guards, literal.func.base(), LiteralTuple(*body_literals)
+        aggr_counter,
+        var_tuple,
+        *literal.guards,
+        literal.func.base(),
+        LiteralTuple(*body_literals)
     )
 
     # ----- eta rules -----
@@ -31,7 +38,13 @@ def rewrite_aggregate(
 
     for element_counter, element in enumerate(literal.elements):
         eta_rules.append(
-            EtaRule.from_scratch(aggr_counter, element_counter, var_tuple, element, LiteralTuple(*body_literals))
+            EtaRule.from_scratch(
+                aggr_counter,
+                element_counter,
+                var_tuple,
+                element,
+                LiteralTuple(*body_literals),
+            )
         )
 
     return (alpha_literal, eps_rule, eta_rules)
