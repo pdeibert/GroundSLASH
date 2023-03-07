@@ -35,6 +35,15 @@ class ArithTerm(Term, ABC):
     def eval(self) -> int:
         pass
 
+    @property
+    def operands(self) -> Tuple[Term, Term]:
+        return (self.loperand, self.roperand)
+
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
+        return SafetyTriplet(unsafe=set().union(*tuple(operand.vars() for operand in self.operands)))
+
     def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the expression with another one."""
         if not (self.ground and other.ground):
@@ -77,13 +86,12 @@ class Minus(ArithTerm):
     def ground(self) -> bool:
         return self.operand.ground
 
+    @property
+    def operands(self) -> Tuple[Term]:
+        return (self.operand,)
+
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.operand.vars(global_only)
-
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=self.operand.vars())
 
     def eval(self) -> int:
         if not self.ground:
@@ -139,15 +147,6 @@ class Add(ArithTerm):
 
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
-
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
-
-    @property
-    def operands(self) -> Tuple[Term, Term]:
-        return (self.loperand, self.roperand)
 
     def eval(self) -> int:
         if not self.ground:
@@ -215,15 +214,6 @@ class Sub(ArithTerm):
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
-
-    @property
-    def operands(self) -> Tuple[Term, Term]:
-        return (self.loperand, self.roperand)
-
     def eval(self) -> int:
         if not self.ground:
             raise Exception("Cannot evaluate non-ground arithmetic term.")
@@ -290,15 +280,6 @@ class Mult(ArithTerm):
 
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
-
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
-
-    @property
-    def operands(self) -> Tuple[Term, Term]:
-        return (self.loperand, self.roperand)
 
     def eval(self) -> int:
         if not self.ground:
@@ -389,15 +370,6 @@ class Div(ArithTerm):
 
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
-
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet(unsafe=self.loperand.vars().union(self.roperand.vars()))
-
-    @property
-    def operands(self) -> Tuple[Term, Term]:
-        return (self.loperand, self.roperand)
 
     def eval(self) -> int:
         if not self.ground:

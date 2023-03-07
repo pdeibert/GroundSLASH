@@ -145,6 +145,11 @@ class AnonVariable(Variable):
         self.val = f"_{id}"
         self.id = id
 
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
+        return SafetyTriplet()
+
     def __eq__(self, other: Expr) -> str:
         return isinstance(other, AnonVariable) and other.val == self.val and other.id == self.id
 
@@ -339,7 +344,7 @@ class TermTuple():
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
     ) -> Tuple["SafetyTriplet", ...]:
-        return tuple(term.safety() for term in self.terms)
+        return tuple(term.safety(rule=rule, global_vars=global_vars) for term in self.terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
         return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))

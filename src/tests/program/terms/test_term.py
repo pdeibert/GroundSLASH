@@ -140,7 +140,7 @@ class TestTerm(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
-        self.assertEqual(term.safety(), SafetyTriplet({term}))
+        self.assertEqual(term.safety(), SafetyTriplet())
         # simplify
         self.assertEqual(term.simplify(), term)
 
