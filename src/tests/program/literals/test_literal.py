@@ -5,6 +5,7 @@ from aspy.program.literals import LiteralTuple, PredicateLiteral
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
 from aspy.program.variable_table import VariableTable
+from aspy.program.safety_characterization import SafetyTriplet
 
 
 class TestLiteral(unittest.TestCase):
@@ -48,9 +49,9 @@ class TestLiteral(unittest.TestCase):
                 PredicateLiteral("q", ArithVariable(0, Minus(Variable("Y")))),
             ),
         )
-        self.assertEqual(literals.safety(), (literals[0].safety(), literals[1].safety()))
+        self.assertEqual(literals.safety(), SafetyTriplet.closure(literals[0].safety(), literals[1].safety()))
         # safety characterization
-        self.assertEqual(literals.safety(), (literals[0].safety(), literals[1].safety()))
+        self.assertEqual(literals.safety(), SafetyTriplet.closure(literals[0].safety(), literals[1].safety()))
 
         # substitute
         self.assertEqual(

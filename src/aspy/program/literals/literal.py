@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Iterator, Optional, Set, Tuple, Union
 
 from aspy.program.expression import Expr
 from aspy.program.substitution import AssignmentError, Substitution
+from aspy.program.safety_characterization import SafetyTriplet
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query
-    from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.statements import Statement
     from aspy.program.terms import Variable
     from aspy.program.variable_table import VariableTable
@@ -85,8 +85,8 @@ class LiteralTuple:
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
-    ) -> Tuple["SafetyTriplet", ...]:
-        return tuple(literal.safety(rule=rule, global_vars=global_vars) for literal in self.literals)
+    ) -> "SafetyTriplet":
+        return SafetyTriplet.closure(*tuple(literal.safety(rule, global_vars) for literal in self.literals))
 
     def without(self, *literals: Literal) -> "LiteralTuple":
         return LiteralTuple(*(literal for literal in self.literals if not literal in literals))

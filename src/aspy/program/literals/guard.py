@@ -1,11 +1,14 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Set, Optional, Union, Tuple, NamedTuple
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.operators import RelOp
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Term
+    from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
+    from aspy.program.safety_characterization import SafetyTriplet
+    from aspy.program.statements import Statement
+    from aspy.program.query import Query
 
 
 class Guard(NamedTuple):
@@ -36,6 +39,14 @@ class Guard(NamedTuple):
         if not self.right:
             return Guard(-self.op, self.term, True)
         return self.copy()
+
+    def vars(self, global_only: bool=False) -> Set["Variable"]:
+        return self.bound.vars(global_only)
+
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> "SafetyTriplet":
+        return self.bound.safety(rule, global_vars)
 
     def ground(self) -> bool:
         return self.bound.ground

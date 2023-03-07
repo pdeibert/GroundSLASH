@@ -145,7 +145,7 @@ class DisjunctiveRule(Rule):
     @cached_property
     def safe(self) -> bool:
         global_vars = self.vars(global_only=True)
-        body_safety = SafetyTriplet.closure(*self.body.safety(global_vars=global_vars))
+        body_safety = self.body.safety(global_vars=global_vars)
 
         return body_safety == SafetyTriplet(global_vars)
 

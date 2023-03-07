@@ -31,9 +31,12 @@ def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
 class AggregateElement(Expr):
     """Represents an aggregate element."""
 
-    def __init__(self, terms: Optional["TermTuple"] = None, literals: Optional["LiteralTuple"] = None) -> None:
-        self.terms = terms if terms is not None else tuple()
-        self.literals = literals if literals is not None else tuple()
+    def __init__(self, terms: Optional[Union[Tuple["Term", ...], "TermTuple"]] = None, literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]] = None) -> None:
+        if literals is None: literals = LiteralTuple()
+        if terms is None: terms = TermTuple()
+
+        self.terms = terms if isinstance(terms, TermTuple) else TermTuple(terms)
+        self.literals = literals if isinstance(literals, LiteralTuple) else LiteralTuple(literals)
 
     def __eq__(self, other: Expr) -> bool:
         return isinstance(other, AggregateElement) and self.terms == other.terms and self.literals == other.literals
@@ -649,7 +652,7 @@ class AggregateLiteral(Literal):
                 self.rguard = guard
             else:
                 if self.lguard is not None:
-                    raise ValueError("Multiple right guards specified for aggregate.")
+                    raise ValueError("Multiple left guards specified for aggregate.")
                 self.lguard = guard
 
         self.func = func
@@ -696,7 +699,7 @@ class AggregateLiteral(Literal):
     def invars(self) -> Set["Variable"]:
         return set().union(
             *tuple(element.vars() for element in self.elements)
-        )  # TODO: does not quite follow the definition in ASP-Core-2?
+        )
 
     def outvars(self) -> Set["Variable"]:
         return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
@@ -746,11 +749,11 @@ class AggregateLiteral(Literal):
                 guard_safeties.append(
                     SafetyTriplet(
                         unsafe=aggr_global_vars,  # global inner variables and variables in guard term
-                        rules=set([SafetyRule(var, aggr_global_invars) for var in guard.bound.safety().safe]),
+                        rules=set([SafetyRule(var, aggr_global_invars) for var in guard.safety().safe]),
                     ).normalize()
                 )
 
-        # TODO: can be simplified?
+        # TODO: is this even necessary?
         if len(guard_safeties) == 1:
             return guard_safeties[0]
         # both guards specified
