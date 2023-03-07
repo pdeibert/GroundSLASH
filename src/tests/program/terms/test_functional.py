@@ -42,8 +42,8 @@ class TestFunctional(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(
             Functional("f", Minus(Variable("X")), String("x")).replace_arith(VariableTable()),

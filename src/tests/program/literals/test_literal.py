@@ -40,7 +40,7 @@ class TestLiteral(unittest.TestCase):
         # ground
         self.assertFalse(literals.ground)
         # variables
-        self.assertTrue(literals.vars() == literals.vars(global_only=True) == {Variable("X"), Variable("Y")})
+        self.assertTrue(literals.vars() == literals.global_vars() == {Variable("X"), Variable("Y")})
         # replace arithmetic terms
         self.assertEqual(
             literals.replace_arith(VariableTable()),

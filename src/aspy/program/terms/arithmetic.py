@@ -39,6 +39,9 @@ class ArithTerm(Term, ABC):
     def operands(self) -> Tuple[Term, Term]:
         return (self.loperand, self.roperand)
 
+    def vars(self) -> Set["Variable"]:
+        return set().union(*tuple(operand.vars() for operand in self.operands))
+
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
     ) -> SafetyTriplet:
@@ -89,9 +92,6 @@ class Minus(ArithTerm):
     @property
     def operands(self) -> Tuple[Term]:
         return (self.operand,)
-
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.operand.vars(global_only)
 
     def eval(self) -> int:
         if not self.ground:
@@ -144,9 +144,6 @@ class Add(ArithTerm):
     @cached_property
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
-
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
     def eval(self) -> int:
         if not self.ground:
@@ -211,9 +208,6 @@ class Sub(ArithTerm):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
-
     def eval(self) -> int:
         if not self.ground:
             raise Exception("Cannot evaluate non-ground arithmetic term.")
@@ -277,9 +271,6 @@ class Mult(ArithTerm):
     @cached_property
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
-
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
     def eval(self) -> int:
         if not self.ground:
@@ -367,9 +358,6 @@ class Div(ArithTerm):
     @cached_property
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
-
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
 
     def eval(self) -> int:
         if not self.ground:

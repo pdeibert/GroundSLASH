@@ -144,7 +144,7 @@ class DisjunctiveRule(Rule):
 
     @cached_property
     def safe(self) -> bool:
-        global_vars = self.vars(global_only=True)
+        global_vars = self.global_vars()
         body_safety = self.body.safety(global_vars=global_vars)
 
         return body_safety == SafetyTriplet(global_vars)
@@ -166,7 +166,7 @@ class DisjunctiveRule(Rule):
     ) -> "DisjunctiveRule":
 
         # global variables
-        glob_vars = self.vars(global_only=True)
+        glob_vars = self.global_vars(self)
 
         # group literals
         non_aggr_literals = []

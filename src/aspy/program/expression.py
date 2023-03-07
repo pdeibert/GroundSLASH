@@ -14,7 +14,11 @@ class Expr(ABC):
     __slots__ = "ground"
 
     @abstractmethod  # pragma: no cover
-    def vars(self, global_only: bool = False) -> Set["Variable"]:  # type: ignore
+    def vars(self) -> Set["Variable"]:  # type: ignore
+        pass
+
+    @abstractmethod  # pragma: no cover
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:  # type: ignore
         pass
 
     @abstractmethod  # pragma: no cover

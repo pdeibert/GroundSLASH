@@ -116,10 +116,10 @@ class NormalRule(Rule):
 
     @cached_property
     def safe(self) -> bool:
-        global_vars = self.vars(global_only=True)
-        body_safety = self.body.safety(global_vars=global_vars)
+        glob_vars = self.global_vars(self)
+        body_safety = self.body.safety(global_vars=glob_vars)
 
-        return body_safety == SafetyTriplet(global_vars)
+        return body_safety == SafetyTriplet(glob_vars)
 
     @cached_property
     def ground(self) -> bool:
@@ -141,7 +141,7 @@ class NormalRule(Rule):
     ) -> "NormalRule":
 
         # global variables
-        glob_vars = self.vars(global_only=True)
+        glob_vars = self.global_vars()
 
         # group literals
         non_aggr_literals = []

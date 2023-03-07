@@ -35,7 +35,7 @@ class TestVariableTable(unittest.TestCase):
             )
         )
         self.assertTrue(
-            var_table.vars() == var_table.vars(True) == {Variable("X"), Variable("Y"), AnonVariable(0), AnonVariable(1)}
+            var_table.vars() == var_table.global_vars() == {Variable("X"), Variable("Y"), AnonVariable(0), AnonVariable(1)}
         )
         self.assertEqual(var_table.arith_vars(), set())
         self.assertEqual(var_table.anon_counter, 2)
@@ -69,7 +69,7 @@ class TestVariableTable(unittest.TestCase):
         )
         self.assertTrue(
             var_table.vars()
-            == var_table.vars(True)
+            == var_table.global_vars()
             == {Variable("X"), Variable("Y"), AnonVariable(0), AnonVariable(1), ArithVariable(0, Variable("Z"))}
         )
         self.assertEqual(var_table.arith_vars(), {ArithVariable(0, Variable("Z"))})

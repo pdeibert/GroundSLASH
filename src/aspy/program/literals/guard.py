@@ -40,8 +40,11 @@ class Guard(NamedTuple):
             return Guard(-self.op, self.term, True)
         return self.copy()
 
-    def vars(self, global_only: bool=False) -> Set["Variable"]:
-        return self.bound.vars(global_only)
+    def vars(self) -> Set["Variable"]:
+        return self.bound.vars()
+
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.bound.global_vars()
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None

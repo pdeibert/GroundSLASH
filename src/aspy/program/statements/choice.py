@@ -9,9 +9,10 @@ from aspy.program.safety_characterization import SafetyTriplet
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import Guard, PredicateLiteral
+    from aspy.program.literals import Guard, PredicateLiteral, Literal
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
+    from aspy.program.query import Query
 
     from .statement import Statement
 
@@ -19,21 +20,21 @@ if TYPE_CHECKING:  # pragma: no cover
 class ChoiceElement(Expr):
     """Choice element."""
 
-    def __init__(self, atom: "PredicateLiteral", literals: Optional["LiteralTuple"] = None) -> None:
+    def __init__(self, atom: "PredicateLiteral", literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]]=None) -> None:
         if literals is None:
             literals = LiteralTuple()
 
-        # TODO: debug tests for literals types
-
         self.atom = atom
-        self.literals = literals
+        self.literals = literals if isinstance(literals, LiteralTuple) else LiteralTuple(*literals)
 
     def __str__(self) -> str:
-        return f"{str(self.atom)}:{','.join([str(literal) for literal in self.literals])}"
+        return str(self.atom) + (
+            f":{','.join([str(literal) for literal in self.literals])}" if self.literals else ""
+        )
 
     @property
     def head(self) -> LiteralTuple:
-        return LiteralTuple([self.atom])
+        return LiteralTuple(self.atom)
 
     @property
     def body(self) -> LiteralTuple:
@@ -41,7 +42,7 @@ class ChoiceElement(Expr):
 
     @cached_property
     def ground(self) -> bool:
-        return self.atom.ground and all(literal.ground for literal in self.literals)
+        return self.atom.ground and self.literals.ground
 
     def vars(self, global_only: bool = False) -> Set["Variable"]:
         # TODO: global
@@ -62,23 +63,19 @@ class Choice(Expr):
 
     def __init__(
         self,
-        elements: Optional[Tuple[ChoiceElement]] = None,
+        elements: Tuple[ChoiceElement],
         guards: Optional[Union["Guard", Tuple["Guard", ...]]] = None,
     ):
-        if guards is None:
-            guards = tuple()
-
         # initialize left and right guard to 'None'
         self.lguard, self.rguard = None, None
+
+        if guards is None:
+            guards = tuple()
 
         # single guard specified
         if isinstance(guards, Guard):
             # wrap in tuple
             guards = (guards,)
-        # no guards specified
-        elif guards is None:
-            # TODO: set default guards
-            raise Exception()
         # guard tuple specified
         elif isinstance(guards, Tuple) and len(guards) > 2:
             raise ValueError("Choice expression requires at least one and at most two guards to be specified.")
@@ -87,21 +84,22 @@ class Choice(Expr):
 
         # process guards
         for guard in guards:
+            if guard is None:
+                continue
+
             if guard.right:
                 if self.rguard is not None:
                     raise ValueError("Multiple right guards specified for choice expression.")
                 self.rguard = guard
             else:
                 if self.lguard is not None:
-                    raise ValueError("Multiple right guards specified for choice expression.")
+                    raise ValueError("Multiple left guards specified for choice expression.")
                 self.lguard = guard
-
-        if elements is None:
-            elements = tuple()
 
         self.elements = elements
 
     def __str__(self) -> str:
+        raise Exception()
         return (
             (f"{str(self.lguard.bound)} {str(self.lguard.op)}" if self.lguard else "")
             + f"{{{';'.join([str(literal) for literal in self.elements])}}}"
@@ -112,15 +110,40 @@ class Choice(Expr):
     def ground(self) -> bool:
         return all(element.ground for element in self.elements)
 
+    @property
     def guards(self) -> Tuple[Union["Guard", None], Union["Guard", None]]:
         return (self.lguard, self.rguard)
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        # TODO: global
-        if global_only:
-            raise Exception()
+    def invars(self) -> Set["Variable"]:
+        # TODO: correct ???
+        return set().union(
+            *tuple(element.vars() for element in self.elements)
+        )
 
-        return set().union(guard.bound.vars() for guard in self.guards() if guard is not None)
+    def outvars(self) -> Set["Variable"]:
+        # TODO: correct ???
+        return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
+
+    def vars(self, global_only: bool = False) -> Set["Variable"]:
+        # TODO: correct ???
+        return self.invars().union(self.outvars())
+
+    def eval(self) -> bool:
+        if not self.ground:
+            raise ValueError("Cannot evaluate non-ground choice expression.")
+
+        # TODO: get count of all unique elements
+        # TODO: check if count CAN satisfy bounds
+        raise Exception()
+        # check guards
+        #return (op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval() if self.lguard is not None else True) and (
+        #    op2rel[self.rguard.op](aggr_term, self.rguard.bound).eval() if self.rguard is not None else True
+        #)
+
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
+    ) -> SafetyTriplet:
+        raise Exception()
 
     def substitute(self, subst: "Substitution") -> "Choice":
         if self.ground:
@@ -133,6 +156,23 @@ class Choice(Expr):
         guards = tuple(guard.substitute(subst) if guard is not None else None for guard in self.guards)
 
         return Choice(elements, guards)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ChoiceFact(Fact):
@@ -159,8 +199,13 @@ class ChoiceFact(Fact):
     def __str__(self) -> str:
         return f"{{{','.join([str(literal) for literal in self.head.elements])}}}."
 
+    @property
     def body(self) -> LiteralTuple:
         return LiteralTuple()
+    
+    @property
+    def extended_body(self) -> LiteralTuple:
+        return self.choice.literals
 
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":
         raise Exception()
@@ -213,9 +258,15 @@ class ChoiceRule(Rule):
     def body(self) -> LiteralTuple:
         return self.literals
 
+    @property
+    def extended_body(self) -> LiteralTuple:
+        return LiteralTuple(*self.literals, *self.choice.literals)
+
     @cached_property
     def safe(self) -> bool:
-        global_vars = self.vars(global_only=True)
+        raise Exception()
+
+        global_vars = self.global_vars(self)
         body_safety = SafetyTriplet.closure(self.body.safety(global_vars=global_vars))
 
         return body_safety == SafetyTriplet(global_vars)

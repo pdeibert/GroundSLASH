@@ -51,8 +51,11 @@ class Statement(Expr, ABC):
 
         return self.__var_table
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.var_table.vars(global_only)
+    def vars(self) -> Set["Variable"]:
+        return self.var_table.vars()
+
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.var_table.global_vars()
 
     def safety(
         self, rule: Optional["Statement"] = None, global_vars: Optional[Set["Variable"]] = None
@@ -67,7 +70,7 @@ class Statement(Expr, ABC):
 
         # mark global variables
         self.__var_table.update(
-            {var: True for var in self.head.vars(global_only=True).union(self.body.vars(global_only=True))}
+            {var: True for var in self.head.global_vars(self).union(self.body.global_vars(self))}
         )
 
     @abstractmethod  # pragma: no cover

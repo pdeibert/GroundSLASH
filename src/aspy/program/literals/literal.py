@@ -38,6 +38,9 @@ class Literal(Expr, ABC):
         """Tries to match the expression with another one."""
         pass
 
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.vars()
+
 
 class LiteralTuple:
     """Represents a collection of literals."""
@@ -80,8 +83,11 @@ class LiteralTuple:
     def neg_occ(self) -> Set["Literal"]:
         return set().union(*tuple(literal.neg_occ() for literal in self.literals))
 
-    def vars(self, global_only=False) -> Set["Variable"]:
-        return set().union(*tuple(literal.vars(global_only) for literal in self.literals))
+    def vars(self) -> Set["Variable"]:
+        return set().union(*tuple(literal.vars() for literal in self.literals))
+
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return set().union(*tuple(literal.global_vars(statement) for literal in self.literals))
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None

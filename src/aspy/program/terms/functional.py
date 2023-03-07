@@ -65,9 +65,9 @@ class Functional(Term):
 
         return False
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.terms.vars(global_only)
-
+    def vars(self) -> Set["Variable"]:
+        return self.terms.vars()
+    
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
     ) -> SafetyTriplet:

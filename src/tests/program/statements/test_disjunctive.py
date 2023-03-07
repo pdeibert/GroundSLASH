@@ -60,8 +60,8 @@ class TestDisjunctive(unittest.TestCase):
         self.assertTrue(ground_rule.safe)
         self.assertFalse(var_rule.safe)
         # variables
-        self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
-        self.assertTrue(var_rule.vars() == var_rule.vars(True) == {Variable("X")})
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
         # TODO: replace arithmetic terms
 
         # substitution
@@ -160,9 +160,9 @@ class TestDisjunctive(unittest.TestCase):
             ).contains_aggregates
         )
         # variables
-        self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
-        self.assertTrue(unsafe_var_rule.vars() == unsafe_var_rule.vars(True) == {Variable("X")})
-        self.assertTrue(safe_var_rule.vars() == safe_var_rule.vars(True) == {Variable("X")})
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(unsafe_var_rule.vars() == unsafe_var_rule.global_vars() == {Variable("X")})
+        self.assertTrue(safe_var_rule.vars() == safe_var_rule.global_vars() == {Variable("X")})
         # TODO: replace arithmetic terms
 
         # substitution

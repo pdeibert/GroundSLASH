@@ -83,8 +83,11 @@ class AggregateElement(Expr):
         # check if all condition literals are part of the specified set
         return all(literal in literals for literal in self.literals)
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.head.vars(global_only).union(self.body.vars(global_only))
+    def vars(self) -> Set["Variable"]:
+        return self.head.vars().union(self.body.vars())
+
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.head.global_vars().union(self.body.global_vars())
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
@@ -108,13 +111,6 @@ class AggregateElement(Expr):
 
 class AggregateFunction(ABC):
     """Abstract base class for all aggregate functions."""
-
-    def vars(self, global_only: bool = False, bound_only: bool = False) -> Set["Variable"]:
-        return (
-            set().union(*tuple(element.vars() for element in self.elements))
-            if not (bound_only or global_only)
-            else set()
-        )  # TODO: does not quite follow the definition in ASP-Core-2?
 
     @abstractmethod  # pragma: no cover
     def eval(self, elements: Set["TermTuple"]) -> Number:
@@ -704,8 +700,11 @@ class AggregateLiteral(Literal):
     def outvars(self) -> Set["Variable"]:
         return set().union(*tuple(guard.bound.vars() for guard in self.guards if guard is not None))
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.outvars() if global_only else self.invars().union(self.outvars())
+    def vars(self) -> Set["Variable"]:
+        return self.invars().union(self.outvars())
+
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.outvars()
 
     def eval(self) -> bool:
         if not self.ground:
@@ -730,7 +729,7 @@ class AggregateLiteral(Literal):
                 )
 
             # get global variables from rule
-            global_vars = rule.vars(global_only=True)
+            global_vars = rule.global_vars()
 
         # set of global variables that appear inside the aggregate
         aggr_global_invars = self.invars().intersection(global_vars)

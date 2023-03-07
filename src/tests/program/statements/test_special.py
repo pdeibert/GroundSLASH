@@ -124,8 +124,8 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(ground_rule.safe)
         self.assertFalse(var_rule.safe)
         # variables
-        self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
-        self.assertTrue(var_rule.vars() == var_rule.vars(True) == set(global_vars))
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(var_rule.vars() == var_rule.global_vars() == set(global_vars))
         # TODO: replace arithmetic terms
         # TODO: gather variable assignement
 
@@ -201,8 +201,8 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(ground_rule.safe)
         self.assertFalse(var_rule.safe)
         # variables
-        self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
-        self.assertTrue(var_rule.vars() == var_rule.vars(True) == set(global_vars + local_vars))
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(var_rule.vars() == var_rule.global_vars() == set(global_vars + local_vars))
         # TODO: replace arithmetic terms
         # TODO: gather variable assignement
 

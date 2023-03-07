@@ -21,7 +21,7 @@ class TestSpecial(unittest.TestCase):
 
         # check initialization
         self.assertTrue(literal.aggr_id == naf_literal.aggr_id == 1)
-        self.assertTrue(literal.global_vars == naf_literal.global_vars == vars)
+        self.assertTrue(literal.glob_vars == naf_literal.glob_vars == vars)
         self.assertTrue(literal.terms == naf_literal.terms == TermTuple(Number(1), Variable("Y")))
         # string representation
         self.assertEqual(str(literal), f"{SpecialChar.ALPHA.value}{1}(1,Y)")
@@ -90,7 +90,7 @@ class TestSpecial(unittest.TestCase):
 
         # check initialization
         self.assertTrue(literal.aggr_id == 1)
-        self.assertEqual(literal.global_vars, vars)
+        self.assertEqual(literal.glob_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable("Y")))
         # string representation
         self.assertEqual(str(literal), f"{SpecialChar.EPS.value}{1}(1,Y)")
@@ -158,7 +158,7 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(literal.aggr_id == 1)
         self.assertTrue(literal.element_id == 3)
         self.assertEqual(literal.local_vars, local_vars)
-        self.assertEqual(literal.global_vars, global_vars)
+        self.assertEqual(literal.glob_vars, global_vars)
         self.assertEqual(literal.terms, TermTuple(Variable("L"), Number(1), Variable("Y")))
         # string representation
         self.assertEqual(str(literal), f"{SpecialChar.ETA.value}{1}_{3}(L,1,Y)")

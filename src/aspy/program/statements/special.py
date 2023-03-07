@@ -31,14 +31,14 @@ class EpsRule(NormalRule):
         return self.atom.aggr_id
 
     @property
-    def global_vars(self) -> TermTuple:
-        return self.atom.global_vars
+    def glob_vars(self) -> TermTuple:
+        return self.atom.glob_vars
 
     @classmethod
     def from_scratch(
         cls,
         aggr_id: int,
-        global_vars: TermTuple,
+        glob_vars: TermTuple,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
         base_value: "Term",
@@ -47,13 +47,13 @@ class EpsRule(NormalRule):
 
         # check if global vars is tuple (important for FIXED order)
         if aspy.debug():
-            if not isinstance(global_vars, TermTuple):
+            if not isinstance(glob_vars, TermTuple):
                 raise ValueError(f"Argument 'global_vars' for {cls} must be of type {TermTuple}.")
             if (lguard is not None and lguard.right) or (rguard is not None and not rguard.right):
                 raise ValueError(f"Left or right guard for {cls} must indicate the correct side.")
 
         # create head atom/literal
-        atom = EpsLiteral(aggr_id, global_vars, deepcopy(global_vars))
+        atom = EpsLiteral(aggr_id, glob_vars, deepcopy(glob_vars))
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
         rguard_literal = op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
@@ -109,24 +109,24 @@ class EtaRule(NormalRule):
         return self.atom.local_vars
 
     @property
-    def global_vars(self) -> int:
-        return self.atom.global_vars
+    def glob_vars(self) -> int:
+        return self.atom.glob_vars
 
     @classmethod
     def from_scratch(
         cls,
         aggr_id: int,
         element_id: int,
-        global_vars: TermTuple,
+        glob_vars: TermTuple,
         element: "AggregateElement",
         non_aggr_literals: "LiteralTuple",
     ) -> "EtaRule":
 
         # compute local variables
-        local_vars = TermTuple(*tuple(var for var in element.vars() if var not in global_vars))
+        local_vars = TermTuple(*tuple(var for var in element.vars() if var not in glob_vars))
 
         # create head atom/literal
-        atom = EtaLiteral(aggr_id, element_id, local_vars, global_vars, local_vars + global_vars)
+        atom = EtaLiteral(aggr_id, element_id, local_vars, glob_vars, local_vars + glob_vars)
         # combine element literals with non-aggregate literals
         literals = element.literals + non_aggr_literals
 

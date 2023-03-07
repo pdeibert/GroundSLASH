@@ -35,8 +35,8 @@ class TestPredicate(unittest.TestCase):
         self.assertTrue(literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(literal.vars() == literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(literal.vars() == literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(literal.replace_arith(VariableTable()), literal)
         self.assertEqual(var_literal.replace_arith(VariableTable()), var_literal)

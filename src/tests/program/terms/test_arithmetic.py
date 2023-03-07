@@ -43,8 +43,8 @@ class TestArithmetic(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # safety charachterization
         self.assertEqual(ground_term.safety(), SafetyTriplet())
         self.assertEqual(var_term.safety(), SafetyTriplet(unsafe={Variable("X")}))
@@ -92,8 +92,8 @@ class TestArithmetic(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic variable
         self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(3))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
@@ -147,8 +147,8 @@ class TestArithmetic(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic variable
         self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(-1))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
@@ -203,8 +203,8 @@ class TestArithmetic(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic variable
         self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(6))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))
@@ -271,8 +271,8 @@ class TestArithmetic(unittest.TestCase):
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
         # variables
-        self.assertTrue(ground_term.vars() == ground_term.vars(global_only=True) == set())
-        self.assertTrue(var_term.vars() == var_term.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(var_term.vars() == var_term.global_vars() == {Variable("X")})
         # replace arithmetic variable
         self.assertTrue(ground_term.replace_arith(VariableTable()) == ground_term.simplify() == Number(0))
         self.assertEqual(var_term.replace_arith(VariableTable()), ArithVariable(0, var_term))

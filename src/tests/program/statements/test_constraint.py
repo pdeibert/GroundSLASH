@@ -62,8 +62,8 @@ class TestConstraint(unittest.TestCase):
             ).contains_aggregates
         )
         # variables
-        self.assertTrue(ground_rule.vars() == ground_rule.vars(True) == set())
-        self.assertTrue(var_rule.vars() == var_rule.vars(True) == {Variable("X")})
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
         # TODO: replace arithmetic terms
 
         # substitution

@@ -47,12 +47,20 @@ class OptimizeElement(Expr):
     def ground(self) -> bool:
         return self.weight.ground and self.level.ground and self.terms.ground and self.literals.ground
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
+    def vars(self) -> Set["Variable"]:
         return set().union(
-            self.weight.vars(global_only),
-            self.level.vars(global_only),
-            self.terms.vars(global_only),
-            self.literals.vars(global_only),
+            self.weight.vars(),
+            self.level.vars(),
+            self.terms.vars(),
+            self.literals.vars(),
+        )
+
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        return set().union(
+            self.weight.global_vars(),
+            self.level.global_vars(),
+            self.terms.global_vars(),
+            self.literals.global_vars(),
         )
 
     def safety(self, rule: Optional["Statement"], global_vars: Optional[Set["Variable"]] = None) -> "SafetyTriplet":

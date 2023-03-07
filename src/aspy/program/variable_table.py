@@ -91,11 +91,11 @@ class VariableTable:
         # return newly created variable
         return var
 
-    def vars(self, global_only: bool = True) -> Set["Variable"]:
-        if global_only:
-            return set(var for (var, is_global) in self.variables.items() if is_global)
-
+    def vars(self) -> Set["Variable"]:
         return set(self.variables.keys())
+
+    def global_vars(self) -> Set["Variable"]:
+        return set(var for (var, is_global) in self.variables.items() if is_global)
 
     def arith_vars(self) -> Set["ArithVariable"]:
         return set(var for var in self.variables if isinstance(var, ArithVariable))

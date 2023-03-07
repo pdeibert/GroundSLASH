@@ -35,8 +35,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -102,8 +102,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -169,8 +169,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -233,8 +233,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -302,8 +302,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literals occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands
@@ -371,8 +371,8 @@ class TestBuiltin(unittest.TestCase):
         self.assertTrue(ground_literal.ground)
         self.assertFalse(var_literal.ground)
         # variables
-        self.assertTrue(ground_literal.vars() == ground_literal.vars(True) == set())
-        self.assertTrue(var_literal.vars() == var_literal.vars(True) == {Variable("X")})
+        self.assertTrue(ground_literal.vars() == ground_literal.global_vars() == set())
+        self.assertTrue(var_literal.vars() == var_literal.global_vars() == {Variable("X")})
         # positive/negative literal occurrences
         self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
         # operands

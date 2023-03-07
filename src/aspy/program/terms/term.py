@@ -27,8 +27,11 @@ class Term(Expr, ABC):
         """Defines the total ordering operator defined for terms in ASP-Core-2."""
         pass
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
+    def vars(self) -> Set["Variable"]:
         return set()
+    
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.vars()
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None
@@ -113,7 +116,7 @@ class Variable(Term):
     def precedes(self, other: Term) -> bool:
         raise Exception("Total ordering is undefined for non-ground terms.")
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
+    def vars(self) -> Set["Variable"]:
         return {self}
 
     def safety(
@@ -338,8 +341,11 @@ class TermTuple():
 
         return subst
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return set().union(*tuple(term.vars(global_only) for term in self.terms))
+    def vars(self) -> Set["Variable"]:
+        return set().union(*tuple(term.vars() for term in self.terms))
+    
+    def global_vars(self, statement: Optional["Statement"]=None) -> Set["Variable"]:
+        return self.vars()
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None

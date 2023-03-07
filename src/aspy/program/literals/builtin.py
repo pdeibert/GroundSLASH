@@ -38,8 +38,8 @@ class BuiltinLiteral(Literal, ABC):
     def neg_occ(self) -> Set["Literal"]:
         return set()
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        return self.loperand.vars(global_only).union(self.roperand.vars(global_only))
+    def vars(self) -> Set["Variable"]:
+        return self.loperand.vars().union(self.roperand.vars())
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None, global_vars: Optional[Set["Variable"]] = None

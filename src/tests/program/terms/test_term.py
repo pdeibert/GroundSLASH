@@ -36,7 +36,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertTrue(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
+        self.assertTrue(term.vars() == term.global_vars() == set())
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -67,7 +67,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertTrue(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
+        self.assertTrue(term.vars() == term.global_vars() == set())
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -101,7 +101,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertFalse(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == {term})
+        self.assertTrue(term.vars() == term.global_vars() == {term})
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -136,7 +136,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertFalse(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == {term})
+        self.assertTrue(term.vars() == term.global_vars() == {term})
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -171,7 +171,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertTrue(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
+        self.assertTrue(term.vars() == term.global_vars() == set())
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -211,7 +211,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertTrue(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
+        self.assertTrue(term.vars() == term.global_vars() == set())
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -243,7 +243,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertTrue(term.ground)
         # variables
-        self.assertTrue(term.vars() == term.vars(global_only=True) == set())
+        self.assertTrue(term.vars() == term.global_vars() == set())
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -274,7 +274,7 @@ class TestTerm(unittest.TestCase):
         # ground
         self.assertFalse(terms.ground)
         # variables
-        self.assertTrue(terms.vars() == terms.vars(global_only=True) == {Variable("X")})
+        self.assertTrue(terms.vars() == terms.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(
             TermTuple(Number(0), Minus(Variable("X"))).replace_arith(VariableTable()),
