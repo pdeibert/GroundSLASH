@@ -17,9 +17,7 @@ def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashabl
         id: int = -1
         # lowest ID of node on stack reachable from node
         # (including itself; -1: unexplored)
-        low_id: int = (
-            -1
-        )  
+        low_id: int = -1
         on_stack: bool = False
 
     # map original nodes to wrapped counterparts

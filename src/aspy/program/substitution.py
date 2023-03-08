@@ -25,8 +25,8 @@ class Substitution(dict):
         return deepcopy(dict.__getitem__(self, var)) if var in self else deepcopy(var)
 
     def __str__(self) -> str:
-        assignments_str = ','.join(
-            [f'{str(var)}:{str(target)}' for var, target in self.items()]
+        assignments_str = ",".join(
+            [f"{str(var)}:{str(target)}" for var, target in self.items()]
         )
 
         return f"{{{assignments_str}}}"

@@ -44,7 +44,7 @@ class Grounder:
             if isinstance(literal, AggregateLiteral):
                 # TODO: raise exception (should have been replaced)
                 raise ValueError(
-                    f"Aggregate literals should be replaced before calling {cls.select} during grounding." # noqa
+                    f"Aggregate literals should be replaced before calling {cls.select} during grounding."  # noqa
                 )
 
             # either literal is positive (pos_occ() is non-empy) or literal is ground
@@ -220,7 +220,7 @@ class Grounder:
 
         while not converged:
 
-            # ground epsilon rules 
+            # ground epsilon rules
             # (encode the satisfiability of aggregates without any element instances)
             eps_instances.update(
                 set().union(

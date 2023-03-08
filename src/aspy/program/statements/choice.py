@@ -79,7 +79,7 @@ class ChoiceElement(Expr):
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         raise ValueError(
-            "Safety characterization for choice elements is undefined without context." # noqa
+            "Safety characterization for choice elements is undefined without context."  # noqa
         )
 
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
@@ -155,9 +155,9 @@ class Choice(Expr):
         return hash(("choice", self.elements, self.guards))
 
     def __str__(self) -> str:
-        elements_str = ';'.join([str(literal) for literal in self.elements])
-        lguard_str = f'{str(self.lguard)} ' if self.lguard is not None else ''
-        rguard_str = f' {str(self.rguard)}' if self.rguard is not None else ''
+        elements_str = ";".join([str(literal) for literal in self.elements])
+        lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
+        rguard_str = f" {str(self.rguard)}" if self.rguard is not None else ""
 
         return f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
@@ -226,7 +226,7 @@ class ChoiceFact(Fact):
     TODO: u_1,R_1 u_2,R_2 may be omitted.
 
     Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
-    """ # noqa
+    """  # noqa
 
     def __init__(self, head: Choice, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -234,10 +234,7 @@ class ChoiceFact(Fact):
         self.choice = head
 
     def __eq__(self, other: Expr) -> bool:
-        return (
-            isinstance(other, ChoiceFact)
-            and self.head == other.head
-        )
+        return isinstance(other, ChoiceFact) and self.head == other.head
 
     def __hash__(self) -> int:
         return hash(("choice fact", self.head))
@@ -281,7 +278,7 @@ class ChoiceRule(Rule):
     for classical atoms h_1,...,h_m, literals b_1,...,b_n, terms u_1,u_2 and comparison operators R_1,R_2.
 
     Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
-    """ # noqa
+    """  # noqa
 
     def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

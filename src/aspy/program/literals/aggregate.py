@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
-    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes.""" # noqa
+    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes."""  # noqa
     elements = list(element_iterable)
     return chain.from_iterable(
         combinations(elements, n_elements) for n_elements in range(len(elements) + 1)
@@ -111,7 +111,7 @@ class AggregateElement(Expr):
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         raise ValueError(
-            "Safety characterization for aggregate elements is undefined without context." # noqa
+            "Safety characterization for aggregate elements is undefined without context."  # noqa
         )
 
     def substitute(self, subst: "Substitution") -> "AggregateElement":
@@ -257,7 +257,7 @@ class AggregateSum(AggregateFunction):
     ) -> Number:
 
         # empty tuple set
-        if not elements or (positive == negative == False): # noqa (chaining is faster)
+        if not elements or (positive == negative == False):  # noqa (chaining is faster)
             return self.base()
 
         # non-empty set
@@ -544,7 +544,7 @@ class AggregateMin(AggregateFunction):
                     and propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
                 )
             elif op == RelOp.UNEQUAL:
-                # check upper or lower bound as well as 
+                # check upper or lower bound as well as
                 # whether or not J satisfies any elements that are not satisfied under I
                 res &= (
                     get_propagation_result(RelOp.GREATER, bound, get_I_elements())
@@ -676,7 +676,7 @@ class AggregateMax(AggregateFunction):
                     and propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
                 )
             elif op == RelOp.UNEQUAL:
-                # check upper or lower bound as well as 
+                # check upper or lower bound as well as
                 # whether or not J satisfies any elements that are not satisfied under I
                 res &= (
                     get_propagation_result(RelOp.GREATER, bound, get_J_elements())
@@ -708,9 +708,7 @@ class AggregateLiteral(Literal):
             guards = (guards,)
         # guard tuple specified
         elif isinstance(guards, Tuple) and len(guards) not in {1, 2}:
-            raise ValueError(
-                "Aggregate requires at least one and at most two guards."
-            )
+            raise ValueError("Aggregate requires at least one and at most two guards.")
 
         # process guards
         for guard in guards:
@@ -730,14 +728,13 @@ class AggregateLiteral(Literal):
         self.elements = elements
 
     def __str__(self) -> str:
-        elements_str = ';'.join([str(element) for element in self.elements])
-        lguard_str = f'{str(self.lguard)} ' if self.lguard is not None else ''
-        rguard_str = f' {str(self.rguard)}' if self.rguard is not None else ''
+        elements_str = ";".join([str(element) for element in self.elements])
+        lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
+        rguard_str = f" {str(self.rguard)}" if self.rguard is not None else ""
 
         return (
-            ("not " if self.naf else "")
-            + f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
-        )
+            "not " if self.naf else ""
+        ) + f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
     def __eq__(self, other: "Expr") -> bool:
         return (
@@ -809,9 +806,11 @@ class AggregateLiteral(Literal):
 
         if rule is None:
             raise AttributeError(
-                ("Computing safety characterization for 'AggregateLiteral'"
-                 " requires a reference to the encompassing rule or the set"
-                 " of global variables in it.")
+                (
+                    "Computing safety characterization for 'AggregateLiteral'"
+                    " requires a reference to the encompassing rule or the set"
+                    " of global variables in it."
+                )
             )
 
         # get global variables from rule

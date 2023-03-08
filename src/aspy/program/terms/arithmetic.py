@@ -89,8 +89,11 @@ class Minus(ArithTerm):
         return hash(("minus", self.operand))
 
     def __str__(self) -> str:
-        operand_str = f"({str(self.operand)})" \
-            if isinstance(self.operand, ArithTerm) else str(self.operand)
+        operand_str = (
+            f"({str(self.operand)})"
+            if isinstance(self.operand, ArithTerm)
+            else str(self.operand)
+        )
 
         return f"-{operand_str}"
 
@@ -151,10 +154,16 @@ class Add(ArithTerm):
         return hash(("add", self.loperand, self.roperand))
 
     def __str__(self) -> str:
-        loperand_str = f"({str(self.loperand)})" \
-            if isinstance(self.loperand, ArithTerm) else str(self.loperand)
-        roperand_str = f"({str(self.roperand)})" \
-            if isinstance(self.roperand, ArithTerm) else str(self.roperand)
+        loperand_str = (
+            f"({str(self.loperand)})"
+            if isinstance(self.loperand, ArithTerm)
+            else str(self.loperand)
+        )
+        roperand_str = (
+            f"({str(self.roperand)})"
+            if isinstance(self.roperand, ArithTerm)
+            else str(self.roperand)
+        )
 
         return f"{loperand_str}+{roperand_str}"
 
@@ -222,10 +231,16 @@ class Sub(ArithTerm):
         return hash(("sub", self.loperand, self.roperand))
 
     def __str__(self) -> str:
-        loperand_str = f"({str(self.loperand)})" \
-            if isinstance(self.loperand, ArithTerm) else str(self.loperand)
-        roperand_str = f"({str(self.roperand)})" \
-            if isinstance(self.roperand, ArithTerm) else str(self.roperand)
+        loperand_str = (
+            f"({str(self.loperand)})"
+            if isinstance(self.loperand, ArithTerm)
+            else str(self.loperand)
+        )
+        roperand_str = (
+            f"({str(self.roperand)})"
+            if isinstance(self.roperand, ArithTerm)
+            else str(self.roperand)
+        )
 
         return f"{loperand_str}-{roperand_str}"
 
@@ -294,10 +309,16 @@ class Mult(ArithTerm):
         return hash(("mult", self.loperand, self.roperand))
 
     def __str__(self) -> str:
-        loperand_str = f"({str(self.loperand)})" \
-            if isinstance(self.loperand, ArithTerm) else str(self.loperand)
-        roperand_str = f"({str(self.roperand)})" \
-            if isinstance(self.roperand, ArithTerm) else str(self.roperand)
+        loperand_str = (
+            f"({str(self.loperand)})"
+            if isinstance(self.loperand, ArithTerm)
+            else str(self.loperand)
+        )
+        roperand_str = (
+            f"({str(self.roperand)})"
+            if isinstance(self.roperand, ArithTerm)
+            else str(self.roperand)
+        )
 
         return f"{loperand_str}*{roperand_str}"
 
@@ -389,10 +410,16 @@ class Div(ArithTerm):
         return hash(("div", self.loperand, self.roperand))
 
     def __str__(self) -> str:
-        loperand_str = f"({str(self.loperand)})" \
-            if isinstance(self.loperand, ArithTerm) else str(self.loperand)
-        roperand_str = f"({str(self.roperand)})" \
-            if isinstance(self.roperand, ArithTerm) else str(self.roperand)
+        loperand_str = (
+            f"({str(self.loperand)})"
+            if isinstance(self.loperand, ArithTerm)
+            else str(self.loperand)
+        )
+        roperand_str = (
+            f"({str(self.roperand)})"
+            if isinstance(self.roperand, ArithTerm)
+            else str(self.roperand)
+        )
 
         return f"{loperand_str}/{roperand_str}"
 

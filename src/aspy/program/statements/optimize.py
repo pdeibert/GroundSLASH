@@ -35,8 +35,8 @@ class OptimizeElement(Expr):
         self.literals = literals
 
     def __str__(self) -> str:
-        terms_str = ', '.join([str(term) for term in self.terms])
-        literals_str = ', '.join([str(literal) for literal in self.literals])
+        terms_str = ", ".join([str(term) for term in self.terms])
+        literals_str = ", ".join([str(literal) for literal in self.literals])
 
         return f"{str(self.weight)}@{str(self.level)}, {terms_str} : {literals_str}"
 
@@ -131,7 +131,7 @@ class MinimizeStatement(OptimizeStatement):
         :~ b_{11},...,b_{1n}. [w_1@l_1,t_{11},...,t_{1m}]
         ...
         :~ b_{k1},...,b_{kn}. [w_k@l_1,t_{k1},...,t_{km}]
-    """ # noqa
+    """  # noqa
 
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, True)
@@ -163,7 +163,7 @@ class MaximizeStatement(OptimizeStatement):
         :~ b_{11},...,b_{1n}. [-w_1@l_1,t_{11},...,t_{1m}]
         ...
         :~ b_{k1},...,b_{kn}. [-w_k@l_1,t_{k1},...,t_{km}]
-    """ # noqa
+    """  # noqa
 
     def __init__(self, elements: Tuple[OptimizeElement, ...]) -> None:
         super().__init__(elements, False)

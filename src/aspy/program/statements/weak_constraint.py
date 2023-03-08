@@ -40,8 +40,8 @@ class WeakConstraint(Statement):
         self.terms = terms
 
     def __str__(self) -> str:
-        body_str = ', '.join([str(literal) for literal in self.body])
-        terms_str = ', '.join([str(term) for term in self.terms])
+        body_str = ", ".join([str(literal) for literal in self.body])
+        terms_str = ", ".join([str(term) for term in self.terms])
         return f":~ {body_str}. [{str(self.weight)}@{str(self.level)}, {terms_str}]"
 
     @property

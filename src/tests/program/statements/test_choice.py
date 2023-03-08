@@ -2,20 +2,10 @@ import unittest
 from typing import Set
 
 import aspy
-from aspy.program.literals import (
-    Guard,
-    Naf,
-    LiteralTuple,
-    PredicateLiteral,
-)
-from aspy.program.statements import (
-    ChoiceElement,
-    Choice,
-    ChoiceFact,
-    ChoiceRule,
-)
+from aspy.program.literals import Guard, LiteralTuple, Naf, PredicateLiteral
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
+from aspy.program.statements import Choice, ChoiceElement, ChoiceFact, ChoiceRule
 from aspy.program.substitution import Substitution
 from aspy.program.terms import (
     ArithVariable,
@@ -95,14 +85,13 @@ class TestChoice(unittest.TestCase):
         # ground
         self.assertFalse(element.ground)
         # positive/negative literal occurrences
-        self.assertEqual(element.pos_occ(),
-            {PredicateLiteral("p", String("str")), PredicateLiteral("p", Number(0))}
+        self.assertEqual(
+            element.pos_occ(),
+            {PredicateLiteral("p", String("str")), PredicateLiteral("p", Number(0))},
         )
         self.assertEqual(element.neg_occ(), {PredicateLiteral("q", Variable("Y"))})
         # vars
-        self.assertTrue(
-            element.vars() == element.global_vars() == {Variable("Y")}
-        )
+        self.assertTrue(element.vars() == element.global_vars() == {Variable("Y")})
         # safety
         self.assertRaises(Exception, element.safety)
         # replace arithmetic terms

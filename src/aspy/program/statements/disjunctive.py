@@ -39,16 +39,20 @@ class DisjunctiveFact(Fact):
 
         if len(atoms) < 2:
             raise ValueError(
-                (f"Head for {type(self)} requires at least two literals."
-                  " Use {NormalFact} instead.")
+                (
+                    f"Head for {type(self)} requires at least two literals."
+                    " Use {NormalFact} instead."
+                )
             )
 
         if aspy.debug() and not all(
             isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms
         ):
             raise ValueError(
-                (f"Head literals for {type(self)} must all be"
-                  " positive literals of type {PredicateLiteral}.")
+                (
+                    f"Head literals for {type(self)} must all be"
+                    " positive literals of type {PredicateLiteral}."
+                )
             )
 
         self.atoms = LiteralTuple(*atoms)
@@ -98,7 +102,7 @@ class DisjunctiveRule(Rule):
     for classical atoms h_1,...,h_m and literals b_1,...,b_n.
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
-    """ # noqa
+    """  # noqa
 
     deterministic: bool = False
 
@@ -112,21 +116,27 @@ class DisjunctiveRule(Rule):
 
         if len(head) < 2:
             raise ValueError(
-                (f"Head for {type(self)} requires at least two literals."
-                  " Use {NormalRule} instead.")
+                (
+                    f"Head for {type(self)} requires at least two literals."
+                    " Use {NormalRule} instead."
+                )
             )
         if len(body) == 0:
             raise ValueError(
-                (f"Body for {type(self)} may not be empty. "
-                  "Use {DisjunctiveFact} instead.")
+                (
+                    f"Body for {type(self)} may not be empty. "
+                    "Use {DisjunctiveFact} instead."
+                )
             )
 
         if aspy.debug() and not all(
             isinstance(atom, PredicateLiteral) and not atom.naf for atom in head
         ):
             raise ValueError(
-                (f"Head literals for {type(self)} must all be"
-                  " positive literals of type {PredicateLiteral}.")
+                (
+                    f"Head literals for {type(self)} must all be"
+                    " positive literals of type {PredicateLiteral}."
+                )
             )
 
         self.atoms = head if isinstance(head, LiteralTuple) else LiteralTuple(*head)
@@ -145,7 +155,7 @@ class DisjunctiveRule(Rule):
         )
 
     def __str__(self) -> str:
-        literals_str = ', '.join([str(literal) for literal in self.body])
+        literals_str = ", ".join([str(literal) for literal in self.body])
         return f"{' | '.join([str(atom) for atom in self.head])} :- {literals_str}."
 
     @property

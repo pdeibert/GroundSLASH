@@ -98,7 +98,7 @@ class EpsRule(NormalRule):
         )
 
     def gather_var_assignment(self) -> Substitution:
-        """Get substitution of local and global variables from rules. Remaining variables will simply be mapped onto themselves.""" # noqa
+        """Get substitution of local and global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
         return self.atom.gather_var_assignment()
 
 
@@ -179,5 +179,5 @@ class EtaRule(NormalRule):
         )
 
     def gather_var_assignment(self) -> Substitution:
-        """Get substitution of local and global variables from rules. Remaining variables will simply be mapped onto themselves.""" # noqa
+        """Get substitution of local and global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
         return self.atom.gather_var_assignment()

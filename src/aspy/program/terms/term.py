@@ -67,8 +67,10 @@ class Infimum(Term):
     def precedes(self, other: Term) -> bool:
         if not other.ground:
             raise ValueError(
-                ("Cannot compare total ordering with non-ground"
-                 " arithmetic terms or variables")
+                (
+                    "Cannot compare total ordering with non-ground"
+                    " arithmetic terms or variables"
+                )
             )
 
         return True
@@ -91,8 +93,10 @@ class Supremum(Term):
     def precedes(self, other: Term) -> bool:
         if not other.ground:
             raise ValueError(
-                ("Cannot compare total ordering with non-ground"
-                 " arithmetic terms or variables")
+                (
+                    "Cannot compare total ordering with non-ground"
+                    " arithmetic terms or variables"
+                )
             )
 
         return True if isinstance(other, Supremum) else False
@@ -212,8 +216,10 @@ class Number(Term):
     def precedes(self, other: Term) -> bool:
         if not other.ground:
             raise ValueError(
-                ("Cannot compare total ordering with non-ground"
-                 " arithmetic terms or variables")
+                (
+                    "Cannot compare total ordering with non-ground"
+                    " arithmetic terms or variables"
+                )
             )
 
         if isinstance(other, Infimum):
@@ -256,8 +262,10 @@ class SymbolicConstant(Term):
     def precedes(self, other: Term) -> bool:
         if not other.ground:
             raise ValueError(
-                ("Cannot compare total ordering with non-ground"
-                 " arithmetic terms or variables")
+                (
+                    "Cannot compare total ordering with non-ground"
+                    " arithmetic terms or variables"
+                )
             )
 
         if isinstance(other, (Infimum, Number)):
@@ -288,8 +296,10 @@ class String(Term):
     def precedes(self, other: Term) -> bool:
         if not other.ground:
             raise ValueError(
-                ("Cannot compare total ordering with non-ground"
-                 " arithmetic terms or variables")
+                (
+                    "Cannot compare total ordering with non-ground"
+                    " arithmetic terms or variables"
+                )
             )
 
         if isinstance(other, (Infimum, Number, SymbolicConstant)):
