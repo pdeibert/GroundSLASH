@@ -2,14 +2,17 @@ from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
+from aspy.program.terms import Number
 from aspy.program.expression import Expr
-from aspy.program.literals import LiteralTuple
+from aspy.program.literals import Guard, LiteralTuple
+from aspy.program.literals.builtin import op2rel, GreaterEqual
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.operators import RelOp
 
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import Guard, Literal, PredicateLiteral
+    from aspy.program.literals import Literal, PredicateLiteral
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
@@ -118,11 +121,7 @@ class Choice(Expr):
             guards = (guards,)
         # guard tuple specified
         elif isinstance(guards, Tuple) and len(guards) > 2:
-            raise ValueError(
-                "Choice expression requires at least one and at most two guards."
-            )
-        else:
-            raise ValueError(f"Invalid specification of aggregate guards: {guards}.")
+            raise ValueError("Choice expression allows at most two guards.")
 
         # process guards
         for guard in guards:
@@ -159,7 +158,7 @@ class Choice(Expr):
         lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
         rguard_str = f" {str(self.rguard)}" if self.rguard is not None else ""
 
-        return f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
+        return f"{lguard_str}{{{elements_str}}}{rguard_str}"
 
     @cached_property
     def ground(self) -> bool:
@@ -179,22 +178,56 @@ class Choice(Expr):
             *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
         )
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        # TODO: correct ???
+    def vars(self) -> Set["Variable"]:
         return self.invars().union(self.outvars())
+
+    def global_vars(self, statement: "Statement") -> Set["Variable"]:
+        return self.vars().intersection(statement.global_vars())
+
+    def pos_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(element.pos_occ() for element in self.elements))
+
+    def neg_occ(self) -> Set["PredicateLiteral"]:
+        return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     def eval(self) -> bool:
         if not self.ground:
             raise ValueError("Cannot evaluate non-ground choice expression.")
 
-        # TODO: get count of all unique elements
-        # TODO: check if count CAN satisfy bounds
-        raise Exception()
+        n_atoms = Number(len({element.atom for element in self.elements}))
+
+        res = True
+
+        for guard in self.guards:
+            if guard is None:
+                continue
+
+            op, bound, right = guard
+
+            # move operator to right-hand side (for canonical processing)
+            if not right:
+                op = -op
+
+            if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                # make sure there are enough elements to potentially satisfy bound
+                res &= op2rel[op](n_atoms, bound).eval()
+            elif op in {RelOp.EQUAL}:
+                # make sure there are enough elements to potentially satisfy bound
+                # and that bound is not negative (i.e., unsatisfiable)
+                res &= (bound.val >= 0) and GreaterEqual(n_atoms, bound).eval()
+            elif op in {RelOp.UNEQUAL}:
+                # only edge case '!= 0', but no elements (i.e., unsatisfiable)
+                res &= (bound.val != 0) or n_atoms.val > 0
+            else:
+                # make sure that upper bound can be satisfied
+                res &= op2rel[op](Number(0), bound).eval()
+
+        return res
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
-        raise Exception()
+        raise Exception("Safety characterization not defined for choice expressions.")
 
     def substitute(self, subst: "Substitution") -> "Choice":
         if self.ground:
@@ -210,6 +243,18 @@ class Choice(Expr):
         )
 
         return Choice(elements, guards)
+
+    def replace_arith(self, var_table: "VariableTable") -> "Choice":
+        # replace guards
+        guards = (
+            None if guard is None else guard.replace_arith(var_table)
+            for guard in self.guards
+        )
+
+        return Choice(
+            tuple(element.replace_arith(var_table) for element in self.elements),
+            guards,
+        )
 
 
 class ChoiceFact(Fact):
