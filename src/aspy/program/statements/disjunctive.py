@@ -91,6 +91,9 @@ class DisjunctiveFact(Fact):
 
         return DisjunctiveFact(*self.head.substitute(subst))
 
+    def replace_arith(self) -> "DisjunctiveFact":
+        return DisjunctiveFact(*self.head.replace_arith(self.var_table))
+
 
 class DisjunctiveRule(Rule):
     """Disjunctive rule.
@@ -245,4 +248,10 @@ class DisjunctiveRule(Rule):
                 literal if literal not in assembling_map else assembling_map[literal]
                 for literal in self.body
             ),
+        )
+
+    def replace_arith(self) -> "DisjunctiveRule":
+        return DisjunctiveRule(
+            self.head.replace_arith(self.var_table),
+            self.body.replace_arith(self.var_table),
         )

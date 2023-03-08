@@ -66,7 +66,6 @@ class Statement(Expr, ABC):
 
         # initialize variable table
         self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
-        self.__var_table.update(self.body.vars())
 
         # mark global variables
         self.__var_table.update(
@@ -107,9 +106,6 @@ class Fact(Rule, ABC):
     """Abstract base class for all facts."""
 
     contains_aggregates: bool = False
-
-    def rewrite(self) -> Tuple["Fact"]:
-        return (deepcopy(self),)
 
     def rewrite_aggregates(
         self,

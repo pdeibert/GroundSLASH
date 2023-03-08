@@ -276,16 +276,23 @@ class ChoiceFact(Fact):
     def __init__(self, head: Choice, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
+        # TODO: correctly infer determinism
+        self.deterministic: bool = False
+
         self.choice = head
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, ChoiceFact) and self.head == other.head
+        return isinstance(other, ChoiceFact) and self.choice == other.choice
 
     def __hash__(self) -> int:
-        return hash(("choice fact", self.head))
+        return hash(("choice fact", self.choice))
 
     def __str__(self) -> str:
-        return f"{{{','.join([str(literal) for literal in self.head.elements])}}}."
+        return f"{str(self.choice)}."
+
+    @property
+    def head(self) -> Choice:
+        return self.choice
 
     @property
     def body(self) -> LiteralTuple:
@@ -297,11 +304,11 @@ class ChoiceFact(Fact):
 
     @cached_property
     def safe(self) -> bool:
-        return len(self.vars()) > 0
+        return len(self.vars()) == 0
 
     @cached_property
     def ground(self) -> bool:
-        return self.head.ground
+        return self.choice.ground
 
     def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice facts not supported yet.")
@@ -310,7 +317,10 @@ class ChoiceFact(Fact):
         if self.ground:
             return deepcopy(self)
 
-        return ChoiceFact(self.head.substitute(subst))
+        return ChoiceFact(self.choice.substitute(subst))
+
+    def replace_arith(self) -> "ChoiceFact":
+        return ChoiceFact(self.head.replace_arith(self.var_table))
 
 
 class ChoiceRule(Rule):
@@ -327,6 +337,9 @@ class ChoiceRule(Rule):
 
     def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
+        # TODO: correctly infer determinism
+        self.deterministic: bool = False
 
         self.choice = head
         self.literals = body
@@ -380,3 +393,9 @@ class ChoiceRule(Rule):
             return deepcopy(self)
 
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))
+
+    def replace_arith(self) -> "ChoiceRule":
+        return ChoiceRule(
+            self.head.replace_arith(self.var_table),
+            self.body.replace_arith(self.var_table),
+        )
