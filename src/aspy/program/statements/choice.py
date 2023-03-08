@@ -2,12 +2,12 @@ from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 
-from aspy.program.terms import Number
 from aspy.program.expression import Expr
 from aspy.program.literals import Guard, LiteralTuple
-from aspy.program.literals.builtin import op2rel, GreaterEqual
-from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.literals.builtin import GreaterEqual, op2rel
 from aspy.program.operators import RelOp
+from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.terms import Number
 
 from .statement import Fact, Rule
 
