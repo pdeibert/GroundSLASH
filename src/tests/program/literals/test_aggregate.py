@@ -51,7 +51,9 @@ class TestAggregate(unittest.TestCase):
                 Naf(PredicateLiteral("q", Variable("Y"))),
             ),
         )
+        # string representation
         self.assertEqual(str(element), '5,X:p("str"),not q(Y)')
+        # equality
         self.assertEqual(
             element,
             AggregateElement(
@@ -62,6 +64,17 @@ class TestAggregate(unittest.TestCase):
                 ),
             ),
         )
+        # head
+        self.assertEqual(element.head, TermTuple(Number(5), Variable("X")))
+        # body
+        self.assertEqual(
+            element.body,
+            LiteralTuple(
+                PredicateLiteral("p", String("str")),
+                Naf(PredicateLiteral("q", Variable("Y"))),
+            ),
+        )
+        # hashing
         self.assertEqual(
             hash(element),
             hash(
@@ -74,25 +87,23 @@ class TestAggregate(unittest.TestCase):
                 )
             ),
         )
-        self.assertEqual(element.head, TermTuple(Number(5), Variable("X")))
-        self.assertEqual(
-            element.body,
-            LiteralTuple(
-                PredicateLiteral("p", String("str")),
-                Naf(PredicateLiteral("q", Variable("Y"))),
-            ),
-        )
+        # ground
         self.assertFalse(element.ground)
+        # positive/negative literal occurrences
         self.assertEqual(element.pos_occ(), {PredicateLiteral("p", String("str"))})
         self.assertEqual(element.neg_occ(), {PredicateLiteral("q", Variable("Y"))})
+        # weight
         self.assertEqual(element.weight, 5)
         self.assertEqual(
             AggregateElement(TermTuple(Variable("X"), Number(5))).weight, 0
         )
+        # vars
         self.assertTrue(
             element.vars() == element.global_vars() == {Variable("X"), Variable("Y")}
         )
+        # safety
         self.assertRaises(ValueError, element.safety)
+        # replace arithmetic terms
         self.assertEqual(element.replace_arith(VariableTable()), element)
         element = AggregateElement(
             TermTuple(Number(5), Minus(Variable("X"))),
@@ -125,7 +136,8 @@ class TestAggregate(unittest.TestCase):
                 ),
             ),
         )
-        # TODO: match
+        # match
+        self.assertRaises(Exception, element.match, element)
 
     def test_aggregate_count(self):
 

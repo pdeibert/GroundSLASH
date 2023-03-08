@@ -6,7 +6,7 @@ from aspy.program.terms import TermTuple
 from .special import EpsRule, EtaRule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AggregateLiteral, Literal, LiteralTuple
+    from aspy.program.literals import AggregateLiteral, Literal
     from aspy.program.terms import Variable
 
 
@@ -17,7 +17,6 @@ def rewrite_aggregate(
     body_literals: Iterable["Literal"],
 ) -> Tuple["AlphaLiteral", "EpsRule", List["EtaRule"]]:
 
-    # TODO: if this does not work due to circular imports, provide it as a method in program (or someplace else)
     aggr_glob_vars = glob_vars.intersection(literal.vars())
     var_tuple = TermTuple(*aggr_glob_vars)
 

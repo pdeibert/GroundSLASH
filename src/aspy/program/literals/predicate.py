@@ -50,7 +50,7 @@ class PredicateLiteral(Literal):
         terms_str = (
             f"({','.join([str(term) for term in self.terms])})" if self.terms else ""
         )
-        return f"{('not ' if self.naf else '')}{('-' if self.neg else '')}{self.name}{terms_str}"
+        return f"{('not ' if self.naf else '')}{('-' if self.neg else '')}{self.name}{terms_str}" # noqa
 
     @property
     def arity(self) -> int:

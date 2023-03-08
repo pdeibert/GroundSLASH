@@ -44,10 +44,11 @@ class Grounder:
             if isinstance(literal, AggregateLiteral):
                 # TODO: raise exception (should have been replaced)
                 raise ValueError(
-                    f"Aggregate literals should be replaced before calling {cls.select} during grounding."
+                    f"Aggregate literals should be replaced before calling {cls.select} during grounding." # noqa
                 )
 
-            # either literal is positive (pos_occ() is non-empy) or the literal is ground under the substitution (all variables in 'literal' are replaced by 'subst')
+            # either literal is positive (pos_occ() is non-empy) or literal is ground
+            # under the substitution (all variables in 'literal' replaced by 'subst')
             if literal.pos_occ() or all(subst[var].ground for var in literal.vars()):
                 return literal
 
@@ -93,7 +94,8 @@ class Grounder:
                 return matches
             # ground negative predicate literal
             elif literal.ground:
-                # literal does not contradict set of certain (positive) literals (used as a check)
+                # literal does not contradict set of certain (positive) literals
+                # (used as a check)
                 return (
                     {subst} if Naf(deepcopy(literal), False) not in certain else set()
                 )
@@ -144,7 +146,7 @@ class Grounder:
             # select positive predicate or ground literal
             literal = cls.select(literals, subst)
 
-            # compute matches for selected literal and move on to grounding remaining literals
+            # compute matches for selected literal and ground remaining literals
             return set().union(
                 *tuple(
                     cls.ground_statement(
@@ -198,7 +200,8 @@ class Grounder:
         eps_instances = set()
         eta_instances = set()
 
-        # NOTE: as implemented by 'mu-gringo', different to the algorithm in the original paper. use of J, J' during grounding of epsilon & eta rules somehow results in incorrect groundings.
+        # NOTE: as implemented by 'mu-gringo', different from original algorithm.
+        # Use of J, J' during grounding of epsilon/eta rules results in incorrect groundings.
         K = I.union(J)
         prev_K = set()
 
@@ -217,7 +220,8 @@ class Grounder:
 
         while not converged:
 
-            # ground epsilon rules (encode the satisfiability of aggregates without any element instances)
+            # ground epsilon rules 
+            # (encode the satisfiability of aggregates without any element instances)
             eps_instances.update(
                 set().union(
                     *tuple(
@@ -267,7 +271,7 @@ class Grounder:
             prev_J = J.copy()
             prev_K = K.copy()
 
-            # NOTE: 'pos_occ' applicable since all head literals are positive predicate literals
+            # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
             head_literals = set().union(
                 *tuple(rule.head.pos_occ() for rule in alpha_instances)
             )
@@ -302,11 +306,12 @@ class Grounder:
         possible_literals = set()
 
         for component in inst_sequence:
-            # compute counter of occurring head predicates (used to indicate which predicates
+            # compute counter of occurring head predicates
+            # (used to indicate which predicates have been fully processed)
             pred_counter = defaultdict(int)
 
             for statement in component.nodes:
-                # NOTE: 'pos_occ' applicable since all head literals are positive predicate literals
+                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
                 for literal in statement.head.pos_occ():
                     # increment counter for literal predicate signature
                     pred_counter[literal.pred()] += 1
@@ -320,20 +325,23 @@ class Grounder:
                 # predicates which are still open (have not been fully processed yet)
                 open_preds = {var for (var, count) in pred_counter.items() if count > 0}
 
-                # can be pre-computed (used for both set updates; NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
+                # can be pre-computed (used for both set updates)
+                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
                 possible_literals = set().union(
                     *tuple(inst.head.pos_occ() for inst in possible_inst)
                 )
 
-                # compute certain instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
+                # compute certain instances
+                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
                 instances = self.ground_component(
                     ref_component_prog.reduct(open_preds),
                     possible_literals,
                     certain_literals,
                 )
 
-                # check if any constraint was derived (resulting in an unsatisfiable program)
+                # check if any constraint was derived
+                # (resulting in an unsatisfiable program)
                 if any(isinstance(inst, Constraint) for inst in instances):
                     warnings.warn(
                         "Derived certain constraint instance. Program is unsatisfiable"
@@ -341,9 +349,9 @@ class Grounder:
                 # update certain instances
                 certain_inst.update(instances)
 
-                # compute & update possible instances (NOTE: 'pos_occ' applicable since all head literals are positive predicate literals)
+                # compute & update possible instances
+                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
                 # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
-                # TODO: DETERMINISM
                 certain_literals = set().union(
                     *tuple(
                         inst.head.pos_occ()

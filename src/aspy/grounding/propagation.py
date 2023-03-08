@@ -89,7 +89,7 @@ class Propagator:
         return possible_alpha_literals
 
     def assemble(self, rules: Set["Statement"]) -> Set["Statement"]:
-        # map ground alpha literals to corresponding assembled aggregate literals to be replaced with
+        # map ground alpha literals to corresponding assembled aggr. literals to be replaced with
         assembling_map = {
             alpha_literal: AggregateLiteral(
                 aggr_func, tuple(elements), guards, naf=alpha_literal.naf

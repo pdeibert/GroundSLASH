@@ -13,10 +13,13 @@ def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashabl
         """Helper class that wraps original nodes with additional information."""
 
         node: Hashable
-        id: int = -1  # ID of exploration (-1: unexplored)
+        # ID of exploration (-1: unexplored)
+        id: int = -1
+        # lowest ID of node on stack reachable from node
+        # (including itself; -1: unexplored)
         low_id: int = (
             -1
-        )  # lowest ID of node on stack reachable from this node (including itself; -1: unexplored)
+        )  
         on_stack: bool = False
 
     # map original nodes to wrapped counterparts
@@ -60,7 +63,8 @@ def compute_SCCs(nodes: Set[Hashable], edges: Set[Hashable]) -> List[Set[Hashabl
                 scc_dfs(dst)
                 # update lowest reachable id on stack
                 node.low_id = min(node.low_id, dst.low_id)
-            # target node visited, but not assigned to an SCC yet (part of current SCC being built)
+            # target node visited, but not assigned to an SCC yet
+            # (i.e., part of current SCC being built)
             elif dst.on_stack:
                 # update lowest reachable id on stack
                 node.low_id = min(node.low_id, dst.id)

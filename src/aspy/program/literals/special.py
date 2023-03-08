@@ -29,7 +29,7 @@ class AlphaLiteral(AuxLiteral):
 
         if len(glob_vars) != len(terms):
             raise ValueError(
-                f"Number of global variables for {type(self)} does not match number of specified terms."
+                f"Number of global variables for {type(self)} does not match number of specified terms." # noqa
             )
 
         super().__init__(f"{SpecialChar.ALPHA.value}{aggr_id}", *terms, naf=naf)
@@ -49,7 +49,7 @@ class AlphaLiteral(AuxLiteral):
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
-            f"Classical negation cannot be set for literal of type {type(AlphaLiteral)}."
+            f"Classical negation cannot be set for literal of type {type(AlphaLiteral)}." # noqa
         )
 
     def pos_occ(self) -> Set["AlphaLiteral"]:
@@ -81,7 +81,7 @@ class AlphaLiteral(AuxLiteral):
         return AlphaLiteral(self.aggr_id, self.glob_vars, self.terms, naf=self.naf)
 
     def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
+        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves.""" # noqa
         return Substitution(
             {
                 var: term
@@ -98,7 +98,7 @@ class EpsLiteral(AuxLiteral):
 
         if len(glob_vars) != len(terms):
             raise ValueError(
-                f"Number of global variables for {type(self)} does not match number of specified terms."
+                f"Number of global variables for {type(self)} does not match number of specified terms." # noqa
             )
 
         super().__init__(f"{SpecialChar.EPS.value}{aggr_id}", *terms)
@@ -155,7 +155,7 @@ class EpsLiteral(AuxLiteral):
         return EpsLiteral(self.aggr_id, self.glob_vars, self.terms)
 
     def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
+        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves.""" # noqa
         return Substitution(
             {
                 var: term
@@ -179,7 +179,7 @@ class EtaLiteral(AuxLiteral):
 
         if len(glob_vars) + len(local_vars) != len(terms):
             raise ValueError(
-                f"Number of global/local variables for {type(self)} does not match number of specified terms."
+                f"Number of global/local variables for {type(self)} does not match number of specified terms." # noqa
             )
 
         super().__init__(f"{SpecialChar.ETA.value}{aggr_id}_{element_id}", *terms)
@@ -269,7 +269,7 @@ class EtaLiteral(AuxLiteral):
         )
 
     def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""
+        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves.""" # noqa
         return Substitution(
             {
                 var: term

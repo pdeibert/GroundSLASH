@@ -37,7 +37,7 @@ class SafetyTriplet:
         )
 
     def normalize(self) -> "SafetyTriplet":
-        """Algorithm 1 in Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition"."""
+        """Algorithm 1 in Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".""" # noqa
 
         # create copy of current safety characterization
         safety = deepcopy(self)

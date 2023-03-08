@@ -98,7 +98,7 @@ class DisjunctiveRule(Rule):
     for classical atoms h_1,...,h_m and literals b_1,...,b_n.
 
     Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
-    """
+    """ # noqa
 
     deterministic: bool = False
 

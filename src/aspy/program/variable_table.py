@@ -22,7 +22,12 @@ class VariableTable:
         return False
 
     def __str__(self) -> str:
-        return f"{{{','.join(var.val if not is_global else var.val + '*' for (var, is_global) in self.variables.items())}}}"
+        variables_str = ','.join(
+            var.val if not is_global else f"{var.val}*" \
+            for (var, is_global) in self.variables.items()
+        )
+
+        return f"{{{variables_str}}}"
 
     def __getitem__(self, symbol: str) -> Variable:
         return self.variables[symbol]
@@ -72,7 +77,7 @@ class VariableTable:
         elif symbol == SpecialChar.TAU:
             if orig_term is None:
                 ValueError(
-                    "Variable table cannot create arithmetic variable without specifying 'orig_term'."
+                    "Variable table cannot create arithmetic variable without specifying 'orig_term'." # noqa
                 )
 
             # get current id for arithmetic variables
@@ -84,7 +89,8 @@ class VariableTable:
             var = ArithVariable(id, orig_term)
         # variable
         else:
-            # check if variable is already known (to avoid duplicate variables where possible)
+            # check if variable is already known 
+            # (to avoid duplicate variables where possible)
             for var in self.variables:
                 if symbol == var.val:
                     # return existing variable

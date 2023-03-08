@@ -121,7 +121,9 @@ class ComponentGraph(object):
 
         graph = object.__new__(cls)
 
-        # create component instances (i.e., nodes), marking components as UNstratified where possible (if they negatively depend on themselves)
+        # create component instances (i.e., nodes)
+        # marking components as unstratified where possible
+        # (i.e., if they negatively depend on themselves)
         components = {
             Component(set(scc), *scc_edges[scc], stratified=not bool(scc_edges[scc][1]))
             for scc in sccs
@@ -163,7 +165,8 @@ class ComponentGraph(object):
 
             for component in stratified_components.copy():
                 for (src_component, dst_component) in graph.edges:
-                    # if component depends on an UNstratified component, mark it as UNstratisfied
+                    # if component depends on an unstratified component,
+                    # mark it as unstratisfied
                     if (
                         src_component == component
                         and dst_component not in stratified_components

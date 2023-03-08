@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
-    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes."""
+    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes.""" # noqa
     elements = list(element_iterable)
     return chain.from_iterable(
         combinations(elements, n_elements) for n_elements in range(len(elements) + 1)
@@ -111,24 +111,22 @@ class AggregateElement(Expr):
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         raise ValueError(
-            "Safety characterization for aggregate elements is undefined without context."
+            "Safety characterization for aggregate elements is undefined without context." # noqa
         )
 
     def substitute(self, subst: "Substitution") -> "AggregateElement":
-        terms = TermTuple(*tuple(term.substitute(subst) for term in self.terms))
-        literals = LiteralTuple(
-            *tuple(literal.substitute(subst) for literal in self.literals)
+        return AggregateElement(
+            self.terms.substitute(subst),
+            self.literals.substitute(subst),
         )
 
-        return AggregateElement(terms, literals)
-
     def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for aggregate elements not supported yet.")
+        raise Exception("Matching for aggregate elements is not defined.")
 
     def replace_arith(self, var_table: "VariableTable") -> "AggregateElement":
         return AggregateElement(
-            TermTuple(*self.terms.replace_arith(var_table)),
-            LiteralTuple(*self.literals.replace_arith(var_table)),
+            self.terms.replace_arith(var_table),
+            self.literals.replace_arith(var_table),
         )
 
 
@@ -259,7 +257,7 @@ class AggregateSum(AggregateFunction):
     ) -> Number:
 
         # empty tuple set
-        if not elements or (positive == negative == False):
+        if not elements or (positive == negative == False): # noqa (chaining is faster)
             return self.base()
 
         # non-empty set

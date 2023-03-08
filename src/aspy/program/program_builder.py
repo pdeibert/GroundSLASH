@@ -107,7 +107,7 @@ class ProgramBuilder(ASPCoreVisitor):
                                 |   head (CONS body?)? DOT
                                 |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
                                 |   optimize DOT
-        """
+        """ # noqa
         # initialize empty variable table (for special counters)
         self.var_table = VariableTable()
 
@@ -128,7 +128,8 @@ class ProgramBuilder(ASPCoreVisitor):
                 else:
                     # TODO: empty constraint?
                     raise Exception("Empty constraints not supported yet.")
-            # WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE (i.e., weak constraint)
+            # WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
+            # (i.e., weak constraint)
             else:
                 # body
                 if n_children > 5:
@@ -241,7 +242,7 @@ class ProgramBuilder(ASPCoreVisitor):
         Handles the following rule(s):
 
             choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)?
-        """
+        """ # noqa
         moving_index = 0
         lguard, rguard = None, None
 
@@ -322,7 +323,7 @@ class ProgramBuilder(ASPCoreVisitor):
         Handles the following rule(s):
 
             aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)?
-        """
+        """ # noqa
         moving_index = 0
         lguard, rguard = None, None
 
@@ -335,7 +336,7 @@ class ProgramBuilder(ASPCoreVisitor):
 
         # aggregate_function
         func = op2aggr[self.visitAggregate_function(ctx.children[moving_index])]()
-        moving_index += 2  # skip CURLY_OPEN as well; should now point to 'aggregate_elements' or 'CURLY_CLOSE'
+        moving_index += 2 # skip CURLY_OPEN as well; should now point to 'aggregate_elements' or 'CURLY_CLOSE' # noqa
 
         # CURLY_OPEN CURLY_CLOSE
         if isinstance(ctx.children[moving_index], antlr4.tree.Tree.TerminalNode):
@@ -344,7 +345,7 @@ class ProgramBuilder(ASPCoreVisitor):
         # CURLY_OPEN choice_elements CURLY_CLOSE
         else:
             elements = self.visitAggregate_elements(ctx.children[moving_index])
-            moving_index += 2  # skip CURLY_OPEN as well; should now point to 'relop' or be out of bounds
+            moving_index += 2  # skip CURLY_OPEN as well; should now point to 'relop' or be out of bounds # noqa
 
         # relop term
         if moving_index < len(ctx.children) - 1:
@@ -434,7 +435,7 @@ class ProgramBuilder(ASPCoreVisitor):
         Handles the following rule(s):
 
             optimize            :   optimize_function CURLY_OPEN optimize_elements? CURLY_CLOSE
-        """
+        """ # noqa
         optimization_function = self.visitOptimize_function(ctx.children[0])
 
         # CURLY_OPEN optimize_elements CURLY_CLOSE

@@ -25,7 +25,11 @@ class Substitution(dict):
         return deepcopy(dict.__getitem__(self, var)) if var in self else deepcopy(var)
 
     def __str__(self) -> str:
-        return f"{{{','.join([f'{str(var)}:{str(target)}' for var, target in self.items()])}}}"
+        assignments_str = ','.join(
+            [f'{str(var)}:{str(target)}' for var, target in self.items()]
+        )
+
+        return f"{{{assignments_str}}}"
 
     def __eq__(self, other: "Substitution") -> bool:
         return isinstance(other, Substitution) and super(Substitution, self).__eq__(
@@ -55,7 +59,8 @@ class Substitution(dict):
 
         # apply other substitution to substituted values
         subst = {var: target.substitute(other) for (var, target) in self.items()}
-        # add substitution of variables that are not in the original substitution (i.e., originally mapped onto themselves)
+        # add substitution of variables that are not in the original substitution
+        # (i.e., originally mapped onto themselves)
         subst.update(
             {var: target for (var, target) in other.items() if var not in subst}
         )
