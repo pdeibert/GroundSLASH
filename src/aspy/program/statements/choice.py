@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
+    from aspy.program.variable_table import VariableTable
 
     from .statement import Statement
 
@@ -33,6 +34,16 @@ class ChoiceElement(Expr):
             literals if isinstance(literals, LiteralTuple) else LiteralTuple(*literals)
         )
 
+    def __eq__(self, other: Expr) -> bool:
+        return (
+            isinstance(other, ChoiceElement)
+            and self.atom == other.atom
+            and self.literals == other.literals
+        )
+
+    def __hash__(self) -> int:
+        return hash(("choice element", self.atom, self.literals))
+
     def __str__(self) -> str:
         return str(self.atom) + (
             f":{','.join([str(literal) for literal in self.literals])}"
@@ -52,18 +63,39 @@ class ChoiceElement(Expr):
     def ground(self) -> bool:
         return self.atom.ground and self.literals.ground
 
-    def vars(self, global_only: bool = False) -> Set["Variable"]:
-        # TODO: global
-        if global_only:
-            raise Exception()
+    def pos_occ(self) -> Set["PredicateLiteral"]:
+        return self.atom.pos_occ().union(self.literals.pos_occ())
 
-        return set().union(literal.vars() for literal in self.literals)
+    def neg_occ(self) -> Set["PredicateLiteral"]:
+        return self.atom.neg_occ().union(self.literals.neg_occ())
 
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception()
+    def vars(self) -> Set["Variable"]:
+        return self.atom.vars().union(self.literals.vars())
+
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        return self.vars()
+
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None
+    ) -> SafetyTriplet:
+        raise ValueError(
+            "Safety characterization for choice elements is undefined without context." # noqa
+        )
 
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
-        raise Exception("Substitution for choice elements not supported yet.")
+        return ChoiceElement(
+            self.atom.substitute(subst),
+            self.literals.substitute(subst),
+        )
+
+    def match(self, other: Expr) -> Set["Substitution"]:
+        raise Exception("Matching for choice elements is not defined.")
+
+    def replace_arith(self, var_table: "VariableTable") -> "ChoiceElement":
+        return ChoiceElement(
+            self.atom.replace_arith(var_table),
+            self.literals.replace_arith(var_table),
+        )
 
 
 class Choice(Expr):
@@ -112,13 +144,22 @@ class Choice(Expr):
 
         self.elements = elements
 
-    def __str__(self) -> str:
-        raise Exception()
+    def __eq__(self, other: Expr) -> bool:
         return (
-            (f"{str(self.lguard.bound)} {str(self.lguard.op)}" if self.lguard else "")
-            + f"{{{';'.join([str(literal) for literal in self.elements])}}}"
-            + (f"{str(self.rguard.op)} {str(self.rguard.bound)}" if self.lguard else "")
+            isinstance(other, Choice)
+            and set(self.elements) == set(other.elements)
+            and self.guards == other.guards
         )
+
+    def __hash__(self) -> int:
+        return hash(("choice", self.elements, self.guards))
+
+    def __str__(self) -> str:
+        elements_str = ';'.join([str(literal) for literal in self.elements])
+        lguard_str = f'{str(self.lguard)} ' if self.lguard is not None else ''
+        rguard_str = f' {str(self.rguard)}' if self.rguard is not None else ''
+
+        return f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
     @cached_property
     def ground(self) -> bool:
@@ -149,10 +190,6 @@ class Choice(Expr):
         # TODO: get count of all unique elements
         # TODO: check if count CAN satisfy bounds
         raise Exception()
-        # check guards
-        # return (op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval() if self.lguard is not None else True) and (
-        #    op2rel[self.rguard.op](aggr_term, self.rguard.bound).eval() if self.rguard is not None else True
-        # )
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
@@ -189,12 +226,21 @@ class ChoiceFact(Fact):
     TODO: u_1,R_1 u_2,R_2 may be omitted.
 
     Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
-    """
+    """ # noqa
 
     def __init__(self, head: Choice, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.choice = head
+
+    def __eq__(self, other: Expr) -> bool:
+        return (
+            isinstance(other, ChoiceFact)
+            and self.head == other.head
+        )
+
+    def __hash__(self) -> int:
+        return hash(("choice fact", self.head))
 
     def __str__(self) -> str:
         return f"{{{','.join([str(literal) for literal in self.head.elements])}}}."
@@ -206,9 +252,6 @@ class ChoiceFact(Fact):
     @property
     def extended_body(self) -> LiteralTuple:
         return self.choice.literals
-
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception()
 
     @cached_property
     def safe(self) -> bool:
@@ -238,13 +281,23 @@ class ChoiceRule(Rule):
     for classical atoms h_1,...,h_m, literals b_1,...,b_n, terms u_1,u_2 and comparison operators R_1,R_2.
 
     Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
-    """
+    """ # noqa
 
     def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.choice = head
         self.literals = body
+
+    def __eq__(self, other: Expr) -> bool:
+        return (
+            isinstance(other, ChoiceRule)
+            and self.head == other.head
+            and self.literals == other.literals
+        )
+
+    def __hash__(self) -> int:
+        return hash(("choice rule", self.head, self.literals))
 
     def __str__(self) -> str:
         return (
