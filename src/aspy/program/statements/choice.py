@@ -1,6 +1,7 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from itertools import chain
+from typing import TYPE_CHECKING, Dict, Iterable, Iterator, Optional, Set, Tuple, Union
 
 from aspy.program.expression import Expr
 from aspy.program.literals import Guard, LiteralTuple
@@ -12,12 +13,18 @@ from aspy.program.terms import Number
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import Literal, PredicateLiteral
+    from aspy.program.literals import (
+        AggregateLiteral,
+        AlphaLiteral,
+        Literal,
+        PredicateLiteral,
+    )
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Variable
     from aspy.program.variable_table import VariableTable
 
+    from .special import EpsRule, EtaRule
     from .statement import Statement
 
 
@@ -160,6 +167,19 @@ class Choice(Expr):
 
         return f"{lguard_str}{{{elements_str}}}{rguard_str}"
 
+    def __iter__(self) -> Iterator[ChoiceElement]:
+        return iter(self.elements)
+
+    @property
+    def head(self) -> LiteralTuple:
+        return LiteralTuple(*tuple(element.atom for element in self.elements))
+
+    @property
+    def body(self) -> LiteralTuple:
+        return LiteralTuple(
+            *chain(*tuple(element.literals for element in self.elements))
+        )
+
     @cached_property
     def ground(self) -> bool:
         return all(element.ground for element in self.elements)
@@ -182,7 +202,14 @@ class Choice(Expr):
         return self.invars().union(self.outvars())
 
     def global_vars(self, statement: "Statement") -> Set["Variable"]:
-        return self.vars().intersection(statement.global_vars())
+        # TODO
+        return self.head.vars().union(self.outvars())
+        # return self.vars().intersection(statement.global_vars())
+        # return set().union(
+        #    self.outvars(),
+        #    self.head.global_vars(statement),
+        #    self.body.global_vars(statement),
+        # )
 
     def pos_occ(self) -> Set["PredicateLiteral"]:
         return set().union(*tuple(element.pos_occ() for element in self.elements))
@@ -290,6 +317,22 @@ class ChoiceFact(Fact):
     def __str__(self) -> str:
         return f"{str(self.choice)}."
 
+    def __init_var_table(self) -> None:
+        # TODO
+
+        # initialize variable table
+        self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
+
+        # mark global variables
+        self.__var_table.update(
+            {
+                var: True
+                for var in self.head.global_vars(self).union(
+                    self.body.global_vars(self)
+                )
+            }
+        )
+
     @property
     def head(self) -> Choice:
         return self.choice
@@ -304,13 +347,19 @@ class ChoiceFact(Fact):
 
     @cached_property
     def safe(self) -> bool:
-        return len(self.vars()) == 0
+
+        for element in self.choice:
+
+            if element.body.safety(self) != SafetyTriplet(self.global_vars()):
+                return False
+
+        return True
 
     @cached_property
     def ground(self) -> bool:
         return self.choice.ground
 
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice facts not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceFact":
@@ -335,14 +384,28 @@ class ChoiceRule(Rule):
     Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
     """  # noqa
 
-    def __init__(self, head: Choice, body: LiteralTuple, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        head: Choice,
+        body: Union[LiteralTuple, Iterable["Literal"]],
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
+
+        if len(body) == 0:
+            raise ValueError(
+                (
+                    f"Body for {type(self)} may not be empty. "
+                    "Use {ChoiceFact} instead."
+                )
+            )
 
         # TODO: correctly infer determinism
         self.deterministic: bool = False
 
         self.choice = head
-        self.literals = body
+        self.literals = body if isinstance(body, LiteralTuple) else LiteralTuple(*body)
 
     def __eq__(self, other: Expr) -> bool:
         return (
@@ -357,6 +420,22 @@ class ChoiceRule(Rule):
     def __str__(self) -> str:
         return (
             f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
+        )
+
+    def __init_var_table(self) -> None:
+        # TODO
+
+        # initialize variable table
+        self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
+
+        # mark global variables
+        self.__var_table.update(
+            {
+                var: True
+                for var in self.head.global_vars(self).union(
+                    self.body.global_vars(self)
+                )
+            }
         )
 
     @property
@@ -374,18 +453,24 @@ class ChoiceRule(Rule):
 
     @cached_property
     def safe(self) -> bool:
-        raise Exception()
 
-        global_vars = self.global_vars(self)
-        body_safety = SafetyTriplet.closure(self.body.safety(self))
+        outside_glob_vars = self.body.global_vars().union(self.choice.outvars())
 
-        return body_safety == SafetyTriplet(global_vars)
+        for element in self.choice:
+            global_vars = outside_glob_vars.union(element.head.global_vars())
+
+            if LiteralTuple(*self.body, *element.body).safety(self) != SafetyTriplet(
+                global_vars
+            ):
+                return False
+
+        return True
 
     @cached_property
     def ground(self) -> bool:
         return self.head.ground and self.body.ground
 
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
+    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":
@@ -399,3 +484,19 @@ class ChoiceRule(Rule):
             self.head.replace_arith(self.var_table),
             self.body.replace_arith(self.var_table),
         )
+
+    def rewrite_aggregates(
+        self,
+        aggr_counter: int,
+        aggr_map: Dict[
+            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+        ],
+    ) -> "Statement":
+        # TODO
+        raise Exception()
+
+    def assemble_aggregates(
+        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+    ) -> "Statement":
+        # TODO
+        raise Exception()

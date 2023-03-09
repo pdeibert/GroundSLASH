@@ -2,21 +2,18 @@ import unittest
 from typing import Set
 
 import aspy
-from aspy.program.literals import Guard, LiteralTuple, Naf, PredicateLiteral
+from aspy.program.literals import (
+    AggregateCount,
+    AggregateLiteral,
+    Guard,
+    LiteralTuple,
+    Naf,
+    PredicateLiteral,
+)
 from aspy.program.operators import RelOp
-from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
 from aspy.program.statements import Choice, ChoiceElement, ChoiceFact, ChoiceRule
 from aspy.program.substitution import Substitution
-from aspy.program.terms import (
-    ArithVariable,
-    Infimum,
-    Minus,
-    Number,
-    String,
-    Supremum,
-    TermTuple,
-    Variable,
-)
+from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
 from aspy.program.variable_table import VariableTable
 
 
@@ -233,6 +230,23 @@ class TestChoice(unittest.TestCase):
                 )
             ),
         )
+        # head
+        self.assertEqual(
+            ground_choice.head,
+            LiteralTuple(
+                PredicateLiteral("p", Number(5)),
+                PredicateLiteral("p", Number(-3)),
+            ),
+        )
+        # body
+        self.assertEqual(
+            ground_choice.body,
+            LiteralTuple(
+                PredicateLiteral("p", String("str")),
+                Naf(PredicateLiteral("q")),
+                Naf(PredicateLiteral("p", String("str"))),
+            ),
+        )
         # ground
         self.assertTrue(ground_choice.ground)
         self.assertFalse(var_choice.ground)
@@ -250,6 +264,7 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             var_choice.global_vars(DummyRule({Variable("Y")})), {Variable("Y")}
         )
+        # self.assertEqual(var_choice.global_vars(), {Variable("X"), Variable("Y")})
         # positive/negative literal occurrences
         self.assertEqual(
             var_choice.pos_occ(),
@@ -520,7 +535,10 @@ class TestChoice(unittest.TestCase):
         # variables
         self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
         self.assertEqual(var_rule.vars(), {Variable("X"), Variable("Y")})
-        self.assertEqual(var_rule.global_vars(), set())
+        # self.assertTrue(
+        #    var_rule.vars() == var_rule.global_vars() == {Variable("X"), Variable("Y")}
+        # )
+        self.assertEqual(var_rule.global_vars(), {Variable("Y")})
         # replace arithmetic terms
         arith_elements = (
             ChoiceElement(
@@ -585,11 +603,9 @@ class TestChoice(unittest.TestCase):
 
         # rewrite aggregates
         self.assertEqual(rule, rule.rewrite_aggregates(0, dict()))
-        # TODO: actual aggregates in condition
 
         # assembling
         self.assertEqual(rule, rule.assemble_aggregates(dict()))
-        # TODO: actual aggregates in condition
 
         # TODO: propagate
 
@@ -598,7 +614,222 @@ class TestChoice(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        # TODO
+        # invalid initialization
+        self.assertRaises(
+            ValueError,
+            ChoiceRule,
+            Choice(tuple()),
+            tuple(),
+        )  # not enough literals
+
+        ground_elements = (
+            ChoiceElement(
+                PredicateLiteral("p", Number(5)),
+                LiteralTuple(
+                    PredicateLiteral("p", String("str")), Naf(PredicateLiteral("q"))
+                ),
+            ),
+            ChoiceElement(
+                PredicateLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+            ),
+        )
+        ground_choice = Choice(
+            ground_elements,
+            guards=Guard(RelOp.LESS, Number(3), False),
+        )
+        ground_rule = ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))
+
+        var_elements = (
+            ChoiceElement(
+                PredicateLiteral("p", Number(5)),
+                LiteralTuple(
+                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
+                ),
+            ),
+            ChoiceElement(
+                PredicateLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+            ),
+        )
+        var_choice = Choice(
+            var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)
+        )
+        safe_var_rule = ChoiceRule(
+            var_choice,
+            (
+                PredicateLiteral("q", Variable("X")),
+                PredicateLiteral("q", Variable("Y")),
+            ),
+        )
+        unsafe_var_rule = ChoiceRule(
+            var_choice, (PredicateLiteral("q", Variable("X")),)
+        )
+
+        # print(ground_rule.safe)
+        # print(safe_var_rule.safe)
+        # print(unsafe_var_rule.safe)
+
+        # string representation
+        self.assertEqual(
+            str(ground_rule), '3 < {p(5):p("str"),not q;p(-3):not p("str")} :- q(1).'
+        )
+        self.assertEqual(
+            str(safe_var_rule),
+            'Y < {p(5):p(X),not q;p(-3):not p("str")} :- q(X), q(Y).',
+        )
+        self.assertEqual(
+            str(unsafe_var_rule), 'Y < {p(5):p(X),not q;p(-3):not p("str")} :- q(X).'
+        )
+        # self.assertEqual(str(unsafe_var_rule), "p(1) | p(X) :- q.")
+        # equality
+        self.assertEqual(
+            ground_rule, ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))
+        )
+        self.assertEqual(
+            safe_var_rule,
+            ChoiceRule(
+                var_choice,
+                (
+                    PredicateLiteral("q", Variable("X")),
+                    PredicateLiteral("q", Variable("Y")),
+                ),
+            ),
+        )
+        self.assertEqual(
+            unsafe_var_rule,
+            ChoiceRule(
+                var_choice,
+                (PredicateLiteral("q", Variable("X")),),
+            ),
+        )
+        self.assertEqual(
+            ground_rule.body, LiteralTuple(PredicateLiteral("q", Number(1)))
+        )
+        self.assertEqual(
+            ground_rule.head,
+            Choice(
+                ground_elements,
+                guards=Guard(RelOp.LESS, Number(3), False),
+            ),
+        )
+        self.assertEqual(
+            ground_rule.body, LiteralTuple(PredicateLiteral("q", Number(1)))
+        )
+        # hashing
+        self.assertEqual(
+            hash(ground_rule),
+            hash(ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))),
+        )
+        self.assertEqual(
+            hash(unsafe_var_rule),
+            hash(
+                ChoiceRule(
+                    var_choice,
+                    (PredicateLiteral("q", Variable("X")),),
+                ),
+            ),
+        )
+        self.assertEqual(
+            hash(safe_var_rule),
+            hash(
+                ChoiceRule(
+                    var_choice,
+                    (
+                        PredicateLiteral("q", Variable("X")),
+                        PredicateLiteral("q", Variable("Y")),
+                    ),
+                ),
+            ),
+        )
+        # ground
+        self.assertTrue(ground_rule.ground)
+        self.assertFalse(unsafe_var_rule.ground)
+        self.assertFalse(safe_var_rule.ground)
+        # safety
+        self.assertTrue(ground_rule.safe)
+        self.assertFalse(unsafe_var_rule.safe)
+        self.assertTrue(safe_var_rule.safe)
+        # contains aggregates
+        self.assertFalse(ground_rule.contains_aggregates)
+        self.assertFalse(unsafe_var_rule.contains_aggregates)
+        self.assertFalse(safe_var_rule.contains_aggregates)
+        self.assertTrue(
+            ChoiceRule(
+                ground_choice,
+                (
+                    AggregateLiteral(
+                        AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                    ),
+                ),
+            ).contains_aggregates
+        )
+        # variables
+        self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
+        self.assertTrue(
+            unsafe_var_rule.vars()
+            == unsafe_var_rule.global_vars()
+            == {Variable("Y"), Variable("X")}
+        )
+        self.assertTrue(
+            safe_var_rule.vars()
+            == safe_var_rule.global_vars()
+            == {Variable("X"), Variable("Y")}
+        )
+        # TODO: replace arithmetic terms
+
+        var_elements = (
+            ChoiceElement(
+                PredicateLiteral("p", Number(5)),
+                LiteralTuple(
+                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
+                ),
+            ),
+            ChoiceElement(
+                PredicateLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+            ),
+        )
+        var_choice = Choice(
+            var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)
+        )
+        safe_var_rule = ChoiceRule(
+            var_choice,
+            (
+                PredicateLiteral("q", Variable("X")),
+                PredicateLiteral("q", Variable("Y")),
+            ),
+        )
+
+        # substitution
+        self.assertEqual(
+            safe_var_rule.substitute(
+                Substitution({Variable("X"): Number(1), Variable("Y"): String("f")})
+            ),
+            ChoiceRule(
+                Choice(
+                    (
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(5)),
+                            LiteralTuple(
+                                PredicateLiteral("p", Number(1)),
+                                Naf(PredicateLiteral("q")),
+                            ),
+                        ),
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(-3)),
+                            LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                        ),
+                    ),
+                    guards=Guard(RelOp.LESS, String("f"), False),
+                ),
+                (PredicateLiteral("q", Number(1)), PredicateLiteral("q", String("f"))),
+            ),
+        )
+
+        # TODO: rewrite aggregates
+        # TODO: assembling aggregates
+        # TODO: propagate
 
 
 if __name__ == "__main__":

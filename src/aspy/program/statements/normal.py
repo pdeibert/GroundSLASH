@@ -58,7 +58,8 @@ class NormalFact(Fact):
 
     @cached_property
     def safe(self) -> bool:
-        return len(self.vars()) == 0
+        return self.body.safety(self) == SafetyTriplet(self.global_vars())
+        # return len(self.vars()) == 0
 
     @cached_property
     def ground(self) -> bool:
