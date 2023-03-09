@@ -115,9 +115,17 @@ class TestDisjunctive(unittest.TestCase):
 
         # invalid initialization
         self.assertRaises(
-            ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0))
+            ValueError,
+            DisjunctiveRule,
+            (PredicateLiteral("p", Number(0)),),
+            (PredicateLiteral("q", Number(0)),),
         )  # not enough atoms
-        # not enough literals
+        self.assertRaises(
+            ValueError,
+            DisjunctiveRule,
+            (PredicateLiteral("p", Number(0)), PredicateLiteral("q", Number(0))),
+            tuple(),
+        )  # not enough literals
 
         ground_rule = DisjunctiveRule(
             (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))),
