@@ -25,5 +25,7 @@ from .special import (
     AggrBaseLiteral,
     AggrElemLiteral,
     AggrPlaceholder,
+    ChoiceBaseLiteral,
+    ChoiceElemLiteral,
     ChoicePlaceholder,
 )
