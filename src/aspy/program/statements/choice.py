@@ -15,7 +15,7 @@ from .statement import Fact, Rule
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import (
         AggregateLiteral,
-        AlphaLiteral,
+        AggrPlaceholder,
         Literal,
         PredicateLiteral,
     )
@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Variable
     from aspy.program.variable_table import VariableTable
 
-    from .special import EpsRule, EtaRule
+    from .special import AggrBaseRule, AggrElemRule
     from .statement import Statement
 
 
@@ -341,9 +341,11 @@ class ChoiceFact(Fact):
     def body(self) -> LiteralTuple:
         return LiteralTuple()
 
-    @property
-    def extended_body(self) -> LiteralTuple:
-        return self.choice.literals
+    def consequents(self) -> "LiteralTuple":
+        return self.choice.head
+
+    def antecedents(self) -> "LiteralTuple":
+        return self.choice.body
 
     @cached_property
     def safe(self) -> bool:
@@ -447,9 +449,11 @@ class ChoiceRule(Rule):
     def body(self) -> LiteralTuple:
         return self.literals
 
-    @property
-    def extended_body(self) -> LiteralTuple:
-        return LiteralTuple(*self.literals, *self.choice.literals)
+    def consequents(self) -> "LiteralTuple":
+        return self.choice.head
+
+    def antecedents(self) -> "LiteralTuple":
+        return LiteralTuple(*self.literals, *self.choice.body)
 
     @cached_property
     def safe(self) -> bool:
@@ -489,14 +493,20 @@ class ChoiceRule(Rule):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "Statement":
         # TODO
         raise Exception()
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "Statement":
         # TODO
         raise Exception()

@@ -1,8 +1,8 @@
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
-from aspy.program.literals import AggregateLiteral, AlphaLiteral
-from aspy.program.statements import EpsRule, EtaRule
+from aspy.program.literals import AggregateLiteral, AggrPlaceholder
+from aspy.program.statements import AggrBaseRule, AggrElemRule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
@@ -13,7 +13,10 @@ class Propagator:
     def __init__(
         self,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", EpsRule, List[EtaRule]]
+            int,
+            Tuple[
+                "AggregateLiteral", "AggrPlaceholder", AggrBaseRule, List[AggrElemRule]
+            ],
         ],
     ) -> None:
         self.aggr_map = aggr_map
@@ -26,14 +29,14 @@ class Propagator:
         I: Set["Literal"],
         J: Set["Literal"],
         J_alpha: Set["Literal"],
-    ) -> Set[AlphaLiteral]:
+    ) -> Set[AggrPlaceholder]:
 
         for rule in chain(eps_instances, eta_instances):
 
             # get corresponding alpha_literal
             aggr_literal, alpha_literal, *_ = self.aggr_map[rule.aggr_id]
 
-            if isinstance(rule, EpsRule):
+            if isinstance(rule, AggrBaseRule):
                 # gather variable substitution
                 subst = rule.gather_var_assignment()
                 # ground corresponding alpha literal
@@ -48,7 +51,7 @@ class Propagator:
                             for guard in aggr_literal.guards
                         ),
                     )
-            elif isinstance(rule, EtaRule):
+            elif isinstance(rule, AggrElemRule):
                 # gather variables
                 subst = rule.gather_var_assignment()
                 # ground corresponding alpha literal

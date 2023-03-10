@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import AlphaLiteral, EpsLiteral, EtaLiteral, Naf
+from aspy.program.literals import AggrBaseLiteral, AggrElemLiteral, AggrPlaceholder, Naf
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
@@ -16,8 +16,8 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
-        literal = AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
-        naf_literal = Naf(AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y"))))
+        literal = AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
+        naf_literal = Naf(AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y"))))
 
         # check initialization
         self.assertTrue(literal.aggr_id == naf_literal.aggr_id == 1)
@@ -30,12 +30,12 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(str(naf_literal), f"not {SpecialChar.ALPHA.value}{1}(1,Y)")
         # equality
         self.assertEqual(
-            literal, AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            literal, AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
         )
         # hashing
         self.assertEqual(
             hash(literal),
-            hash(AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))),
+            hash(AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))),
         )
         # arity
         self.assertEqual(literal.arity, 2)
@@ -49,13 +49,13 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
+            {AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))},
         )
         self.assertEqual(literal.neg_occ(), set())
         self.assertEqual(naf_literal.pos_occ(), set())
         self.assertEqual(
             naf_literal.neg_occ(),
-            {AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
+            {AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))},
         )
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
@@ -68,28 +68,28 @@ class TestSpecial(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y"))).substitute(
+            AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y"))).substitute(
                 Substitution({Variable("Y"): Number(0), Number(1): String("f")})
             ),
-            AlphaLiteral(1, vars, TermTuple(Number(1), Number(0))),
+            AggrPlaceholder(1, vars, TermTuple(Number(1), Number(0))),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            AlphaLiteral(1, vars, TermTuple(Variable("X"), Variable("Y"))).match(
-                AlphaLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            AggrPlaceholder(1, vars, TermTuple(Variable("X"), Variable("Y"))).match(
+                AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
             ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            Naf(AlphaLiteral(1, vars, TermTuple(Variable("X"), String("f")))).match(
-                Naf(AlphaLiteral(1, vars, TermTuple(Number(1), String("g"))))
+            Naf(AggrPlaceholder(1, vars, TermTuple(Variable("X"), String("f")))).match(
+                Naf(AggrPlaceholder(1, vars, TermTuple(Number(1), String("g"))))
             ),
             None,
         )  # ground terms don't match
 
         # gather variable assignment
         self.assertEqual(
-            AlphaLiteral(
+            AggrPlaceholder(
                 1, vars, TermTuple(Number(1), Variable("Y"))
             ).gather_var_assignment(),
             Substitution({Variable("X"): Number(1)}),
@@ -101,27 +101,31 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
-        literal = EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+        literal = AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
 
         # check initialization
         self.assertTrue(literal.aggr_id == 1)
         self.assertEqual(literal.glob_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable("Y")))
         # string representation
-        self.assertEqual(str(literal), f"{SpecialChar.EPS.value}{1}(1,Y)")
+        self.assertEqual(
+            str(literal), f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(1,Y)"
+        )
         # equality
         self.assertEqual(
-            literal, EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            literal, AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
         )
         # hashing
         self.assertEqual(
             hash(literal),
-            hash(EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y")))),
+            hash(AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))),
         )
         # arity
         self.assertEqual(literal.arity, 2)
         # predicate tuple
-        self.assertEqual(literal.pred(), (f"{SpecialChar.EPS.value}{1}", 2))
+        self.assertEqual(
+            literal.pred(), (f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}", 2)
+        )
         # ground
         self.assertFalse(literal.ground, False)
         # TODO: variables
@@ -130,7 +134,7 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
+            {AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
         )
         self.assertEqual(literal.neg_occ(), set())
         # safety characterization
@@ -143,28 +147,28 @@ class TestSpecial(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y"))).substitute(
+            AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y"))).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
-            EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y"))),
+            AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y"))),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            EpsLiteral(1, vars, TermTuple(Variable("X"), Variable("Y"))).match(
-                EpsLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            AggrBaseLiteral(1, vars, TermTuple(Variable("X"), Variable("Y"))).match(
+                AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
             ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            EpsLiteral(1, vars, TermTuple(Variable("X"), String("f"))).match(
-                EpsLiteral(1, vars, TermTuple(Number(1), String("g")))
+            AggrBaseLiteral(1, vars, TermTuple(Variable("X"), String("f"))).match(
+                AggrBaseLiteral(1, vars, TermTuple(Number(1), String("g")))
             ),
             None,
         )  # ground terms don't match
 
         # gather variable assignment
         self.assertEqual(
-            EpsLiteral(
+            AggrBaseLiteral(
                 1, vars, TermTuple(Number(1), Variable("Y"))
             ).gather_var_assignment(),
             Substitution({Variable("X"): Number(1)}),
@@ -177,7 +181,7 @@ class TestSpecial(unittest.TestCase):
 
         global_vars = TermTuple(Variable("L"))
         local_vars = TermTuple(Variable("X"), Variable("Y"))
-        literal = EtaLiteral(
+        literal = AggrElemLiteral(
             1,
             3,
             local_vars,
@@ -194,11 +198,14 @@ class TestSpecial(unittest.TestCase):
             literal.terms, TermTuple(Variable("L"), Number(1), Variable("Y"))
         )
         # string representation
-        self.assertEqual(str(literal), f"{SpecialChar.ETA.value}{1}_{3}(L,1,Y)")
+        self.assertEqual(
+            str(literal),
+            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(L,1,Y)",
+        )
         # equality
         self.assertEqual(
             literal,
-            EtaLiteral(
+            AggrElemLiteral(
                 1,
                 3,
                 local_vars,
@@ -210,7 +217,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             hash(literal),
             hash(
-                EtaLiteral(
+                AggrElemLiteral(
                     1,
                     3,
                     local_vars,
@@ -222,7 +229,10 @@ class TestSpecial(unittest.TestCase):
         # arity
         self.assertEqual(literal.arity, 3)
         # predicate tuple
-        self.assertEqual(literal.pred(), (f"{SpecialChar.ETA.value}{1}_{3}", 3))
+        self.assertEqual(
+            literal.pred(),
+            (f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}", 3),
+        )
         # ground
         self.assertFalse(literal.ground, False)
         # TODO: variables
@@ -232,7 +242,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             literal.pos_occ(),
             {
-                EtaLiteral(
+                AggrElemLiteral(
                     1,
                     3,
                     local_vars,
@@ -254,7 +264,7 @@ class TestSpecial(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            EtaLiteral(
+            AggrElemLiteral(
                 1,
                 3,
                 local_vars,
@@ -263,7 +273,7 @@ class TestSpecial(unittest.TestCase):
             ).substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
-            EtaLiteral(
+            AggrElemLiteral(
                 1,
                 3,
                 local_vars,
@@ -273,14 +283,14 @@ class TestSpecial(unittest.TestCase):
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            EtaLiteral(
+            AggrElemLiteral(
                 1,
                 3,
                 local_vars,
                 global_vars,
                 TermTuple(Variable("L"), Variable("X"), Variable("Y")),
             ).match(
-                EtaLiteral(
+                AggrElemLiteral(
                     1,
                     3,
                     local_vars,
@@ -291,14 +301,14 @@ class TestSpecial(unittest.TestCase):
             Substitution({Variable("L"): Number(1), Variable("Y"): String("f")}),
         )
         self.assertEqual(
-            EtaLiteral(
+            AggrElemLiteral(
                 1,
                 3,
                 local_vars,
                 global_vars,
                 TermTuple(Variable("L"), Variable("X"), String("f")),
             ).match(
-                EtaLiteral(
+                AggrElemLiteral(
                     1,
                     3,
                     local_vars,

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, Union
 import aspy
 from aspy.program.literals import (
     AggregateLiteral,
-    AlphaLiteral,
+    AggrPlaceholder,
     LiteralTuple,
     PredicateLiteral,
 )
@@ -16,7 +16,7 @@ from .statement import Fact, Rule
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.literals import Literal
-    from aspy.program.statements import EpsRule, EtaRule, Statement
+    from aspy.program.statements import AggrBaseRule, AggrElemRule, Statement
     from aspy.program.substitution import Substitution
 
 
@@ -189,7 +189,13 @@ class DisjunctiveRule(Rule):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "DisjunctiveRule":
 
@@ -240,7 +246,7 @@ class DisjunctiveRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "DisjunctiveRule":
         return DisjunctiveRule(
             deepcopy(self.atoms),

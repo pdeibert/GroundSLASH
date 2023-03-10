@@ -8,9 +8,9 @@ from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AlphaLiteral, LiteralTuple
+    from aspy.program.literals import AggrPlaceholder, LiteralTuple
     from aspy.program.safety_characterization import SafetyTriplet
-    from aspy.program.statements import EpsRule, EtaRule
+    from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.terms import Variable
 
 
@@ -82,14 +82,20 @@ class Statement(Expr, ABC):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "Statement":
         pass
 
     @abstractmethod  # pragma: no cover
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "Statement":
         pass
 
@@ -117,12 +123,18 @@ class Fact(Rule, ABC):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "Fact":
         return deepcopy(self)
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "Fact":
         return deepcopy(self)

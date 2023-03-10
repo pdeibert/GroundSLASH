@@ -3,13 +3,13 @@ import unittest
 import aspy
 from aspy.grounding.propagation import Propagator
 from aspy.program.literals import (
+    AggrBaseLiteral,
     AggregateCount,
     AggregateElement,
     AggregateLiteral,
-    AlphaLiteral,
-    EpsLiteral,
+    AggrElemLiteral,
+    AggrPlaceholder,
     Equal,
-    EtaLiteral,
     GreaterEqual,
     Guard,
     LessEqual,
@@ -17,7 +17,7 @@ from aspy.program.literals import (
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import EpsRule, EtaRule, NormalRule
+from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalRule
 from aspy.program.terms import Number, TermTuple, Variable
 
 
@@ -50,9 +50,11 @@ class TestPropagation(unittest.TestCase):
                     elements_1,
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 ),
-                AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-                EpsRule(
-                    EpsLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+                AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+                AggrBaseRule(
+                    AggrBaseLiteral(
+                        1, TermTuple(Variable("X")), TermTuple(Variable("X"))
+                    ),
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                     None,
                     LiteralTuple(
@@ -62,8 +64,8 @@ class TestPropagation(unittest.TestCase):
                     ),
                 ),
                 [
-                    EtaRule(
-                        EtaLiteral(
+                    AggrElemRule(
+                        AggrElemLiteral(
                             1,
                             0,
                             TermTuple(Variable("Y")),
@@ -77,8 +79,8 @@ class TestPropagation(unittest.TestCase):
                             Equal(Number(0), Variable("X")),
                         ),
                     ),
-                    EtaRule(
-                        EtaLiteral(
+                    AggrElemRule(
+                        AggrElemLiteral(
                             1,
                             1,
                             TermTuple(),
@@ -100,9 +102,9 @@ class TestPropagation(unittest.TestCase):
                     elements_2,
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
                 ),
-                AlphaLiteral(2, TermTuple(), TermTuple()),
-                EpsRule(
-                    EpsLiteral(2, TermTuple(), TermTuple()),
+                AggrPlaceholder(2, TermTuple(), TermTuple()),
+                AggrBaseRule(
+                    AggrBaseLiteral(2, TermTuple(), TermTuple()),
                     None,
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     LiteralTuple(
@@ -112,8 +114,8 @@ class TestPropagation(unittest.TestCase):
                     ),
                 ),
                 [
-                    EtaRule(
-                        EtaLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
+                    AggrElemRule(
+                        AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                         elements_2[0],
                         LiteralTuple(
                             PredicateLiteral("q", Number(0)),
@@ -131,8 +133,8 @@ class TestPropagation(unittest.TestCase):
         # propagation
         eps_instances = {
             # aggregate 1
-            EpsRule(
-                EpsLiteral(1, TermTuple(Variable("X")), TermTuple(Number(0))),
+            AggrBaseRule(
+                AggrBaseLiteral(1, TermTuple(Variable("X")), TermTuple(Number(0))),
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 None,
                 LiteralTuple(
@@ -142,8 +144,8 @@ class TestPropagation(unittest.TestCase):
                 ),
             ),
             # aggregate 2
-            EpsRule(
-                EpsLiteral(2, TermTuple(), TermTuple()),
+            AggrBaseRule(
+                AggrBaseLiteral(2, TermTuple(), TermTuple()),
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), False),
                 LiteralTuple(
@@ -156,8 +158,8 @@ class TestPropagation(unittest.TestCase):
         eta_instances = {
             # aggregate 1
             # element 0
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     0,
                     TermTuple(Variable("Y")),
@@ -171,8 +173,8 @@ class TestPropagation(unittest.TestCase):
                     Equal(Number(0), Number(0)),
                 ),
             ),
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     0,
                     TermTuple(Variable("Y")),
@@ -187,8 +189,8 @@ class TestPropagation(unittest.TestCase):
                 ),
             ),
             # element 1
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1, 1, TermTuple(), TermTuple(Variable("X")), TermTuple(Number(0))
                 ),
                 elements_1[1],
@@ -199,8 +201,8 @@ class TestPropagation(unittest.TestCase):
                 ),
             ),
             # aggregate 2
-            EtaRule(
-                EtaLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
+            AggrElemRule(
+                AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
                     PredicateLiteral("q", Number(0)),
@@ -222,18 +224,18 @@ class TestPropagation(unittest.TestCase):
         self.assertEqual(
             J_alpha,
             {
-                AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Number(0))),
-                AlphaLiteral(2, TermTuple(), TermTuple()),
+                AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Number(0))),
+                AggrPlaceholder(2, TermTuple(), TermTuple()),
             },
         )
 
         # assembling
         rule = NormalRule(
             PredicateLiteral("p", Variable("X"), Number(0)),
-            AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
             PredicateLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
-            AlphaLiteral(2, TermTuple(), TermTuple()),
+            AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
         rules = propagator.assemble({rule})
         self.assertEqual(len(rules), 1)

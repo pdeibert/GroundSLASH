@@ -21,4 +21,9 @@ from .literal import Literal, LiteralTuple
 from .naf import Naf
 from .neg import Neg
 from .predicate import PredicateLiteral
-from .special import AlphaLiteral, EpsLiteral, EtaLiteral
+from .special import (
+    AggrBaseLiteral,
+    AggrElemLiteral,
+    AggrPlaceholder,
+    ChoicePlaceholder,
+)

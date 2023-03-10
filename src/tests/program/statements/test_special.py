@@ -2,9 +2,9 @@ import unittest
 
 import aspy
 from aspy.program.literals import (
+    AggrBaseLiteral,
     AggregateElement,
-    EpsLiteral,
-    EtaLiteral,
+    AggrElemLiteral,
     GreaterEqual,
     Guard,
     LessEqual,
@@ -12,7 +12,7 @@ from aspy.program.literals import (
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import EpsRule, EtaRule
+from aspy.program.statements import AggrBaseRule, AggrElemRule
 from aspy.program.substitution import Substitution
 from aspy.program.symbol_table import SpecialChar
 from aspy.program.terms import Number, TermTuple, Variable
@@ -35,10 +35,10 @@ class TestSpecial(unittest.TestCase):
         ground_guard_literals = LiteralTuple(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Number(10))
         )
-        ground_eps_literal = EpsLiteral(
+        ground_eps_literal = AggrBaseLiteral(
             1, global_vars, TermTuple(Number(10), Number(3))
         )
-        ground_rule = EpsRule(
+        ground_rule = AggrBaseRule(
             ground_eps_literal,
             *ground_guards,
             ground_guard_literals
@@ -52,8 +52,8 @@ class TestSpecial(unittest.TestCase):
         var_guard_literals = LiteralTuple(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Variable("X"))
         )
-        var_eps_literal = EpsLiteral(1, global_vars, global_vars)
-        var_rule = EpsRule(
+        var_eps_literal = AggrBaseLiteral(1, global_vars, global_vars)
+        var_rule = AggrBaseRule(
             var_eps_literal,
             *var_guards,
             var_guard_literals
@@ -63,7 +63,7 @@ class TestSpecial(unittest.TestCase):
         # invalid initialization
         self.assertRaises(
             ValueError,
-            EpsRule.from_scratch,
+            AggrBaseRule.from_scratch,
             1,
             {global_vars},
             *ground_guards,
@@ -72,7 +72,7 @@ class TestSpecial(unittest.TestCase):
         )  # non-tuple for 'global_vars'
         self.assertRaises(
             ValueError,
-            EpsRule.from_scratch,
+            AggrBaseRule.from_scratch,
             1,
             global_vars,
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -85,10 +85,11 @@ class TestSpecial(unittest.TestCase):
         # string representation
         self.assertEqual(
             str(ground_rule),
-            f"{SpecialChar.EPS.value}{1}(10,3) :- -1>=0, 0<=10, p(2,3).",
+            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(10,3) :- -1>=0, 0<=10, p(2,3).",
         )
         self.assertEqual(
-            str(var_rule), f"{SpecialChar.EPS.value}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y)."
+            str(var_rule),
+            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y).",
         )
         # equality
         self.assertEqual(len(ground_rule.body), 3)
@@ -127,7 +128,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             hash(ground_rule),
             hash(
-                EpsRule(
+                AggrBaseRule(
                     ground_eps_literal,
                     *ground_guards,
                     ground_guard_literals
@@ -138,7 +139,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             hash(var_rule),
             hash(
-                EpsRule(
+                AggrBaseRule(
                     var_eps_literal,
                     *var_guards,
                     var_guard_literals
@@ -181,10 +182,10 @@ class TestSpecial(unittest.TestCase):
             TermTuple(Variable("L")), LiteralTuple(PredicateLiteral("p", Variable("L")))
         )
 
-        ground_eta_literal = EtaLiteral(
+        ground_eta_literal = AggrElemLiteral(
             1, 3, local_vars, global_vars, TermTuple(Number(5), Number(10), Number(3))
         )
-        ground_rule = EtaRule(
+        ground_rule = AggrElemRule(
             ground_eta_literal,
             element,
             LiteralTuple(
@@ -193,10 +194,10 @@ class TestSpecial(unittest.TestCase):
             ),
         )
 
-        var_eta_literal = EtaLiteral(
+        var_eta_literal = AggrElemLiteral(
             1, 3, local_vars, global_vars, local_vars + global_vars
         )
-        var_rule = EtaRule(
+        var_rule = AggrElemRule(
             var_eta_literal,
             element,
             element.literals
@@ -209,10 +210,12 @@ class TestSpecial(unittest.TestCase):
         self.assertTrue(ground_rule.element == var_rule.element == element)
         # string representation
         self.assertEqual(
-            str(ground_rule), f"{SpecialChar.ETA.value}{1}_{3}(5,10,3) :- p(5), p(2,3)."
+            str(ground_rule),
+            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(5,10,3) :- p(5), p(2,3).",
         )
         self.assertEqual(
-            str(var_rule), f"{SpecialChar.ETA.value}{1}_{3}(L,X,Y) :- p(L), p(2,Y)."
+            str(var_rule),
+            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(L,X,Y) :- p(L), p(2,Y).",
         )
         # equality
         self.assertEqual(len(ground_rule.body), 2)
@@ -229,7 +232,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             hash(ground_rule),
             hash(
-                EtaRule(
+                AggrElemRule(
                     ground_eta_literal,
                     element,
                     LiteralTuple(
@@ -242,7 +245,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(
             hash(var_rule),
             hash(
-                EtaRule(
+                AggrElemRule(
                     var_eta_literal,
                     element,
                     element.literals

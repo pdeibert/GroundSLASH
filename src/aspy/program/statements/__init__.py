@@ -9,6 +9,6 @@ from .optimize import (
     OptimizeStatement,
 )
 from .rewrite import rewrite_aggregate
-from .special import EpsRule, EtaRule
+from .special import AggrBaseRule, AggrElemRule
 from .statement import Fact, Rule, Statement
 from .weak_constraint import WeakConstraint

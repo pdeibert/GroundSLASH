@@ -2,13 +2,13 @@ import unittest
 
 import aspy
 from aspy.program.literals import (
+    AggrBaseLiteral,
     AggregateCount,
     AggregateElement,
     AggregateLiteral,
-    AlphaLiteral,
-    EpsLiteral,
+    AggrElemLiteral,
+    AggrPlaceholder,
     Equal,
-    EtaLiteral,
     GreaterEqual,
     Guard,
     LessEqual,
@@ -16,7 +16,7 @@ from aspy.program.literals import (
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import Constraint, EpsRule, EtaRule
+from aspy.program.statements import AggrBaseRule, AggrElemRule, Constraint
 from aspy.program.substitution import Substitution
 from aspy.program.terms import Number, String, TermTuple, Variable
 
@@ -132,10 +132,10 @@ class TestConstraint(unittest.TestCase):
         )
         target_rule = Constraint(
             PredicateLiteral("p", Variable("X"), Number(0)),
-            AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
             PredicateLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
-            AlphaLiteral(2, TermTuple(), TermTuple()),
+            AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
         aggr_map = dict()
 
@@ -147,8 +147,8 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(alpha_literal, target_rule.body[1])
         self.assertEqual(
             eps_rule,
-            EpsRule(
-                EpsLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrBaseRule(
+                AggrBaseLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralTuple(
@@ -162,8 +162,8 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(len(eta_rules), 2)
         self.assertEqual(
             eta_rules[0],
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     0,
                     TermTuple(Variable("Y")),
@@ -181,8 +181,8 @@ class TestConstraint(unittest.TestCase):
         )
         self.assertEqual(
             eta_rules[1],
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     1,
                     TermTuple(),
@@ -204,8 +204,8 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(alpha_literal, target_rule.body[-1])
         self.assertEqual(
             eps_rule,
-            EpsRule(
-                EpsLiteral(2, TermTuple(), TermTuple()),
+            AggrBaseRule(
+                AggrBaseLiteral(2, TermTuple(), TermTuple()),
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralTuple(
@@ -219,8 +219,8 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(len(eta_rules), 1)
         self.assertEqual(
             eta_rules[0],
-            EtaRule(
-                EtaLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
+            AggrElemRule(
+                AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
                     PredicateLiteral("p", Variable("X"), Number(0)),
@@ -234,10 +234,10 @@ class TestConstraint(unittest.TestCase):
         # assembling
         target_rule = Constraint(
             PredicateLiteral("p", Variable("X"), Number(0)),
-            AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
             PredicateLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
-            AlphaLiteral(2, TermTuple(), TermTuple()),
+            AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
         elements_1 = (
             AggregateElement(
@@ -257,7 +257,7 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(
             target_rule.assemble_aggregates(
                 {
-                    AlphaLiteral(
+                    AggrPlaceholder(
                         1, TermTuple(Variable("X")), TermTuple(Variable("X"))
                     ): AggregateLiteral(
                         AggregateCount(),
@@ -270,7 +270,7 @@ class TestConstraint(unittest.TestCase):
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                     ),
-                    AlphaLiteral(2, TermTuple(), TermTuple()): AggregateLiteral(
+                    AggrPlaceholder(2, TermTuple(), TermTuple()): AggregateLiteral(
                         AggregateCount(),
                         (
                             AggregateElement(

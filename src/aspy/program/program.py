@@ -11,9 +11,9 @@ from .program_builder import ProgramBuilder
 # from .statements import Fact, Rule, Constraint, WeakConstraint
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .literals import AlphaLiteral
+    from .literals import AggrPlaceholder
     from .query import Query
-    from .statements import EpsRule, EtaRule, Statement
+    from .statements import AggrBaseRule, AggrElemRule, Statement
 
 
 class Program:
@@ -59,7 +59,7 @@ class Program:
         "Program",
         "Program",
         "Program",
-        Dict[int, Tuple["AlphaLiteral", "EpsRule", List["EtaRule"]]],
+        Dict[int, Tuple["AggrPlaceholder", "AggrBaseRule", List["AggrElemRule"]]],
     ]:
 
         # TODO: get actual counter?

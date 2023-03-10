@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Dict, Set, Tuple
 
 from aspy.program.literals import (
     AggregateLiteral,
-    AlphaLiteral,
+    AggrPlaceholder,
     LiteralTuple,
     PredicateLiteral,
 )
@@ -17,7 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
     from aspy.program.substitution import Substitution
 
-    from .special import EpsRule, EtaRule
+    from .special import AggrBaseRule, AggrElemRule
 
 
 class NormalFact(Fact):
@@ -59,7 +59,6 @@ class NormalFact(Fact):
     @cached_property
     def safe(self) -> bool:
         return self.body.safety(self) == SafetyTriplet(self.global_vars())
-        # return len(self.vars()) == 0
 
     @cached_property
     def ground(self) -> bool:
@@ -147,7 +146,13 @@ class NormalRule(Rule):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "NormalRule":
 
@@ -198,7 +203,7 @@ class NormalRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "NormalRule":
         return NormalRule(
             self.atom,

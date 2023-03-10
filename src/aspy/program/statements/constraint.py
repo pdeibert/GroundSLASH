@@ -9,8 +9,8 @@ from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.literals import AlphaLiteral, Literal
-    from aspy.program.statements import EpsRule, EtaRule
+    from aspy.program.literals import AggrPlaceholder, Literal
+    from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.substitution import Substitution
 
 
@@ -75,7 +75,13 @@ class Constraint(Statement):
         self,
         aggr_counter: int,
         aggr_map: Dict[
-            int, Tuple["AggregateLiteral", "AlphaLiteral", "EpsRule", Set["EtaRule"]]
+            int,
+            Tuple[
+                "AggregateLiteral",
+                "AggrPlaceholder",
+                "AggrBaseRule",
+                Set["AggrElemRule"],
+            ],
         ],
     ) -> "Constraint":
 
@@ -125,7 +131,7 @@ class Constraint(Statement):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "Constraint":
         return Constraint(
             *tuple(

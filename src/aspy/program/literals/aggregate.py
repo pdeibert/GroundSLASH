@@ -844,12 +844,7 @@ class AggregateLiteral(Literal):
                     ).normalize()
                 )
 
-        # TODO: is this even necessary?
-        if len(guard_safeties) == 1:
-            return guard_safeties[0]
-        # both guards specified
-        else:
-            return SafetyTriplet.closure(guard_safeties)
+        return SafetyTriplet.closure(*guard_safeties)
 
     def substitute(self, subst: "Substitution") -> "AggregateLiteral":
         # substitute guard terms recursively

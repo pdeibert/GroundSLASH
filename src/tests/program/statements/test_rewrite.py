@@ -2,13 +2,13 @@ import unittest
 
 import aspy
 from aspy.program.literals import (
+    AggrBaseLiteral,
     AggregateCount,
     AggregateElement,
     AggregateLiteral,
-    AlphaLiteral,
-    EpsLiteral,
+    AggrElemLiteral,
+    AggrPlaceholder,
     Equal,
-    EtaLiteral,
     GreaterEqual,
     Guard,
     LessEqual,
@@ -16,7 +16,7 @@ from aspy.program.literals import (
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import EpsRule, EtaRule, rewrite_aggregate
+from aspy.program.statements import AggrBaseRule, AggrElemRule, rewrite_aggregate
 from aspy.program.terms import Number, TermTuple, Variable
 
 
@@ -59,12 +59,12 @@ class TestRewrite(unittest.TestCase):
         )
         self.assertEqual(
             alpha_literal,
-            AlphaLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
         )
         self.assertEqual(
             eps_rule,
-            EpsRule(
-                EpsLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+            AggrBaseRule(
+                AggrBaseLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralTuple(
@@ -77,8 +77,8 @@ class TestRewrite(unittest.TestCase):
         self.assertEqual(len(eta_rules), 2)
         self.assertEqual(
             eta_rules[0],
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     0,
                     TermTuple(Variable("Y")),
@@ -95,8 +95,8 @@ class TestRewrite(unittest.TestCase):
         )
         self.assertEqual(
             eta_rules[1],
-            EtaRule(
-                EtaLiteral(
+            AggrElemRule(
+                AggrElemLiteral(
                     1,
                     1,
                     TermTuple(),
@@ -118,11 +118,11 @@ class TestRewrite(unittest.TestCase):
             {Variable("X")},
             [PredicateLiteral("q", Variable("X")), Equal(Number(0), Variable("X"))],
         )
-        self.assertEqual(alpha_literal, AlphaLiteral(2, TermTuple(), TermTuple()))
+        self.assertEqual(alpha_literal, AggrPlaceholder(2, TermTuple(), TermTuple()))
         self.assertEqual(
             eps_rule,
-            EpsRule(
-                EpsLiteral(2, TermTuple(), TermTuple()),
+            AggrBaseRule(
+                AggrBaseLiteral(2, TermTuple(), TermTuple()),
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralTuple(
@@ -135,8 +135,8 @@ class TestRewrite(unittest.TestCase):
         self.assertEqual(len(eta_rules), 1)
         self.assertEqual(
             eta_rules[0],
-            EtaRule(
-                EtaLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
+            AggrElemRule(
+                AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
                     PredicateLiteral("q", Number(0)),

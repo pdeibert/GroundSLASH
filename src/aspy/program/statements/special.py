@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Optional
 
 import aspy
-from aspy.program.literals import EpsLiteral, EtaLiteral, LiteralTuple
+from aspy.program.literals import AggrBaseLiteral, AggrElemLiteral, LiteralTuple
 from aspy.program.literals.builtin import op2rel
 from aspy.program.substitution import Substitution
 from aspy.program.terms import TermTuple
@@ -16,12 +16,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.variable_table import VariableTable
 
 
-class EpsRule(NormalRule):
+class AggrBaseRule(NormalRule):
     """TODO."""
 
     def __init__(
         self,
-        atom: EpsLiteral,
+        atom: AggrBaseLiteral,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
         literals: "LiteralTuple",
@@ -47,7 +47,7 @@ class EpsRule(NormalRule):
         rguard: Optional["Guard"],
         base_value: "Term",
         non_aggr_literals: "LiteralTuple",
-    ) -> "EpsRule":
+    ) -> "AggrBaseRule":
 
         # check if global vars is tuple (important for FIXED order)
         if aspy.debug():
@@ -63,7 +63,7 @@ class EpsRule(NormalRule):
                 )
 
         # create head atom/literal
-        atom = EpsLiteral(aggr_id, glob_vars, deepcopy(glob_vars))
+        atom = AggrBaseLiteral(aggr_id, glob_vars, deepcopy(glob_vars))
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = (
             op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
@@ -79,19 +79,19 @@ class EpsRule(NormalRule):
             )
         )
 
-        return EpsRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
+        return AggrBaseRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
 
-    def substitute(self, subst: "Substitution") -> "EpsRule":
+    def substitute(self, subst: "Substitution") -> "AggrBaseRule":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return EpsRule(
+        return AggrBaseRule(
             self.atom.substitute(subst), *self.guards, self.literals.substitute(subst)
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "EpsRule":
-        return EpsRule(
+    def replace_arith(self, var_table: "VariableTable") -> "AggrBaseRule":
+        return AggrBaseRule(
             self.atom.replace_arith(var_table),
             *self.guards,
             self.literals.replace_arith(var_table),
@@ -102,18 +102,21 @@ class EpsRule(NormalRule):
         return self.atom.gather_var_assignment()
 
 
-class EtaRule(NormalRule):
+class AggrElemRule(NormalRule):
     """TODO."""
 
     def __init__(
-        self, atom: EtaLiteral, element: "AggregateElement", literals: "LiteralTuple"
+        self,
+        atom: AggrElemLiteral,
+        element: "AggregateElement",
+        literals: "LiteralTuple",
     ) -> None:
         super().__init__(atom, *literals)
         self.element = element
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, EtaRule)
+            isinstance(other, AggrElemRule)
             and self.atom == other.atom
             and self.literals == other.literals
             and self.element == other.element
@@ -146,7 +149,7 @@ class EtaRule(NormalRule):
         glob_vars: TermTuple,
         element: "AggregateElement",
         non_aggr_literals: "LiteralTuple",
-    ) -> "EtaRule":
+    ) -> "AggrElemRule":
 
         # compute local variables
         local_vars = TermTuple(
@@ -154,25 +157,25 @@ class EtaRule(NormalRule):
         )
 
         # create head atom/literal
-        atom = EtaLiteral(
+        atom = AggrElemLiteral(
             aggr_id, element_id, local_vars, glob_vars, local_vars + glob_vars
         )
         # combine element literals with non-aggregate literals
         literals = element.literals + non_aggr_literals
 
-        return EtaRule(atom, element, literals)
+        return AggrElemRule(atom, element, literals)
 
-    def substitute(self, subst: "Substitution") -> "EtaRule":
+    def substitute(self, subst: "Substitution") -> "AggrElemRule":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return EtaRule(
+        return AggrElemRule(
             self.atom.substitute(subst), self.element, self.literals.substitute(subst)
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "EtaRule":
-        return EtaRule(
+    def replace_arith(self, var_table: "VariableTable") -> "AggrElemRule":
+        return AggrElemRule(
             self.atom.replace_arith(var_table),
             self.element,
             self.literals.replace_arith(var_table),
