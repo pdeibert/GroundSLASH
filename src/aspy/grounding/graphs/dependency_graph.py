@@ -13,7 +13,10 @@ class DependencyGraph:
 
         for dependee in rules:
 
-            head_predicates = set(literal.pred() for literal in dependee.head)
+            # TODO: use "consequents"
+            # TODO: use "antecedents"
+
+            head_predicates = set(literal.pred() for literal in dependee.consequents())
 
             for depender in rules:
 
@@ -21,11 +24,13 @@ class DependencyGraph:
                 if depender is dependee:
                     continue
 
+                body_predicates = depender.antecedents()
+
                 pos_body_predicates = set(
-                    [literal.pred() for literal in depender.body.pos_occ()]
+                    [literal.pred() for literal in body_predicates.pos_occ()]
                 )
                 neg_body_predicates = set(
-                    [literal.pred() for literal in depender.body.neg_occ()]
+                    [literal.pred() for literal in body_predicates.neg_occ()]
                 )
 
                 # positive dependency

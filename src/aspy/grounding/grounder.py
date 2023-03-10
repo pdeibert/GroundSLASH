@@ -201,7 +201,7 @@ class Grounder:
         eta_instances = set()
 
         # NOTE: as implemented by 'mu-gringo', different from original algorithm.
-        # Use of J, J' during grounding of epsilon/eta rules results in incorrect groundings.
+        # Use of J,J' during grounding of epsilon/eta rules yields incorrect groundings.
         K = I.union(J)
         prev_K = set()
 
@@ -301,7 +301,8 @@ class Grounder:
         certain_inst = set()
         possible_inst = set()
 
-        # initialize sets of certain and possible literal instantiations (follow from head literals of statement instantiations)
+        # initialize sets of certain and possible literal instantiations
+        # (follow from head literals of statement instantiations)
         certain_literals = set()
         possible_literals = set()
 
@@ -311,8 +312,7 @@ class Grounder:
             pred_counter = defaultdict(int)
 
             for statement in component.nodes:
-                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
-                for literal in statement.head.pos_occ():
+                for literal in statement.consequents():
                     # increment counter for literal predicate signature
                     pred_counter[literal.pred()] += 1
 
@@ -320,20 +320,17 @@ class Grounder:
 
             for ref_component in ref_component_seq:
                 # wrap refined component in 'Program' object
-                ref_component_prog = Program(tuple(ref_component))  # TODO: correct ?
+                ref_component_prog = Program(tuple(ref_component))
 
                 # predicates which are still open (have not been fully processed yet)
                 open_preds = {var for (var, count) in pred_counter.items() if count > 0}
 
                 # can be pre-computed (used for both set updates)
-                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
-                # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
+                # TODO: make more efficient by updating incrementally?
                 possible_literals = set().union(
-                    *tuple(inst.head.pos_occ() for inst in possible_inst)
+                    *tuple(inst.consequents() for inst in possible_inst)
                 )
 
-                # compute certain instances
-                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
                 instances = self.ground_component(
                     ref_component_prog.reduct(open_preds),
                     possible_literals,
@@ -350,11 +347,10 @@ class Grounder:
                 certain_inst.update(instances)
 
                 # compute & update possible instances
-                # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
-                # TODO: make more efficient by updating incrementally and keeping '_prev' sets?
+                # TODO: make more efficient by updating incrementally?
                 certain_literals = set().union(
                     *tuple(
-                        inst.head.pos_occ()
+                        inst.consequents()
                         for inst in certain_inst
                         if inst.deterministic
                     )
@@ -367,8 +363,7 @@ class Grounder:
                 )
 
                 for statement in ref_component:
-                    # TODO: decrease pred_counter?
-                    for literal in statement.head.pos_occ():
+                    for literal in statement.consequents():
                         # increment counter for literal predicate signature
                         pred_counter[literal.pred()] -= 1
 

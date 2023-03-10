@@ -8,7 +8,7 @@ from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AlphaLiteral
+    from aspy.program.literals import AlphaLiteral, LiteralTuple
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.statements import EpsRule, EtaRule
     from aspy.program.terms import Variable
@@ -92,6 +92,12 @@ class Statement(Expr, ABC):
         self, assembling_map: Dict["AlphaLiteral", "AggregateLiteral"]
     ) -> "Statement":
         pass
+
+    def consequents(self) -> "LiteralTuple":
+        return self.head
+
+    def antecedents(self) -> "LiteralTuple":
+        return self.body
 
 
 class Rule(Statement, ABC):
