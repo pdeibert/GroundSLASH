@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional, Set, Union
 import aspy
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SYM_CONST_RE
+from aspy.program.symbols import SYM_CONST_RE
 
 from .term import Infimum, Number, String, SymbolicConstant, Term, TermTuple
 

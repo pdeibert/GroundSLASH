@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
 from aspy.program.operators import ArithOp
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SpecialChar
+from aspy.program.symbols import SpecialChar
 
 from .special import ArithVariable
 from .term import Number, Term, Variable

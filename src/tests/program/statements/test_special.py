@@ -14,7 +14,7 @@ from aspy.program.literals import (
 from aspy.program.operators import RelOp
 from aspy.program.statements import AggrBaseRule, AggrElemRule
 from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SpecialChar
+from aspy.program.symbols import SpecialChar
 from aspy.program.terms import Number, TermTuple, Variable
 
 

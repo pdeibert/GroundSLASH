@@ -2,7 +2,7 @@ import unittest
 
 import aspy
 from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SpecialChar
+from aspy.program.symbols import SpecialChar
 from aspy.program.terms import Add, ArithVariable, Minus, Number, Variable
 
 

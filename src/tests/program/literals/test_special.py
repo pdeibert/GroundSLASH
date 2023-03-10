@@ -4,7 +4,7 @@ import aspy
 from aspy.program.literals import AggrBaseLiteral, AggrElemLiteral, AggrPlaceholder, Naf
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
-from aspy.program.symbol_table import SpecialChar
+from aspy.program.symbols import SpecialChar
 from aspy.program.terms import Number, String, TermTuple, Variable
 from aspy.program.variable_table import VariableTable
 

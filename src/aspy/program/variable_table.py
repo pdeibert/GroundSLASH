@@ -1,6 +1,6 @@
 from typing import Dict, Optional, Set, Union
 
-from .symbol_table import SpecialChar
+from .symbols import SpecialChar
 from .terms import AnonVariable, ArithTerm, ArithVariable, Variable
 
 

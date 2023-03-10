@@ -7,7 +7,7 @@ import aspy
 from aspy.program.expression import Expr
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import AssignmentError, Substitution
-from aspy.program.symbol_table import SYM_CONST_RE, VARIABLE_RE
+from aspy.program.symbols import SYM_CONST_RE, VARIABLE_RE
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import aspy
-from aspy.program.symbol_table import SpecialChar
+from aspy.program.symbols import SpecialChar
 from aspy.program.terms.term import Term
 
 from .term import Variable
