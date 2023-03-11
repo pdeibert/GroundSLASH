@@ -22,7 +22,17 @@ from aspy.program.literals import (
 )
 from aspy.program.operators import RelOp
 from aspy.program.program import Program
-from aspy.program.statements import NormalFact, NormalRule
+from aspy.program.statements import (
+    Choice,
+    ChoiceElement,
+    ChoiceFact,
+    ChoiceRule,
+    Constraint,
+    DisjunctiveFact,
+    DisjunctiveRule,
+    NormalFact,
+    NormalRule,
+)
 from aspy.program.terms import (
     Add,
     AnonVariable,
@@ -111,7 +121,8 @@ class TestProgram(unittest.TestCase):
     def test_from_string(self):
 
         # ----- terms -----
-        # NOTE: use normal facts and predicate literals to check (somewhat of a circular test)
+        # NOTE: use normal facts and predicate literals to check
+        # (somewhat of a circular test)
 
         # variable
         self.assertEqual(
@@ -392,25 +403,73 @@ class TestProgram(unittest.TestCase):
         )
 
         # ----- normal facts -----'
-        # TODO
+        self.assertEqual(
+            Program.from_string("p.").statements[0], NormalFact(PredicateLiteral("p"))
+        )
 
         # ----- normal rules -----
-        # TODO
+        self.assertEqual(
+            Program.from_string("p :- q.").statements[0],
+            NormalRule(PredicateLiteral("p"), PredicateLiteral("q")),
+        )
 
         # ----- disjunctive facts -----
-        # TODO
+        self.assertEqual(
+            Program.from_string("p | u | v.").statements[0],
+            DisjunctiveFact(
+                PredicateLiteral("p"), PredicateLiteral("u"), PredicateLiteral("v")
+            ),
+        )
 
         # ----- disjunctive rules -----
-        # TODO
+        self.assertEqual(
+            Program.from_string("p | u | v :- q.").statements[0],
+            DisjunctiveRule(
+                (PredicateLiteral("p"), PredicateLiteral("u"), PredicateLiteral("v")),
+                (PredicateLiteral("q"),),
+            ),
+        )
 
         # ----- choice facts -----
-        # TODO
+        self.assertEqual(
+            Program.from_string(r"3 < {u:p;v:q} > 5.").statements[0],
+            ChoiceFact(
+                Choice(
+                    (
+                        ChoiceElement(PredicateLiteral("u"), (PredicateLiteral("p"),)),
+                        ChoiceElement(PredicateLiteral("v"), (PredicateLiteral("q"),)),
+                    ),
+                    (
+                        Guard(RelOp.LESS, Number(3), False),
+                        Guard(RelOp.GREATER, Number(5), True),
+                    ),
+                )
+            ),
+        )
 
         # ----- choice rules -----
-        # TODO
+        self.assertEqual(
+            Program.from_string(r"3 < {u:p;v:q} > 5 :- r, s.").statements[0],
+            ChoiceRule(
+                Choice(
+                    (
+                        ChoiceElement(PredicateLiteral("u"), (PredicateLiteral("p"),)),
+                        ChoiceElement(PredicateLiteral("v"), (PredicateLiteral("q"),)),
+                    ),
+                    (
+                        Guard(RelOp.LESS, Number(3), False),
+                        Guard(RelOp.GREATER, Number(5), True),
+                    ),
+                ),
+                (PredicateLiteral("r"), PredicateLiteral("s")),
+            ),
+        )
 
         # ----- constraint -----
-        # TODO
+        self.assertEqual(
+            Program.from_string(":- p, q.").statements[0],
+            Constraint(PredicateLiteral("p"), PredicateLiteral("q")),
+        )
 
         # ----- weak constraint -----
         # TODO

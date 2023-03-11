@@ -145,27 +145,29 @@ class ProgramBuilder(ASPCoreVisitor):
 
             # head DOT | head CONS DOT (i.e., fact)
             if n_children < 4:
-                # disjunctive fact
-                if len(head) > 1:
-                    statement = DisjunctiveFact(*head)
-                # normal fact
-                elif isinstance(head[0], PredicateLiteral):
-                    statement = NormalFact(head[0])
+                if not isinstance(head, Choice):
+                    # disjunctive fact
+                    if len(head) > 1:
+                        statement = DisjunctiveFact(*head)
+                    # normal fact
+                    elif isinstance(head[0], PredicateLiteral):
+                        statement = NormalFact(head[0])
                 # choice fact
                 else:
-                    statement = ChoiceFact(head[0])
+                    statement = ChoiceFact(head)
             # head CONS body DOT (i.e., disjunctive rule)
             else:
                 body = self.visitBody(ctx.children[2])
 
-                # disjunctive rule
-                if len(head) > 1:
-                    statement = DisjunctiveRule(head, body)
-                # normal rule
-                elif isinstance(head[0], PredicateLiteral):
-                    statement = NormalRule(head[0], *body)
+                if not isinstance(head, Choice):
+                    # disjunctive rule
+                    if len(head) > 1:
+                        statement = DisjunctiveRule(head, body)
+                    # normal rule
+                    elif isinstance(head[0], PredicateLiteral):
+                        statement = NormalRule(head[0], *body)
                 else:
-                    statement = ChoiceRule(head[0], *body)
+                    statement = ChoiceRule(head, body)
         # optimize DOT
         else:
             statement = self.visitOptimize(ctx.children[0])
@@ -247,32 +249,32 @@ class ProgramBuilder(ASPCoreVisitor):
         lguard, rguard = None, None
 
         # term relop
-        if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
+        if isinstance(ctx.children[0], ASPCoreParser.TermContext):
             lguard = Guard(
                 self.visitRelop(ctx.children[1]),
-                self.visitTerm(self.children[0]),
+                self.visitTerm(ctx.children[0]),
                 False,
             )
-            moving_index += 3  # skip CURLY_OPEN as well
+            moving_index += 3  # should now point to 'choice_elements' of 'CURLY_CLOSE'
 
         # CURLY_OPEN CURLY_CLOSE
         if isinstance(ctx.children[moving_index], antlr4.tree.Tree.TerminalNode):
             elements = tuple()
-            moving_index += 1
+            moving_index += 1  # should now point to 'relop' or be out of bounds
         # CURLY_OPEN choice_elements CURLY_CLOSE
         else:
-            elements = self.visitChoice_elements(ctx.children[moving_index + 1])
-            moving_index += 2
+            elements = self.visitChoice_elements(ctx.children[moving_index])
+            moving_index += 2  # skip CURLY_OPEN as well; should now point to 'relop' or be out of bounds # noqa
 
         # relop term
         if moving_index < len(ctx.children) - 1:
             rguard = Guard(
                 self.visitRelop(ctx.children[moving_index]),
-                self.visitTerm(self.children[moving_index + 1]),
+                self.visitTerm(ctx.children[moving_index + 1]),
                 True,
             )
 
-        return Choice(elements, lguard, rguard)
+        return Choice(elements, (lguard, rguard))
 
     # Visit a parse tree produced by ASPCoreParser#choice_elements.
     def visitChoice_elements(
