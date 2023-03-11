@@ -666,10 +666,6 @@ class TestChoice(unittest.TestCase):
             var_choice, (PredicateLiteral("q", Variable("X")),)
         )
 
-        # print(ground_rule.safe)
-        # print(safe_var_rule.safe)
-        # print(unsafe_var_rule.safe)
-
         # string representation
         self.assertEqual(
             str(ground_rule), '3 < {p(5):p("str"),not q;p(-3):not p("str")} :- q(1).'

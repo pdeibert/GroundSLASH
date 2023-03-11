@@ -294,7 +294,7 @@ class ChoicePlaceholder(AuxLiteral):
                 f"Number of global variables for {type(self)} does not match number of specified terms."  # noqa
             )
 
-        super().__init__(f"{SpecialChar.ALPHA.value}{choice_id}", *terms)
+        super().__init__(f"{SpecialChar.CHI.value}{choice_id}", *terms)
         self.choice_id = choice_id
         self.glob_vars = glob_vars
 
@@ -336,7 +336,6 @@ class ChoicePlaceholder(AuxLiteral):
             self.choice_id,
             self.glob_vars,
             TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
-            naf=self.naf,
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "ChoicePlaceholder":
