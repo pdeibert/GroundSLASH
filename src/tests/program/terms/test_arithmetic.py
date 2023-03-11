@@ -56,12 +56,16 @@ class TestArithmetic(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            Minus(Variable("X")).substitute(Substitution({Variable("X"): Number(1)})),
+            var_term.substitute(Substitution({Variable("X"): Number(1)})),
             Minus(Number(1)),
         )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(Substitution({Variable("X"): Number(1)})),
+            ground_term,
+        )  # NOTE: substitution is invalid
         # match
-        self.assertRaises(ValueError, Minus(Variable("X")).match, Number(3))
-        self.assertRaises(ValueError, Minus(Number(3)).match, Minus(Variable("X")))
+        self.assertRaises(ValueError, var_term.match, Number(3))
+        self.assertRaises(ValueError, Minus(Number(3)).match, var_term)
         self.assertEqual(Minus(Number(3)).match(Minus(Number(1))), None)
         self.assertEqual(Minus(Number(3)).match(Minus(Number(3))), Substitution())
 
@@ -121,6 +125,10 @@ class TestArithmetic(unittest.TestCase):
                 Substitution({Variable("X"): Number(1)})
             ),
             Add(Number(1), Number(0)),
+        )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(Substitution({Variable("X"): Number(1)})),
+            ground_term,
         )  # NOTE: substitution is invalid
         # match
         self.assertRaises(ValueError, Add(Variable("X"), Number(2)).match, Number(3))
@@ -193,6 +201,10 @@ class TestArithmetic(unittest.TestCase):
             ),
             Sub(Number(1), Number(0)),
         )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(Substitution({Variable("X"): Number(1)})),
+            ground_term,
+        )  # NOTE: substitution is invalid
         # match
         self.assertRaises(ValueError, Sub(Variable("X"), Number(2)).match, Number(1))
         self.assertRaises(
@@ -264,6 +276,10 @@ class TestArithmetic(unittest.TestCase):
                 Substitution({Variable("X"): Number(1)})
             ),
             Mult(Number(1), Number(0)),
+        )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(Substitution({Variable("X"): Number(1)})),
+            ground_term,
         )  # NOTE: substitution is invalid
         # match
         self.assertRaises(ValueError, Mult(Variable("X"), Number(2)).match, Number(6))
@@ -361,6 +377,10 @@ class TestArithmetic(unittest.TestCase):
             ),
             Div(Number(1), Number(0)),
         )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(Substitution({Variable("X"): Number(1)})),
+            ground_term,
+        )  # NOTE: substitution is invalid
         # match
         self.assertRaises(ValueError, Div(Variable("X"), Number(2)).match, Number(3))
         self.assertRaises(
@@ -391,12 +411,8 @@ class TestArithmetic(unittest.TestCase):
         # right operand one
         self.assertTrue(Div(Variable("X"), Number(1)).simplify(), Variable("X"))
         # right operand negative one
-        self.assertTrue(
-            Mult(Variable("X"), Number(-1)).simplify(), Minus(Variable("X"))
-        )
-        self.assertTrue(
-            Mult(Minus(Variable("X")), Number(-1)).simplify(), Variable("X")
-        )
+        self.assertTrue(Div(Variable("X"), Number(-1)).simplify(), Minus(Variable("X")))
+        self.assertTrue(Div(Minus(Variable("X")), Number(-1)).simplify(), Variable("X"))
 
 
 if __name__ == "__main__":  # pragma: no cover

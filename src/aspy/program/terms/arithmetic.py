@@ -351,13 +351,8 @@ class Mult(ArithTerm):
             return Number(loperand.val * roperand.val)
         # only left operand is a number
         elif isinstance(loperand, Number):
-            # multiplication by zero
-            if loperand.val == 0:
-                # only simplify to zero if other operand is grounded
-                if not roperand.vars:
-                    return Number(0)
             # identity multiplication
-            elif loperand.val == 1:
+            if loperand.val == 1:
                 return roperand
             # negation
             elif loperand.val == -1:
@@ -368,13 +363,8 @@ class Mult(ArithTerm):
                 return Minus(roperand)
         # only right operand is a number
         elif isinstance(roperand, Number):
-            # multiplication by zero
-            if roperand.val == 0:
-                # only simplify to zero if other operand is grounded
-                if not loperand.vars:
-                    return Number(0)
             # identity multiplication
-            elif roperand.val == 1:
+            if roperand.val == 1:
                 return loperand
             # negation
             elif roperand.val == -1:
@@ -457,13 +447,6 @@ class Div(ArithTerm):
 
             # NOTE: integer division
             return Number(loperand.val // roperand.val)
-        # only left operand is a number
-        elif isinstance(loperand, Number):
-            # dividing zero
-            if loperand.val == 0:
-                # only simplify to zero if other operand is grounded
-                if not roperand.vars:
-                    return Number(0)
         # only right operand is a number
         elif isinstance(roperand, Number):
             # division by zero

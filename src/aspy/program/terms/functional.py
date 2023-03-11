@@ -54,22 +54,18 @@ class Functional(Term):
         if isinstance(other, (Infimum, Number, SymbolicConstant, String)):
             return False
         elif isinstance(other, Functional):
-            if self.arity < other.arity:
-                return True
-            elif self.arity == other.arity:
-                if self.symbol < other.symbol:
-                    return True
-                elif self.symbol == other.symbol:
+            if self.arity == other.arity:
+                if self.symbol == other.symbol:
                     for self_term, other_term in zip(self.terms, other.terms):
                         # other_term < self_term
                         if other_term.precedes(self_term) and not self_term.precedes(
                             other_term
                         ):
                             return False
+                elif self.symbol > other.symbol:
+                    return False
 
-                    return True
-
-        return False
+        return True
 
     def vars(self) -> Set["Variable"]:
         return self.terms.vars()

@@ -6,9 +6,11 @@ from aspy.program.substitution import Substitution
 from aspy.program.terms import (
     ArithVariable,
     Functional,
+    Infimum,
     Minus,
     Number,
     String,
+    Supremum,
     Variable,
 )
 from aspy.program.variable_table import VariableTable
@@ -36,10 +38,16 @@ class TestFunctional(unittest.TestCase):
         # arity
         self.assertEqual(ground_term.arity, 2)
         # total order for terms
+        self.assertFalse(ground_term.precedes(Infimum()))
         self.assertFalse(ground_term.precedes(Functional("e", Number(1), String("x"))))
         self.assertFalse(ground_term.precedes(Functional("f", Number(0), String("x"))))
         self.assertFalse(ground_term.precedes(Functional("f", Number(0), String("y"))))
         self.assertTrue(ground_term.precedes(Functional("f", Number(1), String("x"))))
+        self.assertTrue(ground_term.precedes(Functional("g", Infimum(), Infimum())))
+        self.assertTrue(
+            ground_term.precedes(Functional("f", Number(1), String("x"), Number(2)))
+        )
+        self.assertTrue(ground_term.precedes(Supremum()))
         # ground
         self.assertTrue(ground_term.ground)
         self.assertFalse(var_term.ground)
@@ -64,6 +72,12 @@ class TestFunctional(unittest.TestCase):
             ),
             Functional("f", String("f"), Number(1)),
         )  # NOTE: substitution is invalid
+        self.assertEqual(
+            ground_term.substitute(
+                Substitution({String("f"): Number(0), Variable("X"): Number(1)})
+            ),
+            ground_term,
+        )
         # match
         self.assertEqual(
             Functional("f", Variable("X"), String("f")).match(
@@ -77,6 +91,18 @@ class TestFunctional(unittest.TestCase):
             ),
             None,
         )  # ground terms don't match
+        self.assertEqual(
+            Functional("f", Variable("X"), Variable("X")).match(
+                Functional("f", Number(1), String("f"), Number(2))
+            ),
+            None,
+        )  # different arity
+        self.assertEqual(
+            Functional("f", Variable("X"), Variable("X")).match(
+                Functional("g", Variable("X"), Variable("X"))
+            ),
+            None,
+        )  # different symbol
         self.assertEqual(
             Functional("f", Variable("X"), Variable("X")).match(
                 Functional("f", Number(1), String("f"))
