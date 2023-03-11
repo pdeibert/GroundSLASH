@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import TYPE_CHECKING, NamedTuple, Optional, Set, Union
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -35,13 +36,13 @@ class Guard(NamedTuple):
 
     def to_left(self) -> "Guard":
         if self.right:
-            return Guard(-self.op, self.term, False)
-        return self.copy()
+            return Guard(-self.op, self.bound, False)
+        return deepcopy(self)
 
     def to_right(self) -> "Guard":
         if not self.right:
-            return Guard(-self.op, self.term, True)
-        return self.copy()
+            return Guard(-self.op, self.bound, True)
+        return deepcopy(self)
 
     def vars(self) -> Set["Variable"]:
         return self.bound.vars()
@@ -54,6 +55,7 @@ class Guard(NamedTuple):
     ) -> "SafetyTriplet":
         return self.bound.safety(rule)
 
+    @property
     def ground(self) -> bool:
         return self.bound.ground
 
