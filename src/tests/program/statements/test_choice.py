@@ -17,7 +17,7 @@ from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
 from aspy.program.variable_table import VariableTable
 
 
-class DummyRule:
+class DummyRule:  # pragma: no cover
     def __init__(self, vars: Set["Variable"]) -> None:
         self.vars = vars
 
@@ -828,5 +828,5 @@ class TestChoice(unittest.TestCase):
         # TODO: propagate
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

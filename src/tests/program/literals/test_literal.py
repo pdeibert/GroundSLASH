@@ -143,5 +143,5 @@ class TestLiteral(unittest.TestCase):
         # TODO: iter
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

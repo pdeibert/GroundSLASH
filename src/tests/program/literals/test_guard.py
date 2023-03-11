@@ -47,5 +47,5 @@ class TestGuard(unittest.TestCase):
         # TODO: safety characterization (see aggregate tests)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

@@ -108,5 +108,5 @@ class TestPredicate(unittest.TestCase):
         )  # assignment conflict
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

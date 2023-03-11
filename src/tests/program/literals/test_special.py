@@ -634,5 +634,5 @@ class TestSpecial(unittest.TestCase):
         )  # ground terms don't match
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

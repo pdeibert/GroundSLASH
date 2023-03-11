@@ -580,5 +580,5 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

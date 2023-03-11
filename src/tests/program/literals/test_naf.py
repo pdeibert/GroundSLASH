@@ -67,5 +67,5 @@ class TestNaf(unittest.TestCase):
         self.assertRaises(ValueError, Naf, Equal(Number(0), Variable("Y")))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

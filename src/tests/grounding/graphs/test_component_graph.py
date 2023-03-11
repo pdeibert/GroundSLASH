@@ -124,5 +124,5 @@ class TestComponentGraph(unittest.TestCase):
         self.assertEqual(y_comp.sequence(), [(y,)])
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

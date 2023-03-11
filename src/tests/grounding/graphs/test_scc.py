@@ -21,5 +21,5 @@ class TestSCC(unittest.TestCase):
             self.assertTrue(scc in graph_SCCs)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

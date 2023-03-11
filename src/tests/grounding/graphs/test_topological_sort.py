@@ -33,5 +33,5 @@ class TestSCC(unittest.TestCase):
         self.assertRaises(ValueError, topological_sort, nodes, edges)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()
