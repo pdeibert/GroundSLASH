@@ -9,7 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.statements import Statement
 
 
-class Propagator:
+class AggrPropagator:
     def __init__(
         self,
         aggr_map: Dict[
@@ -92,7 +92,8 @@ class Propagator:
         return possible_alpha_literals
 
     def assemble(self, rules: Set["Statement"]) -> Set["Statement"]:
-        # map ground alpha literals to corresponding assembled aggr. literals to be replaced with
+        # map ground alpha literals to corresponding
+        # assembled aggr. literals to be replaced with
         assembling_map = {
             alpha_literal: AggregateLiteral(
                 aggr_func, tuple(elements), guards, naf=alpha_literal.naf

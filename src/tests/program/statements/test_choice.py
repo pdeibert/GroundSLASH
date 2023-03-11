@@ -280,111 +280,111 @@ class TestChoice(unittest.TestCase):
         )
         # evaluation
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable lower bound
-                guards=Guard(RelOp.LESS, Number(1), False),
-            ).eval()
+                guards=(Guard(RelOp.LESS, Number(1), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable lower bound
-                guards=Guard(RelOp.LESS, Number(2), False),
-            ).eval()
+                guards=(Guard(RelOp.LESS, Number(2), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable lower bound
-                guards=Guard(RelOp.LESS_OR_EQ, Number(2), False),
-            ).eval()
+                guards=(Guard(RelOp.LESS_OR_EQ, Number(2), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable lower bound
-                guards=Guard(RelOp.LESS_OR_EQ, Number(3), False),
-            ).eval()
+                guards=(Guard(RelOp.LESS_OR_EQ, Number(3), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable upper bound
-                guards=Guard(RelOp.GREATER, Number(1), False),
-            ).eval()
+                guards=(Guard(RelOp.GREATER, Number(1), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable upper bound
-                guards=Guard(RelOp.GREATER, Number(0), False),
-            ).eval()
+                guards=(Guard(RelOp.GREATER, Number(0), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable upper bound
-                guards=Guard(RelOp.GREATER_OR_EQ, Number(0), False),
-            ).eval()
+                guards=(Guard(RelOp.GREATER_OR_EQ, Number(0), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable upper bound
-                guards=Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
-            ).eval()
+                guards=(Guard(RelOp.GREATER_OR_EQ, Number(-1), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable equality bound
-                guards=Guard(RelOp.EQUAL, Number(2), False),
-            ).eval()
+                guards=(Guard(RelOp.EQUAL, Number(2), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable equality bound
-                guards=Guard(RelOp.EQUAL, Number(-1), False),
-            ).eval()
+                guards=(Guard(RelOp.EQUAL, Number(-1), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # unsatisfiable equality bound
-                guards=Guard(RelOp.EQUAL, Number(3), False),
-            ).eval()
+                guards=(Guard(RelOp.EQUAL, Number(3), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 # no elements
                 tuple(),
                 # satisfiable unequality bound
-                guards=Guard(RelOp.UNEQUAL, Number(-1), False),
-            ).eval()
+                guards=(Guard(RelOp.UNEQUAL, Number(-1), False), None),
+            )
         )
         self.assertFalse(
-            Choice(
+            Choice.eval(
                 # no elements
                 tuple(),
                 # unsatisfiable unequality bound
-                guards=Guard(RelOp.UNEQUAL, Number(0), False),
-            ).eval()
+                guards=(Guard(RelOp.UNEQUAL, Number(0), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable unequality bound
-                guards=Guard(RelOp.UNEQUAL, Number(-1), False),
-            ).eval()
+                guards=(Guard(RelOp.UNEQUAL, Number(-1), False), None),
+            )
         )
         self.assertTrue(
-            Choice(
+            Choice.eval(
                 ground_elements,
                 # satisfiable unequality bound
-                guards=Guard(RelOp.UNEQUAL, Number(0), False),
-            ).eval()
+                guards=(Guard(RelOp.UNEQUAL, Number(0), False), None),
+            )
         )
         # TODO: test evaluation with two guards
 

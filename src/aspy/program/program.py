@@ -11,9 +11,15 @@ from .program_builder import ProgramBuilder
 # from .statements import Fact, Rule, Constraint, WeakConstraint
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .literals import AggrPlaceholder
+    from .literals import AggrPlaceholder, ChoicePlaceholder
     from .query import Query
-    from .statements import AggrBaseRule, AggrElemRule, Statement
+    from .statements import (
+        AggrBaseRule,
+        AggrElemRule,
+        ChoiceBaseRule,
+        ChoiceElemRule,
+        Statement,
+    )
 
 
 class Program:
@@ -89,6 +95,42 @@ class Program:
             aggr_map,
         )
 
+    def rewrite_choices(
+        self,
+    ) -> Tuple[
+        "Program",
+        "Program",
+        "Program",
+        Dict[int, Tuple["ChoicePlaceholder", "ChoiceBaseRule", List["ChoiceElemRule"]]],
+    ]:
+
+        # TODO: get actual counter?
+        choice_counter = 0
+
+        chi_statements = []
+        eps_statements = []
+        eta_statements = []
+
+        aggr_map = dict()
+
+        for statement in self.statements:
+
+            chi_statement = statement.rewrite_choices(choice_counter, aggr_map)
+
+            for *_, eps_statement, eta_statements in aggr_map.values():
+                eps_statements.append(eps_statement)
+                eta_statements += eta_statements
+                choice_counter += 1
+
+            chi_statements.append(chi_statement)
+
+        return (
+            Program(chi_statements, self.query),
+            Program(eps_statements),
+            Program(eta_statements),
+            aggr_map,
+        )
+
     @cached_property
     def safe(self) -> bool:
         return all(statement.safe for statement in self.statements)  # TODO: query?
@@ -110,21 +152,3 @@ class Program:
         statements, query = ProgramBuilder().visit(tree)
 
         return Program(tuple(statements), query)
-
-    """
-    @property
-    def rules(self) -> Tuple[Rule, ...]:
-        return self.facts + self.non_facts
-
-    def facts(self) -> Tuple[Fact, ...]:
-        return tuple([statement for statement in self.statements if isinstance(statement, Fact)])
-
-    def non_facts(self) -> Tuple[Rule, ...]:
-        return tuple([statement for statement in self.statements if isinstance(statement, Rule) and not isinstance(statement, Fact)])
-
-    def constraints(self) -> Tuple[Constraint, ...]:
-        return tuple([statement for statement in self.statements if isinstance(statement, Constraint)])
-
-    def weak_constraints(self) -> Tuple[WeakConstraint, ...]:
-        return tuple([statement for statement in self.statements if isinstance(statement, WeakConstraint)])
-    """

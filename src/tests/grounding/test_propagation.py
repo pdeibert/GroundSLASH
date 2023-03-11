@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.grounding.propagation import Propagator
+from aspy.grounding.propagation import AggrPropagator
 from aspy.program.literals import (
     AggrBaseLiteral,
     AggregateCount,
@@ -126,7 +126,7 @@ class TestPropagation(unittest.TestCase):
                 ],
             ),
         }
-        propagator = Propagator(aggr_map)
+        propagator = AggrPropagator(aggr_map)
         self.assertEqual(propagator.aggr_map, aggr_map)
         self.assertEqual(propagator.instance_map, dict())
 

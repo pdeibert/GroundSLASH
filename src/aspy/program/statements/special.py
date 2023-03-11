@@ -11,7 +11,7 @@ from aspy.program.literals import (
 )
 from aspy.program.literals.builtin import op2rel
 from aspy.program.substitution import Substitution
-from aspy.program.terms import TermTuple
+from aspy.program.terms import Number, TermTuple
 
 from .normal import NormalRule
 
@@ -222,7 +222,6 @@ class ChoiceBaseRule(NormalRule):
         glob_vars: TermTuple,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
-        base_value: "Term",
         non_aggr_literals: "LiteralTuple",
     ) -> "ChoiceBaseRule":
 
@@ -243,10 +242,10 @@ class ChoiceBaseRule(NormalRule):
         atom = ChoiceBaseLiteral(choice_id, glob_vars, deepcopy(glob_vars))
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = (
-            op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
+            op2rel[lguard.op](lguard.bound, Number(0)) if lguard is not None else None
         )
         rguard_literal = (
-            op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
+            op2rel[rguard.op](Number(0), rguard.bound) if rguard is not None else None
         )
         guard_literals = LiteralTuple(
             *tuple(

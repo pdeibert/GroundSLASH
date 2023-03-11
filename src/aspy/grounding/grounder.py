@@ -16,7 +16,7 @@ from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable
 
 from .graphs import ComponentGraph
-from .propagation import Propagator
+from .propagation import AggrPropagator, ChoicePropagator
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal, LiteralTuple
@@ -197,8 +197,10 @@ class Grounder:
 
         # initialize sets of instances/literals
         alpha_instances = set()
-        eps_instances = set()
-        eta_instances = set()
+        aggr_eps_instances = set()
+        aggr_eta_instances = set()
+        choice_eps_instances = set()
+        choice_eta_instances = set()
 
         # NOTE: as implemented by 'mu-gringo', different from original algorithm.
         # Use of J,J' during grounding of epsilon/eta rules yields incorrect groundings.
@@ -207,45 +209,63 @@ class Grounder:
 
         J_alpha = set()
         prev_J_alpha = set()
+        J_chi = set()
+        prev_J_chi = set()
         prev_J = set()
 
         # initialize flag
         duplicate = False
 
-        prog_alpha, prog_eps, prog_eta, aggr_map = component.rewrite_aggregates()
+        (
+            prog_alpha,
+            prog_aggr_eps,
+            prog_aggr_eta,
+            aggr_map,
+        ) = component.rewrite_aggregates()
+        (
+            prog_alpha,
+            prog_choice_eps,
+            prog_choice_eta,
+            choice_map,
+        ) = prog_alpha.rewrite_choices()
+        # TODO: rewrite choice expressions!
+
         # initialize propagator
-        propagator = Propagator(aggr_map)
+        aggr_propagator = AggrPropagator(aggr_map)
+        choice_propagator = ChoicePropagator(choice_map)
 
         converged = False
 
         while not converged:
 
-            # ground epsilon rules
+            # ground aggregate epsilon rules
             # (encode the satisfiability of aggregates without any element instances)
-            eps_instances.update(
+            aggr_eps_instances.update(
                 set().union(
                     *tuple(
                         self.ground_statement(
                             rule, rule.body, I, K, prev_K, Substitution(), duplicate
                         )
-                        for rule in prog_eps.statements
+                        for rule in prog_aggr_eps.statements
                     )
                 )
             )
             # ground eta rules (encode the satisfiability of aggregate elements)
-            eta_instances.update(
+            aggr_eta_instances.update(
                 set().union(
                     *tuple(
                         self.ground_statement(
                             rule, rule.body, I, K, prev_K, Substitution(), duplicate
                         )
-                        for rule in prog_eta.statements
+                        for rule in prog_aggr_eta.statements
                     )
                 )
             )
 
             # propagate aggregates
-            J_alpha = propagator.propagate(eps_instances, eta_instances, I, J, J_alpha)
+            J_alpha = aggr_propagator.propagate(
+                aggr_eps_instances, aggr_eta_instances, I, J, J_alpha
+            )
 
             # ground remaining rules (including non-aggregate rules)
             alpha_instances.update(
@@ -264,10 +284,48 @@ class Grounder:
                     )
                 )
             )
+            choice_eps_instances.update(
+                set().union(
+                    *tuple(
+                        self.ground_statement(
+                            rule,
+                            rule.body,
+                            I,
+                            J.union(J_alpha),
+                            prev_J.union(prev_J_alpha),
+                            Substitution(),
+                            duplicate,
+                        )
+                        for rule in prog_choice_eps.statements
+                    )
+                )
+            )
+            choice_eta_instances.update(
+                set().union(
+                    *tuple(
+                        self.ground_statement(
+                            rule,
+                            rule.body,
+                            I,
+                            J.union(J_alpha),
+                            prev_J.union(prev_J_alpha),
+                            Substitution(),
+                            duplicate,
+                        )
+                        for rule in prog_choice_eta.statements
+                    )
+                )
+            )
+
+            # propagate choice expressions
+            J_chi = choice_propagator.propagate(
+                choice_eps_instances, choice_eta_instances, I, J, J_chi
+            )
 
             # update state
             duplicate = True
             prev_J_alpha = J_alpha.copy()
+            prev_J_chi = J_chi.copy()
             prev_J = J.copy()
             prev_K = K.copy()
 
@@ -284,7 +342,8 @@ class Grounder:
                 converged = True
 
         # assemble aggregates (if present)
-        assembled_instances = propagator.assemble(alpha_instances)
+        assembled_instances = aggr_propagator.assemble(alpha_instances)
+        assembled_instances = choice_propagator.assemble(assembled_instances, J_chi)
 
         # return re-assembled rules
         return assembled_instances

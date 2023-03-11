@@ -8,10 +8,12 @@ from aspy.program.literals import AggregateLiteral
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AggrPlaceholder, LiteralTuple
+    from aspy.program.literals import AggrPlaceholder, ChoicePlaceholder, LiteralTuple
     from aspy.program.safety_characterization import SafetyTriplet
-    from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.terms import Variable
+
+    from .choice import Choice
+    from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule
 
 
 class Statement(Expr, ABC):
@@ -98,6 +100,26 @@ class Statement(Expr, ABC):
         self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
     ) -> "Statement":
         pass
+
+    def rewrite_choices(
+        self,
+        choice_counter: int,
+        choice_map: Dict[
+            int,
+            Tuple[
+                "Choice",
+                "ChoicePlaceholder",
+                "ChoiceBaseRule",
+                Set["ChoiceElemRule"],
+            ],
+        ],
+    ) -> "Statement":
+        return deepcopy(self)
+
+    def assemble_choices(
+        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
+    ) -> "Statement":
+        return deepcopy(self)
 
     def consequents(self) -> "LiteralTuple":
         return self.head

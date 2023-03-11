@@ -142,7 +142,13 @@ class AggregateFunction(ABC):
         pass
 
     @abstractmethod  # pragma: no cover
-    def propagate(self) -> bool:
+    def propagate(
+        self,
+        guards: Tuple[Optional[Guard], Optional[Guard]],
+        elements: Set["AggregateElement"],
+        I: Set["Literal"],
+        J: Set["Literal"],
+    ) -> bool:
         pass
 
 
@@ -158,11 +164,13 @@ class AggregateCount(AggregateFunction):
     def __hash__(self) -> int:
         return hash(("aggregate count"))
 
-    def eval(self, elements: Set["TermTuple"]) -> Number:
+    @classmethod
+    def eval(cls, elements: Set["TermTuple"]) -> Number:
         """Returns the number of satisfied aggregate elements."""
         return Number(len(elements))
 
-    def base(self) -> Number:
+    @classmethod
+    def base(cls) -> Number:
         return Number(0)
 
     def propagate(
@@ -252,13 +260,14 @@ class AggregateSum(AggregateFunction):
     def __hash__(self) -> int:
         return hash(("aggregate sum"))
 
+    @classmethod
     def eval(
-        self, elements: Set["TermTuple"], positive: bool = True, negative: bool = True
+        cls, elements: Set["TermTuple"], positive: bool = True, negative: bool = True
     ) -> Number:
 
         # empty tuple set
         if not elements or (positive == negative == False):  # noqa (chaining is faster)
-            return self.base()
+            return cls.base()
 
         # non-empty set
         return Number(
@@ -269,7 +278,8 @@ class AggregateSum(AggregateFunction):
             )
         )
 
-    def base(self) -> Number:
+    @classmethod
+    def base(cls) -> Number:
         # TODO: correct?
         return Number(0)
 
@@ -436,15 +446,17 @@ class AggregateMin(AggregateFunction):
     def __hash__(self) -> int:
         return hash(("aggregate min"))
 
-    def eval(self, elements: Set["TermTuple"]) -> Number:
+    @classmethod
+    def eval(cls, elements: Set["TermTuple"]) -> Number:
         # return minimum first term across all non-empty elements
         # NOTE: includes 'Supremum' in case all elements are empty
         return reduce(
             lambda t1, t2: t2 if not t1.precedes(t2) else t1,
-            (self.base(), *tuple(element[0] for element in elements if element)),
+            (cls.base(), *tuple(element[0] for element in elements if element)),
         )
 
-    def base(self) -> Supremum:
+    @classmethod
+    def base(cls) -> Supremum:
         return Supremum()
 
     def propagate(
@@ -493,7 +505,7 @@ class AggregateMin(AggregateFunction):
             J_elements: Set["AggregateElement"],
         ) -> bool:
             # compute baseline value
-            baseline = self.eval({element.terms for element in J})
+            baseline = self.eval({element.terms for element in J_elements})
             # get all elements that would change the baseline value
             # (to reduce number of possible subsets to test)
             candidates = {
@@ -567,14 +579,16 @@ class AggregateMax(AggregateFunction):
     def __hash__(self) -> int:
         return hash(("aggregate max"))
 
-    def eval(self, elements: Set["TermTuple"]) -> Number:
+    @classmethod
+    def eval(cls, elements: Set["TermTuple"]) -> Number:
         # return maximum first term across all non-empty elements
         # NOTE: includes 'Infimum' in case all elements are empty
         return reduce(
             lambda t1, t2: t2 if not t2.precedes(t1) else t1,
-            (self.base(), *tuple(element[0] for element in elements if element)),
+            (cls.base(), *tuple(element[0] for element in elements if element)),
         )
 
+    @classmethod
     def base(self) -> Infimum:
         return Infimum()
 
@@ -624,7 +638,7 @@ class AggregateMax(AggregateFunction):
             J_elements: Set["AggregateElement"],
         ) -> bool:
             # compute baseline value
-            baseline = self.eval({element.terms for element in J})
+            baseline = self.eval({element.terms for element in J_elements})
             # get all elements that would change the baseline value
             # (to reduce number of possible subsets to test)
             candidates = {

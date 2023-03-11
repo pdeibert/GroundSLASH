@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Iterable, List, Set, Tuple
 from aspy.program.literals import AggrPlaceholder, ChoicePlaceholder, LiteralTuple
 from aspy.program.terms import TermTuple
 
-from .choice import Choice, ChoiceElement
-from .special import AggrBaseRule, AggrElemRule
+from .choice import Choice
+from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AggregateLiteral, Literal
@@ -56,22 +56,18 @@ def rewrite_choice(
     choice_counter: int,
     glob_vars: Set["Variable"],
     body_literals: Iterable["Literal"],
-) -> Tuple["AggrPlaceholder", "AggrBaseRule", List["AggrElemRule"]]:
+) -> Tuple["ChoicePlaceholder", "ChoiceBaseRule", List["ChoiceElemRule"]]:
 
-    # TODO: necessary
+    # TODO: necessary?
     choice_glob_vars = glob_vars.intersection(choice.vars())
     var_tuple = TermTuple(*choice_glob_vars)
 
     # ----- create predicate literal for each aggregate occurrence -----
-    gamma_literal = ChoicePlaceholder(choice_counter, var_tuple, var_tuple)
+    chi_literal = ChoicePlaceholder(choice_counter, var_tuple, var_tuple)
 
     # ----- epsilon rule -----
-    eps_rule = AggrBaseRule.from_scratch(
-        choice_counter,
-        var_tuple,
-        *literal.guards,
-        literal.func.base(),
-        LiteralTuple(*body_literals)
+    eps_rule = ChoiceBaseRule.from_scratch(
+        choice_counter, var_tuple, *choice.guards, LiteralTuple(*body_literals)
     )
 
     # ----- eta rules -----
@@ -79,7 +75,7 @@ def rewrite_choice(
 
     for element_counter, element in enumerate(choice.elements):
         eta_rules.append(
-            AggrElemRule.from_scratch(
+            ChoiceElemRule.from_scratch(
                 choice_counter,
                 element_counter,
                 var_tuple,
@@ -88,4 +84,4 @@ def rewrite_choice(
             )
         )
 
-    return (alpha_literal, eps_rule, eta_rules)
+    return (chi_literal, eps_rule, eta_rules)

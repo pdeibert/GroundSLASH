@@ -364,7 +364,7 @@ class ChoiceBaseLiteral(AuxLiteral):
             )
 
         super().__init__(
-            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{choice_id}", *terms
+            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{choice_id}", *terms
         )
         self.choice_id = choice_id
         # store tuple to have a fixed reference order for variables
@@ -447,7 +447,7 @@ class ChoiceElemLiteral(AuxLiteral):
             )
 
         super().__init__(
-            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{choice_id}_{element_id}",
+            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{choice_id}_{element_id}",
             *terms,
         )
         self.choice_id = choice_id

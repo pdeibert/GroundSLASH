@@ -1,15 +1,27 @@
 from copy import deepcopy
 from functools import cached_property
-from itertools import chain
-from typing import TYPE_CHECKING, Dict, Iterable, Iterator, Optional, Set, Tuple, Union
+from itertools import chain, combinations
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from aspy.program.expression import Expr
-from aspy.program.literals import Guard, LiteralTuple
+from aspy.program.literals import ChoicePlaceholder, Guard, LiteralTuple
 from aspy.program.literals.builtin import GreaterEqual, op2rel
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Number
 
+from .normal import NormalFact, NormalRule
+from .special import ChoiceBaseRule, ChoiceElemRule
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -21,11 +33,19 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
-    from aspy.program.terms import Variable
+    from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
 
     from .special import AggrBaseRule, AggrElemRule
     from .statement import Statement
+
+
+def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
+    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes."""  # noqa
+    elements = list(element_iterable)
+    return chain.from_iterable(
+        combinations(elements, n_elements) for n_elements in range(len(elements) + 1)
+    )
 
 
 class ChoiceElement(Expr):
@@ -217,15 +237,18 @@ class Choice(Expr):
     def neg_occ(self) -> Set["PredicateLiteral"]:
         return set().union(*tuple(element.neg_occ() for element in self.elements))
 
-    def eval(self) -> bool:
-        if not self.ground:
+    @classmethod
+    def eval(
+        cls, elements: Set["Literal"], guards: Tuple[Optional[Guard], Optional[Guard]]
+    ) -> bool:
+        if not all(element.ground for element in elements):
             raise ValueError("Cannot evaluate non-ground choice expression.")
 
-        n_atoms = Number(len({element.atom for element in self.elements}))
+        n_atoms = Number(len(elements))
 
         res = True
 
-        for guard in self.guards:
+        for guard in guards:
             if guard is None:
                 continue
 
@@ -248,6 +271,118 @@ class Choice(Expr):
             else:
                 # make sure that upper bound can be satisfied
                 res &= op2rel[op](Number(0), bound).eval()
+
+        return res
+
+    def propagate(
+        self,
+        guards: Tuple[Optional[Guard], Optional[Guard]],
+        elements: Set["ChoiceElement"],
+        I: Set["Literal"],
+        J: Set["Literal"],
+    ) -> bool:
+
+        # TODO: avoid creating objects???
+        # TODO
+        """
+        TODO:
+        AggrPlaceholder
+        ChoicePlaceholder
+        PropBaseLiteral
+        PropElemLiteral
+
+        PropBaseRule
+        PropElemRule
+                ref_id
+                element: Union["AggrElement", "ChoiceElement"]
+
+        to check if deterministic:
+        check if bound true and if != bound false
+        or bound false (deterministic as it is unsatisfiable)
+                -> important: do NOT count consequent literals as possible!
+                -> rewrite as constraint!
+
+        example:
+                1 >= 1 and not 1 != 1 (deterministic)
+                2 >= 1 and 2 != 1 (not deterministic)
+
+        """
+        # cache holding intermediate results (to avoid recomputation)
+        propagation_cache = dict()
+        # elements that are satisfied by I and J, respectively (initialize to None)
+        I_elements = None
+        J_elements = None
+
+        def get_I_elements() -> Set["ChoiceElement"]:
+            nonlocal I_elements
+
+            if I_elements is None:
+                I_elements = {element for element in elements if element.satisfied(I)}
+            return I_elements
+
+        def get_J_elements() -> Set["ChoiceElement"]:
+            nonlocal J_elements
+
+            if J_elements is None:
+                J_elements = {element for element in elements if element.satisfied(J)}
+            return J_elements
+
+        def get_propagation_result(
+            op: RelOp, bound: "Term", domain: Set["ChoiceElement"]
+        ) -> bool:
+            nonlocal propagation_cache
+
+            if (op, bound) not in propagation_cache:
+                propagation_cache[(op, bound)] = op2rel[op](
+                    Number(len({element.atom for element in domain})), bound
+                ).eval()
+            return propagation_cache[(op, bound)]
+
+        def propagate_subset(
+            op,
+            bound,
+            I_elements: Set["ChoiceElement"],
+            J_elements: Set["ChoiceElement"],
+        ) -> bool:
+            # test all combinations of subsets of candidates
+            # TODO: may be complete overkill (hence, inefficient!)
+            for X in powerset(
+                {element.atom for element in I_elements.union(J_elements)}
+            ):
+                if op2rel[op](bound, Number(len(X))).eval():
+                    return True
+
+            return False
+
+        # running boolean tracking the current result of the propagation
+        res = True
+
+        for guard in guards:
+            if guard is None:
+                continue
+            if res is False:
+                break
+
+            op, bound, right = guard
+
+            # move operator to right-hand side (for canonical processing)
+            if not right:
+                op = -op
+
+            if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
+                # check upper bound
+                res &= get_propagation_result(op, bound, get_J_elements())
+            elif op in {RelOp.LESS, RelOp.LESS_OR_EQ}:
+                # check lower bound
+                res &= get_propagation_result(op, bound, set())
+            elif op == RelOp.EQUAL:
+                # check upper bound (TODO: suffices?)
+                res &= get_propagation_result(
+                    RelOp.GREATER_OR_EQ, bound, get_J_elements()
+                )
+            elif op == RelOp.UNEQUAL:
+                # check if any subset of elements satisfies bound
+                res &= propagate_subset(op, bound, I_elements, J_elements)
 
         return res
 
@@ -303,7 +438,7 @@ class ChoiceFact(Fact):
     def __init__(self, head: Choice, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        # TODO: correctly infer determinism
+        # TODO: correctly infer determinism after propagation/grounding?
         self.deterministic: bool = False
 
         self.choice = head
@@ -316,22 +451,6 @@ class ChoiceFact(Fact):
 
     def __str__(self) -> str:
         return f"{str(self.choice)}."
-
-    def __init_var_table(self) -> None:
-        # TODO
-
-        # initialize variable table
-        self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
-
-        # mark global variables
-        self.__var_table.update(
-            {
-                var: True
-                for var in self.head.global_vars(self).union(
-                    self.body.global_vars(self)
-                )
-            }
-        )
 
     @property
     def head(self) -> Choice:
@@ -373,6 +492,47 @@ class ChoiceFact(Fact):
     def replace_arith(self) -> "ChoiceFact":
         return ChoiceFact(self.head.replace_arith(self.var_table))
 
+    def rewrite_choices(
+        self,
+        choice_counter: int,
+        choice_map: Dict[
+            int,
+            Tuple[
+                "Choice",
+                "ChoicePlaceholder",
+                "ChoiceBaseRule",
+                Set["ChoiceElemRule"],
+            ],
+        ],
+    ) -> "NormalFact":
+
+        # global variables
+        glob_vars = self.global_vars()
+
+        # local import due to circular import
+        from .rewrite import rewrite_choice
+
+        chi_literal, eps_rule, eta_rules = rewrite_choice(
+            self.choice, choice_counter, glob_vars, LiteralTuple()
+        )
+
+        # store choice information
+        choice_map[choice_counter] = (self.choice, chi_literal, eps_rule, eta_rules)
+
+        # replace original rule with modified one
+        chi_rule = NormalFact(chi_literal)
+
+        return chi_rule
+
+    def assemble_choices(
+        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
+    ) -> "ChoiceFact":
+        return ChoiceFact(
+            self.choice
+            if self.choice not in assembling_map
+            else assembling_map[self.choice],
+        )
+
 
 class ChoiceRule(Rule):
     """Choice rule.
@@ -403,7 +563,7 @@ class ChoiceRule(Rule):
                 )
             )
 
-        # TODO: correctly infer determinism
+        # TODO: correctly infer determinism after propagation/grounding?
         self.deterministic: bool = False
 
         self.choice = head
@@ -422,22 +582,6 @@ class ChoiceRule(Rule):
     def __str__(self) -> str:
         return (
             f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
-        )
-
-    def __init_var_table(self) -> None:
-        # TODO
-
-        # initialize variable table
-        self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
-
-        # mark global variables
-        self.__var_table.update(
-            {
-                var: True
-                for var in self.head.global_vars(self).union(
-                    self.body.global_vars(self)
-                )
-            }
         )
 
     @property
@@ -501,12 +645,103 @@ class ChoiceRule(Rule):
                 Set["AggrElemRule"],
             ],
         ],
-    ) -> "Statement":
-        # TODO
-        raise Exception()
+    ) -> "ChoiceRule":
+
+        # global variables
+        glob_vars = self.global_vars()
+
+        # group literals
+        non_aggr_literals = []
+        aggr_literals = []
+
+        for literal in self.body:
+            (
+                aggr_literals
+                if isinstance(literal, AggregateLiteral)
+                else non_aggr_literals
+            ).append(literal)
+
+        # mapping from original literals to alpha literals
+        alpha_map = dict()
+
+        # local import due to circular import
+        from .rewrite import rewrite_aggregate
+
+        for literal in aggr_literals:
+            # rewrite aggregate literal
+            alpha_literal, eps_rule, eta_rules = rewrite_aggregate(
+                literal, aggr_counter, glob_vars, non_aggr_literals
+            )
+
+            # map original aggregate literal to new alpha literal
+            alpha_map[literal] = alpha_literal
+
+            # store aggregate information
+            aggr_map[aggr_counter] = (literal, alpha_literal, eps_rule, eta_rules)
+
+            # increase aggregate counter
+            aggr_counter += 1
+
+        # replace original rule with modified one
+        alpha_rule = ChoiceRule(
+            self.choice,
+            *tuple(
+                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                for literal in self.body
+            ),  # NOTE: restores original order of literals
+        )
+
+        return alpha_rule
 
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
-    ) -> "Statement":
-        # TODO
-        raise Exception()
+    ) -> "ChoiceRule":
+        return ChoiceRule(
+            self.choice,
+            *tuple(
+                literal if literal not in assembling_map else assembling_map[literal]
+                for literal in self.body
+            ),
+        )
+
+    def rewrite_choices(
+        self,
+        choice_counter: int,
+        choice_map: Dict[
+            int,
+            Tuple[
+                "Choice",
+                "ChoicePlaceholder",
+                "ChoiceBaseRule",
+                Set["ChoiceElemRule"],
+            ],
+        ],
+    ) -> "NormalRule":
+
+        # global variables
+        glob_vars = self.global_vars()
+
+        # local import due to circular import
+        from .rewrite import rewrite_choice
+
+        chi_literal, eps_rule, eta_rules = rewrite_choice(
+            self.choice, choice_counter, glob_vars, self.literals
+        )
+
+        # store choice information
+        choice_map[choice_counter] = (self.choice, chi_literal, eps_rule, eta_rules)
+
+        # replace original rule with modified one
+        chi_rule = NormalRule(chi_literal, *self.literals)
+
+        return chi_rule
+
+    def assemble_choices(
+        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
+    ) -> "ChoiceRule":
+        return ChoiceRule(
+            self.choice
+            if self.choice not in assembling_map
+            else assembling_map[self.choice],
+            self.literals,
+        )
