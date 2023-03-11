@@ -27,15 +27,15 @@ class TestSubstitution(unittest.TestCase):
         self.assertEqual(-RelOp.GREATER_OR_EQ, RelOp.LESS_OR_EQ)  # x >= y <=> y <= x
 
         # equivalent negated operator
-        self.assertEqual(-RelOp.EQUAL, RelOp.EQUAL)  # not x  = y <=> x != y
-        self.assertEqual(-RelOp.UNEQUAL, RelOp.UNEQUAL)  # not x != y <=> x  = y
-        self.assertEqual(-RelOp.LESS, RelOp.GREATER)  # not x  < y <=> x >= y
-        self.assertEqual(-RelOp.GREATER, RelOp.LESS)  # not x  > y <=> x <= y
+        self.assertEqual(~RelOp.EQUAL, RelOp.UNEQUAL)  # not x  = y <=> x != y
+        self.assertEqual(~RelOp.UNEQUAL, RelOp.EQUAL)  # not x != y <=> x  = y
+        self.assertEqual(~RelOp.LESS, RelOp.GREATER_OR_EQ)  # not x  < y <=> x >= y
+        self.assertEqual(~RelOp.GREATER, RelOp.LESS_OR_EQ)  # not x  > y <=> x <= y
         self.assertEqual(
-            -RelOp.LESS_OR_EQ, RelOp.GREATER_OR_EQ
+            ~RelOp.LESS_OR_EQ, RelOp.GREATER
         )  # not x <= y <=> x  > y
         self.assertEqual(
-            -RelOp.GREATER_OR_EQ, RelOp.LESS_OR_EQ
+            ~RelOp.GREATER_OR_EQ, RelOp.LESS
         )  # not x >= y <=> x  < y
 
         # TODO: eval
