@@ -184,10 +184,15 @@ class TestTerm(unittest.TestCase):
         # total order for terms
         self.assertFalse(term.precedes(Number(4)))
         self.assertTrue(term.precedes(Number(5)))
+        self.assertRaises(ValueError, term.precedes, Variable("X"))
         # ground
         self.assertTrue(term.ground)
         # variables
         self.assertTrue(term.vars() == term.global_vars() == set())
+        # negation
+        self.assertEqual(-term, Number(-5))
+        # absolute value
+        self.assertTrue(abs(term) == abs(Number(-5)) == Number(5))
         # replace arithmetic terms
         self.assertEqual(term.replace_arith(VariableTable()), term)
         # safety characterization
@@ -214,6 +219,10 @@ class TestTerm(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        # invalid initialization
+        self.assertRaises(ValueError, SymbolicConstant, "1")
+        self.assertRaises(ValueError, SymbolicConstant, "Z")
+
         term = SymbolicConstant("b")
         # string representation
         self.assertEqual(str(term), "b")
@@ -222,8 +231,11 @@ class TestTerm(unittest.TestCase):
         # hashing
         self.assertEqual(hash(term), hash(SymbolicConstant("b")))
         # total order for terms
+        self.assertFalse(term.precedes(Infimum()))
         self.assertFalse(term.precedes(SymbolicConstant("a")))
         self.assertTrue(term.precedes(SymbolicConstant("b")))
+        self.assertTrue(term.precedes(Supremum()))
+        self.assertRaises(ValueError, term.precedes, Variable("X"))
         # ground
         self.assertTrue(term.ground)
         # variables
@@ -259,8 +271,11 @@ class TestTerm(unittest.TestCase):
         # hashing
         self.assertEqual(hash(term), hash(String("!?$#b")))
         # total order for terms
+        self.assertFalse(term.precedes(Infimum()))
         self.assertFalse(term.precedes(String("!?$#a")))
         self.assertTrue(term.precedes(String("!?$#b")))
+        self.assertTrue(term.precedes(Supremum()))
+        self.assertRaises(ValueError, term.precedes, Variable("X"))
         # ground
         self.assertTrue(term.ground)
         # variables
@@ -325,6 +340,12 @@ class TestTerm(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
+            TermTuple(Variable("X"), Variable("X"), String("f")).match(
+                TermTuple(Number(1), String("f"))
+            ),
+            None,
+        )  # wrong length
+        self.assertEqual(
             TermTuple(Variable("X"), Variable("X")).match(
                 TermTuple(Number(1), String("f"))
             ),
@@ -337,6 +358,8 @@ class TestTerm(unittest.TestCase):
             TermTuple(Number(0), Variable("X"), String("")),
         )
         # TODO: iter
+        # TODO: pos_weight
+        # TODO: neg_weight
 
 
 if __name__ == "__main__":  # pragma: no cover

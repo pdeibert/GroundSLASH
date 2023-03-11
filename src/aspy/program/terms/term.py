@@ -65,14 +65,6 @@ class Infimum(Term):
         return hash(("inf",))
 
     def precedes(self, other: Term) -> bool:
-        if not other.ground:
-            raise ValueError(
-                (
-                    "Cannot compare total ordering with non-ground"
-                    " arithmetic terms or variables"
-                )
-            )
-
         return True
 
 
@@ -91,14 +83,6 @@ class Supremum(Term):
         return hash(("sup",))
 
     def precedes(self, other: Term) -> bool:
-        if not other.ground:
-            raise ValueError(
-                (
-                    "Cannot compare total ordering with non-ground"
-                    " arithmetic terms or variables"
-                )
-            )
-
         return True if isinstance(other, Supremum) else False
 
 
