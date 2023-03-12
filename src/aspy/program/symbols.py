@@ -7,7 +7,7 @@ class SpecialChar(Enum):
     EPS = "\u03b5"  # ε
     ETA = "\u03b7"  # η
     TAU = "\u03C4"  # τ
-    CHI = "U+03C7"  # χ
+    CHI = "\u03C7"  # χ
 
 
 VARIABLE_RE = re.compile(rf"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")

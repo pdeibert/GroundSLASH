@@ -307,7 +307,7 @@ class ChoiceElemRule(NormalRule):
 
     @property
     def element_id(self) -> int:
-        return self.atom.choice_id
+        return self.atom.element_id
 
     @property
     def local_vars(self) -> int:
