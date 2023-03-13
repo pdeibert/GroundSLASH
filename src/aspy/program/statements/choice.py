@@ -14,7 +14,12 @@ from typing import (
 )
 
 from aspy.program.expression import Expr
-from aspy.program.literals import ChoicePlaceholder, Guard, LiteralTuple
+from aspy.program.literals import (
+    AggregateLiteral,
+    ChoicePlaceholder,
+    Guard,
+    LiteralTuple,
+)
 from aspy.program.literals.builtin import GreaterEqual, op2rel
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
@@ -361,6 +366,11 @@ class Choice(Expr):
 
             return False
 
+        # print()
+        # print([str(e) for e in elements])
+        # print("I", [str(e) for e in get_I_elements()])
+        # print("J", [str(e) for e in get_J_elements()])
+
         # running boolean tracking the current result of the propagation
         res = True
 
@@ -683,7 +693,7 @@ class ChoiceRule(Rule):
         # replace original rule with modified one
         alpha_rule = ChoiceRule(
             self.choice,
-            *tuple(
+            tuple(
                 alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
                 for literal in self.body
             ),  # NOTE: restores original order of literals

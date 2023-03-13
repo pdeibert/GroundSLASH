@@ -283,7 +283,7 @@ class TestGrounder(unittest.TestCase):
 
         # arithmetic terms
         rule = NormalRule(
-            # due to safety, all variables in arithmetic terms occurr outside of it as well
+            # due to safety, all variables in arithmetic terms occurr outside of it too
             PredicateLiteral("p", Number(0)),
             PredicateLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
             PredicateLiteral("q", Variable("X")),
@@ -306,21 +306,19 @@ class TestGrounder(unittest.TestCase):
                     PredicateLiteral("q", Number(3)),
                     PredicateLiteral("q", Number(2)),
                 ),
-                # NormalRule(PredicateLiteral('p', Number(0)), PredicateLiteral('q', Number(5)), PredicateLiteral('q', Number(2)), PredicateLiteral('q', Number(3))), (DUPLICATE)
                 NormalRule(
                     PredicateLiteral("p", Number(0)),
                     PredicateLiteral("q", Number(3)),
                     PredicateLiteral("q", Number(2)),
                     PredicateLiteral("q", Number(1)),
                 ),
-                # NormalRule(PredicateLiteral('p', Number(0)), PredicateLiteral('q', Number(3)), PredicateLiteral('q', Number(1)), PredicateLiteral('q', Number(2))), (DUPLICATE)
                 NormalRule(
                     PredicateLiteral("p", Number(0)),
                     PredicateLiteral("q", Number(2)),
                     PredicateLiteral("q", Number(1)),
                     PredicateLiteral("q", Number(1)),
                 ),
-            },
+            },  # does not contain duplicate instantiations
         )
 
         # TODO: aggregates
@@ -575,6 +573,30 @@ class TestGrounder(unittest.TestCase):
         route(X,Y) :- route(X,Z), route(Z,Y).
 
         drive(X) :- route(berlin,X).
+        """
+
+        self.compare_to_clingo(prog_str)
+
+    def test_example_12(self):
+
+        # from "Answer Set Solving in Practice"
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        prog_str = r"""
+        node(1). node(2). node(3). node(4). node(5). node(6).
+
+        edge(1,2). edge(1,3). edge(1,4).
+        edge(2,4). edge(2,5). edge(2,6).
+        edge(3,1). edge(3,4). edge(3,5).
+        edge(4,1). edge(4,2).
+        edge(5,3). edge(5,4). edge(5,6).
+        edge(6,2). edge(6,3). edge(6,5).
+
+        col(r). col(g). col(b).
+        1 <= { color(X,C):col(C) } <= 1 :- node(X).
+        :- edge(X,Y), color(X,C), color(Y,C).
         """
 
         self.compare_to_clingo(prog_str)
