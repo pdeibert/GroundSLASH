@@ -73,7 +73,7 @@ class ArithTerm(Term, ABC):
             return self.simplify()
 
         # replace non-ground arithmetic term with a new special variable
-        return var_table.create(SpecialChar.TAU, orig_term=self)
+        return var_table.create(SpecialChar.TAU.value, orig_term=self, register=False)
 
 
 class Minus(ArithTerm):

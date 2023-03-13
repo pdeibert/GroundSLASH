@@ -20,6 +20,8 @@ class TestLiteral(unittest.TestCase):
         )
         # length
         self.assertEqual(len(literals), 2)
+        # string representation
+        self.assertEqual(str(literals), "p(0,X),q(-Y)")
         # equality
         self.assertEqual(literals[0], PredicateLiteral("p", Number(0), Variable("X")))
         self.assertEqual(literals[1], PredicateLiteral("q", Minus(Variable("Y"))))
@@ -96,6 +98,13 @@ class TestLiteral(unittest.TestCase):
             ),
             None,
         )  # ground terms don't match
+        self.assertEqual(
+            LiteralTuple(
+                PredicateLiteral("p", Variable("X"), String("f")),
+                PredicateLiteral("q", Variable("X")),
+            ).match(PredicateLiteral("p")),
+            None,
+        )  # wrong type
         self.assertEqual(
             LiteralTuple(
                 PredicateLiteral("p", Variable("X"), String("f")),

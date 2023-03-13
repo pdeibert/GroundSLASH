@@ -360,10 +360,13 @@ class TestTerm(unittest.TestCase):
         # (positive/negative) weight
         self.assertEqual(TermTuple(Number(-3)).weight, -3)
         self.assertEqual(TermTuple(Number(3)).weight, 3)
+        self.assertEqual(TermTuple(String("f")).weight, 0)
         self.assertEqual(TermTuple(Number(-3)).pos_weight, 0)
         self.assertEqual(TermTuple(Number(3)).pos_weight, 3)
+        self.assertEqual(TermTuple(String("f")).pos_weight, 0)
         self.assertEqual(TermTuple(Number(-3)).neg_weight, -3)
         self.assertEqual(TermTuple(Number(33)).neg_weight, 0)
+        self.assertEqual(TermTuple(String("f")).neg_weight, 0)
 
 
 if __name__ == "__main__":  # pragma: no cover

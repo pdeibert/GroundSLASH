@@ -74,8 +74,8 @@ class DisjunctiveFact(Fact):
     def body(self) -> LiteralTuple:
         return LiteralTuple()
 
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
-        raise Exception()
+    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
+        return SafetyTriplet(unsafe=self.vars())
 
     @cached_property
     def safe(self) -> bool:

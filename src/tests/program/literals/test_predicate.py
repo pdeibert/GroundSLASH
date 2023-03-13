@@ -14,6 +14,9 @@ class TestPredicate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
+        # invalid initialization
+        self.assertRaises(ValueError, PredicateLiteral, "P")
+
         literal = PredicateLiteral("p", Number(0), String("x"))
         naf_literal = Naf(PredicateLiteral("p", Number(0), String("x")))
         var_literal = PredicateLiteral("p", Number(0), Variable("X"))

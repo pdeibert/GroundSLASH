@@ -13,9 +13,11 @@ from aspy.program.literals import (
     Guard,
     LessEqual,
     LiteralTuple,
+    Naf,
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
+from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.statements import (
     AggrBaseRule,
     AggrElemRule,
@@ -23,7 +25,7 @@ from aspy.program.statements import (
     DisjunctiveRule,
 )
 from aspy.program.substitution import Substitution
-from aspy.program.terms import Number, String, TermTuple, Variable
+from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
 
 
 class TestDisjunctive(unittest.TestCase):
@@ -36,6 +38,12 @@ class TestDisjunctive(unittest.TestCase):
         self.assertRaises(
             ValueError, DisjunctiveFact, PredicateLiteral("p", Number(0))
         )  # not enough atoms
+        self.assertRaises(
+            ValueError,
+            DisjunctiveFact,
+            PredicateLiteral("p", Number(0)),
+            Naf(PredicateLiteral("q", Number(0))),
+        )  # not all positive predicate literals
 
         ground_rule = DisjunctiveFact(
             PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))
@@ -89,7 +97,20 @@ class TestDisjunctive(unittest.TestCase):
         # variables
         self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
         self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
-        # TODO: replace arithmetic terms
+        # replace arithmetic terms
+        self.assertEqual(
+            DisjunctiveFact(
+                PredicateLiteral("q", Number(0)),
+                PredicateLiteral("p", Minus(Variable("X"))),
+            ).replace_arith(),
+            DisjunctiveFact(
+                PredicateLiteral("q", Number(0)),
+                PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+            ),
+        )
+        # safety characterization
+        self.assertEqual(ground_rule.safety(), SafetyTriplet())
+        self.assertEqual(var_rule.safety(), SafetyTriplet(unsafe={Variable("X")}))
 
         # substitution
         rule = DisjunctiveFact(
@@ -131,6 +152,12 @@ class TestDisjunctive(unittest.TestCase):
             (PredicateLiteral("p", Number(0)), PredicateLiteral("q", Number(0))),
             tuple(),
         )  # not enough literals
+        self.assertRaises(
+            ValueError,
+            DisjunctiveRule,
+            (PredicateLiteral("p", Number(0)), Naf(PredicateLiteral("q", Number(0)))),
+            (PredicateLiteral("q"),),
+        )  # not all positive predicate literals in head
 
         ground_rule = DisjunctiveRule(
             (PredicateLiteral("p", Number(1)), PredicateLiteral("p", Number(0))),
@@ -243,9 +270,43 @@ class TestDisjunctive(unittest.TestCase):
         self.assertTrue(
             safe_var_rule.vars() == safe_var_rule.global_vars() == {Variable("X")}
         )
-        # TODO: replace arithmetic terms
+        # replace arithmetic terms
+        self.assertEqual(
+            DisjunctiveRule(
+                (
+                    PredicateLiteral("q", Number(0)),
+                    PredicateLiteral("p", Minus(Variable("X"))),
+                ),
+                (PredicateLiteral("q", Minus(Variable("Y"))),),
+            ).replace_arith(),
+            DisjunctiveRule(
+                (
+                    PredicateLiteral("q", Number(0)),
+                    PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+                ),
+                (PredicateLiteral("q", ArithVariable(1, Minus(Variable("Y")))),),
+            ),
+        )
 
         # substitution
+        self.assertEqual(
+            DisjunctiveRule(
+                (
+                    PredicateLiteral("p", Number(1)),
+                    PredicateLiteral("p", Number(0)),
+                ),
+                (PredicateLiteral("q", Number(1)),),
+            ).substitute(
+                Substitution({Variable("X"): Number(1), Number(0): String("f")})
+            ),
+            DisjunctiveRule(
+                (
+                    PredicateLiteral("p", Number(1)),
+                    PredicateLiteral("p", Number(0)),
+                ),
+                (PredicateLiteral("q", Number(1)),),
+            ),
+        )
         rule = DisjunctiveRule(
             (
                 PredicateLiteral("p", Number(1)),

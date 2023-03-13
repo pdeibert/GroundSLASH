@@ -22,16 +22,9 @@ class Component:
         self.neg_edges = neg_edges if neg_edges is not None else set()
         self.stratified = stratified
 
-    def __str__(self) -> str:
-        return "\n".join(tuple(str(node) for node in self.nodes))
-
     @property
     def edges(self) -> Set[Tuple["Statement", "Statement"]]:
         return self.pos_edges.union(self.neg_edges)
-
-    @cached_property
-    def stratified(self) -> bool:
-        return bool(self.neg_edges)
 
     def sequence(self) -> List[Tuple["Statement", ...]]:
 

@@ -21,6 +21,10 @@ class TestSubstitution(unittest.TestCase):
         self.assertEqual(
             subst[Variable("X")], Variable("X")
         )  # map non-specified variables to themselves
+        # identity
+        self.assertTrue(Substitution().is_identity())
+        self.assertTrue(Substitution({Variable("X"): Variable("X")}).is_identity())
+        self.assertFalse(Substitution({Variable("X"): Variable("Y")}).is_identity())
 
         # non-empty substitution
         subst = Substitution({Variable("X"): Number(0), Variable("Y"): String("str")})

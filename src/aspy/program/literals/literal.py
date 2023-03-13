@@ -49,7 +49,7 @@ class LiteralTuple:
         self.literals = tuple(literals)
 
     def __str__(self) -> str:
-        return f"{{{','.join(str(literal) for literal in self.literals)}}}"
+        return f"{','.join(str(literal) for literal in self.literals)}"
 
     def __len__(self) -> int:
         return len(self.literals)

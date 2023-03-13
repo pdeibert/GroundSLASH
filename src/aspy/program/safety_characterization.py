@@ -12,7 +12,11 @@ class SafetyRule:
     dependees: Set["Variable"]
 
     def __eq__(self, other: "SafetyRule") -> bool:
-        return self.depender == other.depender and self.dependees == other.dependees
+        return (
+            isinstance(other, SafetyRule)
+            and self.depender == other.depender
+            and self.dependees == other.dependees
+        )
 
     def __hash__(self) -> int:
         return hash((self.depender, frozenset(self.dependees)))

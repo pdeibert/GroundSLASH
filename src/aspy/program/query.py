@@ -1,13 +1,12 @@
-from typing import TYPE_CHECKING, Optional, Set, Union
+from typing import TYPE_CHECKING, Dict, Optional, Set
 
 from .expression import Expr
+from .literals import LiteralTuple, PredicateLiteral
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.terms import Variable
+    from aspy.program.terms import Term, Variable
 
-    from .literals import PredicateLiteral
     from .safety_characterization import SafetyTriplet
-    from .statements import Statement
 
 
 class Query(Expr):
@@ -15,10 +14,27 @@ class Query(Expr):
 
     def __init__(self, atom: "PredicateLiteral") -> None:
         self.atom = atom
-        self.ground = atom.ground
 
     def __str__(self) -> str:
         return f"{str(self.atom)} ?"
+
+    def __eq__(self, other: Expr) -> bool:
+        return isinstance(other, Query) and self.atom == other.atom
+
+    def __hash__(self) -> int:
+        return hash(("query", self.atom))
+
+    @property
+    def head(self) -> LiteralTuple:
+        return LiteralTuple(self.atom)
+
+    @property
+    def body(self) -> LiteralTuple:
+        return LiteralTuple()
+
+    @property
+    def ground(self) -> bool:
+        return self.atom.ground
 
     def vars(self) -> Set["Variable"]:
         return self.atom.vars()
@@ -26,7 +42,8 @@ class Query(Expr):
     def global_vars(self) -> Set["Variable"]:
         return self.atom.global_vars()
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> "SafetyTriplet":
-        return self.atom.safety()
+    def safety(self, rule: Optional["Query"] = None) -> "SafetyTriplet":
+        return self.atom.safety(self)
+
+    def substitute(self, subst: Dict[str, "Term"]) -> "Query":  # type: ignore
+        return Query(self.atom.substitute(subst))

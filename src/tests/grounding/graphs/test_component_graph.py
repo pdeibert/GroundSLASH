@@ -80,6 +80,7 @@ class TestComponentGraph(unittest.TestCase):
             pX_qX_comp.nodes == {pX, qX}
             and pX_qX_comp.pos_edges == {(qX, pX)}
             and pX_qX_comp.neg_edges == {(pX, qX)}
+            and pX_qX_comp.edges == {(qX, pX), (pX, qX)}
         )
         self.assertFalse(pX_qX_comp.stratified)
 
@@ -107,6 +108,17 @@ class TestComponentGraph(unittest.TestCase):
         self.assertTrue((pX_qX_comp, v3_comp) in graph.pos_edges)
         self.assertTrue((x_comp, pX_qX_comp) in graph.neg_edges)
         self.assertTrue((y_comp, pX_qX_comp) in graph.neg_edges)
+        self.assertEqual(
+            graph.edges,
+            {
+                (pX_qX_comp, u1_comp),
+                (pX_qX_comp, u2_comp),
+                (pX_qX_comp, v2_comp),
+                (pX_qX_comp, v3_comp),
+                (x_comp, pX_qX_comp),
+                (y_comp, pX_qX_comp),
+            },
+        )
 
         # check instantiation sequence
         inst_sequence = graph.sequence()

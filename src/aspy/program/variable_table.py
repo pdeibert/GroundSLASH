@@ -35,7 +35,7 @@ class VariableTable:
     def __setitem__(self, symbol: str, is_global: bool) -> None:
         self.variables[symbol] = is_global
 
-    def add(self, var: Variable, is_global: bool = False) -> None:
+    def register(self, var: Variable, is_global: bool = False) -> None:
         # adjust counters if necessary
         if isinstance(var, AnonVariable):
             self.anon_counter = max(self.anon_counter, var.id + 1)
@@ -62,6 +62,7 @@ class VariableTable:
         self,
         symbol: str = "_",
         register: bool = True,
+        is_global: bool = False,
         orig_term: Optional["ArithTerm"] = None,
     ) -> Variable:
         # anonymous variable
@@ -74,9 +75,10 @@ class VariableTable:
             # create new variable
             var = AnonVariable(id)
         # special 'arithmetic replacement' variable
-        elif symbol == SpecialChar.TAU:
+        elif symbol == SpecialChar.TAU.value:
+
             if orig_term is None:
-                ValueError(
+                raise ValueError(
                     "Variable table cannot create arithmetic variable without specifying 'orig_term'."  # noqa
                 )
 
@@ -101,7 +103,7 @@ class VariableTable:
 
         if register:
             # register new variable
-            self.add(var)
+            self.register(var, is_global)
 
         # return newly created variable
         return var

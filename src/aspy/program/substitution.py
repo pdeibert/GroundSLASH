@@ -51,10 +51,6 @@ class Substitution(dict):
 
         return Substitution(subst)
 
-    @cached_property
-    def ground(self) -> bool:
-        return all(target.ground for target in self.values())
-
     def compose(self, other: "Substitution") -> "Substitution":
 
         # apply other substitution to substituted values
