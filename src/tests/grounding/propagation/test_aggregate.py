@@ -21,8 +21,8 @@ from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalRule
 from aspy.program.terms import Number, TermTuple, Variable
 
 
-class TestPropagation(unittest.TestCase):
-    def test_propagator(self):
+class TestAggrPropagator(unittest.TestCase):
+    def test_aggr_propagator(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
@@ -246,8 +246,14 @@ class TestPropagation(unittest.TestCase):
                 AggregateLiteral(
                     AggregateCount(),
                     (
-                        AggregateElement(Number(0), PredicateLiteral("p", Number(0))),
-                        AggregateElement(Number(1), PredicateLiteral("p", Number(1))),
+                        AggregateElement(
+                            TermTuple(Number(0)),
+                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                        ),
+                        AggregateElement(
+                            TermTuple(Number(1)),
+                            LiteralTuple(PredicateLiteral("p", Number(1))),
+                        ),
                     ),  # first possible element order
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 ),
@@ -269,8 +275,14 @@ class TestPropagation(unittest.TestCase):
                 AggregateLiteral(
                     AggregateCount(),
                     (
-                        AggregateElement(Number(1), PredicateLiteral("p", Number(1))),
-                        AggregateElement(Number(0), PredicateLiteral("p", Number(0))),
+                        AggregateElement(
+                            TermTuple(Number(1)),
+                            LiteralTuple(PredicateLiteral("p", Number(1))),
+                        ),
+                        AggregateElement(
+                            TermTuple(Number(0)),
+                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                        ),
                     ),  # second possible element order
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 ),

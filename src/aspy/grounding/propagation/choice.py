@@ -63,7 +63,7 @@ class ChoicePropagator:
                         ),
                     )
 
-                self.instance_map[ground_chi_literal][1].add(
+                self.instance_map[ground_chi_literal][0].add(
                     rule.element.substitute(subst)
                 )
 

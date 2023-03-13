@@ -127,6 +127,10 @@ class ChoiceElement(Expr):
             self.literals.replace_arith(var_table),
         )
 
+    def satisfied(self, literals: Set["Literal"]) -> bool:
+        # check if all condition literals are part of the specified set
+        return all(literal in literals for literal in self.literals)
+
 
 class Choice(Expr):
     """Choice."""
@@ -178,7 +182,7 @@ class Choice(Expr):
         )
 
     def __hash__(self) -> int:
-        return hash(("choice", self.elements, self.guards))
+        return hash(("choice", frozenset(self.elements), self.guards))
 
     def __str__(self) -> str:
         elements_str = ";".join([str(literal) for literal in self.elements])
