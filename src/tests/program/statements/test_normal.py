@@ -18,7 +18,7 @@ from aspy.program.literals import (
 from aspy.program.operators import RelOp
 from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalFact, NormalRule
 from aspy.program.substitution import Substitution
-from aspy.program.terms import Number, String, TermTuple, Variable
+from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
 
 
 class TestNormal(unittest.TestCase):
@@ -58,7 +58,15 @@ class TestNormal(unittest.TestCase):
         # variables
         self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
         self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
-        # TODO: replace arithmetic terms
+        # replace arithmetic terms
+        self.assertEqual(
+            NormalFact(
+                PredicateLiteral("p", Minus(Variable("X"))),
+            ).replace_arith(),
+            NormalFact(
+                PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+            ),
+        )
 
         # substitution
         rule = NormalFact(PredicateLiteral("p", Variable("X"), Number(0)))
@@ -90,6 +98,9 @@ class TestNormal(unittest.TestCase):
         safe_var_rule = NormalRule(
             PredicateLiteral("p", Variable("X")), PredicateLiteral("q", Variable("X"))
         )
+
+        # invalid initialization
+        self.assertRaises(ValueError, NormalRule, PredicateLiteral("p"))
 
         # string representation
         self.assertEqual(str(ground_rule), "p(0) :- q.")
@@ -158,7 +169,17 @@ class TestNormal(unittest.TestCase):
         self.assertTrue(
             safe_var_rule.vars() == safe_var_rule.global_vars() == {Variable("X")}
         )
-        # TODO: replace arithmetic terms
+        # replace arithmetic terms
+        self.assertEqual(
+            NormalRule(
+                PredicateLiteral("p", Minus(Variable("X"))),
+                PredicateLiteral("q", Minus(Variable("Y"))),
+            ).replace_arith(),
+            NormalRule(
+                PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+                PredicateLiteral("q", ArithVariable(1, Minus(Variable("Y")))),
+            ),
+        )
 
         # substitution
         rule = NormalRule(
@@ -300,28 +321,6 @@ class TestNormal(unittest.TestCase):
         )
 
         # assembling
-        target_rule = NormalRule(
-            PredicateLiteral("p", Variable("X"), Number(0)),
-            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredicateLiteral("q", Variable("X")),
-            Equal(Number(0), Variable("X")),
-            AggrPlaceholder(2, TermTuple(), TermTuple()),
-        )
-        elements_1 = (
-            AggregateElement(
-                TermTuple(Variable("Y")),
-                LiteralTuple(PredicateLiteral("p", Variable("Y"))),
-            ),
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
-            ),
-        )
-        elements_2 = (
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("q", Number(0)))
-            ),
-        )
-
         self.assertEqual(
             target_rule.assemble_aggregates(
                 {

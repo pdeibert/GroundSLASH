@@ -222,8 +222,11 @@ class Choice(Expr):
         return self.invars().union(self.outvars())
 
     def global_vars(self, statement: "Statement") -> Set["Variable"]:
-        # TODO
-        return self.head.vars().union(self.outvars())
+        # TODO: correct ?
+        glob_body_vars = statement.body.global_vars()
+
+        return self.outvars().union(self.invars().intersection(glob_body_vars))
+        # return self.head.vars().union(self.outvars())
         # return self.vars().intersection(statement.global_vars())
         # return set().union(
         #    self.outvars(),
@@ -382,7 +385,7 @@ class Choice(Expr):
                 )
             elif op == RelOp.UNEQUAL:
                 # check if any subset of elements satisfies bound
-                res &= propagate_subset(op, bound, I_elements, J_elements)
+                res &= propagate_subset(op, bound, get_I_elements(), get_J_elements())
 
         return res
 
@@ -523,15 +526,6 @@ class ChoiceFact(Fact):
         chi_rule = NormalFact(chi_literal)
 
         return chi_rule
-
-    def assemble_choices(
-        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
-    ) -> "ChoiceFact":
-        return ChoiceFact(
-            self.choice
-            if self.choice not in assembling_map
-            else assembling_map[self.choice],
-        )
 
 
 class ChoiceRule(Rule):
@@ -719,7 +713,7 @@ class ChoiceRule(Rule):
     ) -> "NormalRule":
 
         # global variables
-        glob_vars = self.global_vars()
+        glob_vars = self.global_vars()  # TODO: correct ???
 
         # local import due to circular import
         from .rewrite import rewrite_choice
@@ -735,13 +729,3 @@ class ChoiceRule(Rule):
         chi_rule = NormalRule(chi_literal, *self.literals)
 
         return chi_rule
-
-    def assemble_choices(
-        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
-    ) -> "ChoiceRule":
-        return ChoiceRule(
-            self.choice
-            if self.choice not in assembling_map
-            else assembling_map[self.choice],
-            self.literals,
-        )

@@ -5,24 +5,44 @@ import aspy
 from aspy.program.literals import (
     AggregateCount,
     AggregateLiteral,
+    ChoiceBaseLiteral,
+    ChoiceElemLiteral,
+    ChoicePlaceholder,
+    Equal,
+    GreaterEqual,
     Guard,
     LiteralTuple,
     Naf,
     PredicateLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import Choice, ChoiceElement, ChoiceFact, ChoiceRule
+from aspy.program.statements import (
+    Choice,
+    ChoiceBaseRule,
+    ChoiceElement,
+    ChoiceElemRule,
+    ChoiceFact,
+    ChoiceRule,
+    Constraint,
+    NormalFact,
+    NormalRule,
+)
 from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
+from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
 from aspy.program.variable_table import VariableTable
 
 
-class DummyRule:  # pragma: no cover
+class DummyBody:  # pragma: no cover
     def __init__(self, vars: Set["Variable"]) -> None:
         self.vars = vars
 
     def global_vars(self) -> Set["Variable"]:
         return self.vars
+
+
+class DummyRule:  # pragma: no cover
+    def __init__(self, vars: Set["Variable"]) -> None:
+        self.body = DummyBody(vars)
 
 
 class TestChoice(unittest.TestCase):
@@ -607,7 +627,131 @@ class TestChoice(unittest.TestCase):
         # assembling
         self.assertEqual(rule, rule.assemble_aggregates(dict()))
 
-        # TODO: propagate
+        # rewrite choice
+        elements = (
+            ChoiceElement(
+                PredicateLiteral("p", Variable("X")),
+                LiteralTuple(PredicateLiteral("q", Variable("X"))),
+            ),
+            ChoiceElement(
+                PredicateLiteral("p", Number(1)),
+                LiteralTuple(PredicateLiteral("p", Number(0))),
+            ),
+        )
+        rule = ChoiceFact(
+            Choice(
+                elements,
+                Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+            ),
+        )
+        target_rule = NormalFact(
+            ChoicePlaceholder(
+                1,
+                TermTuple(),
+                TermTuple(),
+            ),
+        )
+        choice_map = dict()
+        self.assertEqual(rule.rewrite_choices(1, choice_map), target_rule)
+        self.assertEqual(len(choice_map), 1)
+
+        choice, chi_literal, eps_rule, eta_rules = choice_map[1]
+        self.assertEqual(choice, rule.head)
+
+        self.assertEqual(chi_literal, target_rule.atom)
+        self.assertEqual(
+            eps_rule,
+            ChoiceBaseRule(
+                ChoiceBaseLiteral(
+                    1,
+                    TermTuple(),
+                    TermTuple(),
+                ),
+                Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+                None,
+                LiteralTuple(
+                    GreaterEqual(Number(-1), Number(0)),
+                ),
+            ),
+        )
+
+        self.assertEqual(len(eta_rules), 2)
+        # """
+        self.assertEqual(
+            eta_rules[0],
+            ChoiceElemRule(
+                ChoiceElemLiteral(
+                    1,
+                    0,
+                    TermTuple(Variable("X")),
+                    TermTuple(),
+                    TermTuple(Variable("X")),
+                ),
+                elements[0],
+                LiteralTuple(
+                    PredicateLiteral("q", Variable("X")),
+                ),
+            ),
+        )
+        self.assertEqual(
+            eta_rules[1],
+            ChoiceElemRule(
+                ChoiceElemLiteral(
+                    1,
+                    1,
+                    TermTuple(),
+                    TermTuple(),
+                    TermTuple(),
+                ),
+                elements[1],
+                LiteralTuple(
+                    PredicateLiteral("p", Number(0)),
+                ),
+            ),
+        )
+
+        # assembling choice
+        self.assertEqual(
+            target_rule.assemble_choices(
+                {
+                    ChoicePlaceholder(1, TermTuple(), TermTuple(),): Choice(
+                        (
+                            ChoiceElement(
+                                PredicateLiteral("p", Number(0)),
+                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                            ),
+                            ChoiceElement(
+                                PredicateLiteral("p", Number(1)),
+                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                            ),
+                        ),
+                        Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+                    ),
+                },
+            ),
+            ChoiceFact(
+                Choice(
+                    (
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(0)),
+                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                        ),
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(1)),
+                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                        ),
+                    ),
+                    Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+                ),
+            ),
+        )  # choice is satisfiable
+
+        self.assertEqual(
+            target_rule.assemble_choices(
+                dict(),
+            ),
+            Constraint(),
+        )  # choice is unsatisfiable (yields constraint)
 
     def test_choice_rule(self):
 
@@ -762,11 +906,11 @@ class TestChoice(unittest.TestCase):
         )
         # variables
         self.assertTrue(ground_rule.vars() == ground_rule.global_vars() == set())
-        self.assertTrue(
-            unsafe_var_rule.vars()
-            == unsafe_var_rule.global_vars()
-            == {Variable("Y"), Variable("X")}
+        self.assertEqual(
+            unsafe_var_rule.vars(),
+            {Variable("Y"), Variable("X")},
         )
+        self.assertEqual(unsafe_var_rule.global_vars(), {Variable("Y"), Variable("X")})
         self.assertTrue(
             safe_var_rule.vars()
             == safe_var_rule.global_vars()
@@ -823,8 +967,155 @@ class TestChoice(unittest.TestCase):
             ),
         )
 
-        # TODO: rewrite aggregates
-        # TODO: assembling aggregates
+        # rewrite choice
+        elements = (
+            ChoiceElement(
+                PredicateLiteral("p", Variable("X")),
+                LiteralTuple(PredicateLiteral("q", Variable("X"))),
+            ),
+            ChoiceElement(
+                PredicateLiteral("p", Number(1)),
+                LiteralTuple(PredicateLiteral("p", Number(0))),
+            ),
+        )
+        rule = ChoiceRule(
+            Choice(
+                elements,
+                Guard(RelOp.GREATER_OR_EQ, Variable("Y"), False),
+            ),
+            (
+                PredicateLiteral("q", Variable("Y")),
+                Equal(Number(0), Variable("X")),
+            ),
+        )
+        target_rule = NormalRule(
+            ChoicePlaceholder(
+                1,
+                TermTuple(Variable("X"), Variable("Y")),
+                TermTuple(Variable("X"), Variable("Y")),
+            ),
+            PredicateLiteral("q", Variable("Y")),
+            Equal(Number(0), Variable("X")),
+        )
+        choice_map = dict()
+
+        self.assertEqual(rule.rewrite_choices(1, choice_map), target_rule)
+        self.assertEqual(len(choice_map), 1)
+
+        choice, chi_literal, eps_rule, eta_rules = choice_map[1]
+        self.assertEqual(choice, rule.head)
+
+        self.assertEqual(chi_literal, target_rule.atom)
+        self.assertEqual(
+            eps_rule,
+            ChoiceBaseRule(
+                ChoiceBaseLiteral(
+                    1,
+                    TermTuple(Variable("X"), Variable("Y")),
+                    TermTuple(Variable("X"), Variable("Y")),
+                ),
+                Guard(RelOp.GREATER_OR_EQ, Variable("Y"), False),
+                None,
+                LiteralTuple(
+                    GreaterEqual(Variable("Y"), Number(0)),
+                    PredicateLiteral("q", Variable("Y")),
+                    Equal(Number(0), Variable("X")),
+                ),
+            ),
+        )
+
+        self.assertEqual(len(eta_rules), 2)
+        self.assertEqual(
+            eta_rules[0],
+            ChoiceElemRule(
+                ChoiceElemLiteral(
+                    1,
+                    0,
+                    TermTuple(),
+                    TermTuple(Variable("X"), Variable("Y")),
+                    TermTuple(Variable("X"), Variable("Y")),
+                ),
+                elements[0],
+                LiteralTuple(
+                    PredicateLiteral("q", Variable("X")),
+                    PredicateLiteral("q", Variable("Y")),
+                    Equal(Number(0), Variable("X")),
+                ),
+            ),
+        )
+        self.assertEqual(
+            eta_rules[1],
+            ChoiceElemRule(
+                ChoiceElemLiteral(
+                    1,
+                    1,
+                    TermTuple(),
+                    TermTuple(Variable("X"), Variable("Y")),
+                    TermTuple(Variable("X"), Variable("Y")),
+                ),
+                elements[1],
+                LiteralTuple(
+                    PredicateLiteral("p", Number(0)),
+                    PredicateLiteral("q", Variable("Y")),
+                    Equal(Number(0), Variable("X")),
+                ),
+            ),
+        )
+
+        # assembling choice
+        self.assertEqual(
+            target_rule.assemble_choices(
+                {
+                    ChoicePlaceholder(
+                        1,
+                        TermTuple(Variable("X"), Variable("Y")),
+                        TermTuple(Variable("X"), Variable("Y")),
+                    ): Choice(
+                        (
+                            ChoiceElement(
+                                PredicateLiteral("p", Number(0)),
+                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                            ),
+                            ChoiceElement(
+                                PredicateLiteral("p", Number(1)),
+                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                            ),
+                        ),
+                        Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+                    ),
+                },
+            ),
+            ChoiceRule(
+                Choice(
+                    (
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(0)),
+                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                        ),
+                        ChoiceElement(
+                            PredicateLiteral("p", Number(1)),
+                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                        ),
+                    ),
+                    Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
+                ),
+                (
+                    PredicateLiteral("q", Variable("Y")),
+                    Equal(Number(0), Variable("X")),
+                ),
+            ),
+        )  # choice is satisfiable
+
+        self.assertEqual(
+            target_rule.assemble_choices(
+                dict(),
+            ),
+            Constraint(
+                PredicateLiteral("q", Variable("Y")),
+                Equal(Number(0), Variable("X")),
+            ),
+        )  # choice is unsatisfiable (yields constraint)
+
         # TODO: propagate
 
 

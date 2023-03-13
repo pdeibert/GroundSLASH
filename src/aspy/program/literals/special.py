@@ -40,12 +40,19 @@ class AggrPlaceholder(AuxLiteral):
         return (
             isinstance(other, AggrPlaceholder)
             and self.aggr_id == other.aggr_id
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and {v: t for v, t in zip(self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
-        return hash(("aggr placeholder", self.aggr_id, self.glob_vars, self.terms))
+        return hash(
+            (
+                "aggr placeholder",
+                self.aggr_id,
+                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
+            )
+        )
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
@@ -112,12 +119,19 @@ class AggrBaseLiteral(AuxLiteral):
         return (
             isinstance(other, AggrBaseLiteral)
             and self.aggr_id == other.aggr_id
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and {v: t for v, t in zip(self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
-        return hash(("aggr base literal", self.aggr_id, self.glob_vars, self.terms))
+        return hash(
+            (
+                "aggr base literal",
+                self.aggr_id,
+                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
+            )
+        )
 
     def set_naf(self, value: bool = True) -> None:
         raise Exception(
@@ -199,9 +213,10 @@ class AggrElemLiteral(AuxLiteral):
             isinstance(other, AggrElemLiteral)
             and self.aggr_id == other.aggr_id
             and self.element_id == other.element_id
-            and self.local_vars == other.local_vars
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and set(self.local_vars) == set(other.local_vars)
+            and {v: t for v, t in zip(self.local_vars + self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.local_vars + other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
@@ -210,9 +225,14 @@ class AggrElemLiteral(AuxLiteral):
                 "aggr element literal",
                 self.aggr_id,
                 self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
+                frozenset(
+                    (v, t)
+                    for v, t in zip(self.local_vars, self.terms[: len(self.local_vars)])
+                ),
+                frozenset(
+                    (v, t)
+                    for v, t in zip(self.glob_vars, self.terms[len(self.local_vars) :])
+                ),
             )
         )
 
@@ -302,12 +322,19 @@ class ChoicePlaceholder(AuxLiteral):
         return (
             isinstance(other, ChoicePlaceholder)
             and self.choice_id == other.choice_id
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and {v: t for v, t in zip(self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
-        return hash(("choice placeholder", self.choice_id, self.glob_vars, self.terms))
+        return hash(
+            (
+                "choice placeholder",
+                self.choice_id,
+                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
+            )
+        )
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
@@ -373,12 +400,19 @@ class ChoiceBaseLiteral(AuxLiteral):
         return (
             isinstance(other, ChoiceBaseLiteral)
             and self.choice_id == other.choice_id
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and {v: t for v, t in zip(self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
-        return hash(("choice base literal", self.choice_id, self.glob_vars, self.terms))
+        return hash(
+            (
+                "choice base literal",
+                self.choice_id,
+                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
+            )
+        )
 
     def set_naf(self, value: bool = True) -> None:
         raise Exception(
@@ -460,9 +494,10 @@ class ChoiceElemLiteral(AuxLiteral):
             isinstance(other, ChoiceElemLiteral)
             and self.choice_id == other.choice_id
             and self.element_id == other.element_id
-            and self.local_vars == other.local_vars
-            and self.glob_vars == other.glob_vars
-            and self.terms == other.terms
+            and set(self.glob_vars) == set(other.glob_vars)
+            and set(self.local_vars) == set(other.local_vars)
+            and {v: t for v, t in zip(self.local_vars + self.glob_vars, self.terms)}
+            == {v: t for v, t in zip(other.local_vars + other.glob_vars, other.terms)}
         )
 
     def __hash__(self) -> int:
@@ -471,9 +506,14 @@ class ChoiceElemLiteral(AuxLiteral):
                 "choice element literal",
                 self.choice_id,
                 self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
+                frozenset(
+                    (v, t)
+                    for v, t in zip(self.local_vars, self.terms[: len(self.local_vars)])
+                ),
+                frozenset(
+                    (v, t)
+                    for v, t in zip(self.glob_vars, self.terms[len(self.local_vars) :])
+                ),
             )
         )
 

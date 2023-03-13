@@ -117,7 +117,8 @@ class Statement(Expr, ABC):
         return deepcopy(self)
 
     def assemble_choices(
-        self, assembling_map: Dict["ChoicePlaceholder", "Choice"]
+        self,
+        assembling_map: Dict["ChoicePlaceholder", "Choice"],
     ) -> "Statement":
         return deepcopy(self)
 

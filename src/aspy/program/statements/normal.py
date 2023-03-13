@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Set, Tuple, Union
 
 from aspy.program.literals import (
     AggregateLiteral,
@@ -10,13 +10,16 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
+from .constraint import Constraint
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
     from aspy.program.literals import Literal
+    from aspy.program.literals.special import ChoicePlaceholder
     from aspy.program.substitution import Substitution
 
+    from .choice import Choice, ChoiceFact, ChoiceRule
     from .special import AggrBaseRule, AggrElemRule
 
 
@@ -72,6 +75,27 @@ class NormalFact(Fact):
 
     def replace_arith(self) -> "NormalFact":
         return NormalFact(self.atom.replace_arith(self.var_table))
+
+    def assemble_choices(
+        self,
+        assembling_map: Dict["ChoicePlaceholder", "Choice"],
+    ) -> Union["NormalFact", "ChoiceFact"]:
+        # local import to avoid circular imports
+        from aspy.program.literals.special import ChoicePlaceholder
+
+        from .choice import ChoiceFact
+
+        # choice rule
+        if isinstance(self.atom, ChoicePlaceholder):
+            # satisfiable (instantiate choice rule)
+            if self.atom in assembling_map:
+                return ChoiceFact(assembling_map[self.atom])
+            # unsatisfiable (instantiate constraint)
+            else:
+                return Constraint()
+
+        # non-choice rule (nothing to be done here)
+        return deepcopy(self)
 
 
 class NormalRule(Rule):
@@ -212,3 +236,24 @@ class NormalRule(Rule):
                 for literal in self.body
             ),
         )
+
+    def assemble_choices(
+        self,
+        assembling_map: Dict["ChoicePlaceholder", "Choice"],
+    ) -> Union["NormalRule", "ChoiceRule"]:
+        # local import to avoid circular imports
+        from aspy.program.literals.special import ChoicePlaceholder
+
+        from .choice import ChoiceRule
+
+        # choice rule
+        if isinstance(self.atom, ChoicePlaceholder):
+            # satisfiable (instantiate choice rule)
+            if self.atom in assembling_map:
+                return ChoiceRule(assembling_map[self.atom], self.body)
+            # unsatisfiable (instantiate constraint)
+            else:
+                return Constraint(*self.body)
+
+        # non-choice rule (nothing to be done here)
+        return deepcopy(self)
