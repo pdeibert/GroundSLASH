@@ -342,7 +342,7 @@ class AggregateSum(AggregateFunction):
             # compute baseline value
             J_terms = {element.terms for element in J_elements}
             baseline = self.eval(J_terms)
-            # get all elements that would change the baseline value
+            # get all elements that would change the baseline valueself
             # (to reduce number of possible subsets to test)
             candidate_terms = {
                 element.terms
@@ -553,7 +553,9 @@ class AggregateMin(AggregateFunction):
                     and get_propagation_result(
                         RelOp.LESS_OR_EQ, bound, get_J_elements()
                     )
-                    and propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+                    and propagate_subset(
+                        RelOp.EQUAL, bound, get_J_elements(), get_I_elements()
+                    )
                 )
             elif op == RelOp.UNEQUAL:
                 # check upper or lower bound as well as
@@ -561,7 +563,9 @@ class AggregateMin(AggregateFunction):
                 res &= (
                     get_propagation_result(RelOp.GREATER, bound, get_I_elements())
                     or get_propagation_result(RelOp.LESS, bound, get_J_elements())
-                    or not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+                    or not propagate_subset(
+                        RelOp.EQUAL, bound, get_I_elements(), get_J_elements()
+                    )
                 )
 
         return res
@@ -687,7 +691,9 @@ class AggregateMax(AggregateFunction):
                     and get_propagation_result(
                         RelOp.LESS_OR_EQ, bound, get_I_elements()
                     )
-                    and propagate_subset(RelOp.EQUAL, bound, J_elements, I_elements)
+                    and propagate_subset(
+                        RelOp.EQUAL, bound, get_J_elements(), get_I_elements()
+                    )
                 )
             elif op == RelOp.UNEQUAL:
                 # check upper or lower bound as well as
@@ -695,7 +701,9 @@ class AggregateMax(AggregateFunction):
                 res &= (
                     get_propagation_result(RelOp.GREATER, bound, get_J_elements())
                     or get_propagation_result(RelOp.LESS, bound, get_I_elements())
-                    or not propagate_subset(RelOp.EQUAL, bound, I_elements, J_elements)
+                    or not propagate_subset(
+                        RelOp.EQUAL, bound, get_I_elements(), get_J_elements()
+                    )
                 )
 
         return res
