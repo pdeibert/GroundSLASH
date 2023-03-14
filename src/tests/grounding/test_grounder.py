@@ -22,21 +22,6 @@ from aspy.program.substitution import Substitution
 from aspy.program.terms import Add, ArithVariable, Number, Variable
 
 
-def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
-
-    ctl = clingo.Control(message_limit=0)
-    # instruct to return all models
-    ctl.configuration.solve.models = 0
-    ctl.add("prog", [], prog)
-    # TODO: optional?
-    ctl.ground([("prog", [])])
-
-    models = []
-    sat = ctl.solve(on_model=lambda m: models.append(frozenset(str(m).split(" "))))
-
-    return sat.satisfiable, set(models)
-
-
 class TestGrounder(unittest.TestCase):
     def test_select(self):
 
@@ -323,6 +308,20 @@ class TestGrounder(unittest.TestCase):
 
         # TODO: aggregates
 
+    def test_ground_unsafe(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        # unsafe program
+        prog_str = r"""
+        p(X).
+        """
+
+        # build & ground program
+        prog = Program.from_string(prog_str)
+        self.assertRaises(ValueError, Grounder, prog)
+
     def test_ground_component(self):
 
         # make sure debug mode is enabled
@@ -332,6 +331,22 @@ class TestGrounder(unittest.TestCase):
 
     def compare_to_clingo(self, prog_str: str) -> None:
         """Helper method (not a test case on its own)."""
+
+        def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
+
+            ctl = clingo.Control(message_limit=0)
+            # instruct to return all models
+            ctl.configuration.solve.models = 0
+            ctl.add("prog", [], prog)
+            # TODO: optional?
+            ctl.ground([("prog", [])])
+
+            models = []
+            sat = ctl.solve(
+                on_model=lambda m: models.append(frozenset(str(m).split(" ")))
+            )
+
+            return sat.satisfiable, set(models)
 
         # build & ground program
         prog = Program.from_string(prog_str)

@@ -183,17 +183,17 @@ class Grounder:
     def ground_component(
         self,
         component: Program,
-        I: Optional[Set["Literal"]] = None,
-        J: Optional[Set["Literal"]] = None,
+        literals_I: Optional[Set["Literal"]] = None,
+        literals_J: Optional[Set["Literal"]] = None,
     ) -> Set["Statement"]:
         if not component.statements:
             return set()
 
         # initialize optional arguments
-        if I is None:
-            I = set()
-        if J is None:
-            J = set()
+        if literals_I is None:
+            literals_I = set()
+        if literals_J is None:
+            literals_J = set()
 
         # initialize sets of instances/literals
         alpha_instances = set()
@@ -204,14 +204,13 @@ class Grounder:
 
         # NOTE: as implemented by 'mu-gringo', different from original algorithm.
         # Use of J,J' during grounding of epsilon/eta rules yields incorrect groundings.
-        K = I.union(J)
-        prev_K = set()
+        literals_K = literals_I.union(literals_J)
+        prev_literals_K = set()
 
-        J_alpha = set()
-        prev_J_alpha = set()
-        J_chi = set()
-        prev_J_chi = set()
-        prev_J = set()
+        literals_J_alpha = set()
+        prev_literals_J_alpha = set()
+        literals_J_chi = set()
+        prev_literals_J = set()
 
         # initialize flag
         duplicate = False
@@ -244,7 +243,13 @@ class Grounder:
                 set().union(
                     *tuple(
                         self.ground_statement(
-                            rule, rule.body, I, K, prev_K, Substitution(), duplicate
+                            rule,
+                            rule.body,
+                            literals_I,
+                            literals_K,
+                            prev_literals_K,
+                            Substitution(),
+                            duplicate,
                         )
                         for rule in prog_aggr_eps.statements
                     )
@@ -255,7 +260,13 @@ class Grounder:
                 set().union(
                     *tuple(
                         self.ground_statement(
-                            rule, rule.body, I, K, prev_K, Substitution(), duplicate
+                            rule,
+                            rule.body,
+                            literals_I,
+                            literals_K,
+                            prev_literals_K,
+                            Substitution(),
+                            duplicate,
                         )
                         for rule in prog_aggr_eta.statements
                     )
@@ -263,8 +274,12 @@ class Grounder:
             )
 
             # propagate aggregates
-            J_alpha = aggr_propagator.propagate(
-                aggr_eps_instances, aggr_eta_instances, I, J, J_alpha
+            literals_J_alpha = aggr_propagator.propagate(
+                aggr_eps_instances,
+                aggr_eta_instances,
+                literals_I,
+                literals_J,
+                literals_J_alpha,
             )
 
             # ground remaining rules (including non-aggregate rules)
@@ -274,9 +289,9 @@ class Grounder:
                         self.ground_statement(
                             rule,
                             rule.body,
-                            I,
-                            J.union(J_alpha),
-                            prev_J.union(prev_J_alpha),
+                            literals_I,
+                            literals_J.union(literals_J_alpha),
+                            prev_literals_J.union(prev_literals_J_alpha),
                             Substitution(),
                             duplicate,
                         )
@@ -290,9 +305,9 @@ class Grounder:
                         self.ground_statement(
                             rule,
                             rule.body,
-                            I,
-                            J.union(J_alpha),
-                            prev_J.union(prev_J_alpha),
+                            literals_I,
+                            literals_J.union(literals_J_alpha),
+                            prev_literals_J.union(prev_literals_J_alpha),
                             Substitution(),
                             duplicate,
                         )
@@ -306,9 +321,9 @@ class Grounder:
                         self.ground_statement(
                             rule,
                             rule.body,
-                            I,
-                            J.union(J_alpha),
-                            prev_J.union(prev_J_alpha),
+                            literals_I,
+                            literals_J.union(literals_J_alpha),
+                            prev_literals_J.union(prev_literals_J_alpha),
                             Substitution(),
                             duplicate,
                         )
@@ -318,32 +333,37 @@ class Grounder:
             )
 
             # propagate choice expressions
-            J_chi = choice_propagator.propagate(
-                choice_eps_instances, choice_eta_instances, I, J, J_chi
+            literals_J_chi = choice_propagator.propagate(
+                choice_eps_instances,
+                choice_eta_instances,
+                literals_I,
+                literals_J,
+                literals_J_chi,
             )
 
             # update state
             duplicate = True
-            prev_J_alpha = J_alpha.copy()
-            prev_J_chi = J_chi.copy()
-            prev_J = J.copy()
-            prev_K = K.copy()
+            prev_literals_J_alpha = literals_J_alpha.copy()
+            prev_literals_J = literals_J.copy()
+            prev_literals_K = literals_K.copy()
 
             # NOTE: 'pos_occ' applicable (all head literals are pos. predicate literals)
             head_literals = set().union(
                 *tuple(rule.head.pos_occ() for rule in alpha_instances)
             )
 
-            J.update(head_literals)
-            K.update(head_literals)
+            literals_J.update(head_literals)
+            literals_K.update(head_literals)
 
             # enough to check lengths instead of elements (much cheaper)
-            if len(J) == len(prev_J):
+            if len(literals_J) == len(prev_literals_J):
                 converged = True
 
         # assemble aggregates (if present)
         assembled_instances = aggr_propagator.assemble(alpha_instances)
-        assembled_instances = choice_propagator.assemble(assembled_instances, J_chi)
+        assembled_instances = choice_propagator.assemble(
+            assembled_instances, literals_J_chi
+        )
 
         # return re-assembled rules
         return assembled_instances
