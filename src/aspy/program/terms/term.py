@@ -225,6 +225,7 @@ class Variable(Term):
     """Represents a variable.
 
     Attributes:
+        val: String representing the identifier for the variable.
         ground: Boolean indicating whether or not the term is ground (always `False`).
     """
 
@@ -238,7 +239,7 @@ class Variable(Term):
                 Valid identifiers start with an upper-case latin letter, followed by zero or more alphanumerics and underscores.
 
         Raises:
-            ValueError: Invalid value specified for the variable. Only checked if `aspy.debug()` is set to `True`.
+            ValueError: Invalid value specified for the variable. Only checked if `aspy.debug()` returns `True`.
         """  # noqa
         # check if variable name is valid
         if aspy.debug() and not (isinstance(val, str) and VARIABLE_RE.fullmatch(val)):
@@ -348,6 +349,8 @@ class AnonVariable(Variable):
     """Represents an anonymous variable.
 
     Attributes:
+        val: String representing the identifier for the anonymous variable.
+        id: Integer representing the id for the anonymous variable.
         ground: Boolean indicating whether or not the term is ground (always `False`).
     """
 
@@ -361,7 +364,7 @@ class AnonVariable(Variable):
                 Should be unique within each statement or query.
 
         Raises:
-            ValueError: Negative id specified for the variable. Only checked if `aspy.debug()` is set to `True`.
+            ValueError: Negative id specified for the variable. Only checked if `aspy.debug()` returns `True`.
         """  # noqa
         # check if id is valid
         if aspy.debug() and id < 0:
@@ -405,6 +408,7 @@ class Number(Term):
     """Represents a number.
 
     Attributes:
+        val: Integer representing the value of the number.
         ground: Boolean indicating whether or not the term is ground (always `True`).
     """
 
@@ -555,6 +559,7 @@ class SymbolicConstant(Term):
     """Represents a symbolic constant.
 
     Attributes:
+        val: String representing the identifier for the symbolic constant.
         ground: Boolean indicating whether or not the term is ground (always `True`).
     """
 
@@ -570,7 +575,7 @@ class SymbolicConstant(Term):
                 '\u03b5\u03C7', '\u03b7\u03b1', or '\u03b7\u03C7', but are reserved for internal use.
 
         Raises:
-            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` is set to `True`.
+            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` returns `True`.
         """  # noqa
         # check if symbolic constant name is valid
         if aspy.debug() and not SYM_CONST_RE.fullmatch(val):  # TODO: alpha, eta, eps?
@@ -638,6 +643,7 @@ class String(Term):
     """Represents a string.
 
     Attributes:
+        val: String representing the string value.
         ground: Boolean indicating whether or not the term is ground (always `True`).
     """
 
@@ -710,6 +716,7 @@ class TermTuple:
     """Represents an ordered collection of terms.
 
     Attributes:
+        terms: Tuple of `Term` instances.
         ground: Boolean indicating whether or not all terms are ground.
     """
 
@@ -724,16 +731,17 @@ class TermTuple:
     def __len__(self) -> int:
         return len(self.terms)
 
-    def __eq__(self, other: "TermTuple") -> bool:
+    def __eq__(self, other: "Expr") -> bool:
         """Compares the term tuple to another given term tuple.
 
-        Considered equal if the given term tuple contains the same terms in the exact same order.
+        Considered equal if the given expression is also a `TermTuple` instance and contains
+        the same terms in the exact same order.
 
         Args:
-            other: `TermTuple` instance to be compared to.
+            other: `Expr` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term tuple is considered equal to the given term tuple.
+            Boolean indicating whether or not the term tuple is considered equal to the given expression.
         """  # noqa
         return (
             isinstance(other, TermTuple)
@@ -854,14 +862,14 @@ class TermTuple:
         """Tries to match the term tuple with an expression.
 
         Can only be matched to a term tuple where each corresponding term can be matched
-        and without any assignment conflicts.
+        without any assignment conflicts.
 
         Args:
             other: `Expr` instance to be matched to.
 
         Returns:
-            A substitution necessary for matching (may be empty).
-        """
+            A substitution necessary for matching (may be empty) or `None` if cannot be matched.
+        """  # noqa
         if not (isinstance(other, TermTuple) and len(self) == len(other)):
             return None
 
@@ -881,7 +889,7 @@ class TermTuple:
         return subst
 
     def substitute(self, subst: "Substitution") -> "TermTuple":
-        """Applies a substitution to the term term tuple.
+        """Applies a substitution to the term tuple.
 
         Substitutes all terms recursively.
 

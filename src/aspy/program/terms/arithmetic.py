@@ -132,7 +132,7 @@ class ArithTerm(Term, ABC):
             other: `Expr` instance to be matched to.
 
         Returns:
-            A substitution necessary for matching (may be empty).
+            A substitution necessary for matching (may be empty) or `None` if cannot be matched.
         """
         if not (self.ground and other.ground):
             raise ValueError("Cannot match non-groun arithmetic terms directly.")
@@ -171,6 +171,7 @@ class Minus(ArithTerm):
 
     Attributes:
         ground: Boolean indicating whether or not the operand is ground.
+        operand: `ArithTerm` instance representing the operand.
         operands: Tuple consisting of the (single) operand.
     """
 
@@ -262,7 +263,14 @@ class Minus(ArithTerm):
 
 
 class Add(ArithTerm):
-    """Represents an addition of arithmetic terms."""
+    """Represents an addition of arithmetic terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not all operands are ground.
+        loperand: `ArithTerm` instance representing the left operand.
+        roperand: `ArithTerm` instance representing the right operand.
+        operands: Tuple consisting of the left and right operands.
+    """
 
     def __init__(
         self,
@@ -373,7 +381,14 @@ class Add(ArithTerm):
 
 
 class Sub(ArithTerm):
-    """Represents a subtraction of arithmetic terms."""
+    """Represents a subtraction of arithmetic terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not all operands are ground.
+        loperand: `ArithTerm` instance representing the left operand.
+        roperand: `ArithTerm` instance representing the right operand.
+        operands: Tuple consisting of the left and right operands.
+    """
 
     def __init__(
         self,
@@ -485,7 +500,14 @@ class Sub(ArithTerm):
 
 
 class Mult(ArithTerm):
-    """Represents a multiplication of arithmetic terms."""
+    """Represents a multiplication of arithmetic terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not all operands are ground.
+        loperand: `ArithTerm` instance representing the left operand.
+        roperand: `ArithTerm` instance representing the right operand.
+        operands: Tuple consisting of the left and right operands.
+    """
 
     def __init__(
         self,
@@ -615,7 +637,14 @@ class Mult(ArithTerm):
 
 
 class Div(ArithTerm):
-    """Represents an integer division of arithmetic terms."""
+    """Represents an integer division of arithmetic terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not all operands are ground.
+        loperand: `ArithTerm` instance representing the left operand.
+        roperand: `ArithTerm` instance representing the right operand.
+        operands: Tuple consisting of the left and right operands.
+    """
 
     def __init__(
         self,

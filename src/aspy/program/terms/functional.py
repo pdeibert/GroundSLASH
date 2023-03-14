@@ -21,6 +21,8 @@ class Functional(Term):
     """Represents a functional term.
 
     Attributes:
+        symbol: String representing the identifier for the functional term.
+        terms: `TermTuple` instance containing the terms of the functional term.
         ground: Boolean indicating whether or not all terms are ground.
         arity: Integer representing the arity of the functional term (equal to the number of terms).
     """  # noqa
@@ -36,7 +38,7 @@ class Functional(Term):
             *terms: Sequence of `Term` instances.
 
         Raises:
-            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` is set to `True`.
+            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` returns `True`.
         """  # noqa
         # check if functor name is valid
         if aspy.debug() and not SYM_CONST_RE.fullmatch(symbol):
@@ -50,7 +52,8 @@ class Functional(Term):
 
         Returns:
             String representing the functional term.
-            Starts with the symbol/identifier, followed by the string representations of the terms, seperated by commas and enclosed by parentheses.
+            Starts with the symbol/identifier, followed by the string representations of the terms,
+            seperated by commas and enclosed by parentheses.
             If the functional term has no terms, the parentheses are omitted.
         """  # noqa
         return self.symbol + (f"({','.join([str(term) for term in self.terms])})")
@@ -141,15 +144,15 @@ class Functional(Term):
     def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the term tuple with an expression.
 
-        Can only be matched to a functional where each corresponding term can be matched
-        and without any assignment conflicts.
+        Can only be matched to a functional term with same identifier where each
+        corresponding term can be matched without any assignment conflicts.
 
         Args:
             other: `Expr` instance to be matched to.
 
         Returns:
-            A substitution necessary for matching (may be empty).
-        """
+            A substitution necessary for matching (may be empty) or `None` if cannot be matched.
+        """  # noqa
         if not (
             isinstance(other, Functional)
             and self.symbol == other.symbol

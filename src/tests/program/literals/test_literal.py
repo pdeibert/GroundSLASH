@@ -129,7 +129,7 @@ class TestLiteral(unittest.TestCase):
                     PredLiteral("q", Number(1)),
                 )
             ),
-            None,
+            Substitution(),
         )  # different order of literals
 
         # combining literal tuples
