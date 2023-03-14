@@ -1,5 +1,5 @@
 from copy import deepcopy
-from functools import cached_property, reduce
+from functools import reduce
 from typing import TYPE_CHECKING, Dict, Optional
 
 if TYPE_CHECKING:  # pragma: no cover

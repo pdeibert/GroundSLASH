@@ -30,12 +30,7 @@ from .special import ChoiceBaseRule, ChoiceElemRule
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import (
-        AggregateLiteral,
-        AggrPlaceholder,
-        Literal,
-        PredicateLiteral,
-    )
+    from aspy.program.literals import AggrPlaceholder, Literal, PredicateLiteral
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
@@ -290,8 +285,8 @@ class Choice(Expr):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["ChoiceElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
 
         # TODO: avoid creating objects???
@@ -322,22 +317,26 @@ class Choice(Expr):
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
-        I_elements = None
-        J_elements = None
+        elements_I = None
+        elements_J = None
 
         def get_I_elements() -> Set["ChoiceElement"]:
-            nonlocal I_elements
+            nonlocal elements_I
 
-            if I_elements is None:
-                I_elements = {element for element in elements if element.satisfied(I)}
-            return I_elements
+            if elements_I is None:
+                elements_I = {
+                    element for element in elements if element.satisfied(literals_I)
+                }
+            return elements_I
 
         def get_J_elements() -> Set["ChoiceElement"]:
-            nonlocal J_elements
+            nonlocal elements_J
 
-            if J_elements is None:
-                J_elements = {element for element in elements if element.satisfied(J)}
-            return J_elements
+            if elements_J is None:
+                elements_J = {
+                    element for element in elements if element.satisfied(literals_J)
+                }
+            return elements_J
 
         def get_propagation_result(
             op: RelOp, bound: "Term", domain: Set["ChoiceElement"]
@@ -353,13 +352,13 @@ class Choice(Expr):
         def propagate_subset(
             op,
             bound,
-            I_elements: Set["ChoiceElement"],
-            J_elements: Set["ChoiceElement"],
+            elements_I: Set["ChoiceElement"],
+            elements_J: Set["ChoiceElement"],
         ) -> bool:
             # test all combinations of subsets of candidates
             # TODO: may be complete overkill (hence, inefficient!)
             for X in powerset(
-                {element.atom for element in I_elements.union(J_elements)}
+                {element.atom for element in elements_I.union(elements_J)}
             ):
                 if op2rel[op](bound, Number(len(X))).eval():
                     return True

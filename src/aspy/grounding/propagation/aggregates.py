@@ -26,9 +26,9 @@ class AggrPropagator:
         self,
         eps_instances,
         eta_instances,
-        I: Set["Literal"],
-        J: Set["Literal"],
-        J_alpha: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
+        literals_J_alpha: Set["Literal"],
     ) -> Set[AggrPlaceholder]:
 
         for rule in chain(eps_instances, eta_instances):
@@ -79,12 +79,14 @@ class AggrPropagator:
             ground_guards,
         ) in self.instance_map.items():
             # skip alpha literal if already derived (in previous iteration)
-            if ground_alpha_literal in J_alpha:
+            if ground_alpha_literal in literals_J_alpha:
                 possible_alpha_literals.add(ground_alpha_literal)
                 continue
 
             # propagate aggregate function to check satisfiability
-            satisfiable = aggr_func.propagate(ground_guards, ground_elements, I, J)
+            satisfiable = aggr_func.propagate(
+                ground_guards, ground_elements, literals_I, literals_J
+            )
 
             if satisfiable:
                 possible_alpha_literals.add(ground_alpha_literal)

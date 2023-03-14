@@ -146,8 +146,8 @@ class AggregateFunction(ABC):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggregateElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_literals_I: Set["Literal"],
+        literals_literals_J: Set["Literal"],
     ) -> bool:
         pass
 
@@ -177,29 +177,33 @@ class AggregateCount(AggregateFunction):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggregateElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
-        I_elements = None
-        J_elements = None
+        elements_I = None
+        elements_J = None
 
         def get_I_elements() -> Set["AggregateElement"]:
-            nonlocal I_elements
+            nonlocal elements_I
 
-            if I_elements is None:
-                I_elements = {element for element in elements if element.satisfied(I)}
-            return I_elements
+            if elements_I is None:
+                elements_I = {
+                    element for element in elements if element.satisfied(literals_I)
+                }
+            return elements_I
 
         def get_J_elements() -> Set["AggregateElement"]:
-            nonlocal J_elements
+            nonlocal elements_J
 
-            if J_elements is None:
-                J_elements = {element for element in elements if element.satisfied(J)}
-            return J_elements
+            if elements_J is None:
+                elements_J = {
+                    element for element in elements if element.satisfied(literals_J)
+                }
+            return elements_J
 
         def get_propagation_result(
             op: RelOp, bound: "Term", domain: Set["AggregateElement"]
@@ -287,29 +291,33 @@ class AggregateSum(AggregateFunction):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggregateElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
-        I_elements = None
-        J_elements = None
+        elements_I = None
+        elements_J = None
 
         def get_I_elements() -> Set["AggregateElement"]:
-            nonlocal I_elements
+            nonlocal elements_I
 
-            if I_elements is None:
-                I_elements = {element for element in elements if element.satisfied(I)}
-            return I_elements
+            if elements_I is None:
+                elements_I = {
+                    element for element in elements if element.satisfied(literals_I)
+                }
+            return elements_I
 
         def get_J_elements() -> Set["AggregateElement"]:
-            nonlocal J_elements
+            nonlocal elements_J
 
-            if J_elements is None:
-                J_elements = {element for element in elements if element.satisfied(J)}
-            return J_elements
+            if elements_J is None:
+                elements_J = {
+                    element for element in elements if element.satisfied(literals_J)
+                }
+            return elements_J
 
         def get_propagation_result(
             op: RelOp,
@@ -336,18 +344,18 @@ class AggregateSum(AggregateFunction):
         def propagate_subset(
             op,
             bound: "Term",
-            I_elements: Set["AggregateElement"],
-            J_elements: Set["AggregateElement"],
+            elements_I: Set["AggregateElement"],
+            elements_J: Set["AggregateElement"],
         ) -> bool:
             # compute baseline value
-            J_terms = {element.terms for element in J_elements}
+            J_terms = {element.terms for element in elements_J}
             baseline = self.eval(J_terms)
             # get all elements that would change the baseline valueself
             # (to reduce number of possible subsets to test)
             candidate_terms = {
                 element.terms
-                for element in I_elements
-                if (element not in J and element.weight != 0)
+                for element in elements_I
+                if (element not in literals_J and element.weight != 0)
             } - J_terms
 
             # test all combinations of subsets of candidates
@@ -463,29 +471,33 @@ class AggregateMin(AggregateFunction):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggregateElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
-        I_elements = None
-        J_elements = None
+        elements_I = None
+        elements_J = None
 
         def get_I_elements() -> Set["AggregateElement"]:
-            nonlocal I_elements
+            nonlocal elements_I
 
-            if I_elements is None:
-                I_elements = {element for element in elements if element.satisfied(I)}
-            return I_elements
+            if elements_I is None:
+                elements_I = {
+                    element for element in elements if element.satisfied(literals_I)
+                }
+            return elements_I
 
         def get_J_elements() -> Set["AggregateElement"]:
-            nonlocal J_elements
+            nonlocal elements_J
 
-            if J_elements is None:
-                J_elements = {element for element in elements if element.satisfied(J)}
-            return J_elements
+            if elements_J is None:
+                elements_J = {
+                    element for element in elements if element.satisfied(literals_J)
+                }
+            return elements_J
 
         def get_propagation_result(
             op: RelOp, bound: "Term", domain: Set["AggregateElement"]
@@ -501,16 +513,16 @@ class AggregateMin(AggregateFunction):
         def propagate_subset(
             op,
             bound,
-            I_elements: Set["AggregateElement"],
-            J_elements: Set["AggregateElement"],
+            elements_I: Set["AggregateElement"],
+            elements_J: Set["AggregateElement"],
         ) -> bool:
             # compute baseline value
-            baseline = self.eval({element.terms for element in J_elements})
+            baseline = self.eval({element.terms for element in elements_J})
             # get all elements that would change the baseline value
             # (to reduce number of possible subsets to test)
             candidates = {
                 element
-                for element in I_elements
+                for element in elements_I
                 if (element.terms and not element.terms[0].precedes(baseline))
             }
 
@@ -600,29 +612,33 @@ class AggregateMax(AggregateFunction):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggregateElement"],
-        I: Set["Literal"],
-        J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
-        I_elements = None
-        J_elements = None
+        elements_I = None
+        elements_J = None
 
         def get_I_elements() -> Set["AggregateElement"]:
-            nonlocal I_elements
+            nonlocal elements_I
 
-            if I_elements is None:
-                I_elements = {element for element in elements if element.satisfied(I)}
-            return I_elements
+            if elements_I is None:
+                elements_I = {
+                    element for element in elements if element.satisfied(literals_I)
+                }
+            return elements_I
 
         def get_J_elements() -> Set["AggregateElement"]:
-            nonlocal J_elements
+            nonlocal elements_J
 
-            if J_elements is None:
-                J_elements = {element for element in elements if element.satisfied(J)}
-            return J_elements
+            if elements_J is None:
+                elements_J = {
+                    element for element in elements if element.satisfied(literals_J)
+                }
+            return elements_J
 
         def get_propagation_result(
             op: RelOp, bound: "Term", domain: Set["AggregateElement"]
@@ -638,16 +654,16 @@ class AggregateMax(AggregateFunction):
         def propagate_subset(
             op,
             bound,
-            I_elements: Set["AggregateElement"],
-            J_elements: Set["AggregateElement"],
+            elements_I: Set["AggregateElement"],
+            elements_J: Set["AggregateElement"],
         ) -> bool:
             # compute baseline value
-            baseline = self.eval({element.terms for element in J_elements})
+            baseline = self.eval({element.terms for element in elements_J})
             # get all elements that would change the baseline value
             # (to reduce number of possible subsets to test)
             candidates = {
                 element
-                for element in I_elements
+                for element in elements_I
                 if (element.terms and not element.terms[0].precedes(baseline))
             }
 

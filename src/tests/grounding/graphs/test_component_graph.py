@@ -11,7 +11,8 @@ class TestComponentGraph(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        # example modified from Example 17 in Kaminski, Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        # example modified from Example 17 in Kaminski, Schaub (2022):
+        # "On the Foundations of Grounding in Answer Set Programming".
         input = r"""
         u(1).
         u(2).

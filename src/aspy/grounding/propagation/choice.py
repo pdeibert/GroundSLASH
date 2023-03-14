@@ -24,9 +24,9 @@ class ChoicePropagator:
         self,
         eps_instances,
         eta_instances,
-        I: Set["Literal"],
-        J: Set["Literal"],
-        J_chi: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
+        literals_J_chi: Set["Literal"],
     ) -> Set[ChoicePlaceholder]:
 
         for rule in chain(eps_instances, eta_instances):
@@ -74,13 +74,15 @@ class ChoicePropagator:
             ground_guards,
         ) in self.instance_map.items():
             # skip chi literal if already derived (in previous iteration)
-            if ground_chi_literal in J_chi:
+            if ground_chi_literal in literals_J_chi:
                 possible_chi_literals.add(ground_chi_literal)
                 continue
 
             # propagate choice to check satisfiability
             # TODO: choice.propagate
-            satisfiable = choice.propagate(ground_guards, ground_elements, I, J)
+            satisfiable = choice.propagate(
+                ground_guards, ground_elements, literals_I, literals_J
+            )
 
             if satisfiable:
                 possible_chi_literals.add(ground_chi_literal)

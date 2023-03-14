@@ -304,20 +304,26 @@ class TestAggregate(unittest.TestCase):
 
         # >, >=
         # TODO: correct ???
-        I = {PredicateLiteral("p", Number(0))}
-        J = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_J = {
+            PredicateLiteral("p", Number(0)),
+            PredicateLiteral("p", Number(1)),
+        }
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
                 (Guard(RelOp.GREATER_OR_EQ, Number(1), True), None),
                 element_instances,
-                I,
-                J,
+                literals_I,
+                literals_J,
             )
         )
         self.assertFalse(
             aggr_func.propagate(
-                (Guard(RelOp.GREATER, Number(1), True), None), element_instances, I, J
+                (Guard(RelOp.GREATER, Number(1), True), None),
+                element_instances,
+                literals_I,
+                literals_J,
             )
         )
         # J subset I
@@ -325,32 +331,41 @@ class TestAggregate(unittest.TestCase):
             aggr_func.propagate(
                 (Guard(RelOp.GREATER_OR_EQ, Number(1), True), None),
                 element_instances,
-                J,
-                I,
+                literals_J,
+                literals_I,
             )
         )
         self.assertFalse(
             aggr_func.propagate(
-                (Guard(RelOp.GREATER, Number(1), True), None), element_instances, J, I
+                (Guard(RelOp.GREATER, Number(1), True), None),
+                element_instances,
+                literals_J,
+                literals_I,
             )
         )
 
         # <, <=
         # TODO: correct ???
-        I = {PredicateLiteral("p", Number(0))}
-        J = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_J = {
+            PredicateLiteral("p", Number(0)),
+            PredicateLiteral("p", Number(1)),
+        }
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
                 (Guard(RelOp.LESS_OR_EQ, Number(1), True), None),
                 element_instances,
-                I,
-                J,
+                literals_I,
+                literals_J,
             )
         )
         self.assertTrue(
             aggr_func.propagate(
-                (Guard(RelOp.LESS, Number(1), True), None), element_instances, I, J
+                (Guard(RelOp.LESS, Number(1), True), None),
+                element_instances,
+                literals_I,
+                literals_J,
             )
         )
         # J subset I
@@ -358,47 +373,68 @@ class TestAggregate(unittest.TestCase):
             aggr_func.propagate(
                 (Guard(RelOp.LESS_OR_EQ, Number(1), True), None),
                 element_instances,
-                J,
-                I,
+                literals_J,
+                literals_I,
             )
         )
         self.assertFalse(
             aggr_func.propagate(
-                (Guard(RelOp.LESS, Number(1), True), None), element_instances, J, I
+                (Guard(RelOp.LESS, Number(1), True), None),
+                element_instances,
+                literals_J,
+                literals_I,
             )
         )
 
         # =
         # TODO: correct ???
-        I = {PredicateLiteral("p", Number(0))}
-        J = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_J = {
+            PredicateLiteral("p", Number(0)),
+            PredicateLiteral("p", Number(1)),
+        }
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
-                (Guard(RelOp.EQUAL, Number(1), True), None), element_instances, I, J
+                (Guard(RelOp.EQUAL, Number(1), True), None),
+                element_instances,
+                literals_I,
+                literals_J,
             )
         )
         # J subset I
         self.assertFalse(
             aggr_func.propagate(
-                (Guard(RelOp.EQUAL, Number(1), True), None), element_instances, J, I
+                (Guard(RelOp.EQUAL, Number(1), True), None),
+                element_instances,
+                literals_J,
+                literals_I,
             )
         )
 
         # !=
         # TODO: correct ???
-        I = {PredicateLiteral("p", Number(0))}
-        J = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_J = {
+            PredicateLiteral("p", Number(0)),
+            PredicateLiteral("p", Number(1)),
+        }
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
-                (Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, I, J
+                (Guard(RelOp.UNEQUAL, Number(1), True), None),
+                element_instances,
+                literals_I,
+                literals_J,
             )
         )
         # J subset I
         self.assertFalse(
             aggr_func.propagate(
-                (Guard(RelOp.UNEQUAL, Number(1), True), None), element_instances, J, I
+                (Guard(RelOp.UNEQUAL, Number(1), True), None),
+                element_instances,
+                literals_J,
+                literals_I,
             )
         )
 

@@ -18,7 +18,7 @@ class Expr(ABC):
         pass
 
     @abstractmethod  # pragma: no cover
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:  # type: ignore
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:  # type: ignore # noqa
         pass
 
     @abstractmethod  # pragma: no cover

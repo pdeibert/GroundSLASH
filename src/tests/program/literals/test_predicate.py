@@ -78,9 +78,9 @@ class TestPredicate(unittest.TestCase):
         self.assertEqual(var_literal.safety(), SafetyTriplet({Variable("X")}))
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         literal.set_neg(True)
-        self.assertTrue(literal.neg == True)
+        self.assertTrue(literal.neg == True)  # noqa
         literal.set_naf(True)
 
         # substitute

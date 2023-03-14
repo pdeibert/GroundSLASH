@@ -33,7 +33,7 @@ class TestGuard(unittest.TestCase):
         self.assertEqual(rguard.to_right(), rguard)
         self.assertEqual(lguard.to_right(), rguard)
         # ground
-        self.assertTrue(rguard.ground == lguard.ground == True)
+        self.assertTrue(rguard.ground == lguard.ground == True)  # noqa
         self.assertFalse(var_guard.ground)
         # variables
         self.assertTrue(var_guard.vars() == var_guard.global_vars() == {Variable("X")})

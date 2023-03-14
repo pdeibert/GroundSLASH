@@ -50,7 +50,7 @@ class TestSpecial(unittest.TestCase):
         # predicate tuple
         self.assertEqual(literal.pred(), (f"{SpecialChar.ALPHA.value}{1}", 2))
         # ground
-        self.assertTrue(literal.ground == naf_literal.ground == False)
+        self.assertTrue(literal.ground == naf_literal.ground == False)  # noqa
         # TODO: variables
         # replace arithmetic terms
         self.assertEqual(literal.replace_arith(VariableTable()), literal)
@@ -69,7 +69,9 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == (not naf_literal.naf) == literal.neg == False)
+        self.assertTrue(
+            literal.naf == (not naf_literal.naf) == literal.neg == False  # noqa
+        )
         self.assertRaises(Exception, literal.set_neg)
         literal.set_naf(True)
         self.assertTrue(literal.naf is True)
@@ -149,7 +151,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         self.assertRaises(Exception, literal.set_neg)
         self.assertRaises(Exception, literal.set_naf)
 
@@ -266,7 +268,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         self.assertRaises(Exception, literal.set_neg)
         self.assertRaises(Exception, literal.set_naf)
 
@@ -376,7 +378,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         self.assertRaises(Exception, literal.set_neg)
         self.assertRaises(Exception, literal.set_naf)
 
@@ -455,7 +457,7 @@ class TestSpecial(unittest.TestCase):
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         self.assertRaises(Exception, literal.set_neg)
         self.assertRaises(Exception, literal.set_naf)
 
@@ -572,7 +574,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # classical negation and negation-as-failure
-        self.assertTrue(literal.naf == literal.neg == False)
+        self.assertTrue(literal.naf == literal.neg == False)  # noqa
         self.assertRaises(Exception, literal.set_neg)
         self.assertRaises(Exception, literal.set_naf)
 
