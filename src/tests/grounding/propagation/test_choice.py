@@ -11,7 +11,7 @@ from aspy.program.literals import (
     Guard,
     LessEqual,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.statements import (
@@ -34,18 +34,18 @@ class TestChoicePropagator(unittest.TestCase):
 
         elements_1 = (
             ChoiceElement(
-                PredicateLiteral("p", Variable("Y")),
-                LiteralTuple(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", Variable("Y")),
+                LiteralTuple(PredLiteral("q", Variable("Y"))),
             ),
             ChoiceElement(
-                PredicateLiteral("q", Number(0)),
-                LiteralTuple(PredicateLiteral("p", Number(0))),
+                PredLiteral("q", Number(0)),
+                LiteralTuple(PredLiteral("p", Number(0))),
             ),
         )
         elements_2 = (
             ChoiceElement(
-                PredicateLiteral("p", Number(0)),
-                LiteralTuple(PredicateLiteral("q", Number(0))),
+                PredLiteral("p", Number(0)),
+                LiteralTuple(PredLiteral("q", Number(0))),
             ),
         )
 
@@ -67,7 +67,7 @@ class TestChoicePropagator(unittest.TestCase):
                     None,
                     LiteralTuple(
                         GreaterEqual(Number(0), Variable("X")),
-                        PredicateLiteral("q", Variable("X")),
+                        PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
                     ),
                 ),
@@ -82,8 +82,8 @@ class TestChoicePropagator(unittest.TestCase):
                         ),
                         elements_1[0],
                         LiteralTuple(
-                            PredicateLiteral("p", Variable("Y")),
-                            PredicateLiteral("q", Variable("X")),
+                            PredLiteral("p", Variable("Y")),
+                            PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
                         ),
                     ),
@@ -97,8 +97,8 @@ class TestChoicePropagator(unittest.TestCase):
                         ),
                         elements_1[1],
                         LiteralTuple(
-                            PredicateLiteral("p", Number(0)),
-                            PredicateLiteral("q", Variable("X")),
+                            PredLiteral("p", Number(0)),
+                            PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
                         ),
                     ),
@@ -116,7 +116,7 @@ class TestChoicePropagator(unittest.TestCase):
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     LiteralTuple(
                         LessEqual(Number(0), Number(0)),
-                        PredicateLiteral("q", Variable("X")),
+                        PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
                     ),
                 ),
@@ -125,8 +125,8 @@ class TestChoicePropagator(unittest.TestCase):
                         ChoiceElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                         elements_2[0],
                         LiteralTuple(
-                            PredicateLiteral("q", Number(0)),
-                            PredicateLiteral("q", Variable("X")),
+                            PredLiteral("q", Number(0)),
+                            PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
                         ),
                     )
@@ -146,7 +146,7 @@ class TestChoicePropagator(unittest.TestCase):
                 None,
                 LiteralTuple(
                     GreaterEqual(Number(0), Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
@@ -157,7 +157,7 @@ class TestChoicePropagator(unittest.TestCase):
                 Guard(RelOp.LESS_OR_EQ, Number(0), False),
                 LiteralTuple(
                     LessEqual(Number(0), Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
@@ -176,8 +176,8 @@ class TestChoicePropagator(unittest.TestCase):
                 ),
                 elements_1[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
@@ -191,8 +191,8 @@ class TestChoicePropagator(unittest.TestCase):
                 ),
                 elements_1[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(1)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(1)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
@@ -203,8 +203,8 @@ class TestChoicePropagator(unittest.TestCase):
                 ),
                 elements_1[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
@@ -213,18 +213,18 @@ class TestChoicePropagator(unittest.TestCase):
                 ChoiceElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
-                    PredicateLiteral("q", Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
             ),
         }
 
         domain = {
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("p", Number(1)),
-            PredicateLiteral("q", Number(0)),
-            PredicateLiteral("q", Number(1)),
+            PredLiteral("p", Number(0)),
+            PredLiteral("p", Number(1)),
+            PredLiteral("q", Number(0)),
+            PredLiteral("q", Number(1)),
         }
         print()
         J_chi = propagator.propagate(
@@ -242,12 +242,12 @@ class TestChoicePropagator(unittest.TestCase):
         # assembling
         rule_1 = NormalRule(
             ChoicePlaceholder(1, TermTuple(Variable("X")), TermTuple(Number(0))),
-            PredicateLiteral("q", Number(0)),
+            PredLiteral("q", Number(0)),
             Equal(Number(0), Number(0)),
         )
         rule_2 = NormalRule(
             ChoicePlaceholder(2, TermTuple(), TermTuple()),
-            PredicateLiteral("q", Number(0)),
+            PredLiteral("q", Number(0)),
             Equal(Number(0), Number(0)),
         )
         rules = propagator.assemble({rule_1, rule_2}, J_chi)
@@ -260,22 +260,22 @@ class TestChoicePropagator(unittest.TestCase):
                     Choice(
                         (
                             ChoiceElement(
-                                PredicateLiteral("q", Number(0)),
-                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                                PredLiteral("q", Number(0)),
+                                LiteralTuple(PredLiteral("p", Number(0))),
                             ),
                             ChoiceElement(
-                                PredicateLiteral("p", Number(1)),
-                                LiteralTuple(PredicateLiteral("q", Number(1))),
+                                PredLiteral("p", Number(1)),
+                                LiteralTuple(PredLiteral("q", Number(1))),
                             ),
                             ChoiceElement(
-                                PredicateLiteral("p", Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                PredLiteral("p", Number(0)),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(0), True),
                     ),
                     (
-                        PredicateLiteral("q", Number(0)),
+                        PredLiteral("q", Number(0)),
                         Equal(Number(0), Number(0)),
                     ),
                 ),
@@ -283,14 +283,14 @@ class TestChoicePropagator(unittest.TestCase):
                     Choice(
                         (
                             ChoiceElement(
-                                PredicateLiteral("p", Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                PredLiteral("p", Number(0)),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                         ),
                         Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     ),
                     (
-                        PredicateLiteral("q", Number(0)),
+                        PredLiteral("q", Number(0)),
                         Equal(Number(0), Number(0)),
                     ),
                 ),

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional, Set
 
 from .expression import Expr
-from .literals import LiteralTuple, PredicateLiteral
+from .literals import LiteralTuple, PredLiteral
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Term, Variable
@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class Query(Expr):
     """Query."""
 
-    def __init__(self, atom: "PredicateLiteral") -> None:
+    def __init__(self, atom: "PredLiteral") -> None:
         self.atom = atom
 
     def __str__(self) -> str:

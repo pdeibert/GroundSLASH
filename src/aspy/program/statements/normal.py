@@ -3,10 +3,10 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Dict, Set, Tuple, Union
 
 from aspy.program.literals import (
-    AggregateLiteral,
+    AggrLiteral,
     AggrPlaceholder,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
@@ -37,7 +37,7 @@ class NormalFact(Fact):
 
     deterministic: bool = True
 
-    def __init__(self, atom: "PredicateLiteral", **kwargs) -> None:
+    def __init__(self, atom: "PredLiteral", **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.atom = atom
@@ -112,7 +112,7 @@ class NormalRule(Rule):
 
     deterministic: bool = True
 
-    def __init__(self, head: "PredicateLiteral", *body: "Literal", **kwargs) -> None:
+    def __init__(self, head: "PredLiteral", *body: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)
 
         if len(body) == 0:
@@ -172,7 +172,7 @@ class NormalRule(Rule):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -189,9 +189,7 @@ class NormalRule(Rule):
 
         for literal in self.body:
             (
-                aggr_literals
-                if isinstance(literal, AggregateLiteral)
-                else non_aggr_literals
+                aggr_literals if isinstance(literal, AggrLiteral) else non_aggr_literals
             ).append(literal)
 
         # mapping from original literals to alpha literals
@@ -219,7 +217,7 @@ class NormalRule(Rule):
         alpha_rule = NormalRule(
             self.atom,
             *tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                alpha_map[literal] if isinstance(literal, AggrLiteral) else literal
                 for literal in self.body
             ),  # NOTE: restores original order of literals
         )
@@ -227,7 +225,7 @@ class NormalRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "NormalRule":
         return NormalRule(
             self.atom,

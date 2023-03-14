@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.literals import (
-    AggregateLiteral,
+    AggrLiteral,
     AggrPlaceholder,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
@@ -34,7 +34,7 @@ class DisjunctiveFact(Fact):
 
     deterministic: bool = False
 
-    def __init__(self, *atoms: PredicateLiteral, **kwargs) -> None:
+    def __init__(self, *atoms: PredLiteral, **kwargs) -> None:
         super().__init__(**kwargs)
 
         if len(atoms) < 2:
@@ -46,12 +46,12 @@ class DisjunctiveFact(Fact):
             )
 
         if aspy.debug() and not all(
-            isinstance(atom, PredicateLiteral) and not atom.naf for atom in atoms
+            isinstance(atom, PredLiteral) and not atom.naf for atom in atoms
         ):
             raise ValueError(
                 (
                     f"Head literals for {type(self)} must all be"
-                    " positive literals of type {PredicateLiteral}."
+                    " positive literals of type {PredLiteral}."
                 )
             )
 
@@ -133,12 +133,12 @@ class DisjunctiveRule(Rule):
             )
 
         if aspy.debug() and not all(
-            isinstance(atom, PredicateLiteral) and not atom.naf for atom in head
+            isinstance(atom, PredLiteral) and not atom.naf for atom in head
         ):
             raise ValueError(
                 (
                     f"Head literals for {type(self)} must all be"
-                    " positive literals of type {PredicateLiteral}."
+                    " positive literals of type {PredLiteral}."
                 )
             )
 
@@ -191,7 +191,7 @@ class DisjunctiveRule(Rule):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -208,9 +208,7 @@ class DisjunctiveRule(Rule):
 
         for literal in self.body:
             (
-                aggr_literals
-                if isinstance(literal, AggregateLiteral)
-                else non_aggr_literals
+                aggr_literals if isinstance(literal, AggrLiteral) else non_aggr_literals
             ).append(literal)
 
         # mapping from original literals to alpha literals
@@ -238,7 +236,7 @@ class DisjunctiveRule(Rule):
         alpha_rule = DisjunctiveRule(
             deepcopy(self.atoms),
             tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                alpha_map[literal] if isinstance(literal, AggrLiteral) else literal
                 for literal in self.body
             ),  # NOTE: restores original order of literals
         )
@@ -246,7 +244,7 @@ class DisjunctiveRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "DisjunctiveRule":
         return DisjunctiveRule(
             deepcopy(self.atoms),

@@ -1,7 +1,7 @@
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
-from aspy.program.literals import AggregateLiteral, AggrPlaceholder
+from aspy.program.literals import AggrLiteral, AggrPlaceholder
 from aspy.program.statements import AggrBaseRule, AggrElemRule
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -14,9 +14,7 @@ class AggrPropagator:
         self,
         aggr_map: Dict[
             int,
-            Tuple[
-                "AggregateLiteral", "AggrPlaceholder", AggrBaseRule, List[AggrElemRule]
-            ],
+            Tuple["AggrLiteral", "AggrPlaceholder", AggrBaseRule, List[AggrElemRule]],
         ],
     ) -> None:
         self.aggr_map = aggr_map
@@ -97,7 +95,7 @@ class AggrPropagator:
         # map ground alpha literals to corresponding
         # assembled aggr. literals to be replaced with
         assembling_map = {
-            alpha_literal: AggregateLiteral(
+            alpha_literal: AggrLiteral(
                 aggr_func, tuple(elements), guards, naf=alpha_literal.naf
             )
             for alpha_literal, (

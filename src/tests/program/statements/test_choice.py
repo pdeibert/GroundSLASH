@@ -3,8 +3,8 @@ from typing import Set
 
 import aspy
 from aspy.program.literals import (
-    AggregateCount,
-    AggregateLiteral,
+    AggrCount,
+    AggrLiteral,
     ChoiceBaseLiteral,
     ChoiceElemLiteral,
     ChoicePlaceholder,
@@ -13,7 +13,7 @@ from aspy.program.literals import (
     Guard,
     LiteralTuple,
     Naf,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.statements import (
@@ -52,10 +52,10 @@ class TestChoice(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         element = ChoiceElement(
-            PredicateLiteral("p", String("str")),
+            PredLiteral("p", String("str")),
             LiteralTuple(
-                PredicateLiteral("p", Number(0)),
-                Naf(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", Number(0)),
+                Naf(PredLiteral("q", Variable("Y"))),
             ),
         )
         # string representation
@@ -64,10 +64,10 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             element,
             ChoiceElement(
-                PredicateLiteral("p", String("str")),
+                PredLiteral("p", String("str")),
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    Naf(PredicateLiteral("q", Variable("Y"))),
+                    PredLiteral("p", Number(0)),
+                    Naf(PredLiteral("q", Variable("Y"))),
                 ),
             ),
         )
@@ -75,15 +75,15 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             element.head,
             LiteralTuple(
-                PredicateLiteral("p", String("str")),
+                PredLiteral("p", String("str")),
             ),
         )
         # body
         self.assertEqual(
             element.body,
             LiteralTuple(
-                PredicateLiteral("p", Number(0)),
-                Naf(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", Number(0)),
+                Naf(PredLiteral("q", Variable("Y"))),
             ),
         )
         # hashing
@@ -91,10 +91,10 @@ class TestChoice(unittest.TestCase):
             hash(element),
             hash(
                 ChoiceElement(
-                    PredicateLiteral("p", String("str")),
+                    PredLiteral("p", String("str")),
                     LiteralTuple(
-                        PredicateLiteral("p", Number(0)),
-                        Naf(PredicateLiteral("q", Variable("Y"))),
+                        PredLiteral("p", Number(0)),
+                        Naf(PredLiteral("q", Variable("Y"))),
                     ),
                 ),
             ),
@@ -104,9 +104,9 @@ class TestChoice(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             element.pos_occ(),
-            {PredicateLiteral("p", String("str")), PredicateLiteral("p", Number(0))},
+            {PredLiteral("p", String("str")), PredLiteral("p", Number(0))},
         )
-        self.assertEqual(element.neg_occ(), {PredicateLiteral("q", Variable("Y"))})
+        self.assertEqual(element.neg_occ(), {PredLiteral("q", Variable("Y"))})
         # vars
         self.assertTrue(element.vars() == element.global_vars() == {Variable("Y")})
         # safety
@@ -114,19 +114,19 @@ class TestChoice(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(element.replace_arith(VariableTable()), element)
         element = ChoiceElement(
-            PredicateLiteral("p", String("str")),
+            PredLiteral("p", String("str")),
             LiteralTuple(
-                PredicateLiteral("p", Number(0)),
-                Naf(PredicateLiteral("q", Minus(Variable("Y")))),
+                PredLiteral("p", Number(0)),
+                Naf(PredLiteral("q", Minus(Variable("Y")))),
             ),
         )
         self.assertEqual(
             element.replace_arith(VariableTable()),
             ChoiceElement(
-                PredicateLiteral("p", String("str")),
+                PredLiteral("p", String("str")),
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    Naf(PredicateLiteral("q", ArithVariable(0, Minus(Variable("Y"))))),
+                    PredLiteral("p", Number(0)),
+                    Naf(PredLiteral("q", ArithVariable(0, Minus(Variable("Y"))))),
                 ),
             ),
         )
@@ -136,10 +136,10 @@ class TestChoice(unittest.TestCase):
                 Substitution({Variable("Y"): Number(1), Number(5): String("f")})
             ),  # NOTE: substitution is invalid
             ChoiceElement(
-                PredicateLiteral("p", String("str")),
+                PredLiteral("p", String("str")),
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    Naf(PredicateLiteral("q", Minus(Number(1)))),
+                    PredLiteral("p", Number(0)),
+                    Naf(PredLiteral("q", Minus(Number(1)))),
                 ),
             ),
         )
@@ -153,14 +153,12 @@ class TestChoice(unittest.TestCase):
 
         ground_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", String("str")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
 
@@ -212,14 +210,12 @@ class TestChoice(unittest.TestCase):
 
         var_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -254,17 +250,17 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             ground_choice.head,
             LiteralTuple(
-                PredicateLiteral("p", Number(5)),
-                PredicateLiteral("p", Number(-3)),
+                PredLiteral("p", Number(5)),
+                PredLiteral("p", Number(-3)),
             ),
         )
         # body
         self.assertEqual(
             ground_choice.body,
             LiteralTuple(
-                PredicateLiteral("p", String("str")),
-                Naf(PredicateLiteral("q")),
-                Naf(PredicateLiteral("p", String("str"))),
+                PredLiteral("p", String("str")),
+                Naf(PredLiteral("q")),
+                Naf(PredLiteral("p", String("str"))),
             ),
         )
         # ground
@@ -289,14 +285,14 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             var_choice.pos_occ(),
             {
-                PredicateLiteral("p", Number(5)),
-                PredicateLiteral("p", Number(-3)),
-                PredicateLiteral("p", Variable("X")),
+                PredLiteral("p", Number(5)),
+                PredLiteral("p", Number(-3)),
+                PredLiteral("p", Variable("X")),
             },
         )
         self.assertEqual(
             var_choice.neg_occ(),
-            {PredicateLiteral("p", String("str")), PredicateLiteral("q")},
+            {PredLiteral("p", String("str")), PredLiteral("q")},
         )
         # evaluation
         self.assertTrue(
@@ -413,10 +409,10 @@ class TestChoice(unittest.TestCase):
         # replace arithmetic terms
         arith_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
+                PredLiteral("p", Number(5)),
                 LiteralTuple(
-                    PredicateLiteral("p", Minus(Variable("X"))),
-                    Naf(PredicateLiteral("q")),
+                    PredLiteral("p", Minus(Variable("X"))),
+                    Naf(PredLiteral("q")),
                 ),
             ),
         )
@@ -429,12 +425,10 @@ class TestChoice(unittest.TestCase):
             Choice(
                 (
                     ChoiceElement(
-                        PredicateLiteral("p", Number(5)),
+                        PredLiteral("p", Number(5)),
                         LiteralTuple(
-                            PredicateLiteral(
-                                "p", ArithVariable(0, Minus(Variable("X")))
-                            ),
-                            Naf(PredicateLiteral("q")),
+                            PredLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+                            Naf(PredLiteral("q")),
                         ),
                     ),
                 ),
@@ -451,14 +445,14 @@ class TestChoice(unittest.TestCase):
             Choice(
                 (
                     ChoiceElement(
-                        PredicateLiteral("p", Number(5)),
+                        PredLiteral("p", Number(5)),
                         LiteralTuple(
-                            PredicateLiteral("p", Number(1)), Naf(PredicateLiteral("q"))
+                            PredLiteral("p", Number(1)), Naf(PredLiteral("q"))
                         ),
                     ),
                     ChoiceElement(
-                        PredicateLiteral("p", Number(-3)),
-                        LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                        PredLiteral("p", Number(-3)),
+                        LiteralTuple(Naf(PredLiteral("p", String("str")))),
                     ),
                 ),
                 guards=Guard(RelOp.LESS, Number(1), False),
@@ -472,14 +466,12 @@ class TestChoice(unittest.TestCase):
 
         ground_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", String("str")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         ground_choice = Choice(
@@ -490,14 +482,12 @@ class TestChoice(unittest.TestCase):
 
         var_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -562,10 +552,10 @@ class TestChoice(unittest.TestCase):
         # replace arithmetic terms
         arith_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
+                PredLiteral("p", Number(5)),
                 LiteralTuple(
-                    PredicateLiteral("p", Minus(Variable("X"))),
-                    Naf(PredicateLiteral("q")),
+                    PredLiteral("p", Minus(Variable("X"))),
+                    Naf(PredLiteral("q")),
                 ),
             ),
         )
@@ -581,12 +571,12 @@ class TestChoice(unittest.TestCase):
                 Choice(
                     (
                         ChoiceElement(
-                            PredicateLiteral("p", Number(5)),
+                            PredLiteral("p", Number(5)),
                             LiteralTuple(
-                                PredicateLiteral(
+                                PredLiteral(
                                     "p", ArithVariable(0, Minus(Variable("X")))
                                 ),
-                                Naf(PredicateLiteral("q")),
+                                Naf(PredLiteral("q")),
                             ),
                         ),
                     ),
@@ -605,15 +595,15 @@ class TestChoice(unittest.TestCase):
                 Choice(
                     (
                         ChoiceElement(
-                            PredicateLiteral("p", Number(5)),
+                            PredLiteral("p", Number(5)),
                             LiteralTuple(
-                                PredicateLiteral("p", Number(1)),
-                                Naf(PredicateLiteral("q")),
+                                PredLiteral("p", Number(1)),
+                                Naf(PredLiteral("q")),
                             ),
                         ),
                         ChoiceElement(
-                            PredicateLiteral("p", Number(-3)),
-                            LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                            PredLiteral("p", Number(-3)),
+                            LiteralTuple(Naf(PredLiteral("p", String("str")))),
                         ),
                     ),
                     guards=Guard(RelOp.LESS, Number(1), False),
@@ -630,12 +620,12 @@ class TestChoice(unittest.TestCase):
         # rewrite choice
         elements = (
             ChoiceElement(
-                PredicateLiteral("p", Variable("X")),
-                LiteralTuple(PredicateLiteral("q", Variable("X"))),
+                PredLiteral("p", Variable("X")),
+                LiteralTuple(PredLiteral("q", Variable("X"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(0))),
+                PredLiteral("p", Number(1)),
+                LiteralTuple(PredLiteral("p", Number(0))),
             ),
         )
         rule = ChoiceFact(
@@ -689,7 +679,7 @@ class TestChoice(unittest.TestCase):
                 ),
                 elements[0],
                 LiteralTuple(
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("q", Variable("X")),
                 ),
             ),
         )
@@ -705,7 +695,7 @@ class TestChoice(unittest.TestCase):
                 ),
                 elements[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
+                    PredLiteral("p", Number(0)),
                 ),
             ),
         )
@@ -717,12 +707,12 @@ class TestChoice(unittest.TestCase):
                     ChoicePlaceholder(1, TermTuple(), TermTuple(),): Choice(
                         (
                             ChoiceElement(
-                                PredicateLiteral("p", Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                PredLiteral("p", Number(0)),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                             ChoiceElement(
-                                PredicateLiteral("p", Number(1)),
-                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                                PredLiteral("p", Number(1)),
+                                LiteralTuple(PredLiteral("p", Number(0))),
                             ),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -733,12 +723,12 @@ class TestChoice(unittest.TestCase):
                 Choice(
                     (
                         ChoiceElement(
-                            PredicateLiteral("p", Number(0)),
-                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                            PredLiteral("p", Number(0)),
+                            LiteralTuple(PredLiteral("q", Number(0))),
                         ),
                         ChoiceElement(
-                            PredicateLiteral("p", Number(1)),
-                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                            PredLiteral("p", Number(1)),
+                            LiteralTuple(PredLiteral("p", Number(0))),
                         ),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -768,32 +758,28 @@ class TestChoice(unittest.TestCase):
 
         ground_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", String("str")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         ground_choice = Choice(
             ground_elements,
             guards=Guard(RelOp.LESS, Number(3), False),
         )
-        ground_rule = ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))
+        ground_rule = ChoiceRule(ground_choice, (PredLiteral("q", Number(1)),))
 
         var_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -802,13 +788,11 @@ class TestChoice(unittest.TestCase):
         safe_var_rule = ChoiceRule(
             var_choice,
             (
-                PredicateLiteral("q", Variable("X")),
-                PredicateLiteral("q", Variable("Y")),
+                PredLiteral("q", Variable("X")),
+                PredLiteral("q", Variable("Y")),
             ),
         )
-        unsafe_var_rule = ChoiceRule(
-            var_choice, (PredicateLiteral("q", Variable("X")),)
-        )
+        unsafe_var_rule = ChoiceRule(var_choice, (PredLiteral("q", Variable("X")),))
 
         # string representation
         self.assertEqual(
@@ -824,15 +808,15 @@ class TestChoice(unittest.TestCase):
         # self.assertEqual(str(unsafe_var_rule), "p(1) | p(X) :- q.")
         # equality
         self.assertEqual(
-            ground_rule, ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))
+            ground_rule, ChoiceRule(ground_choice, (PredLiteral("q", Number(1)),))
         )
         self.assertEqual(
             safe_var_rule,
             ChoiceRule(
                 var_choice,
                 (
-                    PredicateLiteral("q", Variable("X")),
-                    PredicateLiteral("q", Variable("Y")),
+                    PredLiteral("q", Variable("X")),
+                    PredLiteral("q", Variable("Y")),
                 ),
             ),
         )
@@ -840,12 +824,10 @@ class TestChoice(unittest.TestCase):
             unsafe_var_rule,
             ChoiceRule(
                 var_choice,
-                (PredicateLiteral("q", Variable("X")),),
+                (PredLiteral("q", Variable("X")),),
             ),
         )
-        self.assertEqual(
-            ground_rule.body, LiteralTuple(PredicateLiteral("q", Number(1)))
-        )
+        self.assertEqual(ground_rule.body, LiteralTuple(PredLiteral("q", Number(1))))
         self.assertEqual(
             ground_rule.head,
             Choice(
@@ -853,20 +835,18 @@ class TestChoice(unittest.TestCase):
                 guards=Guard(RelOp.LESS, Number(3), False),
             ),
         )
-        self.assertEqual(
-            ground_rule.body, LiteralTuple(PredicateLiteral("q", Number(1)))
-        )
+        self.assertEqual(ground_rule.body, LiteralTuple(PredLiteral("q", Number(1))))
         # hashing
         self.assertEqual(
             hash(ground_rule),
-            hash(ChoiceRule(ground_choice, (PredicateLiteral("q", Number(1)),))),
+            hash(ChoiceRule(ground_choice, (PredLiteral("q", Number(1)),))),
         )
         self.assertEqual(
             hash(unsafe_var_rule),
             hash(
                 ChoiceRule(
                     var_choice,
-                    (PredicateLiteral("q", Variable("X")),),
+                    (PredLiteral("q", Variable("X")),),
                 ),
             ),
         )
@@ -876,8 +856,8 @@ class TestChoice(unittest.TestCase):
                 ChoiceRule(
                     var_choice,
                     (
-                        PredicateLiteral("q", Variable("X")),
-                        PredicateLiteral("q", Variable("Y")),
+                        PredLiteral("q", Variable("X")),
+                        PredLiteral("q", Variable("Y")),
                     ),
                 ),
             ),
@@ -898,8 +878,8 @@ class TestChoice(unittest.TestCase):
             ChoiceRule(
                 ground_choice,
                 (
-                    AggregateLiteral(
-                        AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                    AggrLiteral(
+                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
                     ),
                 ),
             ).contains_aggregates
@@ -920,14 +900,12 @@ class TestChoice(unittest.TestCase):
 
         var_elements = (
             ChoiceElement(
-                PredicateLiteral("p", Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
-                ),
+                PredLiteral("p", Number(5)),
+                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                PredLiteral("p", Number(-3)),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -936,8 +914,8 @@ class TestChoice(unittest.TestCase):
         safe_var_rule = ChoiceRule(
             var_choice,
             (
-                PredicateLiteral("q", Variable("X")),
-                PredicateLiteral("q", Variable("Y")),
+                PredLiteral("q", Variable("X")),
+                PredLiteral("q", Variable("Y")),
             ),
         )
 
@@ -950,32 +928,32 @@ class TestChoice(unittest.TestCase):
                 Choice(
                     (
                         ChoiceElement(
-                            PredicateLiteral("p", Number(5)),
+                            PredLiteral("p", Number(5)),
                             LiteralTuple(
-                                PredicateLiteral("p", Number(1)),
-                                Naf(PredicateLiteral("q")),
+                                PredLiteral("p", Number(1)),
+                                Naf(PredLiteral("q")),
                             ),
                         ),
                         ChoiceElement(
-                            PredicateLiteral("p", Number(-3)),
-                            LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                            PredLiteral("p", Number(-3)),
+                            LiteralTuple(Naf(PredLiteral("p", String("str")))),
                         ),
                     ),
                     guards=Guard(RelOp.LESS, String("f"), False),
                 ),
-                (PredicateLiteral("q", Number(1)), PredicateLiteral("q", String("f"))),
+                (PredLiteral("q", Number(1)), PredLiteral("q", String("f"))),
             ),
         )
 
         # rewrite choice
         elements = (
             ChoiceElement(
-                PredicateLiteral("p", Variable("X")),
-                LiteralTuple(PredicateLiteral("q", Variable("X"))),
+                PredLiteral("p", Variable("X")),
+                LiteralTuple(PredLiteral("q", Variable("X"))),
             ),
             ChoiceElement(
-                PredicateLiteral("p", Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(0))),
+                PredLiteral("p", Number(1)),
+                LiteralTuple(PredLiteral("p", Number(0))),
             ),
         )
         rule = ChoiceRule(
@@ -984,7 +962,7 @@ class TestChoice(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("Y"), False),
             ),
             (
-                PredicateLiteral("q", Variable("Y")),
+                PredLiteral("q", Variable("Y")),
                 Equal(Number(0), Variable("X")),
             ),
         )
@@ -994,7 +972,7 @@ class TestChoice(unittest.TestCase):
                 TermTuple(Variable("X"), Variable("Y")),
                 TermTuple(Variable("X"), Variable("Y")),
             ),
-            PredicateLiteral("q", Variable("Y")),
+            PredLiteral("q", Variable("Y")),
             Equal(Number(0), Variable("X")),
         )
         choice_map = dict()
@@ -1018,7 +996,7 @@ class TestChoice(unittest.TestCase):
                 None,
                 LiteralTuple(
                     GreaterEqual(Variable("Y"), Number(0)),
-                    PredicateLiteral("q", Variable("Y")),
+                    PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -1037,8 +1015,8 @@ class TestChoice(unittest.TestCase):
                 ),
                 elements[0],
                 LiteralTuple(
-                    PredicateLiteral("q", Variable("X")),
-                    PredicateLiteral("q", Variable("Y")),
+                    PredLiteral("q", Variable("X")),
+                    PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -1055,8 +1033,8 @@ class TestChoice(unittest.TestCase):
                 ),
                 elements[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Variable("Y")),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -1073,12 +1051,12 @@ class TestChoice(unittest.TestCase):
                     ): Choice(
                         (
                             ChoiceElement(
-                                PredicateLiteral("p", Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                PredLiteral("p", Number(0)),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                             ChoiceElement(
-                                PredicateLiteral("p", Number(1)),
-                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                                PredLiteral("p", Number(1)),
+                                LiteralTuple(PredLiteral("p", Number(0))),
                             ),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -1089,18 +1067,18 @@ class TestChoice(unittest.TestCase):
                 Choice(
                     (
                         ChoiceElement(
-                            PredicateLiteral("p", Number(0)),
-                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                            PredLiteral("p", Number(0)),
+                            LiteralTuple(PredLiteral("q", Number(0))),
                         ),
                         ChoiceElement(
-                            PredicateLiteral("p", Number(1)),
-                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                            PredLiteral("p", Number(1)),
+                            LiteralTuple(PredLiteral("p", Number(0))),
                         ),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                 ),
                 (
-                    PredicateLiteral("q", Variable("Y")),
+                    PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -1111,7 +1089,7 @@ class TestChoice(unittest.TestCase):
                 dict(),
             ),
             Constraint(
-                PredicateLiteral("q", Variable("Y")),
+                PredLiteral("q", Variable("Y")),
                 Equal(Number(0), Variable("X")),
             ),
         )  # choice is unsatisfiable (yields constraint)

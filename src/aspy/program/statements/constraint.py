@@ -2,7 +2,7 @@ from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 
-from aspy.program.literals import AggregateLiteral, LiteralTuple
+from aspy.program.literals import AggrLiteral, LiteralTuple
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
@@ -69,7 +69,7 @@ class Constraint(Statement):
 
     @cached_property
     def contains_aggregates(self) -> bool:
-        return any(isinstance(literal, AggregateLiteral) for literal in self.literals)
+        return any(isinstance(literal, AggrLiteral) for literal in self.literals)
 
     def rewrite_aggregates(
         self,
@@ -77,7 +77,7 @@ class Constraint(Statement):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -94,9 +94,7 @@ class Constraint(Statement):
 
         for literal in self.body:
             (
-                aggr_literals
-                if isinstance(literal, AggregateLiteral)
-                else non_aggr_literals
+                aggr_literals if isinstance(literal, AggrLiteral) else non_aggr_literals
             ).append(literal)
 
         # mapping from original literals to alpha literals
@@ -123,7 +121,7 @@ class Constraint(Statement):
         # replace original rule with modified one
         alpha_rule = Constraint(
             *tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                alpha_map[literal] if isinstance(literal, AggrLiteral) else literal
                 for literal in self.body
             ),  # NOTE: restores original order of literals
         )
@@ -131,7 +129,7 @@ class Constraint(Statement):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Constraint":
         return Constraint(
             *tuple(

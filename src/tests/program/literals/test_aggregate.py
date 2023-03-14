@@ -3,16 +3,16 @@ from typing import Set
 
 import aspy
 from aspy.program.literals import (
-    AggregateCount,
-    AggregateElement,
-    AggregateLiteral,
-    AggregateMax,
-    AggregateMin,
-    AggregateSum,
+    AggrCount,
+    AggrElement,
+    AggrLiteral,
+    AggrMax,
+    AggrMin,
+    AggrSum,
     Guard,
     LiteralTuple,
     Naf,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
@@ -44,11 +44,11 @@ class TestAggregate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        element = AggregateElement(
+        element = AggrElement(
             TermTuple(Number(5), Variable("X")),
             LiteralTuple(
-                PredicateLiteral("p", String("str")),
-                Naf(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", String("str")),
+                Naf(PredLiteral("q", Variable("Y"))),
             ),
         )
         # string representation
@@ -56,11 +56,11 @@ class TestAggregate(unittest.TestCase):
         # equality
         self.assertEqual(
             element,
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5), Variable("X")),
                 LiteralTuple(
-                    PredicateLiteral("p", String("str")),
-                    Naf(PredicateLiteral("q", Variable("Y"))),
+                    PredLiteral("p", String("str")),
+                    Naf(PredLiteral("q", Variable("Y"))),
                 ),
             ),
         )
@@ -70,19 +70,19 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(
             element.body,
             LiteralTuple(
-                PredicateLiteral("p", String("str")),
-                Naf(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", String("str")),
+                Naf(PredLiteral("q", Variable("Y"))),
             ),
         )
         # hashing
         self.assertEqual(
             hash(element),
             hash(
-                AggregateElement(
+                AggrElement(
                     TermTuple(Number(5), Variable("X")),
                     LiteralTuple(
-                        PredicateLiteral("p", String("str")),
-                        Naf(PredicateLiteral("q", Variable("Y"))),
+                        PredLiteral("p", String("str")),
+                        Naf(PredLiteral("q", Variable("Y"))),
                     ),
                 )
             ),
@@ -90,13 +90,11 @@ class TestAggregate(unittest.TestCase):
         # ground
         self.assertFalse(element.ground)
         # positive/negative literal occurrences
-        self.assertEqual(element.pos_occ(), {PredicateLiteral("p", String("str"))})
-        self.assertEqual(element.neg_occ(), {PredicateLiteral("q", Variable("Y"))})
+        self.assertEqual(element.pos_occ(), {PredLiteral("p", String("str"))})
+        self.assertEqual(element.neg_occ(), {PredLiteral("q", Variable("Y"))})
         # weight
         self.assertEqual(element.weight, 5)
-        self.assertEqual(
-            AggregateElement(TermTuple(Variable("X"), Number(5))).weight, 0
-        )
+        self.assertEqual(AggrElement(TermTuple(Variable("X"), Number(5))).weight, 0)
         # vars
         self.assertTrue(
             element.vars() == element.global_vars() == {Variable("X"), Variable("Y")}
@@ -105,20 +103,20 @@ class TestAggregate(unittest.TestCase):
         self.assertRaises(ValueError, element.safety)
         # replace arithmetic terms
         self.assertEqual(element.replace_arith(VariableTable()), element)
-        element = AggregateElement(
+        element = AggrElement(
             TermTuple(Number(5), Minus(Variable("X"))),
             LiteralTuple(
-                PredicateLiteral("p", String("str")),
-                Naf(PredicateLiteral("q", Variable("Y"))),
+                PredLiteral("p", String("str")),
+                Naf(PredLiteral("q", Variable("Y"))),
             ),
         )
         self.assertEqual(
             element.replace_arith(VariableTable()),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5), ArithVariable(0, Minus(Variable("X")))),
                 LiteralTuple(
-                    PredicateLiteral("p", String("str")),
-                    Naf(PredicateLiteral("q", Variable("Y"))),
+                    PredLiteral("p", String("str")),
+                    Naf(PredLiteral("q", Variable("Y"))),
                 ),
             ),
         )
@@ -128,11 +126,11 @@ class TestAggregate(unittest.TestCase):
             element.substitute(
                 Substitution({Variable("X"): Number(1), Number(5): String("f")})
             ),  # NOTE: substitution is invalid
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5), Minus(Number(1))),
                 LiteralTuple(
-                    PredicateLiteral("p", String("str")),
-                    Naf(PredicateLiteral("q", Variable("Y"))),
+                    PredLiteral("p", String("str")),
+                    Naf(PredLiteral("q", Variable("Y"))),
                 ),
             ),
         )
@@ -144,11 +142,11 @@ class TestAggregate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        aggr_func = AggregateCount()
+        aggr_func = AggrCount()
         # equality
-        self.assertEqual(aggr_func, AggregateCount())
+        self.assertEqual(aggr_func, AggrCount())
         # hashing
-        self.assertEqual(hash(aggr_func), hash(AggregateCount()))
+        self.assertEqual(hash(aggr_func), hash(AggrCount()))
         # string representation
         self.assertEqual(str(aggr_func), "#count")
         # base value
@@ -160,19 +158,19 @@ class TestAggregate(unittest.TestCase):
 
         # ----- propagation -----
         element_instances = {
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(1))),
+                LiteralTuple(PredLiteral("p", Number(1))),
             ),
         }
 
         # >, >=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -204,8 +202,8 @@ class TestAggregate(unittest.TestCase):
 
         # <, <=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -237,8 +235,8 @@ class TestAggregate(unittest.TestCase):
 
         # =
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -254,8 +252,8 @@ class TestAggregate(unittest.TestCase):
 
         # !=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -277,11 +275,11 @@ class TestAggregate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        aggr_func = AggregateSum()
+        aggr_func = AggrSum()
         # equality
-        self.assertEqual(aggr_func, AggregateSum())
+        self.assertEqual(aggr_func, AggrSum())
         # hashing
-        self.assertEqual(hash(aggr_func), hash(AggregateSum()))
+        self.assertEqual(hash(aggr_func), hash(AggrSum()))
         # string representation
         self.assertEqual(str(aggr_func), "#sum")
         # base value
@@ -293,21 +291,21 @@ class TestAggregate(unittest.TestCase):
 
         # ----- propagation -----
         element_instances = {
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(1))),
+                LiteralTuple(PredLiteral("p", Number(1))),
             ),
         }
 
         # >, >=
         # TODO: correct ???
-        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_I = {PredLiteral("p", Number(0))}
         literals_J = {
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("p", Number(1)),
+            PredLiteral("p", Number(0)),
+            PredLiteral("p", Number(1)),
         }
         # I subset J
         self.assertTrue(
@@ -346,10 +344,10 @@ class TestAggregate(unittest.TestCase):
 
         # <, <=
         # TODO: correct ???
-        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_I = {PredLiteral("p", Number(0))}
         literals_J = {
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("p", Number(1)),
+            PredLiteral("p", Number(0)),
+            PredLiteral("p", Number(1)),
         }
         # I subset J
         self.assertTrue(
@@ -388,10 +386,10 @@ class TestAggregate(unittest.TestCase):
 
         # =
         # TODO: correct ???
-        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_I = {PredLiteral("p", Number(0))}
         literals_J = {
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("p", Number(1)),
+            PredLiteral("p", Number(0)),
+            PredLiteral("p", Number(1)),
         }
         # I subset J
         self.assertTrue(
@@ -414,10 +412,10 @@ class TestAggregate(unittest.TestCase):
 
         # !=
         # TODO: correct ???
-        literals_I = {PredicateLiteral("p", Number(0))}
+        literals_I = {PredLiteral("p", Number(0))}
         literals_J = {
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("p", Number(1)),
+            PredLiteral("p", Number(0)),
+            PredLiteral("p", Number(1)),
         }
         # I subset J
         self.assertTrue(
@@ -446,11 +444,11 @@ class TestAggregate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        aggr_func = AggregateMax()
+        aggr_func = AggrMax()
         # equality
-        self.assertEqual(aggr_func, AggregateMax())
+        self.assertEqual(aggr_func, AggrMax())
         # hashing
-        self.assertEqual(hash(aggr_func), hash(AggregateMax()))
+        self.assertEqual(hash(aggr_func), hash(AggrMax()))
         # string representation
         self.assertEqual(str(aggr_func), "#max")
         # base value
@@ -462,19 +460,19 @@ class TestAggregate(unittest.TestCase):
 
         # ----- propagation -----
         element_instances = {
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(1))),
+                LiteralTuple(PredLiteral("p", Number(1))),
             ),
         }
 
         # >, >=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -506,8 +504,8 @@ class TestAggregate(unittest.TestCase):
 
         # <, <=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -539,8 +537,8 @@ class TestAggregate(unittest.TestCase):
 
         # =
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -556,8 +554,8 @@ class TestAggregate(unittest.TestCase):
 
         # !=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -579,11 +577,11 @@ class TestAggregate(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        aggr_func = AggregateMin()
+        aggr_func = AggrMin()
         # equality
-        self.assertEqual(aggr_func, AggregateMin())
+        self.assertEqual(aggr_func, AggrMin())
         # hashing
-        self.assertEqual(hash(aggr_func), hash(AggregateMin()))
+        self.assertEqual(hash(aggr_func), hash(AggrMin()))
         # string representation
         self.assertEqual(str(aggr_func), "#min")
         # base value
@@ -595,19 +593,19 @@ class TestAggregate(unittest.TestCase):
 
         # ----- propagation -----
         element_instances = {
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredicateLiteral("p", Number(1))),
+                LiteralTuple(PredLiteral("p", Number(1))),
             ),
         }
 
         # >, >=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertFalse(
             aggr_func.propagate(
@@ -639,8 +637,8 @@ class TestAggregate(unittest.TestCase):
 
         # <, <=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -672,8 +670,8 @@ class TestAggregate(unittest.TestCase):
 
         # =
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertFalse(
             aggr_func.propagate(
@@ -689,8 +687,8 @@ class TestAggregate(unittest.TestCase):
 
         # !=
         # TODO: correct ???
-        A = {PredicateLiteral("p", Number(0))}
-        B = {PredicateLiteral("p", Number(0)), PredicateLiteral("p", Number(1))}
+        A = {PredLiteral("p", Number(0))}
+        B = {PredLiteral("p", Number(0)), PredLiteral("p", Number(1))}
         # I subset J
         self.assertTrue(
             aggr_func.propagate(
@@ -713,25 +711,21 @@ class TestAggregate(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         ground_elements = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", String("str")), Naf(PredicateLiteral("q"))
-                ),
+                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
-        aggr_func = AggregateCount()
+        aggr_func = AggrCount()
 
         # no guards
-        self.assertRaises(
-            ValueError, AggregateLiteral, aggr_func, ground_elements, tuple()
-        )
+        self.assertRaises(ValueError, AggrLiteral, aggr_func, ground_elements, tuple())
         # left guard only
-        ground_literal = AggregateLiteral(
+        ground_literal = AggrLiteral(
             aggr_func, ground_elements, guards=Guard(RelOp.LESS, Number(3), False)
         )
         self.assertEqual(ground_literal.lguard, Guard(RelOp.LESS, Number(3), False))
@@ -744,7 +738,7 @@ class TestAggregate(unittest.TestCase):
             str(ground_literal), '3 < #count{5:p("str"),not q;-3:not p("str")}'
         )
         # right guard only
-        ground_literal = AggregateLiteral(
+        ground_literal = AggrLiteral(
             aggr_func, ground_elements, Guard(RelOp.LESS, Number(3), True), naf=True
         )
         self.assertEqual(ground_literal.lguard, None)
@@ -757,7 +751,7 @@ class TestAggregate(unittest.TestCase):
             str(ground_literal), 'not #count{5:p("str"),not q;-3:not p("str")} < 3'
         )
         # both guards
-        ground_literal = AggregateLiteral(
+        ground_literal = AggrLiteral(
             aggr_func,
             ground_elements,
             guards=(
@@ -777,25 +771,23 @@ class TestAggregate(unittest.TestCase):
         )
 
         var_elements = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5)),
-                LiteralTuple(
-                    PredicateLiteral("p", Variable("X")), Naf(PredicateLiteral("q"))
-                ),
+                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
             ),
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(-3)),
-                LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                LiteralTuple(Naf(PredLiteral("p", String("str")))),
             ),
         )
-        var_literal = AggregateLiteral(
+        var_literal = AggrLiteral(
             aggr_func, var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)
         )
 
         # equality
         self.assertEqual(
             ground_literal,
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func,
                 ground_elements,
                 guards=(
@@ -808,7 +800,7 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(
             hash(ground_literal),
             hash(
-                AggregateLiteral(
+                AggrLiteral(
                     aggr_func,
                     ground_elements,
                     guards=(
@@ -842,10 +834,10 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(var_literal.vars(), {Variable("X"), Variable("Y")})
         self.assertEqual(var_literal.global_vars(), {Variable("Y")})
         # positive/negative literal occurrences
-        self.assertEqual(var_literal.pos_occ(), {PredicateLiteral("p", Variable("X"))})
+        self.assertEqual(var_literal.pos_occ(), {PredLiteral("p", Variable("X"))})
         self.assertEqual(
             var_literal.neg_occ(),
-            {PredicateLiteral("p", String("str")), PredicateLiteral("q")},
+            {PredLiteral("p", String("str")), PredLiteral("q")},
         )
 
         # safety characterization
@@ -857,13 +849,13 @@ class TestAggregate(unittest.TestCase):
             var_literal.safety(DummyRule({Variable("Y")})), SafetyTriplet()
         )
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, Guard(RelOp.LESS, Variable("X"), False)
             ).safety(DummyRule({Variable("X")})),
             SafetyTriplet(unsafe={Variable("X")}),
         )
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, Guard(RelOp.LESS, Variable("X"), False)
             ).safety(DummyRule({Variable("Y")})),
             SafetyTriplet(),
@@ -872,7 +864,7 @@ class TestAggregate(unittest.TestCase):
         # aggr_global_vars = {'X','Y'} -> unsafe
         # rules = { ('Y', {'X'}) }
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("Y"), False)
             ).safety(DummyRule({Variable("X"), Variable("Y")})),
             SafetyTriplet(
@@ -884,7 +876,7 @@ class TestAggregate(unittest.TestCase):
         # aggr_global_vars = {'Y'} -> unsafe
         # rules = { ('Y', {}) } -> makes 'Y' safe
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("Y"), False)
             ).safety(DummyRule({Variable("Y")})),
             SafetyTriplet(safe={Variable("Y")}),
@@ -893,7 +885,7 @@ class TestAggregate(unittest.TestCase):
         # aggr_global_vars = {'X'} -> unsafe
         # rules = { ('X', {'X'}) } -> removes (without making 'X' safe)
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("X"), False)
             ).safety(DummyRule({Variable("X")})),
             SafetyTriplet(unsafe={Variable("X")}),
@@ -902,7 +894,7 @@ class TestAggregate(unittest.TestCase):
         # aggr_global_vars = {'X'} -> unsafe
         # rules = { ('X', {}) } -> makes 'X' safe
         self.assertEqual(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func, var_elements, guards=Guard(RelOp.EQUAL, Variable("X"), False)
             ).safety(DummyRule({Variable("Y")})),
             SafetyTriplet(safe={Variable("X")}),
@@ -911,16 +903,16 @@ class TestAggregate(unittest.TestCase):
 
         # replace arithmetic terms
         arith_elements = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Number(5)),
                 LiteralTuple(
-                    PredicateLiteral("p", Minus(Variable("X"))),
-                    Naf(PredicateLiteral("q")),
+                    PredLiteral("p", Minus(Variable("X"))),
+                    Naf(PredLiteral("q")),
                 ),
             ),
         )
         arith_literal = Naf(
-            AggregateLiteral(
+            AggrLiteral(
                 aggr_func,
                 arith_elements,
                 Guard(RelOp.EQUAL, Minus(Variable("X")), True),
@@ -929,16 +921,16 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(
             arith_literal.replace_arith(VariableTable()),
             Naf(
-                AggregateLiteral(
+                AggrLiteral(
                     aggr_func,
                     (
-                        AggregateElement(
+                        AggrElement(
                             TermTuple(Number(5)),
                             LiteralTuple(
-                                PredicateLiteral(
+                                PredLiteral(
                                     "p", ArithVariable(0, Minus(Variable("X")))
                                 ),
-                                Naf(PredicateLiteral("q")),
+                                Naf(PredLiteral("q")),
                             ),
                         ),
                     ),
@@ -948,25 +940,25 @@ class TestAggregate(unittest.TestCase):
         )
 
         # substitute
-        var_literal = AggregateLiteral(
+        var_literal = AggrLiteral(
             aggr_func, var_elements, Guard(RelOp.LESS, Variable("X"), False)
         )
         self.assertEqual(
             var_literal.substitute(
                 Substitution({Variable("X"): Number(1), Number(-3): String("f")})
             ),  # NOTE: substitution is invalid
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Number(5)),
                         LiteralTuple(
-                            PredicateLiteral("p", Number(1)), Naf(PredicateLiteral("q"))
+                            PredLiteral("p", Number(1)), Naf(PredLiteral("q"))
                         ),
                     ),
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Number(-3)),
-                        LiteralTuple(Naf(PredicateLiteral("p", String("str")))),
+                        LiteralTuple(Naf(PredLiteral("p", String("str")))),
                     ),
                 ),
                 guards=Guard(RelOp.LESS, Number(1), False),

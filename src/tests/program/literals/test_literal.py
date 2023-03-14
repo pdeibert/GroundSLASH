@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import LiteralTuple, PredicateLiteral
+from aspy.program.literals import LiteralTuple, PredLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
@@ -15,21 +15,21 @@ class TestLiteral(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         literals = LiteralTuple(
-            PredicateLiteral("p", Number(0), Variable("X")),
-            PredicateLiteral("q", Minus(Variable("Y"))),
+            PredLiteral("p", Number(0), Variable("X")),
+            PredLiteral("q", Minus(Variable("Y"))),
         )
         # length
         self.assertEqual(len(literals), 2)
         # string representation
         self.assertEqual(str(literals), "p(0,X),q(-Y)")
         # equality
-        self.assertEqual(literals[0], PredicateLiteral("p", Number(0), Variable("X")))
-        self.assertEqual(literals[1], PredicateLiteral("q", Minus(Variable("Y"))))
+        self.assertEqual(literals[0], PredLiteral("p", Number(0), Variable("X")))
+        self.assertEqual(literals[1], PredLiteral("q", Minus(Variable("Y"))))
         self.assertTrue(
             literals
             == LiteralTuple(
-                PredicateLiteral("p", Number(0), Variable("X")),
-                PredicateLiteral("q", Minus(Variable("Y"))),
+                PredLiteral("p", Number(0), Variable("X")),
+                PredLiteral("q", Minus(Variable("Y"))),
             )
         )
         # hashing
@@ -37,8 +37,8 @@ class TestLiteral(unittest.TestCase):
             hash(literals),
             hash(
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0), Variable("X")),
-                    PredicateLiteral("q", Minus(Variable("Y"))),
+                    PredLiteral("p", Number(0), Variable("X")),
+                    PredLiteral("q", Minus(Variable("Y"))),
                 )
             ),
         )
@@ -52,8 +52,8 @@ class TestLiteral(unittest.TestCase):
         self.assertEqual(
             literals.replace_arith(VariableTable()),
             LiteralTuple(
-                PredicateLiteral("p", Number(0), Variable("X")),
-                PredicateLiteral("q", ArithVariable(0, Minus(Variable("Y")))),
+                PredLiteral("p", Number(0), Variable("X")),
+                PredLiteral("q", ArithVariable(0, Minus(Variable("Y")))),
             ),
         )
         self.assertEqual(
@@ -68,65 +68,65 @@ class TestLiteral(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            LiteralTuple(PredicateLiteral("p", String("f"), Variable("X"))).substitute(
+            LiteralTuple(PredLiteral("p", String("f"), Variable("X"))).substitute(
                 Substitution({String("f"): Number(0), Variable("X"): Number(1)})
             ),
-            LiteralTuple(PredicateLiteral("p", String("f"), Number(1))),
+            LiteralTuple(PredLiteral("p", String("f"), Number(1))),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
             LiteralTuple(
-                PredicateLiteral("p", Variable("X"), String("f")),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("p", Variable("X"), String("f")),
+                PredLiteral("q", Variable("X")),
             ).match(
                 LiteralTuple(
-                    PredicateLiteral("p", Number(1), String("f")),
-                    PredicateLiteral("q", Number(1)),
+                    PredLiteral("p", Number(1), String("f")),
+                    PredLiteral("q", Number(1)),
                 )
             ),
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
             LiteralTuple(
-                PredicateLiteral("p", Variable("X"), String("f")),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("p", Variable("X"), String("f")),
+                PredLiteral("q", Variable("X")),
             ).match(
                 LiteralTuple(
-                    PredicateLiteral("p", Number(1), String("g")),
-                    PredicateLiteral("q", Number(1)),
+                    PredLiteral("p", Number(1), String("g")),
+                    PredLiteral("q", Number(1)),
                 )
             ),
             None,
         )  # ground terms don't match
         self.assertEqual(
             LiteralTuple(
-                PredicateLiteral("p", Variable("X"), String("f")),
-                PredicateLiteral("q", Variable("X")),
-            ).match(PredicateLiteral("p")),
+                PredLiteral("p", Variable("X"), String("f")),
+                PredLiteral("q", Variable("X")),
+            ).match(PredLiteral("p")),
             None,
         )  # wrong type
         self.assertEqual(
             LiteralTuple(
-                PredicateLiteral("p", Variable("X"), String("f")),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("p", Variable("X"), String("f")),
+                PredLiteral("q", Variable("X")),
             ).match(
                 LiteralTuple(
-                    PredicateLiteral("p", Number(1), String("f")),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(1), String("f")),
+                    PredLiteral("q", Number(0)),
                 )
             ),
             None,
         )  # assignment conflict
         self.assertEqual(
             LiteralTuple(
-                PredicateLiteral("p", Number(0), String("f")),
-                PredicateLiteral("q", Number(1)),
-                PredicateLiteral("u", Number(0)),
+                PredLiteral("p", Number(0), String("f")),
+                PredLiteral("q", Number(1)),
+                PredLiteral("u", Number(0)),
             ).match(
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0), String("f")),
-                    PredicateLiteral("u", Number(0)),
-                    PredicateLiteral("q", Number(1)),
+                    PredLiteral("p", Number(0), String("f")),
+                    PredLiteral("u", Number(0)),
+                    PredLiteral("q", Number(1)),
                 )
             ),
             None,
@@ -134,20 +134,20 @@ class TestLiteral(unittest.TestCase):
 
         # combining literal tuples
         self.assertEqual(
-            literals + LiteralTuple(PredicateLiteral("u")),
+            literals + LiteralTuple(PredLiteral("u")),
             LiteralTuple(
-                PredicateLiteral("p", Number(0), Variable("X")),
-                PredicateLiteral("q", Minus(Variable("Y"))),
-                PredicateLiteral("u"),
+                PredLiteral("p", Number(0), Variable("X")),
+                PredLiteral("q", Minus(Variable("Y"))),
+                PredLiteral("u"),
             ),
         )
         # without
         self.assertEqual(
-            literals.without(PredicateLiteral("p", Number(0), Variable("X"))),
-            LiteralTuple(PredicateLiteral("q", Minus(Variable("Y")))),
+            literals.without(PredLiteral("p", Number(0), Variable("X"))),
+            LiteralTuple(PredLiteral("q", Minus(Variable("Y")))),
         )
         self.assertEqual(
-            literals.without(PredicateLiteral("p", Number(1), Variable("X"))), literals
+            literals.without(PredLiteral("p", Number(1), Variable("X"))), literals
         )  # not part of original literal tuple
         # TODO: iter
 

@@ -3,17 +3,17 @@ import unittest
 import aspy
 from aspy.program.literals import (
     AggrBaseLiteral,
-    AggregateCount,
-    AggregateElement,
-    AggregateLiteral,
+    AggrCount,
+    AggrElement,
     AggrElemLiteral,
+    AggrLiteral,
     AggrPlaceholder,
     Equal,
     GreaterEqual,
     Guard,
     LessEqual,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.statements import AggrBaseRule, AggrElemRule, Constraint
@@ -27,11 +27,9 @@ class TestConstraint(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        ground_rule = Constraint(
-            PredicateLiteral("p", Number(0)), PredicateLiteral("q")
-        )
+        ground_rule = Constraint(PredLiteral("p", Number(0)), PredLiteral("q"))
         var_rule = Constraint(
-            PredicateLiteral("p", Variable("X")), PredicateLiteral("q", Variable("X"))
+            PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))
         )
 
         # string representation
@@ -41,27 +39,27 @@ class TestConstraint(unittest.TestCase):
         self.assertEqual(ground_rule.head, LiteralTuple())
         self.assertEqual(
             ground_rule.body,
-            LiteralTuple(PredicateLiteral("p", Number(0)), PredicateLiteral("q")),
+            LiteralTuple(PredLiteral("p", Number(0)), PredLiteral("q")),
         )
         self.assertEqual(var_rule.head, LiteralTuple())
         self.assertEqual(
             var_rule.body,
             LiteralTuple(
-                PredicateLiteral("p", Variable("X")),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("p", Variable("X")),
+                PredLiteral("q", Variable("X")),
             ),
         )
         # hashing
         self.assertEqual(
             hash(ground_rule),
-            hash(Constraint(PredicateLiteral("p", Number(0)), PredicateLiteral("q"))),
+            hash(Constraint(PredLiteral("p", Number(0)), PredLiteral("q"))),
         )
         self.assertEqual(
             hash(var_rule),
             hash(
                 Constraint(
-                    PredicateLiteral("p", Variable("X")),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
                 )
             ),
         )
@@ -76,10 +74,8 @@ class TestConstraint(unittest.TestCase):
         self.assertFalse(var_rule.contains_aggregates)
         self.assertTrue(
             Constraint(
-                PredicateLiteral("p", Variable("X")),
-                AggregateLiteral(
-                    AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-                ),
+                PredLiteral("p", Variable("X")),
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
             ).contains_aggregates
         )
         # variables
@@ -89,51 +85,51 @@ class TestConstraint(unittest.TestCase):
 
         # substitution
         rule = Constraint(
-            PredicateLiteral("p", Variable("X"), Number(0)),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("p", Variable("X"), Number(0)),
+            PredLiteral("q", Variable("X")),
         )
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
             Constraint(
-                PredicateLiteral("p", Number(1), Number(0)),
-                PredicateLiteral("q", Number(1)),
+                PredLiteral("p", Number(1), Number(0)),
+                PredLiteral("q", Number(1)),
             ),
         )  # NOTE: substitution is invalid
 
         # rewrite aggregates
         elements_1 = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredicateLiteral("p", Variable("Y"))),
+                LiteralTuple(PredLiteral("p", Variable("Y"))),
             ),
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
         )
         elements_2 = (
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("q", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
             ),
         )
         rule = Constraint(
-            PredicateLiteral("p", Variable("X"), Number(0)),
-            AggregateLiteral(
-                AggregateCount(),
+            PredLiteral("p", Variable("X"), Number(0)),
+            AggrLiteral(
+                AggrCount(),
                 elements_1,
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
             ),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
-            AggregateLiteral(
-                AggregateCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
+            AggrLiteral(
+                AggrCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
             ),
         )
         target_rule = Constraint(
-            PredicateLiteral("p", Variable("X"), Number(0)),
+            PredLiteral("p", Variable("X"), Number(0)),
             AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
             AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
@@ -152,9 +148,9 @@ class TestConstraint(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralTuple(
-                    GreaterEqual(Variable("X"), AggregateCount().base()),
-                    PredicateLiteral("p", Variable("X"), Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    GreaterEqual(Variable("X"), AggrCount().base()),
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -172,9 +168,9 @@ class TestConstraint(unittest.TestCase):
                 ),
                 elements_1[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Variable("X"), Number(0)),
-                    PredicateLiteral("p", Variable("Y")),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    PredLiteral("p", Variable("Y")),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -191,9 +187,9 @@ class TestConstraint(unittest.TestCase):
                 ),
                 elements_1[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Variable("X"), Number(0)),
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -209,9 +205,9 @@ class TestConstraint(unittest.TestCase):
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralTuple(
-                    LessEqual(AggregateCount().base(), Number(0)),
-                    PredicateLiteral("p", Variable("X"), Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    LessEqual(AggrCount().base(), Number(0)),
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -223,9 +219,9 @@ class TestConstraint(unittest.TestCase):
                 AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Variable("X"), Number(0)),
-                    PredicateLiteral("q", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -233,24 +229,24 @@ class TestConstraint(unittest.TestCase):
 
         # assembling
         target_rule = Constraint(
-            PredicateLiteral("p", Variable("X"), Number(0)),
+            PredLiteral("p", Variable("X"), Number(0)),
             AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
             AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
         elements_1 = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredicateLiteral("p", Variable("Y"))),
+                LiteralTuple(PredLiteral("p", Variable("Y"))),
             ),
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
         )
         elements_2 = (
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("q", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
             ),
         )
 
@@ -259,23 +255,23 @@ class TestConstraint(unittest.TestCase):
                 {
                     AggrPlaceholder(
                         1, TermTuple(Variable("X")), TermTuple(Variable("X"))
-                    ): AggregateLiteral(
-                        AggregateCount(),
+                    ): AggrLiteral(
+                        AggrCount(),
                         (
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(0)),
-                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                                LiteralTuple(PredLiteral("p", Number(0))),
                             ),
-                            AggregateElement(TermTuple(String("f")), LiteralTuple()),
+                            AggrElement(TermTuple(String("f")), LiteralTuple()),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                     ),
-                    AggrPlaceholder(2, TermTuple(), TermTuple()): AggregateLiteral(
-                        AggregateCount(),
+                    AggrPlaceholder(2, TermTuple(), TermTuple()): AggrLiteral(
+                        AggrCount(),
                         (
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                         ),
                         Guard(RelOp.LESS_OR_EQ, Number(0), True),
@@ -283,26 +279,26 @@ class TestConstraint(unittest.TestCase):
                 }
             ),
             Constraint(
-                PredicateLiteral("p", Variable("X"), Number(0)),
-                AggregateLiteral(
-                    AggregateCount(),
+                PredLiteral("p", Variable("X"), Number(0)),
+                AggrLiteral(
+                    AggrCount(),
                     (
-                        AggregateElement(
+                        AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                            LiteralTuple(PredLiteral("p", Number(0))),
                         ),
-                        AggregateElement(TermTuple(String("f")), LiteralTuple()),
+                        AggrElement(TermTuple(String("f")), LiteralTuple()),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                 ),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("q", Variable("X")),
                 Equal(Number(0), Variable("X")),
-                AggregateLiteral(
-                    AggregateCount(),
+                AggrLiteral(
+                    AggrCount(),
                     (
-                        AggregateElement(
+                        AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                            LiteralTuple(PredLiteral("q", Number(0))),
                         ),
                     ),
                     Guard(RelOp.LESS_OR_EQ, Number(0), True),

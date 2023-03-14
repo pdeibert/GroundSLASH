@@ -17,7 +17,7 @@ from .normal import NormalRule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
-    from aspy.program.literals import AggregateElement, Guard
+    from aspy.program.literals import AggrElement, Guard
     from aspy.program.statements.choice import ChoiceElement
     from aspy.program.terms import Term
     from aspy.program.variable_table import VariableTable
@@ -115,7 +115,7 @@ class AggrElemRule(NormalRule):
     def __init__(
         self,
         atom: AggrElemLiteral,
-        element: "AggregateElement",
+        element: "AggrElement",
         literals: "LiteralTuple",
     ) -> None:
         super().__init__(atom, *literals)
@@ -154,7 +154,7 @@ class AggrElemRule(NormalRule):
         aggr_id: int,
         element_id: int,
         glob_vars: TermTuple,
-        element: "AggregateElement",
+        element: "AggrElement",
         non_aggr_literals: "LiteralTuple",
     ) -> "AggrElemRule":
 

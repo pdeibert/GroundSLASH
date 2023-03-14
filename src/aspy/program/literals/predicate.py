@@ -18,7 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.variable_table import VariableTable
 
 
-class PredicateLiteral(Literal):
+class PredLiteral(Literal):
     """Predicate."""
 
     def __init__(
@@ -36,7 +36,7 @@ class PredicateLiteral(Literal):
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, PredicateLiteral)
+            isinstance(other, PredLiteral)
             and self.name == other.name
             and self.terms == other.terms
             and self.neg == other.neg
@@ -73,14 +73,14 @@ class PredicateLiteral(Literal):
         if self.naf:
             return set()
 
-        return {PredicateLiteral(self.name, *self.terms.terms, neg=self.neg)}
+        return {PredLiteral(self.name, *self.terms.terms, neg=self.neg)}
 
     def neg_occ(self) -> Set["Literal"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
-        return {PredicateLiteral(self.name, *self.terms.terms, neg=self.neg)}
+        return {PredLiteral(self.name, *self.terms.terms, neg=self.neg)}
 
     def vars(self) -> Set["Variable"]:
         return set().union(self.terms.vars())
@@ -97,7 +97,7 @@ class PredicateLiteral(Literal):
     def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one."""
         if (
-            isinstance(other, PredicateLiteral)
+            isinstance(other, PredLiteral)
             and self.name == other.name
             and self.arity == other.arity
             and self.neg == other.neg
@@ -106,19 +106,19 @@ class PredicateLiteral(Literal):
 
         return None
 
-    def substitute(self, subst: Substitution) -> "PredicateLiteral":
+    def substitute(self, subst: Substitution) -> "PredLiteral":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return PredicateLiteral(
+        return PredLiteral(
             self.name,
             *tuple((term.substitute(subst) for term in self.terms)),
             neg=self.neg,
             naf=self.naf,
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "PredicateLiteral":
-        return PredicateLiteral(
+    def replace_arith(self, var_table: "VariableTable") -> "PredLiteral":
+        return PredLiteral(
             self.name, *self.terms.replace_arith(var_table), neg=self.neg, naf=self.naf
         )

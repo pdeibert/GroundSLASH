@@ -6,14 +6,14 @@ import clingo  # type: ignore
 import aspy
 from aspy.grounding import Grounder
 from aspy.program.literals import (
-    AggregateCount,
-    AggregateLiteral,
+    AggrCount,
+    AggrLiteral,
     Equal,
     Guard,
     LiteralTuple,
     Naf,
     Neg,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.program import Program
@@ -31,43 +31,41 @@ class TestGrounder(unittest.TestCase):
         self.assertEqual(
             Grounder.select(
                 LiteralTuple(
-                    Neg(PredicateLiteral("p", Variable("X"))),
-                    PredicateLiteral("q", Number(1)),
+                    Neg(PredLiteral("p", Variable("X"))),
+                    PredLiteral("q", Number(1)),
                 )
             ),
-            Neg(PredicateLiteral("p", Variable("X"))),
+            Neg(PredLiteral("p", Variable("X"))),
         )  # first predicate literal gets selected (even if it is non-ground)
         self.assertEqual(
             Grounder.select(
                 LiteralTuple(
-                    Naf(PredicateLiteral("p", Variable("X"))),
-                    PredicateLiteral("q", Number(1)),
+                    Naf(PredLiteral("p", Variable("X"))),
+                    PredLiteral("q", Number(1)),
                 )
             ),
-            PredicateLiteral("q", Number(1)),
+            PredLiteral("q", Number(1)),
         )  # first predicate literal gets skipped (NAF and NON-ground)
         self.assertEqual(
             Grounder.select(
                 LiteralTuple(
-                    Naf(PredicateLiteral("p", Number(1))),
-                    PredicateLiteral("q", Number(1)),
+                    Naf(PredLiteral("p", Number(1))),
+                    PredLiteral("q", Number(1)),
                 )
             ),
-            Naf(PredicateLiteral("p", Number(1))),
+            Naf(PredLiteral("p", Number(1))),
         )  # first predicate literal gets select (NAF and ground)
         self.assertEqual(
             Grounder.select(
                 LiteralTuple(
-                    Equal(Variable("X"), Number(1)), PredicateLiteral("q", Number(1))
+                    Equal(Variable("X"), Number(1)), PredLiteral("q", Number(1))
                 )
             ),
-            PredicateLiteral("q", Number(1)),
+            PredLiteral("q", Number(1)),
         )  # first built-in literal gets skipped (NON-ground)
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(
-                    Equal(Number(0), Number(1)), PredicateLiteral("q", Number(1))
-                )
+                LiteralTuple(Equal(Number(0), Number(1)), PredLiteral("q", Number(1)))
             ),
             Equal(Number(0), Number(1)),
         )  # first built-in literal gets selected (ground)
@@ -76,26 +74,22 @@ class TestGrounder(unittest.TestCase):
             ValueError,
             Grounder.select,
             LiteralTuple(
-                AggregateLiteral(
-                    AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-                ),
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
                 Naf(
-                    AggregateLiteral(
-                        AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                    AggrLiteral(
+                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
                     )
                 ),
-                PredicateLiteral("p", Variable("X")),
+                PredLiteral("p", Variable("X")),
             ),
-        ), PredicateLiteral("p", Variable("X"))
+        ), PredLiteral("p", Variable("X"))
         # no selectable literal
         self.assertRaises(
             ValueError,
             Grounder.select,
             LiteralTuple(
-                AggregateLiteral(
-                    AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-                ),
-                Naf(PredicateLiteral("p", Variable("X"))),
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
+                Naf(PredLiteral("p", Variable("X"))),
             ),
         )
 
@@ -107,38 +101,38 @@ class TestGrounder(unittest.TestCase):
         # ground positive predicate literal
         self.assertEqual(
             Grounder.matches(
-                Neg(PredicateLiteral("p", Number(0))),
-                possible={Neg(PredicateLiteral("p", Number(0)))},
+                Neg(PredLiteral("p", Number(0))),
+                possible={Neg(PredLiteral("p", Number(0)))},
             ),
             {Substitution()},
         )  # in set of possible literals
         self.assertEqual(
-            Grounder.matches(Neg(PredicateLiteral("p", Number(0)))), set()
+            Grounder.matches(Neg(PredLiteral("p", Number(0)))), set()
         )  # not in set of possible literals
         # non-ground positive predicate literal
         self.assertEqual(
             Grounder.matches(
-                Neg(PredicateLiteral("p", Variable("X"))),
-                possible={Neg(PredicateLiteral("p", Number(0)))},
+                Neg(PredLiteral("p", Variable("X"))),
+                possible={Neg(PredLiteral("p", Number(0)))},
             ),
             {Substitution({Variable("X"): Number(0)})},
         )  # match
         self.assertEqual(
             Grounder.matches(
-                Neg(PredicateLiteral("p", Variable("X"))),
-                possible={Neg(PredicateLiteral("q", Number(0)))},
+                Neg(PredLiteral("p", Variable("X"))),
+                possible={Neg(PredLiteral("q", Number(0)))},
             ),
             set(),
         )  # no match
         # ground negative predicate literal
         self.assertEqual(
-            Grounder.matches(Naf(Neg(PredicateLiteral("p", Number(0))))),
+            Grounder.matches(Naf(Neg(PredLiteral("p", Number(0))))),
             {Substitution()},
         )  # not in set of certain literals
         self.assertEqual(
             Grounder.matches(
-                Naf(Neg(PredicateLiteral("p", Number(0)))),
-                certain={Neg(PredicateLiteral("p", Number(0)))},
+                Naf(Neg(PredLiteral("p", Number(0)))),
+                certain={Neg(PredLiteral("p", Number(0)))},
             ),
             set(),
         )  # in set of certain literals
@@ -151,7 +145,7 @@ class TestGrounder(unittest.TestCase):
         )  # relation does not hold
         # invalid input literal
         self.assertRaises(
-            ValueError, Grounder.matches, Naf(PredicateLiteral("p", Variable("X")))
+            ValueError, Grounder.matches, Naf(PredLiteral("p", Variable("X")))
         )  # non-ground negative predicate literal
         self.assertRaises(
             ValueError, Grounder.matches, Equal(Number(0), Variable("X"))
@@ -159,9 +153,7 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(
             ValueError,
             Grounder.matches,
-            AggregateLiteral(
-                AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-            ),
+            AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
         )  # aggregate literal
 
     def test_ground_statement(self):
@@ -173,17 +165,15 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(
             ValueError,
             Grounder.ground_statement,
-            NormalFact(PredicateLiteral("p", Variable("X"))),
+            NormalFact(PredLiteral("p", Variable("X"))),
         )
         # statement containing aggregates
         self.assertRaises(
             ValueError,
             Grounder.ground_statement,
             NormalRule(
-                PredicateLiteral("p", Variable("X")),
-                AggregateLiteral(
-                    AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)
-                ),
+                PredLiteral("p", Variable("X")),
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)),
             ),
         )
 
@@ -191,8 +181,8 @@ class TestGrounder(unittest.TestCase):
 
         # ground fact (no need to ground)
         self.assertEqual(
-            Grounder.ground_statement(NormalFact(PredicateLiteral("p", Number(1)))),
-            {NormalFact(PredicateLiteral("p", Number(1)))},
+            Grounder.ground_statement(NormalFact(PredLiteral("p", Number(1)))),
+            {NormalFact(PredLiteral("p", Number(1)))},
         )
 
         # ----- normal rules -----
@@ -200,51 +190,45 @@ class TestGrounder(unittest.TestCase):
         # ground rule (no need to ground)
         self.assertEqual(
             Grounder.ground_statement(
-                NormalRule(
-                    PredicateLiteral("p", Number(1)), PredicateLiteral("q", Number(0))
-                ),
-                possible={PredicateLiteral("q", Number(0))},
+                NormalRule(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+                possible={PredLiteral("q", Number(0))},
             ),
-            {
-                NormalRule(
-                    PredicateLiteral("p", Number(1)), PredicateLiteral("q", Number(0))
-                )
-            },
+            {NormalRule(PredLiteral("p", Number(1)), PredLiteral("q", Number(0)))},
         )
         # non-ground rule
         self.assertEqual(
             Grounder.ground_statement(
                 NormalRule(
-                    PredicateLiteral("p", Variable("X")),
-                    PredicateLiteral("q", Variable("X")),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
+                    PredLiteral("q", Number(0)),
                 ),
                 possible={
-                    PredicateLiteral("q", Number(1)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("q", Number(0)),
                 },
             ),
             {
                 NormalRule(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(0)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
                 ),
                 NormalRule(
-                    PredicateLiteral("p", Number(1)),
-                    PredicateLiteral("q", Number(1)),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Number(1)),
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("q", Number(0)),
                 ),
             },
         )  # all literals have matches in 'possible'
         self.assertEqual(
             Grounder.ground_statement(
                 NormalRule(
-                    PredicateLiteral("p", Variable("X")),
-                    PredicateLiteral("q", Variable("X")),
-                    PredicateLiteral("q", Number(0)),
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
+                    PredLiteral("q", Number(0)),
                 ),
-                possible={PredicateLiteral("q", Number(1))},
+                possible={PredLiteral("q", Number(1))},
             ),
             set(),
         )  # not all literals have matches in 'possible'
@@ -269,39 +253,39 @@ class TestGrounder(unittest.TestCase):
         # arithmetic terms
         rule = NormalRule(
             # due to safety, all variables in arithmetic terms occurr outside of it too
-            PredicateLiteral("p", Number(0)),
-            PredicateLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
-            PredicateLiteral("q", Variable("X")),
-            PredicateLiteral("q", Variable("Y")),
+            PredLiteral("p", Number(0)),
+            PredLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
+            PredLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("Y")),
         )
         self.assertEqual(
             Grounder.ground_statement(
                 rule,
                 possible={
-                    PredicateLiteral("q", Number(1)),
-                    PredicateLiteral("q", Number(3)),
-                    PredicateLiteral("q", Number(5)),
-                    PredicateLiteral("q", Number(2)),
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("q", Number(3)),
+                    PredLiteral("q", Number(5)),
+                    PredLiteral("q", Number(2)),
                 },
             ),
             {
                 NormalRule(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(5)),
-                    PredicateLiteral("q", Number(3)),
-                    PredicateLiteral("q", Number(2)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(5)),
+                    PredLiteral("q", Number(3)),
+                    PredLiteral("q", Number(2)),
                 ),
                 NormalRule(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(3)),
-                    PredicateLiteral("q", Number(2)),
-                    PredicateLiteral("q", Number(1)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(3)),
+                    PredLiteral("q", Number(2)),
+                    PredLiteral("q", Number(1)),
                 ),
                 NormalRule(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Number(2)),
-                    PredicateLiteral("q", Number(1)),
-                    PredicateLiteral("q", Number(1)),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(2)),
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("q", Number(1)),
                 ),
             },  # does not contain duplicate instantiations
         )

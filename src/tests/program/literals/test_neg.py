@@ -1,14 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import (
-    AggregateCount,
-    AggregateLiteral,
-    Equal,
-    Guard,
-    Neg,
-    PredicateLiteral,
-)
+from aspy.program.literals import AggrCount, AggrLiteral, Equal, Guard, Neg, PredLiteral
 from aspy.program.operators import RelOp
 from aspy.program.terms import Number, Variable
 
@@ -20,25 +13,21 @@ class TestNaf(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         # predicate literal
-        literal = PredicateLiteral("p", Number(0), Variable("Y"))
+        literal = PredLiteral("p", Number(0), Variable("Y"))
         self.assertFalse(literal.neg)
-        literal_ = Neg(PredicateLiteral("p", Number(0), Variable("Y")))
+        literal_ = Neg(PredLiteral("p", Number(0), Variable("Y")))
         self.assertTrue(literal_.neg)
         self.assertTrue(
             literal.name == literal_.name and literal.terms == literal_.terms
         )
-        self.assertFalse(
-            Neg(PredicateLiteral("p", Number(0), Variable("Y")), False).neg
-        )
-        self.assertTrue(Neg(PredicateLiteral("p", Number(0), Variable("Y")), True).neg)
+        self.assertFalse(Neg(PredLiteral("p", Number(0), Variable("Y")), False).neg)
+        self.assertTrue(Neg(PredLiteral("p", Number(0), Variable("Y")), True).neg)
 
         # aggregate literal
         self.assertRaises(
             ValueError,
             Neg,
-            AggregateLiteral(
-                AggregateCount(), tuple(), Guard(RelOp.LESS, Number(3), False)
-            ),
+            AggrLiteral(AggrCount(), tuple(), Guard(RelOp.LESS, Number(3), False)),
         )
 
         # builtin literal

@@ -5,13 +5,13 @@ import antlr4  # type: ignore
 from aspy.antlr.ASPCoreParser import ASPCoreParser
 from aspy.antlr.ASPCoreVisitor import ASPCoreVisitor
 from aspy.program.literals import (
-    AggregateElement,
-    AggregateLiteral,
+    AggrElement,
+    AggrLiteral,
     Guard,
     LiteralTuple,
     Naf,
     Neg,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.literals.aggregate import op2aggr
 from aspy.program.literals.builtin import op2rel
@@ -57,7 +57,7 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#program.
     def visitProgram(
         self, ctx: ASPCoreParser.ProgramContext
-    ) -> Tuple[List[Statement], Optional[PredicateLiteral]]:
+    ) -> Tuple[List[Statement], Optional[PredLiteral]]:
         """Visits 'program'.
 
         Handles the following rule(s):
@@ -88,7 +88,7 @@ class ProgramBuilder(ASPCoreVisitor):
         return tuple([self.visitStatement(child) for child in ctx.children])
 
     # Visit a parse tree produced by ASPCoreParser#query.
-    def visitQuery(self, ctx: ASPCoreParser.QueryContext) -> PredicateLiteral:
+    def visitQuery(self, ctx: ASPCoreParser.QueryContext) -> PredLiteral:
         """Visits 'query'.
 
         Handles the following rule(s):
@@ -150,7 +150,7 @@ class ProgramBuilder(ASPCoreVisitor):
                     if len(head) > 1:
                         statement = DisjunctiveFact(*head)
                     # normal fact
-                    elif isinstance(head[0], PredicateLiteral):
+                    elif isinstance(head[0], PredLiteral):
                         statement = NormalFact(head[0])
                 # choice fact
                 else:
@@ -164,7 +164,7 @@ class ProgramBuilder(ASPCoreVisitor):
                     if len(head) > 1:
                         statement = DisjunctiveRule(head, body)
                     # normal rule
-                    elif isinstance(head[0], PredicateLiteral):
+                    elif isinstance(head[0], PredLiteral):
                         statement = NormalRule(head[0], *body)
                 else:
                     statement = ChoiceRule(head, body)
@@ -177,7 +177,7 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#head.
     def visitHead(
         self, ctx: ASPCoreParser.HeadContext
-    ) -> Union[Choice, Tuple[PredicateLiteral, ...]]:
+    ) -> Union[Choice, Tuple[PredLiteral, ...]]:
         """Visits 'head'.
 
         Handles the following rule(s):
@@ -220,7 +220,7 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#disjunction.
     def visitDisjunction(
         self, ctx: ASPCoreParser.DisjunctionContext
-    ) -> List[PredicateLiteral]:
+    ) -> List[PredLiteral]:
         """Visits 'disjunction'.
 
         Handles the following rule(s):
@@ -319,7 +319,7 @@ class ProgramBuilder(ASPCoreVisitor):
         return ChoiceElement(atom, literals)
 
     # Visit a parse tree produced by ASPCoreParser#aggregate.
-    def visitAggregate(self, ctx: ASPCoreParser.AggregateContext) -> "AggregateLiteral":
+    def visitAggregate(self, ctx: ASPCoreParser.AggregateContext) -> "AggrLiteral":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
@@ -357,12 +357,12 @@ class ProgramBuilder(ASPCoreVisitor):
                 True,
             )
 
-        return AggregateLiteral(func, elements, (lguard, rguard))
+        return AggrLiteral(func, elements, (lguard, rguard))
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_elements.
     def visitAggregate_elements(
         self, ctx: ASPCoreParser.Aggregate_elementsContext
-    ) -> Tuple[AggregateElement, ...]:
+    ) -> Tuple[AggrElement, ...]:
         """Visits 'aggregate_elements'.
 
         Handles the following rule(s):
@@ -383,7 +383,7 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#aggregate_element.
     def visitAggregate_element(
         self, ctx: ASPCoreParser.Aggregate_elementContext
-    ) -> Optional[AggregateElement]:
+    ) -> Optional[AggrElement]:
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
@@ -410,7 +410,7 @@ class ProgramBuilder(ASPCoreVisitor):
         if not terms and not literals:
             return None
         else:
-            return AggregateElement(TermTuple(*terms), LiteralTuple(*literals))
+            return AggrElement(TermTuple(*terms), LiteralTuple(*literals))
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_function.
     def visitAggregate_function(
@@ -591,7 +591,7 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#classical_literal.
     def visitClassical_literal(
         self, ctx: ASPCoreParser.Classical_literalContext
-    ) -> PredicateLiteral:
+    ) -> PredLiteral:
         """Visits 'classical_literal'.
 
         Handles the following rule(s):
@@ -615,9 +615,7 @@ class ProgramBuilder(ASPCoreVisitor):
             # initialize empty term tuple
             terms = tuple()
 
-        return Neg(
-            PredicateLiteral(ctx.children[minus].getSymbol().text, *terms), minus
-        )
+        return Neg(PredLiteral(ctx.children[minus].getSymbol().text, *terms), minus)
 
     # Visit a parse tree produced by ASPCoreParser#builtin_atom.
     def visitBuiltin_atom(

@@ -2,7 +2,7 @@ from abc import ABC
 from copy import deepcopy
 from typing import TYPE_CHECKING, Set
 
-from aspy.program.literals import PredicateLiteral
+from aspy.program.literals import PredLiteral
 from aspy.program.substitution import Substitution
 from aspy.program.symbols import SpecialChar
 from aspy.program.terms import TermTuple
@@ -12,12 +12,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.variable_table import VariableTable
 
 
-class AuxLiteral(PredicateLiteral, ABC):
+class AuxLiteral(PredLiteral, ABC):
     """TODO."""
 
     def __init__(self, name: str, *args, **kwargs) -> None:
         super().__init__("f", *args, **kwargs)
-        self.name = name  # TODO: better way to avoid regex check in 'PredicateLiteral'?
+        self.name = name  # TODO: better way to avoid regex check in 'PredLiteral'?
 
 
 class AggrPlaceholder(AuxLiteral):

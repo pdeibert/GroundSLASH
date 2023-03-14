@@ -19,7 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
 
-    from .predicate import PredicateLiteral
+    from .predicate import PredLiteral
 
 
 def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
@@ -30,7 +30,7 @@ def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
     )
 
 
-class AggregateElement(Expr):
+class AggrElement(Expr):
     """Represents an aggregate element."""
 
     def __init__(
@@ -50,7 +50,7 @@ class AggregateElement(Expr):
 
     def __eq__(self, other: Expr) -> bool:
         return (
-            isinstance(other, AggregateElement)
+            isinstance(other, AggrElement)
             and self.terms == other.terms
             and self.literals == other.literals
         )
@@ -79,10 +79,10 @@ class AggregateElement(Expr):
             literal.ground for literal in self.literals
         )
 
-    def pos_occ(self) -> Set["PredicateLiteral"]:
+    def pos_occ(self) -> Set["PredLiteral"]:
         return self.literals.pos_occ()
 
-    def neg_occ(self) -> Set["PredicateLiteral"]:
+    def neg_occ(self) -> Set["PredLiteral"]:
         return self.literals.neg_occ()
 
     @property
@@ -114,8 +114,8 @@ class AggregateElement(Expr):
             "Safety characterization for aggregate elements is undefined without context."  # noqa
         )
 
-    def substitute(self, subst: "Substitution") -> "AggregateElement":
-        return AggregateElement(
+    def substitute(self, subst: "Substitution") -> "AggrElement":
+        return AggrElement(
             self.terms.substitute(subst),
             self.literals.substitute(subst),
         )
@@ -123,14 +123,14 @@ class AggregateElement(Expr):
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate elements is not defined.")
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateElement":
-        return AggregateElement(
+    def replace_arith(self, var_table: "VariableTable") -> "AggrElement":
+        return AggrElement(
             self.terms.replace_arith(var_table),
             self.literals.replace_arith(var_table),
         )
 
 
-class AggregateFunction(ABC):
+class AggrFunc(ABC):
     """Abstract base class for all aggregate functions."""
 
     @abstractmethod  # pragma: no cover
@@ -145,21 +145,21 @@ class AggregateFunction(ABC):
     def propagate(
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
-        elements: Set["AggregateElement"],
+        elements: Set["AggrElement"],
         literals_literals_I: Set["Literal"],
         literals_literals_J: Set["Literal"],
     ) -> bool:
         pass
 
 
-class AggregateCount(AggregateFunction):
+class AggrCount(AggrFunc):
     """Represents a 'count' aggregate."""
 
     def __str__(self) -> str:
         return "#count"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateCount)
+        return isinstance(other, AggrCount)
 
     def __hash__(self) -> int:
         return hash(("aggregate count"))
@@ -176,7 +176,7 @@ class AggregateCount(AggregateFunction):
     def propagate(
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
-        elements: Set["AggregateElement"],
+        elements: Set["AggrElement"],
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
@@ -187,7 +187,7 @@ class AggregateCount(AggregateFunction):
         elements_I = None
         elements_J = None
 
-        def get_I_elements() -> Set["AggregateElement"]:
+        def get_I_elements() -> Set["AggrElement"]:
             nonlocal elements_I
 
             if elements_I is None:
@@ -196,7 +196,7 @@ class AggregateCount(AggregateFunction):
                 }
             return elements_I
 
-        def get_J_elements() -> Set["AggregateElement"]:
+        def get_J_elements() -> Set["AggrElement"]:
             nonlocal elements_J
 
             if elements_J is None:
@@ -206,7 +206,7 @@ class AggregateCount(AggregateFunction):
             return elements_J
 
         def get_propagation_result(
-            op: RelOp, bound: "Term", domain: Set["AggregateElement"]
+            op: RelOp, bound: "Term", domain: Set["AggrElement"]
         ) -> bool:
             nonlocal propagation_cache
 
@@ -252,14 +252,14 @@ class AggregateCount(AggregateFunction):
         return res
 
 
-class AggregateSum(AggregateFunction):
+class AggrSum(AggrFunc):
     """Represents a 'sum' aggregate."""
 
     def __str__(self) -> str:
         return "#sum"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateSum)
+        return isinstance(other, AggrSum)
 
     def __hash__(self) -> int:
         return hash(("aggregate sum"))
@@ -290,7 +290,7 @@ class AggregateSum(AggregateFunction):
     def propagate(
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
-        elements: Set["AggregateElement"],
+        elements: Set["AggrElement"],
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
@@ -301,7 +301,7 @@ class AggregateSum(AggregateFunction):
         elements_I = None
         elements_J = None
 
-        def get_I_elements() -> Set["AggregateElement"]:
+        def get_I_elements() -> Set["AggrElement"]:
             nonlocal elements_I
 
             if elements_I is None:
@@ -310,7 +310,7 @@ class AggregateSum(AggregateFunction):
                 }
             return elements_I
 
-        def get_J_elements() -> Set["AggregateElement"]:
+        def get_J_elements() -> Set["AggrElement"]:
             nonlocal elements_J
 
             if elements_J is None:
@@ -323,7 +323,7 @@ class AggregateSum(AggregateFunction):
             op: RelOp,
             bound: "Term",
             adjust: int,
-            domain: Set["AggregateElement"],
+            domain: Set["AggrElement"],
             positive: bool = True,
             negative: bool = True,
         ) -> bool:
@@ -344,8 +344,8 @@ class AggregateSum(AggregateFunction):
         def propagate_subset(
             op,
             bound: "Term",
-            elements_I: Set["AggregateElement"],
-            elements_J: Set["AggregateElement"],
+            elements_I: Set["AggrElement"],
+            elements_J: Set["AggrElement"],
         ) -> bool:
             # compute baseline value
             J_terms = {element.terms for element in elements_J}
@@ -442,14 +442,14 @@ class AggregateSum(AggregateFunction):
         return res
 
 
-class AggregateMin(AggregateFunction):
+class AggrMin(AggrFunc):
     """Represents a 'minimum' aggregate."""
 
     def __str__(self) -> str:
         return "#min"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateMin)
+        return isinstance(other, AggrMin)
 
     def __hash__(self) -> int:
         return hash(("aggregate min"))
@@ -470,7 +470,7 @@ class AggregateMin(AggregateFunction):
     def propagate(
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
-        elements: Set["AggregateElement"],
+        elements: Set["AggrElement"],
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
@@ -481,7 +481,7 @@ class AggregateMin(AggregateFunction):
         elements_I = None
         elements_J = None
 
-        def get_I_elements() -> Set["AggregateElement"]:
+        def get_I_elements() -> Set["AggrElement"]:
             nonlocal elements_I
 
             if elements_I is None:
@@ -490,7 +490,7 @@ class AggregateMin(AggregateFunction):
                 }
             return elements_I
 
-        def get_J_elements() -> Set["AggregateElement"]:
+        def get_J_elements() -> Set["AggrElement"]:
             nonlocal elements_J
 
             if elements_J is None:
@@ -500,7 +500,7 @@ class AggregateMin(AggregateFunction):
             return elements_J
 
         def get_propagation_result(
-            op: RelOp, bound: "Term", domain: Set["AggregateElement"]
+            op: RelOp, bound: "Term", domain: Set["AggrElement"]
         ) -> bool:
             nonlocal propagation_cache
 
@@ -513,8 +513,8 @@ class AggregateMin(AggregateFunction):
         def propagate_subset(
             op,
             bound,
-            elements_I: Set["AggregateElement"],
-            elements_J: Set["AggregateElement"],
+            elements_I: Set["AggrElement"],
+            elements_J: Set["AggrElement"],
         ) -> bool:
             # compute baseline value
             baseline = self.eval({element.terms for element in elements_J})
@@ -583,14 +583,14 @@ class AggregateMin(AggregateFunction):
         return res
 
 
-class AggregateMax(AggregateFunction):
+class AggrMax(AggrFunc):
     """Represents a 'maximum' aggregate."""
 
     def __str__(self) -> str:
         return "#max"
 
     def __eq__(self, other: Expr) -> bool:
-        return isinstance(other, AggregateMax)
+        return isinstance(other, AggrMax)
 
     def __hash__(self) -> int:
         return hash(("aggregate max"))
@@ -611,7 +611,7 @@ class AggregateMax(AggregateFunction):
     def propagate(
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
-        elements: Set["AggregateElement"],
+        elements: Set["AggrElement"],
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
@@ -622,7 +622,7 @@ class AggregateMax(AggregateFunction):
         elements_I = None
         elements_J = None
 
-        def get_I_elements() -> Set["AggregateElement"]:
+        def get_I_elements() -> Set["AggrElement"]:
             nonlocal elements_I
 
             if elements_I is None:
@@ -631,7 +631,7 @@ class AggregateMax(AggregateFunction):
                 }
             return elements_I
 
-        def get_J_elements() -> Set["AggregateElement"]:
+        def get_J_elements() -> Set["AggrElement"]:
             nonlocal elements_J
 
             if elements_J is None:
@@ -641,7 +641,7 @@ class AggregateMax(AggregateFunction):
             return elements_J
 
         def get_propagation_result(
-            op: RelOp, bound: "Term", domain: Set["AggregateElement"]
+            op: RelOp, bound: "Term", domain: Set["AggrElement"]
         ) -> bool:
             nonlocal propagation_cache
 
@@ -654,8 +654,8 @@ class AggregateMax(AggregateFunction):
         def propagate_subset(
             op,
             bound,
-            elements_I: Set["AggregateElement"],
-            elements_J: Set["AggregateElement"],
+            elements_I: Set["AggrElement"],
+            elements_J: Set["AggrElement"],
         ) -> bool:
             # compute baseline value
             baseline = self.eval({element.terms for element in elements_J})
@@ -725,13 +725,13 @@ class AggregateMax(AggregateFunction):
         return res
 
 
-class AggregateLiteral(Literal):
+class AggrLiteral(Literal):
     """Represents an aggregate literal."""
 
     def __init__(
         self,
-        func: AggregateFunction,
-        elements: Tuple[AggregateElement, ...],
+        func: AggrFunc,
+        elements: Tuple[AggrElement, ...],
         guards: Union[Guard, Tuple[Guard, ...]],
         naf: bool = False,
     ) -> None:
@@ -776,7 +776,7 @@ class AggregateLiteral(Literal):
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, AggregateLiteral)
+            isinstance(other, AggrLiteral)
             and self.func == other.func
             and set(self.elements) == set(other.elements)
             and self.guards == other.guards
@@ -796,10 +796,10 @@ class AggregateLiteral(Literal):
     def set_naf(self, value: bool = True) -> None:
         self.naf = value
 
-    def pos_occ(self) -> Set["PredicateLiteral"]:
+    def pos_occ(self) -> Set["PredLiteral"]:
         return set().union(*tuple(element.pos_occ() for element in self.elements))
 
-    def neg_occ(self) -> Set["PredicateLiteral"]:
+    def neg_occ(self) -> Set["PredLiteral"]:
         return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     @property
@@ -845,7 +845,7 @@ class AggregateLiteral(Literal):
         if rule is None:
             raise AttributeError(
                 (
-                    "Computing safety characterization for 'AggregateLiteral'"
+                    "Computing safety characterization for 'AggrLiteral'"
                     " requires a reference to the encompassing rule or the set"
                     " of global variables in it."
                 )
@@ -884,14 +884,14 @@ class AggregateLiteral(Literal):
 
         return SafetyTriplet.closure(*guard_safeties)
 
-    def substitute(self, subst: "Substitution") -> "AggregateLiteral":
+    def substitute(self, subst: "Substitution") -> "AggrLiteral":
         # substitute guard terms recursively
         guards = tuple(
             guard.substitute(subst) if guard is not None else None
             for guard in self.guards
         )
 
-        return AggregateLiteral(
+        return AggrLiteral(
             self.func,
             tuple(element.substitute(subst) for element in self.elements),
             guards,
@@ -901,14 +901,14 @@ class AggregateLiteral(Literal):
     def match(self, other: Expr) -> Set["Substitution"]:
         raise Exception("Matching for aggregate literals not supported yet.")
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggregateLiteral":
+    def replace_arith(self, var_table: "VariableTable") -> "AggrLiteral":
         # replace guards
         guards = (
             None if guard is None else guard.replace_arith(var_table)
             for guard in self.guards
         )
 
-        return AggregateLiteral(
+        return AggrLiteral(
             self.func,
             tuple(element.replace_arith(var_table) for element in self.elements),
             guards,
@@ -918,8 +918,8 @@ class AggregateLiteral(Literal):
 
 # maps aggregate operators/functions to their corresponding AST constructs
 op2aggr = {
-    AggrOp.COUNT: AggregateCount,
-    AggrOp.SUM: AggregateSum,
-    AggrOp.MIN: AggregateMin,
-    AggrOp.MAX: AggregateMax,
+    AggrOp.COUNT: AggrCount,
+    AggrOp.SUM: AggrSum,
+    AggrOp.MIN: AggrMin,
+    AggrOp.MAX: AggrMax,
 }

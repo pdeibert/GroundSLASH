@@ -3,17 +3,17 @@ import unittest
 import aspy
 from aspy.program.literals import (
     AggrBaseLiteral,
-    AggregateCount,
-    AggregateElement,
-    AggregateLiteral,
+    AggrCount,
+    AggrElement,
     AggrElemLiteral,
+    AggrLiteral,
     AggrPlaceholder,
     Equal,
     GreaterEqual,
     Guard,
     LessEqual,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalFact, NormalRule
@@ -27,27 +27,23 @@ class TestNormal(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        ground_rule = NormalFact(PredicateLiteral("p", Number(0)))
-        var_rule = NormalFact(PredicateLiteral("p", Variable("X")))
+        ground_rule = NormalFact(PredLiteral("p", Number(0)))
+        var_rule = NormalFact(PredLiteral("p", Variable("X")))
 
         # string representation
         self.assertEqual(str(ground_rule), "p(0).")
         self.assertEqual(str(var_rule), "p(X).")
         # equality
-        self.assertEqual(
-            ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(0)))
-        )
+        self.assertEqual(ground_rule.head, LiteralTuple(PredLiteral("p", Number(0))))
         self.assertEqual(ground_rule.body, LiteralTuple())
-        self.assertEqual(
-            var_rule.head, LiteralTuple(PredicateLiteral("p", Variable("X")))
-        )
+        self.assertEqual(var_rule.head, LiteralTuple(PredLiteral("p", Variable("X"))))
         self.assertEqual(var_rule.body, LiteralTuple())
         # hashing
         self.assertEqual(
-            hash(ground_rule), hash(NormalFact(PredicateLiteral("p", Number(0))))
+            hash(ground_rule), hash(NormalFact(PredLiteral("p", Number(0))))
         )
         self.assertEqual(
-            hash(var_rule), hash(NormalFact(PredicateLiteral("p", Variable("X"))))
+            hash(var_rule), hash(NormalFact(PredLiteral("p", Variable("X"))))
         )
         # ground
         self.assertTrue(ground_rule.ground)
@@ -61,20 +57,20 @@ class TestNormal(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(
             NormalFact(
-                PredicateLiteral("p", Minus(Variable("X"))),
+                PredLiteral("p", Minus(Variable("X"))),
             ).replace_arith(),
             NormalFact(
-                PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+                PredLiteral("p", ArithVariable(0, Minus(Variable("X")))),
             ),
         )
 
         # substitution
-        rule = NormalFact(PredicateLiteral("p", Variable("X"), Number(0)))
+        rule = NormalFact(PredLiteral("p", Variable("X"), Number(0)))
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
-            NormalFact(PredicateLiteral("p", Number(1), Number(0))),
+            NormalFact(PredLiteral("p", Number(1), Number(0))),
         )  # NOTE: substitution is invalid
 
         # rewrite aggregates
@@ -89,55 +85,47 @@ class TestNormal(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        ground_rule = NormalRule(
-            PredicateLiteral("p", Number(0)), PredicateLiteral("q")
-        )
-        unsafe_var_rule = NormalRule(
-            PredicateLiteral("p", Variable("X")), PredicateLiteral("q")
-        )
+        ground_rule = NormalRule(PredLiteral("p", Number(0)), PredLiteral("q"))
+        unsafe_var_rule = NormalRule(PredLiteral("p", Variable("X")), PredLiteral("q"))
         safe_var_rule = NormalRule(
-            PredicateLiteral("p", Variable("X")), PredicateLiteral("q", Variable("X"))
+            PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))
         )
 
         # invalid initialization
-        self.assertRaises(ValueError, NormalRule, PredicateLiteral("p"))
+        self.assertRaises(ValueError, NormalRule, PredLiteral("p"))
 
         # string representation
         self.assertEqual(str(ground_rule), "p(0) :- q.")
         self.assertEqual(str(unsafe_var_rule), "p(X) :- q.")
         self.assertEqual(str(safe_var_rule), "p(X) :- q(X).")
         # equality
+        self.assertEqual(ground_rule.head, LiteralTuple(PredLiteral("p", Number(0))))
+        self.assertEqual(ground_rule.body, LiteralTuple(PredLiteral("q")))
         self.assertEqual(
-            ground_rule.head, LiteralTuple(PredicateLiteral("p", Number(0)))
+            unsafe_var_rule.head, LiteralTuple(PredLiteral("p", Variable("X")))
         )
-        self.assertEqual(ground_rule.body, LiteralTuple(PredicateLiteral("q")))
+        self.assertEqual(unsafe_var_rule.body, LiteralTuple(PredLiteral("q")))
         self.assertEqual(
-            unsafe_var_rule.head, LiteralTuple(PredicateLiteral("p", Variable("X")))
-        )
-        self.assertEqual(unsafe_var_rule.body, LiteralTuple(PredicateLiteral("q")))
-        self.assertEqual(
-            safe_var_rule.head, LiteralTuple(PredicateLiteral("p", Variable("X")))
+            safe_var_rule.head, LiteralTuple(PredLiteral("p", Variable("X")))
         )
         self.assertEqual(
-            safe_var_rule.body, LiteralTuple(PredicateLiteral("q", Variable("X")))
+            safe_var_rule.body, LiteralTuple(PredLiteral("q", Variable("X")))
         )
         # hashing
         self.assertEqual(
             hash(ground_rule),
-            hash(NormalRule(PredicateLiteral("p", Number(0)), PredicateLiteral("q"))),
+            hash(NormalRule(PredLiteral("p", Number(0)), PredLiteral("q"))),
         )
         self.assertEqual(
             hash(unsafe_var_rule),
-            hash(
-                NormalRule(PredicateLiteral("p", Variable("X")), PredicateLiteral("q"))
-            ),
+            hash(NormalRule(PredLiteral("p", Variable("X")), PredLiteral("q"))),
         )
         self.assertEqual(
             hash(safe_var_rule),
             hash(
                 NormalRule(
-                    PredicateLiteral("p", Variable("X")),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
                 )
             ),
         )
@@ -155,10 +143,8 @@ class TestNormal(unittest.TestCase):
         self.assertFalse(safe_var_rule.contains_aggregates)
         self.assertTrue(
             NormalRule(
-                PredicateLiteral("p", Variable("X")),
-                AggregateLiteral(
-                    AggregateCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-                ),
+                PredLiteral("p", Variable("X")),
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
             ).contains_aggregates
         )
         # variables
@@ -172,62 +158,62 @@ class TestNormal(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(
             NormalRule(
-                PredicateLiteral("p", Minus(Variable("X"))),
-                PredicateLiteral("q", Minus(Variable("Y"))),
+                PredLiteral("p", Minus(Variable("X"))),
+                PredLiteral("q", Minus(Variable("Y"))),
             ).replace_arith(),
             NormalRule(
-                PredicateLiteral("p", ArithVariable(0, Minus(Variable("X")))),
-                PredicateLiteral("q", ArithVariable(1, Minus(Variable("Y")))),
+                PredLiteral("p", ArithVariable(0, Minus(Variable("X")))),
+                PredLiteral("q", ArithVariable(1, Minus(Variable("Y")))),
             ),
         )
 
         # substitution
         rule = NormalRule(
-            PredicateLiteral("p", Variable("X"), Number(0)),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("p", Variable("X"), Number(0)),
+            PredLiteral("q", Variable("X")),
         )
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
             NormalRule(
-                PredicateLiteral("p", Number(1), Number(0)),
-                PredicateLiteral("q", Number(1)),
+                PredLiteral("p", Number(1), Number(0)),
+                PredLiteral("q", Number(1)),
             ),
         )  # NOTE: substitution is invalid
 
         # rewrite aggregates
         elements_1 = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredicateLiteral("p", Variable("Y"))),
+                LiteralTuple(PredLiteral("p", Variable("Y"))),
             ),
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
         )
         elements_2 = (
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("q", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
             ),
         )
         rule = NormalRule(
-            PredicateLiteral("p", Variable("X"), Number(0)),
-            AggregateLiteral(
-                AggregateCount(),
+            PredLiteral("p", Variable("X"), Number(0)),
+            AggrLiteral(
+                AggrCount(),
                 elements_1,
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
             ),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
-            AggregateLiteral(
-                AggregateCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
+            AggrLiteral(
+                AggrCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
             ),
         )
         target_rule = NormalRule(
-            PredicateLiteral("p", Variable("X"), Number(0)),
+            PredLiteral("p", Variable("X"), Number(0)),
             AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredicateLiteral("q", Variable("X")),
+            PredLiteral("q", Variable("X")),
             Equal(Number(0), Variable("X")),
             AggrPlaceholder(2, TermTuple(), TermTuple()),
         )
@@ -246,8 +232,8 @@ class TestNormal(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralTuple(
-                    GreaterEqual(Variable("X"), AggregateCount().base()),
-                    PredicateLiteral("q", Variable("X")),
+                    GreaterEqual(Variable("X"), AggrCount().base()),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -265,8 +251,8 @@ class TestNormal(unittest.TestCase):
                 ),
                 elements_1[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Variable("Y")),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("Y")),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -283,8 +269,8 @@ class TestNormal(unittest.TestCase):
                 ),
                 elements_1[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -300,8 +286,8 @@ class TestNormal(unittest.TestCase):
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralTuple(
-                    LessEqual(AggregateCount().base(), Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    LessEqual(AggrCount().base(), Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -313,8 +299,8 @@ class TestNormal(unittest.TestCase):
                 AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
-                    PredicateLiteral("q", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -326,23 +312,23 @@ class TestNormal(unittest.TestCase):
                 {
                     AggrPlaceholder(
                         1, TermTuple(Variable("X")), TermTuple(Variable("X"))
-                    ): AggregateLiteral(
-                        AggregateCount(),
+                    ): AggrLiteral(
+                        AggrCount(),
                         (
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(0)),
-                                LiteralTuple(PredicateLiteral("p", Number(0))),
+                                LiteralTuple(PredLiteral("p", Number(0))),
                             ),
-                            AggregateElement(TermTuple(String("f")), LiteralTuple()),
+                            AggrElement(TermTuple(String("f")), LiteralTuple()),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                     ),
-                    AggrPlaceholder(2, TermTuple(), TermTuple()): AggregateLiteral(
-                        AggregateCount(),
+                    AggrPlaceholder(2, TermTuple(), TermTuple()): AggrLiteral(
+                        AggrCount(),
                         (
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(0)),
-                                LiteralTuple(PredicateLiteral("q", Number(0))),
+                                LiteralTuple(PredLiteral("q", Number(0))),
                             ),
                         ),
                         Guard(RelOp.LESS_OR_EQ, Number(0), True),
@@ -350,26 +336,26 @@ class TestNormal(unittest.TestCase):
                 }
             ),
             NormalRule(
-                PredicateLiteral("p", Variable("X"), Number(0)),
-                AggregateLiteral(
-                    AggregateCount(),
+                PredLiteral("p", Variable("X"), Number(0)),
+                AggrLiteral(
+                    AggrCount(),
                     (
-                        AggregateElement(
+                        AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredicateLiteral("p", Number(0))),
+                            LiteralTuple(PredLiteral("p", Number(0))),
                         ),
-                        AggregateElement(TermTuple(String("f")), LiteralTuple()),
+                        AggrElement(TermTuple(String("f")), LiteralTuple()),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                 ),
-                PredicateLiteral("q", Variable("X")),
+                PredLiteral("q", Variable("X")),
                 Equal(Number(0), Variable("X")),
-                AggregateLiteral(
-                    AggregateCount(),
+                AggrLiteral(
+                    AggrCount(),
                     (
-                        AggregateElement(
+                        AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredicateLiteral("q", Number(0))),
+                            LiteralTuple(PredLiteral("q", Number(0))),
                         ),
                     ),
                     Guard(RelOp.LESS_OR_EQ, Number(0), True),

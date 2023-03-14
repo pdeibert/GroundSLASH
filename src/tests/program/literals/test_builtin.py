@@ -7,7 +7,7 @@ from aspy.program.literals import (
     GreaterEqual,
     Less,
     LessEqual,
-    PredicateLiteral,
+    PredLiteral,
     Unequal,
 )
 from aspy.program.safety_characterization import SafetyTriplet
@@ -85,7 +85,7 @@ class TestBuiltin(unittest.TestCase):
             Equal(Variable("X"), String("f")).match(Equal(Number(1), String("g"))), None
         )  # ground terms don't match
         self.assertEqual(
-            Equal(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            Equal(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             Equal(Variable("X"), Variable("X")).match(Equal(Number(1), String("f"))),
@@ -163,7 +163,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
-            Unequal(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            Unequal(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             Unequal(Variable("X"), Variable("X")).match(
@@ -242,7 +242,7 @@ class TestBuiltin(unittest.TestCase):
             Less(Variable("X"), String("f")).match(Less(Number(1), String("g"))), None
         )  # ground terms don't match
         self.assertEqual(
-            Less(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            Less(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             Less(Variable("X"), Variable("X")).match(Less(Number(1), String("f"))), None
@@ -321,7 +321,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
-            Greater(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            Greater(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             Greater(Variable("X"), Variable("X")).match(
@@ -407,7 +407,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
-            LessEqual(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            LessEqual(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             LessEqual(Variable("X"), Variable("X")).match(
@@ -498,7 +498,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
-            GreaterEqual(Variable("X"), String("f")).match(PredicateLiteral("p")), None
+            GreaterEqual(Variable("X"), String("f")).match(PredLiteral("p")), None
         )  # different type
         self.assertEqual(
             GreaterEqual(Variable("X"), Variable("X")).match(

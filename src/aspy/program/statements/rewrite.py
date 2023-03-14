@@ -7,12 +7,12 @@ from .choice import Choice
 from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AggregateLiteral, Literal
+    from aspy.program.literals import AggrLiteral, Literal
     from aspy.program.terms import Variable
 
 
 def rewrite_aggregate(
-    literal: "AggregateLiteral",
+    literal: "AggrLiteral",
     aggr_counter: int,
     glob_vars: Set["Variable"],
     body_literals: Iterable["Literal"],

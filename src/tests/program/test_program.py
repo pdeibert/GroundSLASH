@@ -2,12 +2,12 @@ import unittest
 
 import aspy
 from aspy.program.literals import (
-    AggregateCount,
-    AggregateElement,
-    AggregateLiteral,
-    AggregateMax,
-    AggregateMin,
-    AggregateSum,
+    AggrCount,
+    AggrElement,
+    AggrLiteral,
+    AggrMax,
+    AggrMin,
+    AggrSum,
     Equal,
     Greater,
     GreaterEqual,
@@ -17,7 +17,7 @@ from aspy.program.literals import (
     LiteralTuple,
     Naf,
     Neg,
-    PredicateLiteral,
+    PredLiteral,
     Unequal,
 )
 from aspy.program.operators import RelOp
@@ -56,27 +56,27 @@ class TestProgram(unittest.TestCase):
 
         prog = Program(
             (
-                NormalRule(PredicateLiteral("a"), Naf(PredicateLiteral("b"))),
-                NormalRule(PredicateLiteral("b"), Naf(PredicateLiteral("a"))),
-                NormalFact(PredicateLiteral("c")),
+                NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
+                NormalRule(PredLiteral("b"), Naf(PredLiteral("a"))),
+                NormalFact(PredLiteral("c")),
                 NormalRule(
-                    PredicateLiteral("d"),
-                    AggregateLiteral(
-                        AggregateSum(),
+                    PredLiteral("d"),
+                    AggrLiteral(
+                        AggrSum(),
                         (
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(1)),
-                                LiteralTuple(PredicateLiteral("a")),
+                                LiteralTuple(PredLiteral("a")),
                             ),
-                            AggregateElement(
+                            AggrElement(
                                 TermTuple(Number(1)),
-                                LiteralTuple(PredicateLiteral("c")),
+                                LiteralTuple(PredLiteral("c")),
                             ),
                         ),
                         Guard(RelOp.EQUAL, Number(1), True),
                     ),
                 ),
-                NormalRule(PredicateLiteral("e"), Naf(PredicateLiteral("d"))),
+                NormalRule(PredLiteral("e"), Naf(PredLiteral("d"))),
             )
         )
         # TODO: query!
@@ -93,20 +93,20 @@ class TestProgram(unittest.TestCase):
             prog.reduct({("a", 0), ("d", 0)}),
             Program(
                 (
-                    NormalRule(PredicateLiteral("a"), Naf(PredicateLiteral("b"))),
-                    NormalFact(PredicateLiteral("c")),
+                    NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
+                    NormalFact(PredLiteral("c")),
                     NormalRule(
-                        PredicateLiteral("d"),
-                        AggregateLiteral(
-                            AggregateSum(),
+                        PredLiteral("d"),
+                        AggrLiteral(
+                            AggrSum(),
                             (
-                                AggregateElement(
+                                AggrElement(
                                     TermTuple(Number(1)),
-                                    LiteralTuple(PredicateLiteral("a")),
+                                    LiteralTuple(PredLiteral("a")),
                                 ),
-                                AggregateElement(
+                                AggrElement(
                                     TermTuple(Number(1)),
-                                    LiteralTuple(PredicateLiteral("c")),
+                                    LiteralTuple(PredLiteral("c")),
                                 ),
                             ),
                             Guard(RelOp.EQUAL, Number(1), True),
@@ -194,7 +194,7 @@ class TestProgram(unittest.TestCase):
 
         # predicate literal
         self.assertEqual(
-            Program.from_string("p().").statements[0].atom, PredicateLiteral("p")
+            Program.from_string("p().").statements[0].atom, PredLiteral("p")
         )  # zero-ary predicate
         self.assertEqual(
             Program.from_string("p.").statements[0].atom,  # dropped parentheses
@@ -202,13 +202,13 @@ class TestProgram(unittest.TestCase):
         )
         self.assertEqual(
             Program.from_string("-p.").statements[0].atom,
-            Neg(PredicateLiteral("p")),  # classical negation
+            Neg(PredLiteral("p")),  # classical negation
         )
         self.assertEqual(
             Program.from_string("a :- not p.")
             .statements[0]
             .body[0],  # negation as failure (NAF)
-            Naf(PredicateLiteral("p")),
+            Naf(PredLiteral("p")),
         )
 
         # builtin literal
@@ -246,12 +246,12 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 3 = #count{X: p(X)}.")
             .statements[0]
             .body[0],  # only left guard
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                        LiteralTuple(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (Guard(RelOp.EQUAL, Number(3), False), None),
@@ -261,12 +261,12 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- #count{X: p(X)} = 3.")
             .statements[0]
             .body[0],  # only right guard
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                        LiteralTuple(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (None, Guard(RelOp.EQUAL, Number(3), True)),
@@ -276,12 +276,12 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{X: p(X)} = 3.")
             .statements[0]
             .body[0],  # only right guard
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                        LiteralTuple(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (
@@ -294,8 +294,8 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{} = 3.")
             .statements[0]
             .body[0],  # no elements
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 tuple(),
                 (
                     Guard(RelOp.LESS, Number(5), False),
@@ -307,9 +307,9 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{X:} = 3.")
             .statements[0]
             .body[0],  # element without literals (i.e., condition)
-            AggregateLiteral(
-                AggregateCount(),
-                (AggregateElement(TermTuple(Variable("X")), LiteralTuple()),),
+            AggrLiteral(
+                AggrCount(),
+                (AggrElement(TermTuple(Variable("X")), LiteralTuple()),),
                 (
                     Guard(RelOp.LESS, Number(5), False),
                     Guard(RelOp.EQUAL, Number(3), True),
@@ -320,11 +320,11 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{:p(X)} = 3.")
             .statements[0]
             .body[0],  # element without terms
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
-                        TermTuple(), LiteralTuple(PredicateLiteral("p", Variable("X")))
+                    AggrElement(
+                        TermTuple(), LiteralTuple(PredLiteral("p", Variable("X")))
                     ),
                 ),
                 (
@@ -337,8 +337,8 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{:} = 3.")
             .statements[0]
             .body[0],  # element without terms or literals
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 tuple(),
                 (
                     Guard(RelOp.LESS, Number(5), False),
@@ -350,16 +350,16 @@ class TestProgram(unittest.TestCase):
             Program.from_string(r"a :- 5 < #count{X: p(X); X: q(X)} = 3.")
             .statements[0]
             .body[0],  # multiple elements
-            AggregateLiteral(
-                AggregateCount(),
+            AggrLiteral(
+                AggrCount(),
                 (
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredicateLiteral("p", Variable("X"))),
+                        LiteralTuple(PredLiteral("p", Variable("X"))),
                     ),
-                    AggregateElement(
+                    AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredicateLiteral("q", Variable("X"))),
+                        LiteralTuple(PredLiteral("q", Variable("X"))),
                     ),
                 ),
                 (
@@ -370,8 +370,8 @@ class TestProgram(unittest.TestCase):
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #sum{} = 3.").statements[0].body[0],  # sum
-            AggregateLiteral(
-                AggregateSum(),
+            AggrLiteral(
+                AggrSum(),
                 tuple(),
                 (
                     Guard(RelOp.LESS, Number(5), False),
@@ -381,8 +381,8 @@ class TestProgram(unittest.TestCase):
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #min{} = 3.").statements[0].body[0],  # min
-            AggregateLiteral(
-                AggregateMin(),
+            AggrLiteral(
+                AggrMin(),
                 tuple(),
                 (
                     Guard(RelOp.LESS, Number(5), False),
@@ -392,8 +392,8 @@ class TestProgram(unittest.TestCase):
         )
         self.assertEqual(
             Program.from_string(r"a :- 5 < #max{} = 3.").statements[0].body[0],  # max
-            AggregateLiteral(
-                AggregateMax(),
+            AggrLiteral(
+                AggrMax(),
                 tuple(),
                 (
                     Guard(RelOp.LESS, Number(5), False),
@@ -404,29 +404,27 @@ class TestProgram(unittest.TestCase):
 
         # ----- normal facts -----'
         self.assertEqual(
-            Program.from_string("p.").statements[0], NormalFact(PredicateLiteral("p"))
+            Program.from_string("p.").statements[0], NormalFact(PredLiteral("p"))
         )
 
         # ----- normal rules -----
         self.assertEqual(
             Program.from_string("p :- q.").statements[0],
-            NormalRule(PredicateLiteral("p"), PredicateLiteral("q")),
+            NormalRule(PredLiteral("p"), PredLiteral("q")),
         )
 
         # ----- disjunctive facts -----
         self.assertEqual(
             Program.from_string("p | u | v.").statements[0],
-            DisjunctiveFact(
-                PredicateLiteral("p"), PredicateLiteral("u"), PredicateLiteral("v")
-            ),
+            DisjunctiveFact(PredLiteral("p"), PredLiteral("u"), PredLiteral("v")),
         )
 
         # ----- disjunctive rules -----
         self.assertEqual(
             Program.from_string("p | u | v :- q.").statements[0],
             DisjunctiveRule(
-                (PredicateLiteral("p"), PredicateLiteral("u"), PredicateLiteral("v")),
-                (PredicateLiteral("q"),),
+                (PredLiteral("p"), PredLiteral("u"), PredLiteral("v")),
+                (PredLiteral("q"),),
             ),
         )
 
@@ -436,8 +434,8 @@ class TestProgram(unittest.TestCase):
             ChoiceFact(
                 Choice(
                     (
-                        ChoiceElement(PredicateLiteral("u"), (PredicateLiteral("p"),)),
-                        ChoiceElement(PredicateLiteral("v"), (PredicateLiteral("q"),)),
+                        ChoiceElement(PredLiteral("u"), (PredLiteral("p"),)),
+                        ChoiceElement(PredLiteral("v"), (PredLiteral("q"),)),
                     ),
                     (
                         Guard(RelOp.LESS, Number(3), False),
@@ -453,22 +451,22 @@ class TestProgram(unittest.TestCase):
             ChoiceRule(
                 Choice(
                     (
-                        ChoiceElement(PredicateLiteral("u"), (PredicateLiteral("p"),)),
-                        ChoiceElement(PredicateLiteral("v"), (PredicateLiteral("q"),)),
+                        ChoiceElement(PredLiteral("u"), (PredLiteral("p"),)),
+                        ChoiceElement(PredLiteral("v"), (PredLiteral("q"),)),
                     ),
                     (
                         Guard(RelOp.LESS, Number(3), False),
                         Guard(RelOp.GREATER, Number(5), True),
                     ),
                 ),
-                (PredicateLiteral("r"), PredicateLiteral("s")),
+                (PredLiteral("r"), PredLiteral("s")),
             ),
         )
 
         # ----- constraint -----
         self.assertEqual(
             Program.from_string(":- p, q.").statements[0],
-            Constraint(PredicateLiteral("p"), PredicateLiteral("q")),
+            Constraint(PredLiteral("p"), PredLiteral("q")),
         )
 
         # ----- weak constraint -----

@@ -14,12 +14,7 @@ from typing import (
 )
 
 from aspy.program.expression import Expr
-from aspy.program.literals import (
-    AggregateLiteral,
-    ChoicePlaceholder,
-    Guard,
-    LiteralTuple,
-)
+from aspy.program.literals import AggrLiteral, ChoicePlaceholder, Guard, LiteralTuple
 from aspy.program.literals.builtin import GreaterEqual, op2rel
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
@@ -30,7 +25,7 @@ from .special import ChoiceBaseRule, ChoiceElemRule
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AggrPlaceholder, Literal, PredicateLiteral
+    from aspy.program.literals import AggrPlaceholder, Literal, PredLiteral
     from aspy.program.query import Query
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
@@ -53,7 +48,7 @@ class ChoiceElement(Expr):
 
     def __init__(
         self,
-        atom: "PredicateLiteral",
+        atom: "PredLiteral",
         literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]] = None,
     ) -> None:
         if literals is None:
@@ -93,10 +88,10 @@ class ChoiceElement(Expr):
     def ground(self) -> bool:
         return self.atom.ground and self.literals.ground
 
-    def pos_occ(self) -> Set["PredicateLiteral"]:
+    def pos_occ(self) -> Set["PredLiteral"]:
         return self.atom.pos_occ().union(self.literals.pos_occ())
 
-    def neg_occ(self) -> Set["PredicateLiteral"]:
+    def neg_occ(self) -> Set["PredLiteral"]:
         return self.atom.neg_occ().union(self.literals.neg_occ())
 
     def vars(self) -> Set["Variable"]:
@@ -238,10 +233,10 @@ class Choice(Expr):
         #    self.body.global_vars(statement),
         # )
 
-    def pos_occ(self) -> Set["PredicateLiteral"]:
+    def pos_occ(self) -> Set["PredLiteral"]:
         return set().union(*tuple(element.pos_occ() for element in self.elements))
 
-    def neg_occ(self) -> Set["PredicateLiteral"]:
+    def neg_occ(self) -> Set["PredLiteral"]:
         return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     @classmethod
@@ -646,7 +641,7 @@ class ChoiceRule(Rule):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -663,9 +658,7 @@ class ChoiceRule(Rule):
 
         for literal in self.body:
             (
-                aggr_literals
-                if isinstance(literal, AggregateLiteral)
-                else non_aggr_literals
+                aggr_literals if isinstance(literal, AggrLiteral) else non_aggr_literals
             ).append(literal)
 
         # mapping from original literals to alpha literals
@@ -693,7 +686,7 @@ class ChoiceRule(Rule):
         alpha_rule = ChoiceRule(
             self.choice,
             tuple(
-                alpha_map[literal] if isinstance(literal, AggregateLiteral) else literal
+                alpha_map[literal] if isinstance(literal, AggrLiteral) else literal
                 for literal in self.body
             ),  # NOTE: restores original order of literals
         )
@@ -701,7 +694,7 @@ class ChoiceRule(Rule):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "ChoiceRule":
         return ChoiceRule(
             self.choice,

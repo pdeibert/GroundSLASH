@@ -3,17 +3,17 @@ import unittest
 import aspy
 from aspy.program.literals import (
     AggrBaseLiteral,
-    AggregateCount,
-    AggregateElement,
-    AggregateLiteral,
+    AggrCount,
+    AggrElement,
     AggrElemLiteral,
+    AggrLiteral,
     AggrPlaceholder,
     Equal,
     GreaterEqual,
     Guard,
     LessEqual,
     LiteralTuple,
-    PredicateLiteral,
+    PredLiteral,
 )
 from aspy.program.operators import RelOp
 from aspy.program.statements import AggrBaseRule, AggrElemRule, rewrite_aggregate
@@ -28,34 +28,34 @@ class TestRewrite(unittest.TestCase):
 
         # rewrite aggregates
         elements_1 = (
-            AggregateElement(
+            AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredicateLiteral("p", Variable("Y"))),
+                LiteralTuple(PredLiteral("p", Variable("Y"))),
             ),
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("p", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
             ),
         )
-        aggregate_1 = AggregateLiteral(
-            AggregateCount(),
+        aggregate_1 = AggrLiteral(
+            AggrCount(),
             elements_1,
             Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
         )
 
         elements_2 = (
-            AggregateElement(
-                TermTuple(Number(0)), LiteralTuple(PredicateLiteral("q", Number(0)))
+            AggrElement(
+                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
             ),
         )
-        aggregate_2 = AggregateLiteral(
-            AggregateCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
+        aggregate_2 = AggrLiteral(
+            AggrCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
         )
 
         alpha_literal, eps_rule, eta_rules = rewrite_aggregate(
             aggregate_1,
             1,
             {Variable("X")},
-            [PredicateLiteral("q", Variable("X")), Equal(Number(0), Variable("X"))],
+            [PredLiteral("q", Variable("X")), Equal(Number(0), Variable("X"))],
         )
         self.assertEqual(
             alpha_literal,
@@ -68,8 +68,8 @@ class TestRewrite(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralTuple(
-                    GreaterEqual(Variable("X"), AggregateCount().base()),
-                    PredicateLiteral("q", Variable("X")),
+                    GreaterEqual(Variable("X"), AggrCount().base()),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -87,8 +87,8 @@ class TestRewrite(unittest.TestCase):
                 ),
                 elements_1[0],
                 LiteralTuple(
-                    PredicateLiteral("p", Variable("Y")),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Variable("Y")),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -105,8 +105,8 @@ class TestRewrite(unittest.TestCase):
                 ),
                 elements_1[1],
                 LiteralTuple(
-                    PredicateLiteral("p", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -116,7 +116,7 @@ class TestRewrite(unittest.TestCase):
             aggregate_2,
             2,
             {Variable("X")},
-            [PredicateLiteral("q", Variable("X")), Equal(Number(0), Variable("X"))],
+            [PredLiteral("q", Variable("X")), Equal(Number(0), Variable("X"))],
         )
         self.assertEqual(alpha_literal, AggrPlaceholder(2, TermTuple(), TermTuple()))
         self.assertEqual(
@@ -126,8 +126,8 @@ class TestRewrite(unittest.TestCase):
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralTuple(
-                    LessEqual(AggregateCount().base(), Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    LessEqual(AggrCount().base(), Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),
@@ -139,8 +139,8 @@ class TestRewrite(unittest.TestCase):
                 AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
                 LiteralTuple(
-                    PredicateLiteral("q", Number(0)),
-                    PredicateLiteral("q", Variable("X")),
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
             ),

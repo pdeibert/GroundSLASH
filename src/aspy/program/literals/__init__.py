@@ -1,11 +1,11 @@
 from .aggregate import (
-    AggregateCount,
-    AggregateElement,
-    AggregateFunction,
-    AggregateLiteral,
-    AggregateMax,
-    AggregateMin,
-    AggregateSum,
+    AggrCount,
+    AggrElement,
+    AggrFunc,
+    AggrLiteral,
+    AggrMax,
+    AggrMin,
+    AggrSum,
     Guard,
 )
 from .builtin import (
@@ -20,7 +20,7 @@ from .builtin import (
 from .literal import Literal, LiteralTuple
 from .naf import Naf
 from .neg import Neg
-from .predicate import PredicateLiteral
+from .predicate import PredLiteral
 from .special import (
     AggrBaseLiteral,
     AggrElemLiteral,

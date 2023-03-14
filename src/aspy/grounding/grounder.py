@@ -3,13 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import TYPE_CHECKING, Optional, Set
 
-from aspy.program.literals import (
-    AggregateLiteral,
-    BuiltinLiteral,
-    Equal,
-    Naf,
-    PredicateLiteral,
-)
+from aspy.program.literals import AggrLiteral, BuiltinLiteral, Equal, Naf, PredLiteral
 from aspy.program.program import Program
 from aspy.program.statements import Constraint
 from aspy.program.substitution import Substitution
@@ -41,7 +35,7 @@ class Grounder:
 
         # find appropriate literal
         for literal in literals:
-            if isinstance(literal, AggregateLiteral):
+            if isinstance(literal, AggrLiteral):
                 # TODO: raise exception (should have been replaced)
                 raise ValueError(
                     f"Aggregate literals should be replaced before calling {cls.select} during grounding."  # noqa
@@ -75,7 +69,7 @@ class Grounder:
         # apply (partial) substitution
         literal = literal.substitute(subst)
 
-        if isinstance(literal, PredicateLiteral):
+        if isinstance(literal, PredLiteral):
             # positive predicate literal
             if not literal.naf:
                 matches = set()

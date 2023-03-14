@@ -4,7 +4,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple
 
 from aspy.program.expression import Expr
-from aspy.program.literals import AggregateLiteral
+from aspy.program.literals import AggrLiteral
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -86,7 +86,7 @@ class Statement(Expr, ABC):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -97,7 +97,7 @@ class Statement(Expr, ABC):
 
     @abstractmethod  # pragma: no cover
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Statement":
         pass
 
@@ -134,7 +134,7 @@ class Rule(Statement, ABC):
 
     @cached_property
     def contains_aggregates(self) -> bool:
-        return any(isinstance(literal, AggregateLiteral) for literal in self.body)
+        return any(isinstance(literal, AggrLiteral) for literal in self.body)
 
 
 class Fact(Rule, ABC):
@@ -148,7 +148,7 @@ class Fact(Rule, ABC):
         aggr_map: Dict[
             int,
             Tuple[
-                "AggregateLiteral",
+                "AggrLiteral",
                 "AggrPlaceholder",
                 "AggrBaseRule",
                 Set["AggrElemRule"],
@@ -158,6 +158,6 @@ class Fact(Rule, ABC):
         return deepcopy(self)
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggregateLiteral"]
+        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Fact":
         return deepcopy(self)

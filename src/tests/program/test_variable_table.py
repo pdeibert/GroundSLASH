@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import Naf, PredicateLiteral
+from aspy.program.literals import Naf, PredLiteral
 from aspy.program.statements import NormalRule
 from aspy.program.symbols import SpecialChar
 from aspy.program.terms import AnonVariable, ArithVariable, Minus, Variable
@@ -15,11 +15,11 @@ class TestVariableTable(unittest.TestCase):
         self.assertTrue(aspy.debug())
 
         statement = NormalRule(
-            PredicateLiteral("p", Variable("X")),
-            Naf(PredicateLiteral("q", AnonVariable(0))),
-            PredicateLiteral("u", AnonVariable(1)),
-            PredicateLiteral("v", Variable("Y")),
-            PredicateLiteral("q", ArithVariable(0, Variable("Z"))),
+            PredLiteral("p", Variable("X")),
+            Naf(PredLiteral("q", AnonVariable(0))),
+            PredLiteral("u", AnonVariable(1)),
+            PredLiteral("v", Variable("Y")),
+            PredLiteral("q", ArithVariable(0, Variable("Z"))),
         )
 
         var_table = statement.var_table
