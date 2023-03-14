@@ -83,14 +83,14 @@ class ArithTerm(Term, ABC):
         return set().union(*tuple(operand.vars() for operand in self.operands))
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the the safety characterizations for the arithmetic term.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for terms. Defaults to `None`.
 
         Returns:
@@ -133,7 +133,7 @@ class ArithTerm(Term, ABC):
 
         Returns:
             A substitution necessary for matching (may be empty) or `None` if cannot be matched.
-        """
+        """  # noqa
         if not (self.ground and other.ground):
             raise ValueError("Cannot match non-groun arithmetic terms directly.")
 

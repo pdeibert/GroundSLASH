@@ -113,14 +113,14 @@ class Functional(Term):
         return self.terms.vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statenment: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the the safety characterizations for the functional term.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for terms. Defaults to `None`.
 
         Returns:

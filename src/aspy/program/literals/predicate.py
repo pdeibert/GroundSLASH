@@ -58,7 +58,7 @@ class PredLiteral(Literal):
         self.terms = TermTuple(*terms)
 
     def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+        """Compares the literal to a given expression.
 
         Considered equal if the given expression is also a `PredLiteral` instance with same name/identifier value
         as well as equal terms.
@@ -163,14 +163,14 @@ class PredLiteral(Literal):
         return set().union(self.terms.vars())
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple[SafetyTriplet, ...]:
         """Returns the the safety characterizations for the predicate literal.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for predicate literals. Defaults to `None`.
 
         Returns:

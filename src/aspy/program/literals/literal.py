@@ -62,7 +62,7 @@ class Literal(Expr, ABC):
         """Returns the global variables associated with the literal.
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Usually irrelevant for literals. Defaults to `None`.
 
         Returns:
@@ -168,21 +168,21 @@ class LiteralCollection:
         )
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         """Returns the the safety characterizations for the literal collection.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for most literals. Defaults to `None`.
 
         Returns:
             `SafetyTriplet` instance as the closure of the safety characterizations of all individual literals.
         """  # noqa
         return SafetyTriplet.closure(
-            *tuple(literal.safety(rule) for literal in self.literals)
+            *tuple(literal.safety(statement) for literal in self.literals)
         )
 
     def without(self, *literals: Literal) -> "LiteralCollection":

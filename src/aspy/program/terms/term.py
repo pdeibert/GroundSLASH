@@ -56,12 +56,12 @@ class Term(Expr, ABC):
         return set()
 
     def global_vars(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> Set["Variable"]:
         """Returns the global variables associated with the term.
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Usually irrelevant for terms. Defaults to `None`.
 
         Returns:
@@ -70,14 +70,14 @@ class Term(Expr, ABC):
         return self.vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the safety characterization for the term.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Usually irrelevant for terms. Defaults to `None`.
 
         Returns:
@@ -293,14 +293,14 @@ class Variable(Term):
         return {self}
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the safety characterization for a variable.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for variables. Defaults to `None`.
 
         Returns:
@@ -785,7 +785,7 @@ class TermTuple:
         """Returns the global variables associated with the term tuple.
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Usually irrelevant for terms. Defaults to `None`.
 
         Returns:
@@ -794,20 +794,20 @@ class TermTuple:
         return self.vars()
 
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple["SafetyTriplet", ...]:
         """Returns the safety characterizations for all individual terms.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            rule: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` or `Query` instance the term appears in.
                 Irrelevant for terms. Defaults to `None`.
 
         Returns:
             Tuple of `SafetyTriplet` instances corresponding to the individual terms.
         """  # noqa
-        return tuple(term.safety(rule=rule) for term in self.terms)
+        return tuple(term.safety(statement) for term in self.terms)
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
         """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
