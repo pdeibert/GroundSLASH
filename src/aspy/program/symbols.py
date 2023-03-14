@@ -10,7 +10,7 @@ class SpecialChar(Enum):
     CHI = "\u03C7"  # χ
 
 
-VARIABLE_RE = re.compile(rf"^[A-Z{SpecialChar.TAU.value}][a-zA-Z0-1_]*")
+VARIABLE_RE = re.compile(r"^[A-Z][a-zA-Z0-1_]*")
 SYM_CONST_RE = re.compile(
     (
         rf"[a-z{SpecialChar.ALPHA.value}{SpecialChar.CHI.value}"

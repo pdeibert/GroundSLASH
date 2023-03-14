@@ -16,82 +16,230 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Term(Expr, ABC):
-    """Abstract base class for all terms."""
+    """Abstract base class for all terms.
+
+    Declares some default as well as abstract methods for terms. All terms should inherit from this class.
+    """  # noqa
 
     @abstractmethod  # pragma: no cover
     def __eq__(self, other: Expr) -> bool:
+        """Compares the term to a given expression.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         pass
 
     @abstractmethod  # pragma: no cover
     def precedes(self, other: "Term") -> bool:
-        """Defines the total ordering operator defined for terms in ASP-Core-2."""
+        """Checks precendence of w.r.t. a given term.
+
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Returns:
+            Boolean value indicating whether or not the term precedes the given term.
+        """  # noqa
         pass
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the term.
+
+        Returns:
+            Empty set of 'Variable' instances.
+        """
         return set()
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+    def global_vars(
+        self, rule: Optional[Union["Statement", "Query"]] = None
+    ) -> Set["Variable"]:
+        """Returns the global variables associated with the term.
+
+        Args:
+            rule: Optional `Statement` or `Query` instance the term appears in.
+                Usually irrelevant for terms. Defaults to `None`.
+
+        Returns:
+            A (possibly empty) set of `Variable` instances.
+        """
         return self.vars()
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
+        """Returns the safety characterization for the term.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            rule: Optional `Statement` or `Query` instance the term appears in.
+                Usually irrelevant for terms. Defaults to `None`.
+
+        Returns:
+            Empty `SafetyTriplet` instance.
+        """  # noqa
         return SafetyTriplet()
 
     def replace_arith(self, var_table: "VariableTable") -> "Term":
+        """Replaces arithmetic terms appearing in the term with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `Term` instance.
+        """
         return deepcopy(self)
 
-    def substitute(self, subst: Substitution) -> "Expr":
+    def substitute(self, subst: Substitution) -> "Term":
+        """Applies a substitution to the term.
+
+        Replaces all variables with their substitution terms.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            (Possibly substituted) `Term` instance.
+        """
         return deepcopy(self)
 
     def match(self, other: Expr) -> Optional[Substitution]:
-        """Tries to match the expression with another one."""
+        """Tries to match the expression with another one.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            A substitution necessary for matching, if the expression can be matched (may be empty).
+            `None` if the expression cannot be matched.
+        """  # noqa
         # empty substitution
         return Substitution() if self == other else None
 
 
 class Infimum(Term):
-    """Least element in the total ordering for terms."""
+    """Least element in the total ordering for terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `True`).
+    """
 
     ground: bool = True
 
     def __str__(self) -> str:
+        """Returns the string representation for an infimum.
+
+        Returns:
+            String `"#inf"`.
+        """
         return "#inf"
 
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `Infimum` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, Infimum)
 
     def __hash__(self) -> int:
         return hash(("inf",))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence of w.r.t. a given term.
+
+        As the least element in the total ordering for terms, `Infimum` precedes any term.
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Returns:
+            Boolean value (always `True`).
+        """  # noqa
         return True
 
 
 class Supremum(Term):
-    """Greatest element in the total ordering for terms."""
+    """Greatest element in the total ordering for terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `True`).
+    """
 
     ground: bool = True
 
     def __str__(self) -> str:
+        """Returns the string representation for a supremum.
+
+        Returns:
+            String `"#sup"`.
+        """
         return "#sup"
 
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `Supremum` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, Supremum)
 
     def __hash__(self) -> int:
         return hash(("sup",))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence of w.r.t. a given term.
+
+        As the greatest element in the total ordering for terms, `Supremum` precedes only itself.
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Returns:
+            Boolean value indicating whether or not the term precedes the given term.
+        """  # noqa
         return True if isinstance(other, Supremum) else False
 
 
 class Variable(Term):
-    """Represents a variable."""
+    """Represents a variable.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `False`).
+    """
 
     ground: bool = False
 
     def __init__(self, val: str) -> None:
+        """Initializes the variable instance.
+
+        Args:
+            val: String representing the identifier for the variable.
+                Valid identifiers start with an upper-case latin letter, followed by zero or more alphanumerics and underscores.
+
+        Raises:
+            ValueError: Invalid value specified for the variable. Only checked if `aspy.debug()` is set to `True`.
+        """  # noqa
         # check if variable name is valid
         if aspy.debug() and not (isinstance(val, str) and VARIABLE_RE.fullmatch(val)):
             raise ValueError(f"Invalid value for {type(self)}: {val}")
@@ -99,42 +247,122 @@ class Variable(Term):
         self.val = val
 
     def __str__(self) -> str:
+        """Returns the string representation for a variable.
+
+        Returns:
+            String representing the value (i.e., identifier) of the variable.
+        """
         return self.val
 
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `Variable` instance with same value.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, Variable) and other.val == self.val
 
     def __hash__(self) -> int:
         return hash(("var", self.val))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence w.r.t. a given term.
+
+        Undefined for variables (i.e., non-ground terms). Raises an exception.
+
+        Args:
+            other: `Term` instance.
+
+        Raises:
+            Exception: Total order is undefined for variables.
+        """  # noqa
         raise Exception("Total ordering is undefined for non-ground terms.")
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the term.
+
+        Returns:
+            Singleton set containing the `Variable` instance itself.
+        """
         return {self}
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
+        """Returns the safety characterization for a variable.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            rule: Optional `Statement` or `Query` instance the term appears in.
+                Irrelevant for variables. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance with the `Variable` instance marked as 'safe'.
+        """  # noqa
         return SafetyTriplet({self})
 
-    def simplify(self) -> "Number":
-        """Used in arithmetical terms."""
+    def simplify(self) -> "Variable":
+        """Simplifies the variable as part of an arithmetic term.
+
+        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+
+        Returns:
+            Copy of the `Variable` instance.
+        """  # noqa
         return Variable(self.val)
 
     def match(self, other: Expr) -> Optional[Substitution]:
-        """Tries to match the expression with another one."""
+        """Tries to match the expression with another one.
+
+        Variables can be matched to any expression.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            A substitution necessary for matching (may be empty).
+        """  # noqa
         return Substitution({self: other}) if not self == other else Substitution()
 
     def substitute(self, subst: Substitution) -> Term:
+        """Applies a substitution to the term.
+
+        Replaces the variable with its substitution term.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            (Possibly substituted) `Term` instance.
+        """
         return subst[self]
 
 
 class AnonVariable(Variable):
-    """Represents an anonymous variable."""
+    """Represents an anonymous variable.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `False`).
+    """
 
     def __init__(self, id: int) -> None:
+        """Initializes the anonymous variable instance.
 
+        The variable identifier is initialized as `"_{id}"`.
+
+        Args:
+            id: Non-negative integer representing the id for the anonymous variable.
+                Should be unique within each statement or query.
+
+        Raises:
+            ValueError: Negative id specified for the variable. Only checked if `aspy.debug()` is set to `True`.
+        """  # noqa
         # check if id is valid
         if aspy.debug() and id < 0:
             raise ValueError(f"Invalid value for {type(self)}: {id}")
@@ -142,12 +370,17 @@ class AnonVariable(Variable):
         self.val = f"_{id}"
         self.id = id
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> SafetyTriplet:
-        return SafetyTriplet()
-
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `AnonVariable` instance with same id (i.e., value).
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return (
             isinstance(other, AnonVariable)
             and other.val == self.val
@@ -157,47 +390,133 @@ class AnonVariable(Variable):
     def __hash__(self) -> int:
         return hash(("anon var", self.val))
 
-    def simplify(self) -> "Number":
-        """Used in arithmetical terms."""
+    def simplify(self) -> "AnonVariable":
+        """Simplifies the variable as part of an arithmetic term.
+
+        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+
+        Returns:
+            Copy of the `AnonVariable` instance.
+        """  # noqa
         return AnonVariable(self.id)
 
 
 class Number(Term):
-    """Represents a number."""
+    """Represents a number.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `True`).
+    """
 
     ground: bool = True
 
     def __init__(self, val: int) -> None:
+        """Initializes the number instance.
+
+        Args:
+            val: Integer representing the value of the number.
+        """
         self.val = val
 
-    def __add__(self, other) -> "Number":
+    def __add__(self, other: "Number") -> "Number":
+        """Returns a number representing the sum of this and a given number.
+
+        Args:
+            other: `Number` instance to be added.
+
+        Returns:
+            `Number` instance representing the sum of this and the given number.
+        """
         return Number(self.val + other.val)
 
-    def __sub__(self, other) -> "Number":
+    def __sub__(self, other: "Number") -> "Number":
+        """Returns a number representing the difference of this and a given number.
+
+        Args:
+            other: `Number` instance to be subtracted.
+
+        Returns:
+            `Number` instance representing the difference of this and the given number.
+        """
         return Number(self.val - other.val)
 
-    def __mul__(self, other) -> "Number":
+    def __mul__(self, other: "Number") -> "Number":
+        """Returns a number representing the product of this and a given number.
+
+        Args:
+            other: `Number` instance to be multiplied by.
+
+        Returns:
+            `Number` instance representing the product of this and the given number.
+        """
         return Number(self.val * other.val)
 
-    def __floordiv__(self, other) -> "Number":
+    def __floordiv__(self, other: "Number") -> "Number":
+        """Returns a number representing the integer division of this and a given number.
+
+        Args:
+            other: `Number` instance to be divided by.
+
+        Returns:
+            `Number` instance representing the integer division of this and the given number.
+        """  # noqa
         return Number(self.val // other.val)
 
     def __neg__(self) -> "Number":
+        """Returns the negation of the number.
+
+        Returns:
+            `Number` instance representing the negation of the number.
+        """  # noqa
         return Number(-self.val)
 
     def __abs__(self) -> "Number":
+        """Returns the absolute number.
+
+        Returns:
+            `Number` instance representing the absolute number.
+        """  # noqa
         return Number(abs(self.val))
 
     def __str__(self) -> str:
+        """Returns the string representation for a number.
+
+        Returns:
+            String representing the integer value of the number.
+        """
         return str(self.val)
 
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `Number` instance with same integer value.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, Number) and other.val == self.val
 
     def __hash__(self) -> int:
         return hash(("num", self.val))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence of w.r.t. a given term.
+
+        A number is preceded by `Infimum` and all `Number` instances with smaller or equal integer value.
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Raises:
+            ValueError: Comparison with non-ground arithmetic term or variable.
+
+        Returns:
+            Boolean value indicating whether or not the term precedes the given term.
+        """  # noqa
         if not other.ground:
             raise ValueError(
                 (
@@ -214,20 +533,45 @@ class Number(Term):
             return True
 
     def simplify(self) -> "Number":
-        """Used in arithmetical terms."""
+        """Simplifies the variable as part of an arithmetic term.
+
+        Used in arithmetic terms. Returns a copy of itself, as numbers cannot be further simplified.
+
+        Returns:
+            Copy of the `Number` instance.
+        """  # noqa
         return Number(self.val)
 
     def eval(self) -> int:
+        """Evaluates the number.
+
+        Returns:
+            Integer value of the number.
+        """
         return self.val
 
 
 class SymbolicConstant(Term):
-    """Represents a symbolic constant."""
+    """Represents a symbolic constant.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `True`).
+    """
 
     ground: bool = True
 
     def __init__(self, val: str) -> None:
+        """Initializes the symbolic constant instance.
 
+        Args:
+            val: String representing the identifier for the symbolic constant.
+                Valid identifiers start with a lower-case latin letter, followed by zero or more alphanumerics and underscores.
+                Instead of a single lower-case latin letter, identifiers may also start with '\u03b1', '\u03C7', '\u03b5\u03b1',
+                '\u03b5\u03C7', '\u03b7\u03b1', or '\u03b7\u03C7', but are reserved for internal use.
+
+        Raises:
+            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` is set to `True`.
+        """  # noqa
         # check if symbolic constant name is valid
         if aspy.debug() and not SYM_CONST_RE.fullmatch(val):  # TODO: alpha, eta, eps?
             raise ValueError(f"Invalid value for {type(self)}: {val}")
@@ -235,15 +579,45 @@ class SymbolicConstant(Term):
         self.val = val
 
     def __str__(self) -> str:
+        """Returns the string representation for a symbolic constant.
+
+        Returns:
+            String representing the identifier of the symbolic constant.
+        """
         return self.val
 
     def __eq__(self, other: Expr) -> str:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `SymbolicConstant` instance with same identifier value.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
     def __hash__(self) -> int:
         return hash(("symbolic const", self.val))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence of w.r.t. a given term.
+
+        A symbolic constant is preceded by `Infimum`, `Number` instances,
+        and all `SymbolicConstant` instances with lexicographically smaller or equal identifier values.
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Raises:
+            ValueError: Comparison with non-ground arithmetic term or variable.
+
+        Returns:
+            Boolean value indicating whether or not the term precedes the given term.
+        """  # noqa
         if not other.ground:
             raise ValueError(
                 (
@@ -261,23 +635,61 @@ class SymbolicConstant(Term):
 
 
 class String(Term):
-    """Represents a string."""
+    """Represents a string.
+
+    Attributes:
+        ground: Boolean indicating whether or not the term is ground (always `True`).
+    """
 
     ground: bool = True
 
     def __init__(self, val: str) -> None:
+        """Initializes the string instance.
+
+        Args:
+            val: String representing the string value.
+        """
         self.val = val
 
     def __str__(self) -> str:
+        """Returns the string representation for a string.
+
+        Returns:
+            String representing the string value enclosed in double quotes.
+        """
         return f'"{self.val}"'
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the term to a given expression.
+
+        Considered equal if the given expression is also a `String` instance with same value.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, String) and other.val == self.val
 
     def __hash__(self) -> int:
         return hash(("str", self.val))
 
     def precedes(self, other: Term) -> bool:
+        """Checks precendence of w.r.t. a given term.
+
+        A string is preceded by all (ground) terms except `Supremum` and all `String` instances with lexicographically greater identifier values.
+        For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
+
+        Args:
+            other: `Term` instance.
+
+        Raises:
+            ValueError: Comparison with non-ground arithmetic term or variable.
+
+        Returns:
+            Boolean value indicating whether or not the term precedes the given term.
+        """  # noqa
         if not other.ground:
             raise ValueError(
                 (
@@ -295,15 +707,34 @@ class String(Term):
 
 
 class TermTuple:
-    """Represents a collection of terms."""
+    """Represents an ordered collection of terms.
+
+    Attributes:
+        ground: Boolean indicating whether or not all terms are ground.
+    """
 
     def __init__(self, *terms: Term) -> None:
+        """Initializes the term tuple instance.
+
+        Args:
+            *terms: sequence of terms.
+        """
         self.terms = terms
 
     def __len__(self) -> int:
         return len(self.terms)
 
     def __eq__(self, other: "TermTuple") -> bool:
+        """Compares the term tuple to another given term tuple.
+
+        Considered equal if the given term tuple contains the same terms in the exact same order.
+
+        Args:
+            other: `TermTuple` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the term tuple is considered equal to the given term tuple.
+        """  # noqa
         return (
             isinstance(other, TermTuple)
             and len(self) == len(other)
@@ -317,6 +748,14 @@ class TermTuple:
         return iter(self.terms)
 
     def __add__(self, other: "TermTuple") -> "TermTuple":
+        """Concatenates another given term tuple.
+
+        Args:
+            other: `TermTuple` instance to be concatenated.
+
+        Returns:
+            `TermTuple` instance representing the concatenated term tuples.
+        """
         return TermTuple(*self.terms, *other.terms)
 
     def __getitem__(self, index: int) -> "Term":
@@ -326,18 +765,103 @@ class TermTuple:
     def ground(self) -> bool:
         return all(term.ground for term in self.terms)
 
-    def substitute(self, subst: "Substitution") -> "TermTuple":
-        if self.ground:
-            return deepcopy(self)
+    def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the term tuple.
 
-        # substitute terms recursively
-        terms = (term.substitute(subst) for term in self)
+        Returns:
+            (Possibly empty) set of 'Variable' instances as union of the variables of all terms.
+        """  # noqa
+        return set().union(*tuple(term.vars() for term in self.terms))
 
-        return TermTuple(*terms)
+    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        """Returns the global variables associated with the term tuple.
+
+        Args:
+            rule: Optional `Statement` or `Query` instance the term appears in.
+                Usually irrelevant for terms. Defaults to `None`.
+
+        Returns:
+            (Possibly empty) set of 'Variable' instances as union of the (global) variables of all terms.
+        """  # noqa
+        return self.vars()
+
+    def safety(
+        self, rule: Optional[Union["Statement", "Query"]] = None
+    ) -> Tuple["SafetyTriplet", ...]:
+        """Returns the safety characterizations for all individual terms.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            rule: Optional `Statement` or `Query` instance the term appears in.
+                Irrelevant for terms. Defaults to `None`.
+
+        Returns:
+            Tuple of `SafetyTriplet` instances corresponding to the individual terms.
+        """  # noqa
+        return tuple(term.safety(rule=rule) for term in self.terms)
+
+    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
+        """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `TermTuple` instance.
+        """  # noqa
+        return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))
+
+    @cached_property
+    def weight(self) -> int:
+        """Returns the weight of the term tuple.
+
+        Returns:
+            Integer representing the value of the first term if it is a `Number` instance, and zero else.
+        """  # noqa
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return self.terms[0].val
+
+        return 0
+
+    @cached_property
+    def pos_weight(self) -> int:
+        """Returns the positive weight of the term tuple.
+
+        Returns:
+            Integer representing the value of the first term if it is a positive `Number` instance, and zero else.
+        """  # noqa
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return max(self.terms[0].val, 0)
+
+        return 0
+
+    @cached_property
+    def neg_weight(self) -> int:
+        """Returns the negative weight of the term tuple.
+
+        Returns:
+            Integer representing the value of the first term if it is a negative `Number` instance, and zero else.
+        """  # noqa"
+        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
+            return min(self.terms[0].val, 0)
+
+        return 0
 
     def match(self, other: Expr) -> Optional[Substitution]:
-        # raise Exception("Matching for term tuples is not supported yet.")
+        """Tries to match the term tuple with an expression.
 
+        Can only be matched to a term tuple where each corresponding term can be matched
+        and without any assignment conflicts.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            A substitution necessary for matching (may be empty).
+        """
         if not (isinstance(other, TermTuple) and len(self) == len(other)):
             return None
 
@@ -356,40 +880,21 @@ class TermTuple:
 
         return subst
 
-    def vars(self) -> Set["Variable"]:
-        return set().union(*tuple(term.vars() for term in self.terms))
+    def substitute(self, subst: "Substitution") -> "TermTuple":
+        """Applies a substitution to the term term tuple.
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
-        return self.vars()
+        Substitutes all terms recursively.
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> Tuple["SafetyTriplet", ...]:
-        return tuple(term.safety(rule=rule) for term in self.terms)
+        Args:
+            subst: `Substitution` instance.
 
-    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
-        return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))
+        Returns:
+            `TermTuple` instance with (possibly substituted) terms.
+        """
+        if self.ground:
+            return deepcopy(self)
 
-    @cached_property
-    def weight(self) -> int:
-        """Used in aggregates."""
-        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
-            return self.terms[0].val
+        # substitute terms recursively
+        terms = (term.substitute(subst) for term in self)
 
-        return 0
-
-    @cached_property
-    def pos_weight(self) -> int:
-        """Used in aggregates."""
-        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
-            return max(self.terms[0].val, 0)
-
-        return 0
-
-    @cached_property
-    def neg_weight(self) -> int:
-        """Used in aggregates."""
-        if len(self.terms) > 0 and isinstance(self.terms[0], Number):
-            return min(self.terms[0].val, 0)
-
-        return 0
+        return TermTuple(*terms)
