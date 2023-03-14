@@ -24,6 +24,7 @@ class Literal(Expr, ABC):
 
     Attributes:
         naf: Boolean indicating whether or not the literal is default-negated.
+        ground: Boolean indicating whether or not the literal is ground.
     """
 
     naf: bool = False
