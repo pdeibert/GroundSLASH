@@ -7,7 +7,7 @@ from aspy.program.literals import (
     AggrElemLiteral,
     ChoiceBaseLiteral,
     ChoiceElemLiteral,
-    LiteralTuple,
+    LiteralCollection,
 )
 from aspy.program.literals.builtin import op2rel
 from aspy.program.substitution import Substitution
@@ -31,7 +31,7 @@ class AggrBaseRule(NormalRule):
         atom: AggrBaseLiteral,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
-        literals: "LiteralTuple",
+        literals: "LiteralCollection",
     ) -> None:
 
         super().__init__(atom, *literals)
@@ -53,7 +53,7 @@ class AggrBaseRule(NormalRule):
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
         base_value: "Term",
-        non_aggr_literals: "LiteralTuple",
+        non_aggr_literals: "LiteralCollection",
     ) -> "AggrBaseRule":
 
         # check if global vars is tuple (important for FIXED order)
@@ -78,7 +78,7 @@ class AggrBaseRule(NormalRule):
         rguard_literal = (
             op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
         )
-        guard_literals = LiteralTuple(
+        guard_literals = LiteralCollection(
             *tuple(
                 guard_literal
                 for guard_literal in (lguard_literal, rguard_literal)
@@ -116,7 +116,7 @@ class AggrElemRule(NormalRule):
         self,
         atom: AggrElemLiteral,
         element: "AggrElement",
-        literals: "LiteralTuple",
+        literals: "LiteralCollection",
     ) -> None:
         super().__init__(atom, *literals)
         self.element = element
@@ -155,7 +155,7 @@ class AggrElemRule(NormalRule):
         element_id: int,
         glob_vars: TermTuple,
         element: "AggrElement",
-        non_aggr_literals: "LiteralTuple",
+        non_aggr_literals: "LiteralCollection",
     ) -> "AggrElemRule":
 
         # compute local variables
@@ -201,7 +201,7 @@ class ChoiceBaseRule(NormalRule):
         atom: ChoiceBaseLiteral,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
-        literals: "LiteralTuple",
+        literals: "LiteralCollection",
     ) -> None:
 
         super().__init__(atom, *literals)
@@ -222,7 +222,7 @@ class ChoiceBaseRule(NormalRule):
         glob_vars: TermTuple,
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
-        non_aggr_literals: "LiteralTuple",
+        non_aggr_literals: "LiteralCollection",
     ) -> "ChoiceBaseRule":
 
         # check if global vars is tuple (important for FIXED order)
@@ -247,7 +247,7 @@ class ChoiceBaseRule(NormalRule):
         rguard_literal = (
             op2rel[rguard.op](Number(0), rguard.bound) if rguard is not None else None
         )
-        guard_literals = LiteralTuple(
+        guard_literals = LiteralCollection(
             *tuple(
                 guard_literal
                 for guard_literal in (lguard_literal, rguard_literal)
@@ -285,7 +285,7 @@ class ChoiceElemRule(NormalRule):
         self,
         atom: ChoiceElemLiteral,
         element: "ChoiceElement",
-        literals: "LiteralTuple",
+        literals: "LiteralCollection",
     ) -> None:
         super().__init__(atom, *literals)
         self.element = element
@@ -324,7 +324,7 @@ class ChoiceElemRule(NormalRule):
         element_id: int,
         glob_vars: TermTuple,
         element: "ChoiceElement",
-        non_aggr_literals: "LiteralTuple",
+        non_aggr_literals: "LiteralCollection",
     ) -> "ChoiceElemRule":
 
         # compute local variables

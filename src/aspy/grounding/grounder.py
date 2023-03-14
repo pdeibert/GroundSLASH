@@ -13,7 +13,7 @@ from .graphs import ComponentGraph
 from .propagation import AggrPropagator, ChoicePropagator
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import Literal, LiteralTuple
+    from aspy.program.literals import Literal, LiteralCollection
     from aspy.program.statements import Statement
 
 
@@ -27,7 +27,7 @@ class Grounder:
 
     @classmethod
     def select(
-        cls, literals: "LiteralTuple", subst: Optional[Substitution] = None
+        cls, literals: "LiteralCollection", subst: Optional[Substitution] = None
     ) -> "Literal":
         if subst is None:
             # initialize with empty/identity substitution
@@ -105,7 +105,7 @@ class Grounder:
     def ground_statement(
         cls,
         statement: "Statement",
-        literals: Optional["LiteralTuple"] = None,
+        literals: Optional["LiteralCollection"] = None,
         certain: Optional[Set["Literal"]] = None,
         possible: Optional[Set["Literal"]] = None,
         prev_possible: Optional[Set["Literal"]] = None,

@@ -17,7 +17,7 @@ from .builtin import (
     LessEqual,
     Unequal,
 )
-from .literal import Literal, LiteralTuple
+from .literal import Literal, LiteralCollection
 from .naf import Naf
 from .neg import Neg
 from .predicate import PredLiteral

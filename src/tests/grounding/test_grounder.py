@@ -10,7 +10,7 @@ from aspy.program.literals import (
     AggrLiteral,
     Equal,
     Guard,
-    LiteralTuple,
+    LiteralCollection,
     Naf,
     Neg,
     PredLiteral,
@@ -30,7 +30,7 @@ class TestGrounder(unittest.TestCase):
 
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(
+                LiteralCollection(
                     Neg(PredLiteral("p", Variable("X"))),
                     PredLiteral("q", Number(1)),
                 )
@@ -39,7 +39,7 @@ class TestGrounder(unittest.TestCase):
         )  # first predicate literal gets selected (even if it is non-ground)
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(
+                LiteralCollection(
                     Naf(PredLiteral("p", Variable("X"))),
                     PredLiteral("q", Number(1)),
                 )
@@ -48,7 +48,7 @@ class TestGrounder(unittest.TestCase):
         )  # first predicate literal gets skipped (NAF and NON-ground)
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(
+                LiteralCollection(
                     Naf(PredLiteral("p", Number(1))),
                     PredLiteral("q", Number(1)),
                 )
@@ -57,7 +57,7 @@ class TestGrounder(unittest.TestCase):
         )  # first predicate literal gets select (NAF and ground)
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(
+                LiteralCollection(
                     Equal(Variable("X"), Number(1)), PredLiteral("q", Number(1))
                 )
             ),
@@ -65,7 +65,9 @@ class TestGrounder(unittest.TestCase):
         )  # first built-in literal gets skipped (NON-ground)
         self.assertEqual(
             Grounder.select(
-                LiteralTuple(Equal(Number(0), Number(1)), PredLiteral("q", Number(1)))
+                LiteralCollection(
+                    Equal(Number(0), Number(1)), PredLiteral("q", Number(1))
+                )
             ),
             Equal(Number(0), Number(1)),
         )  # first built-in literal gets selected (ground)
@@ -73,7 +75,7 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(
             ValueError,
             Grounder.select,
-            LiteralTuple(
+            LiteralCollection(
                 AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
                 Naf(
                     AggrLiteral(
@@ -87,7 +89,7 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(
             ValueError,
             Grounder.select,
-            LiteralTuple(
+            LiteralCollection(
                 AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
                 Naf(PredLiteral("p", Variable("X"))),
             ),

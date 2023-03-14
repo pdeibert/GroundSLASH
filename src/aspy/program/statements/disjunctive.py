@@ -6,7 +6,7 @@ import aspy
 from aspy.program.literals import (
     AggrLiteral,
     AggrPlaceholder,
-    LiteralTuple,
+    LiteralCollection,
     PredLiteral,
 )
 from aspy.program.safety_characterization import SafetyTriplet
@@ -55,7 +55,7 @@ class DisjunctiveFact(Fact):
                 )
             )
 
-        self.atoms = LiteralTuple(*atoms)
+        self.atoms = LiteralCollection(*atoms)
 
     def __eq__(self, other: "Expr") -> bool:
         return isinstance(other, DisjunctiveFact) and self.atoms == other.atoms
@@ -67,12 +67,12 @@ class DisjunctiveFact(Fact):
         return f"{' | '.join([str(atom) for atom in self.head])}."
 
     @property
-    def head(self) -> LiteralTuple:
+    def head(self) -> LiteralCollection:
         return self.atoms
 
     @property
-    def body(self) -> LiteralTuple:
-        return LiteralTuple()
+    def body(self) -> LiteralCollection:
+        return LiteralCollection()
 
     def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
         return SafetyTriplet(unsafe=self.vars())
@@ -111,8 +111,8 @@ class DisjunctiveRule(Rule):
 
     def __init__(
         self,
-        head: Union[LiteralTuple, Tuple["Literal", ...]],
-        body: Union[LiteralTuple, Tuple["Literal", ...]],
+        head: Union[LiteralCollection, Tuple["Literal", ...]],
+        body: Union[LiteralCollection, Tuple["Literal", ...]],
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -142,8 +142,12 @@ class DisjunctiveRule(Rule):
                 )
             )
 
-        self.atoms = head if isinstance(head, LiteralTuple) else LiteralTuple(*head)
-        self.literals = body if isinstance(body, LiteralTuple) else LiteralTuple(*body)
+        self.atoms = (
+            head if isinstance(head, LiteralCollection) else LiteralCollection(*head)
+        )
+        self.literals = (
+            body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
+        )
 
     def __eq__(self, other: "Expr") -> bool:
         return (
@@ -162,11 +166,11 @@ class DisjunctiveRule(Rule):
         return f"{' | '.join([str(atom) for atom in self.head])} :- {literals_str}."
 
     @property
-    def head(self) -> LiteralTuple:
+    def head(self) -> LiteralCollection:
         return self.atoms
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
     @cached_property

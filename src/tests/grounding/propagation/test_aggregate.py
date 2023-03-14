@@ -13,7 +13,7 @@ from aspy.program.literals import (
     GreaterEqual,
     Guard,
     LessEqual,
-    LiteralTuple,
+    LiteralCollection,
     PredLiteral,
 )
 from aspy.program.operators import RelOp
@@ -30,15 +30,15 @@ class TestAggrPropagator(unittest.TestCase):
         elements_1 = (
             AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredLiteral("p", Variable("Y"))),
+                LiteralCollection(PredLiteral("p", Variable("Y"))),
             ),
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
         )
         elements_2 = (
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("q", Number(0)))
             ),
         )
 
@@ -57,7 +57,7 @@ class TestAggrPropagator(unittest.TestCase):
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                     None,
-                    LiteralTuple(
+                    LiteralCollection(
                         GreaterEqual(AggrCount().base(), Variable("X")),
                         PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
@@ -73,7 +73,7 @@ class TestAggrPropagator(unittest.TestCase):
                             TermTuple(Variable("Y"), Variable("X")),
                         ),
                         elements_1[0],
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("p", Variable("Y")),
                             PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
@@ -88,7 +88,7 @@ class TestAggrPropagator(unittest.TestCase):
                             TermTuple(Variable("X")),
                         ),
                         elements_1[1],
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("p", Number(0)),
                             PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
@@ -107,7 +107,7 @@ class TestAggrPropagator(unittest.TestCase):
                     AggrBaseLiteral(2, TermTuple(), TermTuple()),
                     None,
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
-                    LiteralTuple(
+                    LiteralCollection(
                         LessEqual(Number(0), AggrCount().base()),
                         PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
@@ -117,7 +117,7 @@ class TestAggrPropagator(unittest.TestCase):
                     AggrElemRule(
                         AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                         elements_2[0],
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("q", Number(0)),
                             PredLiteral("q", Variable("X")),
                             Equal(Number(0), Variable("X")),
@@ -137,7 +137,7 @@ class TestAggrPropagator(unittest.TestCase):
                 AggrBaseLiteral(1, TermTuple(Variable("X")), TermTuple(Number(0))),
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 None,
-                LiteralTuple(
+                LiteralCollection(
                     GreaterEqual(AggrCount().base(), Number(0)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -148,7 +148,7 @@ class TestAggrPropagator(unittest.TestCase):
                 AggrBaseLiteral(2, TermTuple(), TermTuple()),
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), False),
-                LiteralTuple(
+                LiteralCollection(
                     LessEqual(Number(0), AggrCount().base()),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -167,7 +167,7 @@ class TestAggrPropagator(unittest.TestCase):
                     TermTuple(Number(0), Number(0)),
                 ),
                 elements_1[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -182,7 +182,7 @@ class TestAggrPropagator(unittest.TestCase):
                     TermTuple(Number(1), Number(0)),
                 ),
                 elements_1[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(1)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -194,7 +194,7 @@ class TestAggrPropagator(unittest.TestCase):
                     1, 1, TermTuple(), TermTuple(Variable("X")), TermTuple(Number(0))
                 ),
                 elements_1[1],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -204,7 +204,7 @@ class TestAggrPropagator(unittest.TestCase):
             AggrElemRule(
                 AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("q", Number(0)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
@@ -248,11 +248,11 @@ class TestAggrPropagator(unittest.TestCase):
                     (
                         AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredLiteral("p", Number(0))),
+                            LiteralCollection(PredLiteral("p", Number(0))),
                         ),
                         AggrElement(
                             TermTuple(Number(1)),
-                            LiteralTuple(PredLiteral("p", Number(1))),
+                            LiteralCollection(PredLiteral("p", Number(1))),
                         ),
                     ),  # first possible element order
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
@@ -264,7 +264,7 @@ class TestAggrPropagator(unittest.TestCase):
                     (
                         AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredLiteral("q", Number(0))),
+                            LiteralCollection(PredLiteral("q", Number(0))),
                         ),
                     ),
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
@@ -277,11 +277,11 @@ class TestAggrPropagator(unittest.TestCase):
                     (
                         AggrElement(
                             TermTuple(Number(1)),
-                            LiteralTuple(PredLiteral("p", Number(1))),
+                            LiteralCollection(PredLiteral("p", Number(1))),
                         ),
                         AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredLiteral("p", Number(0))),
+                            LiteralCollection(PredLiteral("p", Number(0))),
                         ),
                     ),  # second possible element order
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
@@ -293,7 +293,7 @@ class TestAggrPropagator(unittest.TestCase):
                     (
                         AggrElement(
                             TermTuple(Number(0)),
-                            LiteralTuple(PredLiteral("q", Number(0))),
+                            LiteralCollection(PredLiteral("q", Number(0))),
                         ),
                     ),
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),

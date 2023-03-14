@@ -2,7 +2,7 @@ from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Optional
 
-from aspy.program.literals import LiteralTuple
+from aspy.program.literals import LiteralCollection
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
@@ -25,7 +25,7 @@ class WeakConstraint(Statement):
 
     def __init__(
         self,
-        literals: "LiteralTuple",
+        literals: "LiteralCollection",
         weight: "Term",
         level: "Term",
         terms: "TermTuple",
@@ -45,11 +45,11 @@ class WeakConstraint(Statement):
         return f":~ {body_str}. [{str(self.weight)}@{str(self.level)}, {terms_str}]"
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple()
+    def head(self) -> LiteralCollection:
+        return LiteralCollection()
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
     @cached_property

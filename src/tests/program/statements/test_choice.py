@@ -11,7 +11,7 @@ from aspy.program.literals import (
     Equal,
     GreaterEqual,
     Guard,
-    LiteralTuple,
+    LiteralCollection,
     Naf,
     PredLiteral,
 )
@@ -53,7 +53,7 @@ class TestChoice(unittest.TestCase):
 
         element = ChoiceElement(
             PredLiteral("p", String("str")),
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(0)),
                 Naf(PredLiteral("q", Variable("Y"))),
             ),
@@ -65,7 +65,7 @@ class TestChoice(unittest.TestCase):
             element,
             ChoiceElement(
                 PredLiteral("p", String("str")),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     Naf(PredLiteral("q", Variable("Y"))),
                 ),
@@ -74,14 +74,14 @@ class TestChoice(unittest.TestCase):
         # head
         self.assertEqual(
             element.head,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", String("str")),
             ),
         )
         # body
         self.assertEqual(
             element.body,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(0)),
                 Naf(PredLiteral("q", Variable("Y"))),
             ),
@@ -92,7 +92,7 @@ class TestChoice(unittest.TestCase):
             hash(
                 ChoiceElement(
                     PredLiteral("p", String("str")),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral("p", Number(0)),
                         Naf(PredLiteral("q", Variable("Y"))),
                     ),
@@ -115,7 +115,7 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(element.replace_arith(VariableTable()), element)
         element = ChoiceElement(
             PredLiteral("p", String("str")),
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(0)),
                 Naf(PredLiteral("q", Minus(Variable("Y")))),
             ),
@@ -124,7 +124,7 @@ class TestChoice(unittest.TestCase):
             element.replace_arith(VariableTable()),
             ChoiceElement(
                 PredLiteral("p", String("str")),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     Naf(PredLiteral("q", ArithVariable(0, Minus(Variable("Y"))))),
                 ),
@@ -137,7 +137,7 @@ class TestChoice(unittest.TestCase):
             ),  # NOTE: substitution is invalid
             ChoiceElement(
                 PredLiteral("p", String("str")),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     Naf(PredLiteral("q", Minus(Number(1)))),
                 ),
@@ -154,11 +154,13 @@ class TestChoice(unittest.TestCase):
         ground_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", String("str")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
 
@@ -211,11 +213,13 @@ class TestChoice(unittest.TestCase):
         var_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -249,7 +253,7 @@ class TestChoice(unittest.TestCase):
         # head
         self.assertEqual(
             ground_choice.head,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(5)),
                 PredLiteral("p", Number(-3)),
             ),
@@ -257,7 +261,7 @@ class TestChoice(unittest.TestCase):
         # body
         self.assertEqual(
             ground_choice.body,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", String("str")),
                 Naf(PredLiteral("q")),
                 Naf(PredLiteral("p", String("str"))),
@@ -410,7 +414,7 @@ class TestChoice(unittest.TestCase):
         arith_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Minus(Variable("X"))),
                     Naf(PredLiteral("q")),
                 ),
@@ -426,7 +430,7 @@ class TestChoice(unittest.TestCase):
                 (
                     ChoiceElement(
                         PredLiteral("p", Number(5)),
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("p", ArithVariable(0, Minus(Variable("X")))),
                             Naf(PredLiteral("q")),
                         ),
@@ -446,13 +450,13 @@ class TestChoice(unittest.TestCase):
                 (
                     ChoiceElement(
                         PredLiteral("p", Number(5)),
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("p", Number(1)), Naf(PredLiteral("q"))
                         ),
                     ),
                     ChoiceElement(
                         PredLiteral("p", Number(-3)),
-                        LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                        LiteralCollection(Naf(PredLiteral("p", String("str")))),
                     ),
                 ),
                 guards=Guard(RelOp.LESS, Number(1), False),
@@ -467,11 +471,13 @@ class TestChoice(unittest.TestCase):
         ground_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", String("str")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         ground_choice = Choice(
@@ -483,11 +489,13 @@ class TestChoice(unittest.TestCase):
         var_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -508,12 +516,12 @@ class TestChoice(unittest.TestCase):
                 guards=Guard(RelOp.LESS, Number(3), False),
             ),
         )
-        self.assertEqual(ground_rule.body, LiteralTuple())
+        self.assertEqual(ground_rule.body, LiteralCollection())
         self.assertEqual(
             var_rule.choice,  # TODO: head
             Choice(var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)),
         )
-        self.assertEqual(var_rule.body, LiteralTuple())
+        self.assertEqual(var_rule.body, LiteralCollection())
         # hashing
         self.assertEqual(
             hash(ground_rule),
@@ -553,7 +561,7 @@ class TestChoice(unittest.TestCase):
         arith_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Minus(Variable("X"))),
                     Naf(PredLiteral("q")),
                 ),
@@ -572,7 +580,7 @@ class TestChoice(unittest.TestCase):
                     (
                         ChoiceElement(
                             PredLiteral("p", Number(5)),
-                            LiteralTuple(
+                            LiteralCollection(
                                 PredLiteral(
                                     "p", ArithVariable(0, Minus(Variable("X")))
                                 ),
@@ -596,14 +604,14 @@ class TestChoice(unittest.TestCase):
                     (
                         ChoiceElement(
                             PredLiteral("p", Number(5)),
-                            LiteralTuple(
+                            LiteralCollection(
                                 PredLiteral("p", Number(1)),
                                 Naf(PredLiteral("q")),
                             ),
                         ),
                         ChoiceElement(
                             PredLiteral("p", Number(-3)),
-                            LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                            LiteralCollection(Naf(PredLiteral("p", String("str")))),
                         ),
                     ),
                     guards=Guard(RelOp.LESS, Number(1), False),
@@ -621,11 +629,11 @@ class TestChoice(unittest.TestCase):
         elements = (
             ChoiceElement(
                 PredLiteral("p", Variable("X")),
-                LiteralTuple(PredLiteral("q", Variable("X"))),
+                LiteralCollection(PredLiteral("q", Variable("X"))),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(1)),
-                LiteralTuple(PredLiteral("p", Number(0))),
+                LiteralCollection(PredLiteral("p", Number(0))),
             ),
         )
         rule = ChoiceFact(
@@ -659,7 +667,7 @@ class TestChoice(unittest.TestCase):
                 ),
                 Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                 None,
-                LiteralTuple(
+                LiteralCollection(
                     GreaterEqual(Number(-1), Number(0)),
                 ),
             ),
@@ -678,7 +686,7 @@ class TestChoice(unittest.TestCase):
                     TermTuple(Variable("X")),
                 ),
                 elements[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("q", Variable("X")),
                 ),
             ),
@@ -694,7 +702,7 @@ class TestChoice(unittest.TestCase):
                     TermTuple(),
                 ),
                 elements[1],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                 ),
             ),
@@ -708,11 +716,11 @@ class TestChoice(unittest.TestCase):
                         (
                             ChoiceElement(
                                 PredLiteral("p", Number(0)),
-                                LiteralTuple(PredLiteral("q", Number(0))),
+                                LiteralCollection(PredLiteral("q", Number(0))),
                             ),
                             ChoiceElement(
                                 PredLiteral("p", Number(1)),
-                                LiteralTuple(PredLiteral("p", Number(0))),
+                                LiteralCollection(PredLiteral("p", Number(0))),
                             ),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -724,11 +732,11 @@ class TestChoice(unittest.TestCase):
                     (
                         ChoiceElement(
                             PredLiteral("p", Number(0)),
-                            LiteralTuple(PredLiteral("q", Number(0))),
+                            LiteralCollection(PredLiteral("q", Number(0))),
                         ),
                         ChoiceElement(
                             PredLiteral("p", Number(1)),
-                            LiteralTuple(PredLiteral("p", Number(0))),
+                            LiteralCollection(PredLiteral("p", Number(0))),
                         ),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -759,11 +767,13 @@ class TestChoice(unittest.TestCase):
         ground_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", String("str")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         ground_choice = Choice(
@@ -775,11 +785,13 @@ class TestChoice(unittest.TestCase):
         var_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -827,7 +839,9 @@ class TestChoice(unittest.TestCase):
                 (PredLiteral("q", Variable("X")),),
             ),
         )
-        self.assertEqual(ground_rule.body, LiteralTuple(PredLiteral("q", Number(1))))
+        self.assertEqual(
+            ground_rule.body, LiteralCollection(PredLiteral("q", Number(1)))
+        )
         self.assertEqual(
             ground_rule.head,
             Choice(
@@ -835,7 +849,9 @@ class TestChoice(unittest.TestCase):
                 guards=Guard(RelOp.LESS, Number(3), False),
             ),
         )
-        self.assertEqual(ground_rule.body, LiteralTuple(PredLiteral("q", Number(1))))
+        self.assertEqual(
+            ground_rule.body, LiteralCollection(PredLiteral("q", Number(1)))
+        )
         # hashing
         self.assertEqual(
             hash(ground_rule),
@@ -901,11 +917,13 @@ class TestChoice(unittest.TestCase):
         var_elements = (
             ChoiceElement(
                 PredLiteral("p", Number(5)),
-                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))
+                ),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_choice = Choice(
@@ -929,14 +947,14 @@ class TestChoice(unittest.TestCase):
                     (
                         ChoiceElement(
                             PredLiteral("p", Number(5)),
-                            LiteralTuple(
+                            LiteralCollection(
                                 PredLiteral("p", Number(1)),
                                 Naf(PredLiteral("q")),
                             ),
                         ),
                         ChoiceElement(
                             PredLiteral("p", Number(-3)),
-                            LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                            LiteralCollection(Naf(PredLiteral("p", String("str")))),
                         ),
                     ),
                     guards=Guard(RelOp.LESS, String("f"), False),
@@ -949,11 +967,11 @@ class TestChoice(unittest.TestCase):
         elements = (
             ChoiceElement(
                 PredLiteral("p", Variable("X")),
-                LiteralTuple(PredLiteral("q", Variable("X"))),
+                LiteralCollection(PredLiteral("q", Variable("X"))),
             ),
             ChoiceElement(
                 PredLiteral("p", Number(1)),
-                LiteralTuple(PredLiteral("p", Number(0))),
+                LiteralCollection(PredLiteral("p", Number(0))),
             ),
         )
         rule = ChoiceRule(
@@ -994,7 +1012,7 @@ class TestChoice(unittest.TestCase):
                 ),
                 Guard(RelOp.GREATER_OR_EQ, Variable("Y"), False),
                 None,
-                LiteralTuple(
+                LiteralCollection(
                     GreaterEqual(Variable("Y"), Number(0)),
                     PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
@@ -1014,7 +1032,7 @@ class TestChoice(unittest.TestCase):
                     TermTuple(Variable("X"), Variable("Y")),
                 ),
                 elements[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("q", Variable("X")),
                     PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
@@ -1032,7 +1050,7 @@ class TestChoice(unittest.TestCase):
                     TermTuple(Variable("X"), Variable("Y")),
                 ),
                 elements[1],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     PredLiteral("q", Variable("Y")),
                     Equal(Number(0), Variable("X")),
@@ -1052,11 +1070,11 @@ class TestChoice(unittest.TestCase):
                         (
                             ChoiceElement(
                                 PredLiteral("p", Number(0)),
-                                LiteralTuple(PredLiteral("q", Number(0))),
+                                LiteralCollection(PredLiteral("q", Number(0))),
                             ),
                             ChoiceElement(
                                 PredLiteral("p", Number(1)),
-                                LiteralTuple(PredLiteral("p", Number(0))),
+                                LiteralCollection(PredLiteral("p", Number(0))),
                             ),
                         ),
                         Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
@@ -1068,11 +1086,11 @@ class TestChoice(unittest.TestCase):
                     (
                         ChoiceElement(
                             PredLiteral("p", Number(0)),
-                            LiteralTuple(PredLiteral("q", Number(0))),
+                            LiteralCollection(PredLiteral("q", Number(0))),
                         ),
                         ChoiceElement(
                             PredLiteral("p", Number(1)),
-                            LiteralTuple(PredLiteral("p", Number(0))),
+                            LiteralCollection(PredLiteral("p", Number(0))),
                         ),
                     ),
                     Guard(RelOp.GREATER_OR_EQ, Number(-1), False),

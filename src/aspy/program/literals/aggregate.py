@@ -10,7 +10,7 @@ from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
 from aspy.program.terms import Infimum, Number, Supremum, TermTuple
 
 from .guard import Guard
-from .literal import Literal, LiteralTuple
+from .literal import Literal, LiteralCollection
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.query import Query
@@ -36,16 +36,18 @@ class AggrElement(Expr):
     def __init__(
         self,
         terms: Optional[Union[Tuple["Term", ...], "TermTuple"]] = None,
-        literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]] = None,
+        literals: Optional[Union[Tuple["Literal", ...], "LiteralCollection"]] = None,
     ) -> None:
         if literals is None:
-            literals = LiteralTuple()
+            literals = LiteralCollection()
         if terms is None:
             terms = TermTuple()
 
         self.terms = terms if isinstance(terms, TermTuple) else TermTuple(terms)
         self.literals = (
-            literals if isinstance(literals, LiteralTuple) else LiteralTuple(literals)
+            literals
+            if isinstance(literals, LiteralCollection)
+            else LiteralCollection(literals)
         )
 
     def __eq__(self, other: Expr) -> bool:
@@ -70,7 +72,7 @@ class AggrElement(Expr):
         return self.terms
 
     @property
-    def body(self) -> "LiteralTuple":
+    def body(self) -> "LiteralCollection":
         return self.literals
 
     @cached_property

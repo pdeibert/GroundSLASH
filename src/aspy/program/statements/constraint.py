@@ -2,7 +2,7 @@ from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Dict, Set, Tuple
 
-from aspy.program.literals import AggrLiteral, LiteralTuple
+from aspy.program.literals import AggrLiteral, LiteralCollection
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .statement import Statement
@@ -29,7 +29,7 @@ class Constraint(Statement):
     def __init__(self, *literals: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.literals = LiteralTuple(*literals)
+        self.literals = LiteralCollection(*literals)
 
     def __eq__(self, other: "Expr") -> bool:
         return isinstance(other, Constraint) and set(self.literals) == set(
@@ -43,11 +43,11 @@ class Constraint(Statement):
         return f":- {', '.join([str(literal) for literal in self.body])}."
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple()
+    def head(self) -> LiteralCollection:
+        return LiteralCollection()
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
     @cached_property

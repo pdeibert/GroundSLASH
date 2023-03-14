@@ -12,7 +12,7 @@ from aspy.program.literals import (
     GreaterEqual,
     Guard,
     LessEqual,
-    LiteralTuple,
+    LiteralCollection,
     PredLiteral,
 )
 from aspy.program.operators import RelOp
@@ -30,10 +30,10 @@ class TestRewrite(unittest.TestCase):
         elements_1 = (
             AggrElement(
                 TermTuple(Variable("Y")),
-                LiteralTuple(PredLiteral("p", Variable("Y"))),
+                LiteralCollection(PredLiteral("p", Variable("Y"))),
             ),
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
         )
         aggregate_1 = AggrLiteral(
@@ -44,7 +44,7 @@ class TestRewrite(unittest.TestCase):
 
         elements_2 = (
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("q", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("q", Number(0)))
             ),
         )
         aggregate_2 = AggrLiteral(
@@ -67,7 +67,7 @@ class TestRewrite(unittest.TestCase):
                 AggrBaseLiteral(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
-                LiteralTuple(
+                LiteralCollection(
                     GreaterEqual(Variable("X"), AggrCount().base()),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
@@ -86,7 +86,7 @@ class TestRewrite(unittest.TestCase):
                     TermTuple(Variable("Y"), Variable("X")),
                 ),
                 elements_1[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Variable("Y")),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
@@ -104,7 +104,7 @@ class TestRewrite(unittest.TestCase):
                     TermTuple(Variable("X")),
                 ),
                 elements_1[1],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0)),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
@@ -125,7 +125,7 @@ class TestRewrite(unittest.TestCase):
                 AggrBaseLiteral(2, TermTuple(), TermTuple()),
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
-                LiteralTuple(
+                LiteralCollection(
                     LessEqual(AggrCount().base(), Number(0)),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
@@ -138,7 +138,7 @@ class TestRewrite(unittest.TestCase):
             AggrElemRule(
                 AggrElemLiteral(2, 0, TermTuple(), TermTuple(), TermTuple()),
                 elements_2[0],
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("q", Number(0)),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),

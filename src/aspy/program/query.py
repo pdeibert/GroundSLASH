@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Dict, Optional, Set
 
 from .expression import Expr
-from .literals import LiteralTuple, PredLiteral
+from .literals import LiteralCollection, PredLiteral
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Term, Variable
@@ -25,12 +25,12 @@ class Query(Expr):
         return hash(("query", self.atom))
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple(self.atom)
+    def head(self) -> LiteralCollection:
+        return LiteralCollection(self.atom)
 
     @property
-    def body(self) -> LiteralTuple:
-        return LiteralTuple()
+    def body(self) -> LiteralCollection:
+        return LiteralCollection()
 
     @property
     def ground(self) -> bool:

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Dict, Set, Tuple, Union
 from aspy.program.literals import (
     AggrLiteral,
     AggrPlaceholder,
-    LiteralTuple,
+    LiteralCollection,
     PredLiteral,
 )
 from aspy.program.safety_characterization import SafetyTriplet
@@ -52,12 +52,12 @@ class NormalFact(Fact):
         return hash(("normal fact", self.atom))
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple(self.atom)
+    def head(self) -> LiteralCollection:
+        return LiteralCollection(self.atom)
 
     @property
-    def body(self) -> LiteralTuple:
-        return LiteralTuple()
+    def body(self) -> LiteralCollection:
+        return LiteralCollection()
 
     @cached_property
     def safe(self) -> bool:
@@ -121,7 +121,7 @@ class NormalRule(Rule):
             )
 
         self.atom = head
-        self.literals = LiteralTuple(*body)
+        self.literals = LiteralCollection(*body)
 
     def __eq__(self, other: "Expr") -> bool:
         return (
@@ -139,11 +139,11 @@ class NormalRule(Rule):
         )
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple(self.atom)
+    def head(self) -> LiteralCollection:
+        return LiteralCollection(self.atom)
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
     @cached_property

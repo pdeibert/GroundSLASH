@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Iterable, List, Set, Tuple
 
-from aspy.program.literals import AggrPlaceholder, ChoicePlaceholder, LiteralTuple
+from aspy.program.literals import AggrPlaceholder, ChoicePlaceholder, LiteralCollection
 from aspy.program.terms import TermTuple
 
 from .choice import Choice
@@ -31,7 +31,7 @@ def rewrite_aggregate(
         var_tuple,
         *literal.guards,
         literal.func.base(),
-        LiteralTuple(*body_literals)
+        LiteralCollection(*body_literals)
     )
 
     # ----- eta rules -----
@@ -44,7 +44,7 @@ def rewrite_aggregate(
                 element_counter,
                 var_tuple,
                 element,
-                LiteralTuple(*body_literals),
+                LiteralCollection(*body_literals),
             )
         )
 
@@ -67,7 +67,7 @@ def rewrite_choice(
 
     # ----- epsilon rule -----
     eps_rule = ChoiceBaseRule.from_scratch(
-        choice_counter, var_tuple, *choice.guards, LiteralTuple(*body_literals)
+        choice_counter, var_tuple, *choice.guards, LiteralCollection(*body_literals)
     )
 
     # ----- eta rules -----
@@ -80,7 +80,7 @@ def rewrite_choice(
                 element_counter,
                 var_tuple,
                 element,
-                LiteralTuple(*body_literals),
+                LiteralCollection(*body_literals),
             )
         )
 

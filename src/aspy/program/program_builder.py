@@ -8,7 +8,7 @@ from aspy.program.literals import (
     AggrElement,
     AggrLiteral,
     Guard,
-    LiteralTuple,
+    LiteralCollection,
     Naf,
     Neg,
     PredLiteral,
@@ -410,7 +410,7 @@ class ProgramBuilder(ASPCoreVisitor):
         if not terms and not literals:
             return None
         else:
-            return AggrElement(TermTuple(*terms), LiteralTuple(*literals))
+            return AggrElement(TermTuple(*terms), LiteralCollection(*literals))
 
     # Visit a parse tree produced by ASPCoreParser#aggregate_function.
     def visitAggregate_function(

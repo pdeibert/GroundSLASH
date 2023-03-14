@@ -71,7 +71,7 @@ class Literal(Expr, ABC):
         return self.vars()
 
 
-class LiteralTuple:
+class LiteralCollection:
     """Represents an order-preserving unordered collection of literals.
 
     Attributes:
@@ -80,7 +80,7 @@ class LiteralTuple:
     """
 
     def __init__(self, *literals: Literal) -> None:
-        """Initializes literal tuple instance.
+        """Initializes literal collection instance.
 
         Args:
             *literals: Sequence of `Literal` instances.
@@ -88,7 +88,7 @@ class LiteralTuple:
         self.literals = tuple(literals)
 
     def __str__(self) -> str:
-        """Returns the string representation for the literal tuple.
+        """Returns the string representation for the literal collection.
 
         Returns:
             String consisting of the string representations of the literals,
@@ -100,31 +100,31 @@ class LiteralTuple:
         return len(self.literals)
 
     def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal tuple to a given expression.
+        """Compares the literal collection to a given expression.
 
-        Considered equal if the given expression is also a `LiteralTuple` instance and contains
+        Considered equal if the given expression is also a `LiteralCollection` instance and contains
         the same terms in any order.
 
         Args:
             other: `Expr` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal tuple is considered equal to the given expression.
+            Boolean indicating whether or not the literal collection is considered equal to the given expression.
         """  # noqa
         return (
-            isinstance(other, LiteralTuple)
+            isinstance(other, LiteralCollection)
             and len(self) == len(other)
             and frozenset(self.literals) == frozenset(other.literals)
         )
 
     def __hash__(self) -> int:
-        return hash(("literal tuple", frozenset(self.literals)))
+        return hash(("literal collection", frozenset(self.literals)))
 
     def __iter__(self) -> Iterator[Literal]:
         return iter(self.literals)
 
-    def __add__(self, other: "LiteralTuple") -> "LiteralTuple":
-        return LiteralTuple(*self.literals, *other.literals)
+    def __add__(self, other: "LiteralCollection") -> "LiteralCollection":
+        return LiteralCollection(*self.literals, *other.literals)
 
     def __getitem__(self, index: int) -> "Literal":
         return self.literals[index]
@@ -150,7 +150,7 @@ class LiteralTuple:
         return set().union(*tuple(literal.neg_occ() for literal in self.literals))
 
     def vars(self) -> Set["Variable"]:
-        """Returns the variables associated with the literal tuple.
+        """Returns the variables associated with the literal collection.
 
         Returns:
             (Possibly empty) set of 'Variable' instances as union of the variables of all literals.
@@ -158,7 +158,7 @@ class LiteralTuple:
         return set().union(*tuple(literal.vars() for literal in self.literals))
 
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
-        """Returns the global variables associated with the literal tuple.
+        """Returns the global variables associated with the literal collection.
 
         Returns:
             (Possibly empty) set of 'Variable' instances as union of the global variables of all literals.
@@ -170,7 +170,7 @@ class LiteralTuple:
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
-        """Returns the the safety characterizations for the literal tuple.
+        """Returns the the safety characterizations for the literal collection.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
@@ -185,21 +185,21 @@ class LiteralTuple:
             *tuple(literal.safety(rule) for literal in self.literals)
         )
 
-    def without(self, *literals: Literal) -> "LiteralTuple":
-        """Returns a literal tuple without any of the specified literals.
+    def without(self, *literals: Literal) -> "LiteralCollection":
+        """Returns a literal collection without any of the specified literals.
 
         Args:
             *literals: Sequence of `Literal` instances to be excluded.
 
         Returns:
-            `LiteralTuple` instance excluding any of the specified literals.
+            `LiteralCollection` instance excluding any of the specified literals.
         """
-        return LiteralTuple(
+        return LiteralCollection(
             *(literal for literal in self.literals if literal not in literals)
         )
 
-    def substitute(self, subst: "Substitution") -> "LiteralTuple":
-        """Applies a substitution to the literal tuple.
+    def substitute(self, subst: "Substitution") -> "LiteralCollection":
+        """Applies a substitution to the literal collection.
 
         Substitutes all literals recursively.
 
@@ -207,7 +207,7 @@ class LiteralTuple:
             subst: `Substitution` instance.
 
         Returns:
-            `LiteralTuple` instance with (possibly substituted) literals.
+            `LiteralCollection` instance with (possibly substituted) literals.
         """
         if self.ground:
             return deepcopy(self)
@@ -215,12 +215,12 @@ class LiteralTuple:
         # substitute literals recursively
         literals = (literal.substitute(subst) for literal in self)
 
-        return LiteralTuple(*literals)
+        return LiteralCollection(*literals)
 
     def match(self, other: Expr) -> Optional["Substitution"]:
-        """Tries to match the literal tuple with an expression.
+        """Tries to match the literal collection with an expression.
 
-        Can only be matched to a literal tuple where all literals can be matched (in arbitrary order)
+        Can only be matched to a literal collection where all literals can be matched (in arbitrary order)
         without any assignment conflicts.
 
         Args:
@@ -229,7 +229,7 @@ class LiteralTuple:
         Returns:
             A substitution necessary for matching (may be empty) or `None` if cannot be matched.
         """  # noqa
-        if not (isinstance(other, LiteralTuple) and len(self) == len(other)):
+        if not (isinstance(other, LiteralCollection) and len(self) == len(other)):
             return None
 
         subst = Substitution()
@@ -257,8 +257,8 @@ class LiteralTuple:
 
         return subst
 
-    def replace_arith(self, var_table: "VariableTable") -> "LiteralTuple":
-        """Replaces arithmetic terms appearing in the literal tuple with arithmetic variables.
+    def replace_arith(self, var_table: "VariableTable") -> "LiteralCollection":
+        """Replaces arithmetic terms appearing in the literal collection with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
 
@@ -266,8 +266,8 @@ class LiteralTuple:
             var_table: `VariableTable` instance.
 
         Returns:
-            `LiteralTuple` instance.
+            `LiteralCollection` instance.
         """  # noqa
-        return LiteralTuple(
+        return LiteralCollection(
             *tuple(literal.replace_arith(var_table) for literal in self.literals)
         )

@@ -14,7 +14,12 @@ from typing import (
 )
 
 from aspy.program.expression import Expr
-from aspy.program.literals import AggrLiteral, ChoicePlaceholder, Guard, LiteralTuple
+from aspy.program.literals import (
+    AggrLiteral,
+    ChoicePlaceholder,
+    Guard,
+    LiteralCollection,
+)
 from aspy.program.literals.builtin import GreaterEqual, op2rel
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
@@ -49,14 +54,16 @@ class ChoiceElement(Expr):
     def __init__(
         self,
         atom: "PredLiteral",
-        literals: Optional[Union[Tuple["Literal", ...], "LiteralTuple"]] = None,
+        literals: Optional[Union[Tuple["Literal", ...], "LiteralCollection"]] = None,
     ) -> None:
         if literals is None:
-            literals = LiteralTuple()
+            literals = LiteralCollection()
 
         self.atom = atom
         self.literals = (
-            literals if isinstance(literals, LiteralTuple) else LiteralTuple(*literals)
+            literals
+            if isinstance(literals, LiteralCollection)
+            else LiteralCollection(*literals)
         )
 
     def __eq__(self, other: Expr) -> bool:
@@ -77,11 +84,11 @@ class ChoiceElement(Expr):
         )
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple(self.atom)
+    def head(self) -> LiteralCollection:
+        return LiteralCollection(self.atom)
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
     @cached_property
@@ -190,12 +197,12 @@ class Choice(Expr):
         return iter(self.elements)
 
     @property
-    def head(self) -> LiteralTuple:
-        return LiteralTuple(*tuple(element.atom for element in self.elements))
+    def head(self) -> LiteralCollection:
+        return LiteralCollection(*tuple(element.atom for element in self.elements))
 
     @property
-    def body(self) -> LiteralTuple:
-        return LiteralTuple(
+    def body(self) -> LiteralCollection:
+        return LiteralCollection(
             *chain(*tuple(element.literals for element in self.elements))
         )
 
@@ -468,13 +475,13 @@ class ChoiceFact(Fact):
         return self.choice
 
     @property
-    def body(self) -> LiteralTuple:
-        return LiteralTuple()
+    def body(self) -> LiteralCollection:
+        return LiteralCollection()
 
-    def consequents(self) -> "LiteralTuple":
+    def consequents(self) -> "LiteralCollection":
         return self.choice.head
 
-    def antecedents(self) -> "LiteralTuple":
+    def antecedents(self) -> "LiteralCollection":
         return self.choice.body
 
     @cached_property
@@ -524,7 +531,7 @@ class ChoiceFact(Fact):
         from .rewrite import rewrite_choice
 
         chi_literal, eps_rule, eta_rules = rewrite_choice(
-            self.choice, choice_counter, glob_vars, LiteralTuple()
+            self.choice, choice_counter, glob_vars, LiteralCollection()
         )
 
         # store choice information
@@ -551,7 +558,7 @@ class ChoiceRule(Rule):
     def __init__(
         self,
         head: Choice,
-        body: Union[LiteralTuple, Iterable["Literal"]],
+        body: Union[LiteralCollection, Iterable["Literal"]],
         *args,
         **kwargs,
     ) -> None:
@@ -569,7 +576,9 @@ class ChoiceRule(Rule):
         self.deterministic: bool = False
 
         self.choice = head
-        self.literals = body if isinstance(body, LiteralTuple) else LiteralTuple(*body)
+        self.literals = (
+            body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
+        )
 
     def __eq__(self, other: Expr) -> bool:
         return (
@@ -592,14 +601,14 @@ class ChoiceRule(Rule):
         return self.choice
 
     @property
-    def body(self) -> LiteralTuple:
+    def body(self) -> LiteralCollection:
         return self.literals
 
-    def consequents(self) -> "LiteralTuple":
+    def consequents(self) -> "LiteralCollection":
         return self.choice.head
 
-    def antecedents(self) -> "LiteralTuple":
-        return LiteralTuple(*self.literals, *self.choice.body)
+    def antecedents(self) -> "LiteralCollection":
+        return LiteralCollection(*self.literals, *self.choice.body)
 
     @cached_property
     def safe(self) -> bool:
@@ -609,9 +618,9 @@ class ChoiceRule(Rule):
         for element in self.choice:
             global_vars = outside_glob_vars.union(element.head.global_vars())
 
-            if LiteralTuple(*self.body, *element.body).safety(self) != SafetyTriplet(
-                global_vars
-            ):
+            if LiteralCollection(*self.body, *element.body).safety(
+                self
+            ) != SafetyTriplet(global_vars):
                 return False
 
         return True

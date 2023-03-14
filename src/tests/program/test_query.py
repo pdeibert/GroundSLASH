@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import LiteralTuple, PredLiteral
+from aspy.program.literals import LiteralCollection, PredLiteral
 from aspy.program.query import Query
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
@@ -22,9 +22,11 @@ class TestQuery(unittest.TestCase):
         # equality
         self.assertEqual(ground_query, Query(PredLiteral("p", Number(0))))
         # head
-        self.assertEqual(ground_query.head, LiteralTuple(PredLiteral("p", Number(0))))
+        self.assertEqual(
+            ground_query.head, LiteralCollection(PredLiteral("p", Number(0)))
+        )
         # body
-        self.assertEqual(ground_query.body, LiteralTuple())
+        self.assertEqual(ground_query.body, LiteralCollection())
         # hashing
         self.assertEqual(hash(ground_query), hash(Query(PredLiteral("p", Number(0)))))
         # ground

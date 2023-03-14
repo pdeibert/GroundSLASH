@@ -10,7 +10,7 @@ from aspy.program.terms import TermTuple
 from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import LiteralTuple
+    from aspy.program.literals import LiteralCollection
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
 
@@ -27,7 +27,11 @@ class OptimizeElement(Expr):
     """
 
     def __init__(
-        self, weight: "Term", level: "Term", terms: TermTuple, literals: "LiteralTuple"
+        self,
+        weight: "Term",
+        level: "Term",
+        terms: TermTuple,
+        literals: "LiteralCollection",
     ) -> None:
         self.weight = weight
         self.level = level
@@ -45,7 +49,7 @@ class OptimizeElement(Expr):
         return TermTuple(self.weight, self.level) + self.terms
 
     @property
-    def body(self) -> "LiteralTuple":
+    def body(self) -> "LiteralCollection":
         return self.literals
 
     @property
@@ -99,7 +103,7 @@ class OptimizeStatement(Statement, ABC):
         return sum([element.head() for element in self.elements])
 
     @property
-    def body(self) -> "LiteralTuple":
+    def body(self) -> "LiteralCollection":
         # TODO: correct?
         return sum([element.body() for element in self.elements])
 

@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import LiteralTuple, PredLiteral
+from aspy.program.literals import LiteralCollection, PredLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
@@ -9,12 +9,12 @@ from aspy.program.variable_table import VariableTable
 
 
 class TestLiteral(unittest.TestCase):
-    def test_literal_tuple(self):
+    def test_literal_collection(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        literals = LiteralTuple(
+        literals = LiteralCollection(
             PredLiteral("p", Number(0), Variable("X")),
             PredLiteral("q", Minus(Variable("Y"))),
         )
@@ -27,7 +27,7 @@ class TestLiteral(unittest.TestCase):
         self.assertEqual(literals[1], PredLiteral("q", Minus(Variable("Y"))))
         self.assertTrue(
             literals
-            == LiteralTuple(
+            == LiteralCollection(
                 PredLiteral("p", Number(0), Variable("X")),
                 PredLiteral("q", Minus(Variable("Y"))),
             )
@@ -36,7 +36,7 @@ class TestLiteral(unittest.TestCase):
         self.assertEqual(
             hash(literals),
             hash(
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0), Variable("X")),
                     PredLiteral("q", Minus(Variable("Y"))),
                 )
@@ -51,7 +51,7 @@ class TestLiteral(unittest.TestCase):
         # replace arithmetic terms
         self.assertEqual(
             literals.replace_arith(VariableTable()),
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(0), Variable("X")),
                 PredLiteral("q", ArithVariable(0, Minus(Variable("Y")))),
             ),
@@ -68,18 +68,18 @@ class TestLiteral(unittest.TestCase):
 
         # substitute
         self.assertEqual(
-            LiteralTuple(PredLiteral("p", String("f"), Variable("X"))).substitute(
+            LiteralCollection(PredLiteral("p", String("f"), Variable("X"))).substitute(
                 Substitution({String("f"): Number(0), Variable("X"): Number(1)})
             ),
-            LiteralTuple(PredLiteral("p", String("f"), Number(1))),
+            LiteralCollection(PredLiteral("p", String("f"), Number(1))),
         )  # NOTE: substitution is invalid
         # match
         self.assertEqual(
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Variable("X"), String("f")),
                 PredLiteral("q", Variable("X")),
             ).match(
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(1), String("f")),
                     PredLiteral("q", Number(1)),
                 )
@@ -87,11 +87,11 @@ class TestLiteral(unittest.TestCase):
             Substitution({Variable("X"): Number(1)}),
         )
         self.assertEqual(
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Variable("X"), String("f")),
                 PredLiteral("q", Variable("X")),
             ).match(
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(1), String("g")),
                     PredLiteral("q", Number(1)),
                 )
@@ -99,18 +99,18 @@ class TestLiteral(unittest.TestCase):
             None,
         )  # ground terms don't match
         self.assertEqual(
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Variable("X"), String("f")),
                 PredLiteral("q", Variable("X")),
             ).match(PredLiteral("p")),
             None,
         )  # wrong type
         self.assertEqual(
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Variable("X"), String("f")),
                 PredLiteral("q", Variable("X")),
             ).match(
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(1), String("f")),
                     PredLiteral("q", Number(0)),
                 )
@@ -118,12 +118,12 @@ class TestLiteral(unittest.TestCase):
             None,
         )  # assignment conflict
         self.assertEqual(
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(0), String("f")),
                 PredLiteral("q", Number(1)),
                 PredLiteral("u", Number(0)),
             ).match(
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Number(0), String("f")),
                     PredLiteral("u", Number(0)),
                     PredLiteral("q", Number(1)),
@@ -132,10 +132,10 @@ class TestLiteral(unittest.TestCase):
             Substitution(),
         )  # different order of literals
 
-        # combining literal tuples
+        # combining literal collections
         self.assertEqual(
-            literals + LiteralTuple(PredLiteral("u")),
-            LiteralTuple(
+            literals + LiteralCollection(PredLiteral("u")),
+            LiteralCollection(
                 PredLiteral("p", Number(0), Variable("X")),
                 PredLiteral("q", Minus(Variable("Y"))),
                 PredLiteral("u"),
@@ -144,11 +144,11 @@ class TestLiteral(unittest.TestCase):
         # without
         self.assertEqual(
             literals.without(PredLiteral("p", Number(0), Variable("X"))),
-            LiteralTuple(PredLiteral("q", Minus(Variable("Y")))),
+            LiteralCollection(PredLiteral("q", Minus(Variable("Y")))),
         )
         self.assertEqual(
             literals.without(PredLiteral("p", Number(1), Variable("X"))), literals
-        )  # not part of original literal tuple
+        )  # not part of original literal collection
         # TODO: iter
 
 

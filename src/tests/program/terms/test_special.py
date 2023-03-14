@@ -105,21 +105,21 @@ class TestSpecial(unittest.TestCase):
         # aggregate element
         element = AggrElement(
             TermTuple(Number(5), Minus(Variable('X'))),
-            LiteralTuple(PredLiteral('p', String('str')), Naf(PredLiteral('q', Variable('Y'))))
+            LiteralCollection(PredLiteral('p', String('str')), Naf(PredLiteral('q', Variable('Y'))))
         )
         self.assertEqual(replace_arith(element, VariableTable()),
             AggrElement(
                 TermTuple(Number(5), ArithVariable(0, Minus(Variable('X')))),
-                LiteralTuple(PredLiteral('p', String('str')), Naf(PredLiteral('q', Variable('Y'))))
+                LiteralCollection(PredLiteral('p', String('str')), Naf(PredLiteral('q', Variable('Y'))))
             )
         )
         # count
-        aggregate = AggrCount(AggrElement(TermTuple(Number(5)), LiteralTuple(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
+        aggregate = AggrCount(AggrElement(TermTuple(Number(5)), LiteralCollection(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
         self.assertEqual(replace_arith(aggregate, VariableTable()),
             AggrCount(
                 AggrElement(
                     TermTuple(Number(5)),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral('p', ArithVariable(0, Minus(Variable('X')))),
                         Naf(PredLiteral('q'))
                     )
@@ -127,12 +127,12 @@ class TestSpecial(unittest.TestCase):
             )
         )
         # sum
-        aggregate = AggrSum(AggrElement(TermTuple(Number(5)), LiteralTuple(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
+        aggregate = AggrSum(AggrElement(TermTuple(Number(5)), LiteralCollection(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
         self.assertEqual(replace_arith(aggregate, VariableTable()),
             AggrSum(
                 AggrElement(
                     TermTuple(Number(5)),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral('p', ArithVariable(0, Minus(Variable('X')))),
                         Naf(PredLiteral('q'))
                     )
@@ -140,12 +140,12 @@ class TestSpecial(unittest.TestCase):
             )
         )
         # min
-        aggregate = AggrMax(AggrElement(TermTuple(Number(5)), LiteralTuple(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
+        aggregate = AggrMax(AggrElement(TermTuple(Number(5)), LiteralCollection(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
         self.assertEqual(replace_arith(aggregate, VariableTable()),
             AggrMax(
                 AggrElement(
                     TermTuple(Number(5)),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral('p', ArithVariable(0, Minus(Variable('X')))),
                         Naf(PredLiteral('q'))
                     )
@@ -153,12 +153,12 @@ class TestSpecial(unittest.TestCase):
             )
         )
         # max
-        aggregate = AggrMin(AggrElement(TermTuple(Number(5)), LiteralTuple(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
+        aggregate = AggrMin(AggrElement(TermTuple(Number(5)), LiteralCollection(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
         self.assertEqual(replace_arith(aggregate, VariableTable()),
             AggrMin(
                 AggrElement(
                     TermTuple(Number(5)),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral('p', ArithVariable(0, Minus(Variable('X')))),
                         Naf(PredLiteral('q'))
                     )
@@ -168,14 +168,14 @@ class TestSpecial(unittest.TestCase):
         # guard
         self.assertEqual(replace_arith(Guard(RelOp.EQUAL, Minus(Variable('X')), True), ), Guard(RelOp.EQUAL, ArithVariable(0, Variable('X')), True))
         # aggregate literal
-        aggregate = AggrCount(AggrElement(TermTuple(Number(5)), LiteralTuple(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
+        aggregate = AggrCount(AggrElement(TermTuple(Number(5)), LiteralCollection(PredLiteral('p', Minus(Variable('X'))), Naf(PredLiteral('q')))))
         literal = Naf(AggrLiteral(aggregate, Guard(RelOp.EQUAL, Minus(Variable('X')), True)))
         self.assertEqual(replace_arith(literal, VariableTable()),
             Naf(AggrLiteral(
                     AggrCount(
                     AggrElement(
                         TermTuple(Number(5)),
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral('p', ArithVariable(0, Minus(Variable('X')))),
                             Naf(PredLiteral('q'))
                         )
@@ -185,8 +185,8 @@ class TestSpecial(unittest.TestCase):
             ))
         )
 
-        # literal tuple
-        self.assertEqual(replace_arith(LiteralTuple(PredLiteral('p', Number(0), Variable('X')), PredLiteral('q', Minus(Variable('X')))), VariableTable()), LiteralTuple(PredLiteral('p', Number(0), Variable('X')), PredLiteral('q', ArithVariable(0, Minus(Variable('Y'))))))
+        # literal collection
+        self.assertEqual(replace_arith(LiteralCollection(PredLiteral('p', Number(0), Variable('X')), PredLiteral('q', Minus(Variable('X')))), VariableTable()), LiteralCollection(PredLiteral('p', Number(0), Variable('X')), PredLiteral('q', ArithVariable(0, Minus(Variable('Y'))))))
 
         # ----- statements -----
     """

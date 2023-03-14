@@ -8,7 +8,11 @@ from aspy.program.literals import AggrLiteral
 from aspy.program.variable_table import VariableTable
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.literals import AggrPlaceholder, ChoicePlaceholder, LiteralTuple
+    from aspy.program.literals import (
+        AggrPlaceholder,
+        ChoicePlaceholder,
+        LiteralCollection,
+    )
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.terms import Variable
 
@@ -122,10 +126,10 @@ class Statement(Expr, ABC):
     ) -> "Statement":
         return deepcopy(self)
 
-    def consequents(self) -> "LiteralTuple":
+    def consequents(self) -> "LiteralCollection":
         return self.head
 
-    def antecedents(self) -> "LiteralTuple":
+    def antecedents(self) -> "LiteralCollection":
         return self.body
 
 

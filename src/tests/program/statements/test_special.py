@@ -10,7 +10,7 @@ from aspy.program.literals import (
     GreaterEqual,
     Guard,
     LessEqual,
-    LiteralTuple,
+    LiteralCollection,
     PredLiteral,
 )
 from aspy.program.operators import RelOp
@@ -39,7 +39,7 @@ class TestSpecial(unittest.TestCase):
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Number(10), True),
         )
-        ground_guard_literals = LiteralTuple(
+        ground_guard_literals = LiteralCollection(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Number(10))
         )
         ground_eps_literal = AggrBaseLiteral(
@@ -49,14 +49,14 @@ class TestSpecial(unittest.TestCase):
             ground_eps_literal,
             *ground_guards,
             ground_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )
 
         var_guards = (
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Variable("X"), True),
         )
-        var_guard_literals = LiteralTuple(
+        var_guard_literals = LiteralCollection(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Variable("X"))
         )
         var_eps_literal = AggrBaseLiteral(1, global_vars, global_vars)
@@ -64,7 +64,7 @@ class TestSpecial(unittest.TestCase):
             var_eps_literal,
             *var_guards,
             var_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
 
         # invalid initialization
@@ -75,7 +75,7 @@ class TestSpecial(unittest.TestCase):
             {global_vars},
             *ground_guards,
             base_value,
-            LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # non-tuple for 'global_vars'
         self.assertRaises(
             ValueError,
@@ -85,7 +85,7 @@ class TestSpecial(unittest.TestCase):
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Number(10), False),
             base_value,
-            LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # two left guards
         # correct initialization
         self.assertTrue(ground_rule.aggr_id == var_rule.aggr_id == 1)
@@ -115,17 +115,17 @@ class TestSpecial(unittest.TestCase):
             var_rule.body[1], LessEqual(Number(0), Variable("X"))
         )  # NOTE: order of operands in built-in terms
         self.assertEqual(var_rule.body[2], PredLiteral("p", Number(2), Variable("Y")))
-        self.assertEqual(ground_rule.head, LiteralTuple(ground_eps_literal))
+        self.assertEqual(ground_rule.head, LiteralCollection(ground_eps_literal))
         self.assertEqual(
             ground_rule.body,
             ground_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )
-        self.assertEqual(var_rule.head, LiteralTuple(var_eps_literal))
+        self.assertEqual(var_rule.head, LiteralCollection(var_eps_literal))
         self.assertEqual(
             var_rule.body,
             var_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
         # hashing
         self.assertEqual(
@@ -135,7 +135,7 @@ class TestSpecial(unittest.TestCase):
                     ground_eps_literal,
                     *ground_guards,
                     ground_guard_literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
                 )
             ),
         )
@@ -146,7 +146,7 @@ class TestSpecial(unittest.TestCase):
                     var_eps_literal,
                     *var_guards,
                     var_guard_literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
                 )
             ),
         )
@@ -182,7 +182,7 @@ class TestSpecial(unittest.TestCase):
         local_vars = TermTuple(Variable("L"))
         global_vars = TermTuple(Variable("X"), Variable("Y"))
         element = AggrElement(
-            TermTuple(Variable("L")), LiteralTuple(PredLiteral("p", Variable("L")))
+            TermTuple(Variable("L")), LiteralCollection(PredLiteral("p", Variable("L")))
         )
 
         ground_eta_literal = AggrElemLiteral(
@@ -191,7 +191,7 @@ class TestSpecial(unittest.TestCase):
         ground_rule = AggrElemRule(
             ground_eta_literal,
             element,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(5)),
                 PredLiteral("p", Number(2), Number(3)),
             ),
@@ -203,7 +203,8 @@ class TestSpecial(unittest.TestCase):
         var_rule = AggrElemRule(
             var_eta_literal,
             element,
-            element.literals + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            element.literals
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
 
         # correct initialization
@@ -233,7 +234,7 @@ class TestSpecial(unittest.TestCase):
                 AggrElemRule(
                     ground_eta_literal,
                     element,
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral("p", Number(5)),
                         PredLiteral("p", Number(2), Number(3)),
                     ),
@@ -247,7 +248,7 @@ class TestSpecial(unittest.TestCase):
                     var_eta_literal,
                     element,
                     element.literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
                 )
             ),
         )
@@ -295,7 +296,7 @@ class TestSpecial(unittest.TestCase):
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Number(10), True),
         )
-        ground_guard_literals = LiteralTuple(
+        ground_guard_literals = LiteralCollection(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Number(10))
         )
         ground_eps_literal = ChoiceBaseLiteral(
@@ -305,14 +306,14 @@ class TestSpecial(unittest.TestCase):
             ground_eps_literal,
             *ground_guards,
             ground_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )
 
         var_guards = (
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Variable("X"), True),
         )
-        var_guard_literals = LiteralTuple(
+        var_guard_literals = LiteralCollection(
             GreaterEqual(Number(-1), base_value), LessEqual(base_value, Variable("X"))
         )
         var_eps_literal = ChoiceBaseLiteral(1, global_vars, global_vars)
@@ -320,7 +321,7 @@ class TestSpecial(unittest.TestCase):
             var_eps_literal,
             *var_guards,
             var_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
 
         # invalid initialization
@@ -330,7 +331,7 @@ class TestSpecial(unittest.TestCase):
             1,
             {global_vars},
             *ground_guards,
-            LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # non-tuple for 'global_vars'
         self.assertRaises(
             ValueError,
@@ -339,7 +340,7 @@ class TestSpecial(unittest.TestCase):
             global_vars,
             Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             Guard(RelOp.LESS_OR_EQ, Number(10), False),
-            LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # two left guards
         # correct initialization
         self.assertTrue(ground_rule.choice_id == var_rule.choice_id == 1)
@@ -370,17 +371,17 @@ class TestSpecial(unittest.TestCase):
             var_rule.body[1], LessEqual(Number(0), Variable("X"))
         )  # NOTE: order of operands in built-in terms
         self.assertEqual(var_rule.body[2], PredLiteral("p", Number(2), Variable("Y")))
-        self.assertEqual(ground_rule.head, LiteralTuple(ground_eps_literal))
+        self.assertEqual(ground_rule.head, LiteralCollection(ground_eps_literal))
         self.assertEqual(
             ground_rule.body,
             ground_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+            + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )
-        self.assertEqual(var_rule.head, LiteralTuple(var_eps_literal))
+        self.assertEqual(var_rule.head, LiteralCollection(var_eps_literal))
         self.assertEqual(
             var_rule.body,
             var_guard_literals
-            + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
         # hashing
         self.assertEqual(
@@ -390,7 +391,7 @@ class TestSpecial(unittest.TestCase):
                     ground_eps_literal,
                     *ground_guards,
                     ground_guard_literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Number(3))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Number(3))),
                 )
             ),
         )
@@ -401,7 +402,7 @@ class TestSpecial(unittest.TestCase):
                     var_eps_literal,
                     *var_guards,
                     var_guard_literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
                 )
             ),
         )
@@ -438,7 +439,7 @@ class TestSpecial(unittest.TestCase):
         global_vars = TermTuple(Variable("X"), Variable("Y"))
         element = ChoiceElement(
             PredLiteral("p", Variable("L")),
-            LiteralTuple(PredLiteral("p", Variable("L"))),
+            LiteralCollection(PredLiteral("p", Variable("L"))),
         )
 
         ground_eta_literal = ChoiceElemLiteral(
@@ -447,7 +448,7 @@ class TestSpecial(unittest.TestCase):
         ground_rule = ChoiceElemRule(
             ground_eta_literal,
             element,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", Number(5)),
                 PredLiteral("p", Number(2), Number(3)),
             ),
@@ -459,7 +460,8 @@ class TestSpecial(unittest.TestCase):
         var_rule = ChoiceElemRule(
             var_eta_literal,
             element,
-            element.literals + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+            element.literals
+            + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
         )
 
         # correct initialization
@@ -489,7 +491,7 @@ class TestSpecial(unittest.TestCase):
                 ChoiceElemRule(
                     ground_eta_literal,
                     element,
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral("p", Number(5)),
                         PredLiteral("p", Number(2), Number(3)),
                     ),
@@ -503,7 +505,7 @@ class TestSpecial(unittest.TestCase):
                     var_eta_literal,
                     element,
                     element.literals
-                    + LiteralTuple(PredLiteral("p", Number(2), Variable("Y"))),
+                    + LiteralCollection(PredLiteral("p", Number(2), Variable("Y"))),
                 )
             ),
         )

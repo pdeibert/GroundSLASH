@@ -14,7 +14,7 @@ from aspy.program.literals import (
     Guard,
     Less,
     LessEqual,
-    LiteralTuple,
+    LiteralCollection,
     Naf,
     Neg,
     PredLiteral,
@@ -66,11 +66,11 @@ class TestProgram(unittest.TestCase):
                         (
                             AggrElement(
                                 TermTuple(Number(1)),
-                                LiteralTuple(PredLiteral("a")),
+                                LiteralCollection(PredLiteral("a")),
                             ),
                             AggrElement(
                                 TermTuple(Number(1)),
-                                LiteralTuple(PredLiteral("c")),
+                                LiteralCollection(PredLiteral("c")),
                             ),
                         ),
                         Guard(RelOp.EQUAL, Number(1), True),
@@ -102,11 +102,11 @@ class TestProgram(unittest.TestCase):
                             (
                                 AggrElement(
                                     TermTuple(Number(1)),
-                                    LiteralTuple(PredLiteral("a")),
+                                    LiteralCollection(PredLiteral("a")),
                                 ),
                                 AggrElement(
                                     TermTuple(Number(1)),
-                                    LiteralTuple(PredLiteral("c")),
+                                    LiteralCollection(PredLiteral("c")),
                                 ),
                             ),
                             Guard(RelOp.EQUAL, Number(1), True),
@@ -251,7 +251,7 @@ class TestProgram(unittest.TestCase):
                 (
                     AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredLiteral("p", Variable("X"))),
+                        LiteralCollection(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (Guard(RelOp.EQUAL, Number(3), False), None),
@@ -266,7 +266,7 @@ class TestProgram(unittest.TestCase):
                 (
                     AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredLiteral("p", Variable("X"))),
+                        LiteralCollection(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (None, Guard(RelOp.EQUAL, Number(3), True)),
@@ -281,7 +281,7 @@ class TestProgram(unittest.TestCase):
                 (
                     AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredLiteral("p", Variable("X"))),
+                        LiteralCollection(PredLiteral("p", Variable("X"))),
                     ),
                 ),
                 (
@@ -309,7 +309,7 @@ class TestProgram(unittest.TestCase):
             .body[0],  # element without literals (i.e., condition)
             AggrLiteral(
                 AggrCount(),
-                (AggrElement(TermTuple(Variable("X")), LiteralTuple()),),
+                (AggrElement(TermTuple(Variable("X")), LiteralCollection()),),
                 (
                     Guard(RelOp.LESS, Number(5), False),
                     Guard(RelOp.EQUAL, Number(3), True),
@@ -324,7 +324,7 @@ class TestProgram(unittest.TestCase):
                 AggrCount(),
                 (
                     AggrElement(
-                        TermTuple(), LiteralTuple(PredLiteral("p", Variable("X")))
+                        TermTuple(), LiteralCollection(PredLiteral("p", Variable("X")))
                     ),
                 ),
                 (
@@ -355,11 +355,11 @@ class TestProgram(unittest.TestCase):
                 (
                     AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredLiteral("p", Variable("X"))),
+                        LiteralCollection(PredLiteral("p", Variable("X"))),
                     ),
                     AggrElement(
                         TermTuple(Variable("X")),
-                        LiteralTuple(PredLiteral("q", Variable("X"))),
+                        LiteralCollection(PredLiteral("q", Variable("X"))),
                     ),
                 ),
                 (

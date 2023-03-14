@@ -10,7 +10,7 @@ from aspy.program.literals import (
     AggrMin,
     AggrSum,
     Guard,
-    LiteralTuple,
+    LiteralCollection,
     Naf,
     PredLiteral,
 )
@@ -46,7 +46,7 @@ class TestAggregate(unittest.TestCase):
 
         element = AggrElement(
             TermTuple(Number(5), Variable("X")),
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", String("str")),
                 Naf(PredLiteral("q", Variable("Y"))),
             ),
@@ -58,7 +58,7 @@ class TestAggregate(unittest.TestCase):
             element,
             AggrElement(
                 TermTuple(Number(5), Variable("X")),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", String("str")),
                     Naf(PredLiteral("q", Variable("Y"))),
                 ),
@@ -69,7 +69,7 @@ class TestAggregate(unittest.TestCase):
         # body
         self.assertEqual(
             element.body,
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", String("str")),
                 Naf(PredLiteral("q", Variable("Y"))),
             ),
@@ -80,7 +80,7 @@ class TestAggregate(unittest.TestCase):
             hash(
                 AggrElement(
                     TermTuple(Number(5), Variable("X")),
-                    LiteralTuple(
+                    LiteralCollection(
                         PredLiteral("p", String("str")),
                         Naf(PredLiteral("q", Variable("Y"))),
                     ),
@@ -105,7 +105,7 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(element.replace_arith(VariableTable()), element)
         element = AggrElement(
             TermTuple(Number(5), Minus(Variable("X"))),
-            LiteralTuple(
+            LiteralCollection(
                 PredLiteral("p", String("str")),
                 Naf(PredLiteral("q", Variable("Y"))),
             ),
@@ -114,7 +114,7 @@ class TestAggregate(unittest.TestCase):
             element.replace_arith(VariableTable()),
             AggrElement(
                 TermTuple(Number(5), ArithVariable(0, Minus(Variable("X")))),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", String("str")),
                     Naf(PredLiteral("q", Variable("Y"))),
                 ),
@@ -128,7 +128,7 @@ class TestAggregate(unittest.TestCase):
             ),  # NOTE: substitution is invalid
             AggrElement(
                 TermTuple(Number(5), Minus(Number(1))),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", String("str")),
                     Naf(PredLiteral("q", Variable("Y"))),
                 ),
@@ -159,11 +159,11 @@ class TestAggregate(unittest.TestCase):
         # ----- propagation -----
         element_instances = {
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
             AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredLiteral("p", Number(1))),
+                LiteralCollection(PredLiteral("p", Number(1))),
             ),
         }
 
@@ -292,11 +292,11 @@ class TestAggregate(unittest.TestCase):
         # ----- propagation -----
         element_instances = {
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
             AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredLiteral("p", Number(1))),
+                LiteralCollection(PredLiteral("p", Number(1))),
             ),
         }
 
@@ -461,11 +461,11 @@ class TestAggregate(unittest.TestCase):
         # ----- propagation -----
         element_instances = {
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
             AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredLiteral("p", Number(1))),
+                LiteralCollection(PredLiteral("p", Number(1))),
             ),
         }
 
@@ -594,11 +594,11 @@ class TestAggregate(unittest.TestCase):
         # ----- propagation -----
         element_instances = {
             AggrElement(
-                TermTuple(Number(0)), LiteralTuple(PredLiteral("p", Number(0)))
+                TermTuple(Number(0)), LiteralCollection(PredLiteral("p", Number(0)))
             ),
             AggrElement(
                 TermTuple(Number(1)),
-                LiteralTuple(PredLiteral("p", Number(1))),
+                LiteralCollection(PredLiteral("p", Number(1))),
             ),
         }
 
@@ -713,11 +713,13 @@ class TestAggregate(unittest.TestCase):
         ground_elements = (
             AggrElement(
                 TermTuple(Number(5)),
-                LiteralTuple(PredLiteral("p", String("str")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", String("str")), Naf(PredLiteral("q"))
+                ),
             ),
             AggrElement(
                 TermTuple(Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         aggr_func = AggrCount()
@@ -773,11 +775,13 @@ class TestAggregate(unittest.TestCase):
         var_elements = (
             AggrElement(
                 TermTuple(Number(5)),
-                LiteralTuple(PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))),
+                LiteralCollection(
+                    PredLiteral("p", Variable("X")), Naf(PredLiteral("q"))
+                ),
             ),
             AggrElement(
                 TermTuple(Number(-3)),
-                LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                LiteralCollection(Naf(PredLiteral("p", String("str")))),
             ),
         )
         var_literal = AggrLiteral(
@@ -905,7 +909,7 @@ class TestAggregate(unittest.TestCase):
         arith_elements = (
             AggrElement(
                 TermTuple(Number(5)),
-                LiteralTuple(
+                LiteralCollection(
                     PredLiteral("p", Minus(Variable("X"))),
                     Naf(PredLiteral("q")),
                 ),
@@ -926,7 +930,7 @@ class TestAggregate(unittest.TestCase):
                     (
                         AggrElement(
                             TermTuple(Number(5)),
-                            LiteralTuple(
+                            LiteralCollection(
                                 PredLiteral(
                                     "p", ArithVariable(0, Minus(Variable("X")))
                                 ),
@@ -952,13 +956,13 @@ class TestAggregate(unittest.TestCase):
                 (
                     AggrElement(
                         TermTuple(Number(5)),
-                        LiteralTuple(
+                        LiteralCollection(
                             PredLiteral("p", Number(1)), Naf(PredLiteral("q"))
                         ),
                     ),
                     AggrElement(
                         TermTuple(Number(-3)),
-                        LiteralTuple(Naf(PredLiteral("p", String("str")))),
+                        LiteralCollection(Naf(PredLiteral("p", String("str")))),
                     ),
                 ),
                 guards=Guard(RelOp.LESS, Number(1), False),
