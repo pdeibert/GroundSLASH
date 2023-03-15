@@ -55,7 +55,8 @@ class PropBaseRule(NormalRule):
         lguard: Optional["Guard"],
         rguard: Optional["Guard"],
         base_value: "Term",
-        non_aggr_literals: "LiteralCollection",
+        literals: "LiteralCollection",
+        atom_type: Type = PropBaseLiteral,
     ) -> "PropBaseRule":
 
         # check if global vars is tuple (important for FIXED order)
@@ -72,7 +73,7 @@ class PropBaseRule(NormalRule):
                 )
 
         # create head atom/literal
-        atom = PropBaseLiteral(ref_id, glob_vars, deepcopy(glob_vars))
+        atom = atom_type(ref_id, glob_vars, deepcopy(glob_vars))
         # compute guard literals and combine them with non-aggregate literals
         lguard_literal = (
             op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
@@ -88,7 +89,7 @@ class PropBaseRule(NormalRule):
             )
         )
 
-        return PropBaseRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
+        return cls(atom, lguard, rguard, guard_literals + literals)
 
     def substitute(self, subst: "Substitution") -> "PropBaseRule":
         if self.ground:
@@ -160,6 +161,7 @@ class PropElemRule(NormalRule):
         glob_vars: TermTuple,
         element: "AggrElement",
         literals: "LiteralCollection",
+        atom_type: Type = PropElemLiteral,
     ) -> "PropElemRule":
 
         # compute local variables
@@ -168,13 +170,13 @@ class PropElemRule(NormalRule):
         )
 
         # create head atom/literal
-        atom = PropElemLiteral(
+        atom = atom_type(
             ref_id, element_id, local_vars, glob_vars, local_vars + glob_vars
         )
         # combine element literals with other literals
         literals = element.literals + literals
 
-        return PropElemRule(atom, element, literals)
+        return cls(atom, element, literals)
 
     def substitute(self, subst: "Substitution") -> "PropElemRule":
         if self.ground:
@@ -220,38 +222,15 @@ class AggrBaseRule(PropBaseRule):
         base_value: "Term",
         non_aggr_literals: "LiteralCollection",
     ) -> "AggrBaseRule":
-
-        # check if global vars is tuple (important for FIXED order)
-        if aspy.debug():
-            if not isinstance(glob_vars, TermTuple):
-                raise ValueError(
-                    f"Argument 'global_vars' for {cls} must be of type {TermTuple}."
-                )
-            if (lguard is not None and lguard.right) or (
-                rguard is not None and not rguard.right
-            ):
-                raise ValueError(
-                    f"Left or right guard for {cls} must indicate the correct side."
-                )
-
-        # create head atom/literal
-        atom = AggrBaseLiteral(ref_id, glob_vars, deepcopy(glob_vars))
-        # compute guard literals and combine them with non-aggregate literals
-        lguard_literal = (
-            op2rel[lguard.op](lguard.bound, base_value) if lguard is not None else None
+        return super().from_scratch(
+            ref_id,
+            glob_vars,
+            lguard,
+            rguard,
+            base_value,
+            non_aggr_literals,
+            AggrBaseLiteral,
         )
-        rguard_literal = (
-            op2rel[rguard.op](base_value, rguard.bound) if rguard is not None else None
-        )
-        guard_literals = LiteralCollection(
-            *tuple(
-                guard_literal
-                for guard_literal in (lguard_literal, rguard_literal)
-                if guard_literal is not None
-            )
-        )
-
-        return AggrBaseRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
 
 
 class AggrElemRule(PropElemRule):
@@ -274,20 +253,14 @@ class AggrElemRule(PropElemRule):
         element: "AggrElement",
         non_aggr_literals: "LiteralCollection",
     ) -> "AggrElemRule":
-
-        # compute local variables
-        local_vars = TermTuple(
-            *tuple(var for var in element.vars() if var not in glob_vars)
+        return super().from_scratch(
+            ref_id,
+            element_id,
+            glob_vars,
+            element,
+            non_aggr_literals,
+            AggrElemLiteral,
         )
-
-        # create head atom/literal
-        atom = AggrElemLiteral(
-            ref_id, element_id, local_vars, glob_vars, local_vars + glob_vars
-        )
-        # combine element literals with non-aggregate literals
-        literals = element.literals + non_aggr_literals
-
-        return AggrElemRule(atom, element, literals)
 
 
 class ChoiceBaseRule(PropBaseRule):
@@ -312,38 +285,15 @@ class ChoiceBaseRule(PropBaseRule):
         rguard: Optional["Guard"],
         non_aggr_literals: "LiteralCollection",
     ) -> "ChoiceBaseRule":
-
-        # check if global vars is tuple (important for FIXED order)
-        if aspy.debug():
-            if not isinstance(glob_vars, TermTuple):
-                raise ValueError(
-                    f"Argument 'global_vars' for {cls} must be of type {TermTuple}."
-                )
-            if (lguard is not None and lguard.right) or (
-                rguard is not None and not rguard.right
-            ):
-                raise ValueError(
-                    f"Left or right guard for {cls} must indicate the correct side."
-                )
-
-        # create head atom/literal
-        atom = ChoiceBaseLiteral(ref_id, glob_vars, deepcopy(glob_vars))
-        # compute guard literals and combine them with non-aggregate literals
-        lguard_literal = (
-            op2rel[lguard.op](lguard.bound, Number(0)) if lguard is not None else None
+        return super().from_scratch(
+            ref_id,
+            glob_vars,
+            lguard,
+            rguard,
+            Number(0),
+            non_aggr_literals,
+            ChoiceBaseLiteral,
         )
-        rguard_literal = (
-            op2rel[rguard.op](Number(0), rguard.bound) if rguard is not None else None
-        )
-        guard_literals = LiteralCollection(
-            *tuple(
-                guard_literal
-                for guard_literal in (lguard_literal, rguard_literal)
-                if guard_literal is not None
-            )
-        )
-
-        return ChoiceBaseRule(atom, lguard, rguard, guard_literals + non_aggr_literals)
 
 
 class ChoiceElemRule(PropElemRule):
@@ -366,17 +316,11 @@ class ChoiceElemRule(PropElemRule):
         element: "ChoiceElement",
         non_aggr_literals: "LiteralCollection",
     ) -> "ChoiceElemRule":
-
-        # compute local variables
-        local_vars = TermTuple(
-            *tuple(var for var in element.vars() if var not in glob_vars)
+        return super().from_scratch(
+            ref_id,
+            element_id,
+            glob_vars,
+            element,
+            non_aggr_literals,
+            ChoiceElemLiteral,
         )
-
-        # create head atom/literal
-        atom = ChoiceElemLiteral(
-            ref_id, element_id, local_vars, glob_vars, local_vars + glob_vars
-        )
-        # combine element literals with non-aggregate literals
-        literals = element.literals + non_aggr_literals
-
-        return ChoiceElemRule(atom, element, literals)
