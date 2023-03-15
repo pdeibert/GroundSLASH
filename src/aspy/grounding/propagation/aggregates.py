@@ -32,7 +32,7 @@ class AggrPropagator:
         for rule in chain(eps_instances, eta_instances):
 
             # get corresponding alpha_literal
-            aggr_literal, alpha_literal, *_ = self.aggr_map[rule.aggr_id]
+            aggr_literal, alpha_literal, *_ = self.aggr_map[rule.ref_id]
 
             if isinstance(rule, AggrBaseRule):
                 # gather variable substitution

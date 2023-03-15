@@ -13,18 +13,30 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class AuxLiteral(PredLiteral, ABC):
-    """TODO."""
+    """Abstract base class for auxiliary predicate literals."""
 
     def __init__(self, name: str, *args, **kwargs) -> None:
+        """Initializes the auxiliary literal instance.
+
+        Args:
+            name: String representing the predicate identifier.
+                Does not need to standard identifier limitations, but should
+                make sense when printed.
+        """
         super().__init__("f", *args, **kwargs)
         self.name = name  # TODO: better way to avoid regex check in 'PredLiteral'?
 
 
-class AggrPlaceholder(AuxLiteral):
-    """TODO."""
+class PropPlaceholder(AuxLiteral):
+    """TODO"""
 
     def __init__(
-        self, aggr_id: int, glob_vars: TermTuple, terms: TermTuple, naf: bool = False
+        self,
+        prefix: str,
+        ref_id: int,
+        glob_vars: TermTuple,
+        terms: TermTuple,
+        naf: bool = False,
     ) -> None:
 
         if len(glob_vars) != len(terms):
@@ -32,14 +44,16 @@ class AggrPlaceholder(AuxLiteral):
                 f"Number of global variables for {type(self)} does not match number of specified terms."  # noqa
             )
 
-        super().__init__(f"{SpecialChar.ALPHA.value}{aggr_id}", *terms, naf=naf)
-        self.aggr_id = aggr_id
+        super().__init__(f"{prefix}{ref_id}", *terms, naf=naf)
+        self.prefix = prefix
+        self.ref_id = ref_id
         self.glob_vars = glob_vars
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, AggrPlaceholder)
-            and self.aggr_id == other.aggr_id
+            isinstance(other, type(self))
+            and self.prefix == other.prefix
+            and self.ref_id == other.ref_id
             and set(self.glob_vars) == set(other.glob_vars)
             and {v: t for v, t in zip(self.glob_vars, self.terms)}
             == {v: t for v, t in zip(other.glob_vars, other.terms)}
@@ -48,44 +62,66 @@ class AggrPlaceholder(AuxLiteral):
     def __hash__(self) -> int:
         return hash(
             (
-                "aggr placeholder",
-                self.aggr_id,
+                "prop placeholder",
+                self.prefix,
+                self.ref_id,
                 frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
             )
         )
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
-            f"Classical negation cannot be set for literal of type {type(AggrPlaceholder)}."  # noqa
+            f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["AggrPlaceholder"]:
+    def pos_occ(self) -> Set["PropPlaceholder"]:
         if self.naf:
             return set()
 
-        return {AggrPlaceholder(self.aggr_id, self.glob_vars, self.terms)}
+        return {
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
+            )
+        }
 
-    def neg_occ(self) -> Set["AggrPlaceholder"]:
+    def neg_occ(self) -> Set["PropPlaceholder"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
-        return {AggrPlaceholder(self.aggr_id, self.glob_vars, self.terms)}
+        return {
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
+            )
+        }
 
-    def substitute(self, subst: "Substitution") -> "AggrPlaceholder":
+    def substitute(self, subst: "Substitution") -> "PropPlaceholder":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return AggrPlaceholder(
-            self.aggr_id,
-            self.glob_vars,
-            TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            glob_vars=self.glob_vars,
+            terms=TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
             naf=self.naf,
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggrPlaceholder":
-        return AggrPlaceholder(self.aggr_id, self.glob_vars, self.terms, naf=self.naf)
+    def replace_arith(self, var_table: "VariableTable") -> "PropPlaceholder":
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            glob_vars=self.glob_vars,
+            terms=self.terms,
+            naf=self.naf,
+        )
 
     def gather_var_assignment(self) -> Substitution:
         """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
@@ -98,27 +134,29 @@ class AggrPlaceholder(AuxLiteral):
         )
 
 
-class AggrBaseLiteral(AuxLiteral):
+class PropBaseLiteral(AuxLiteral):
     """TODO."""
 
-    def __init__(self, aggr_id: int, glob_vars: TermTuple, terms: TermTuple) -> None:
+    def __init__(
+        self, prefix: str, ref_id: int, glob_vars: TermTuple, terms: TermTuple
+    ) -> None:
 
         if len(glob_vars) != len(terms):
             raise ValueError(
                 f"Number of global variables for {type(self)} does not match number of specified terms."  # noqa
             )
 
-        super().__init__(
-            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{aggr_id}", *terms
-        )
-        self.aggr_id = aggr_id
+        super().__init__(f"{SpecialChar.EPS.value}{prefix}{ref_id}", *terms)
+        self.prefix = prefix
+        self.ref_id = ref_id
         # store tuple to have a fixed reference order for variables
         self.glob_vars = glob_vars
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, AggrBaseLiteral)
-            and self.aggr_id == other.aggr_id
+            isinstance(other, type(self))
+            and self.prefix == other.prefix
+            and self.ref_id == other.ref_id
             and set(self.glob_vars) == set(other.glob_vars)
             and {v: t for v, t in zip(self.glob_vars, self.terms)}
             == {v: t for v, t in zip(other.glob_vars, other.terms)}
@@ -127,48 +165,69 @@ class AggrBaseLiteral(AuxLiteral):
     def __hash__(self) -> int:
         return hash(
             (
-                "aggr base literal",
-                self.aggr_id,
+                "prop base literal",
+                self.prefix,
+                self.ref_id,
                 frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
             )
         )
 
     def set_naf(self, value: bool = True) -> None:
         raise Exception(
-            f"Negation as failure cannot be set for literal of type {type(AggrBaseLiteral)}."  # noqa
+            f"Negation as failure cannot be set for literal of type {type(self)}."  # noqa
         )
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
-            f"Classical negation cannot be set for literal of type {type(AggrBaseLiteral)}."  # noqa
+            f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["AggrBaseLiteral"]:
+    def pos_occ(self) -> Set["PropBaseLiteral"]:
         if self.naf:
             return set()
 
-        return {AggrBaseLiteral(self.aggr_id, self.glob_vars, self.terms)}
+        return {
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
+            )
+        }
 
-    def neg_occ(self) -> Set["AggrBaseLiteral"]:
+    def neg_occ(self) -> Set["PropBaseLiteral"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
-        return {AggrBaseLiteral(self.aggr_id, self.glob_vars, self.terms)}
+        return {
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
+            )
+        }
 
-    def substitute(self, subst: "Substitution") -> "AggrBaseLiteral":
+    def substitute(self, subst: "Substitution") -> "PropBaseLiteral":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return AggrBaseLiteral(
-            self.aggr_id,
-            self.glob_vars,
-            TermTuple(*tuple((term.substitute(subst) for term in self.terms))),
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            glob_vars=self.glob_vars,
+            terms=TermTuple(*tuple((term.substitute(subst) for term in self.terms))),
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggrBaseLiteral":
-        return AggrBaseLiteral(self.aggr_id, self.glob_vars, self.terms)
+    def replace_arith(self, var_table: "VariableTable") -> "PropBaseLiteral":
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            glob_vars=self.glob_vars,
+            terms=self.terms,
+        )
 
     def gather_var_assignment(self) -> Substitution:
         """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
@@ -181,12 +240,13 @@ class AggrBaseLiteral(AuxLiteral):
         )
 
 
-class AggrElemLiteral(AuxLiteral):
+class PropElemLiteral(AuxLiteral):
     """TODO."""
 
     def __init__(
         self,
-        aggr_id: int,
+        prefix: str,
+        ref_id: int,
         element_id: int,
         local_vars: "TermTuple",
         glob_vars: "TermTuple",
@@ -199,10 +259,11 @@ class AggrElemLiteral(AuxLiteral):
             )
 
         super().__init__(
-            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{aggr_id}_{element_id}",
+            f"{SpecialChar.ETA.value}{prefix}{ref_id}_{element_id}",
             *terms,
         )
-        self.aggr_id = aggr_id
+        self.prefix = prefix
+        self.ref_id = ref_id
         self.element_id = element_id
         # store tuples to have a fixed reference order for variables
         self.local_vars = local_vars
@@ -210,8 +271,9 @@ class AggrElemLiteral(AuxLiteral):
 
     def __eq__(self, other: "Expr") -> bool:
         return (
-            isinstance(other, AggrElemLiteral)
-            and self.aggr_id == other.aggr_id
+            isinstance(other, type(self))
+            and self.prefix == other.prefix
+            and self.ref_id == other.ref_id
             and self.element_id == other.element_id
             and set(self.glob_vars) == set(other.glob_vars)
             and set(self.local_vars) == set(other.local_vars)
@@ -222,8 +284,9 @@ class AggrElemLiteral(AuxLiteral):
     def __hash__(self) -> int:
         return hash(
             (
-                "aggr element literal",
-                self.aggr_id,
+                "prop element literal",
+                self.prefix,
+                self.ref_id,
                 self.element_id,
                 frozenset(
                     (v, t)
@@ -238,59 +301,67 @@ class AggrElemLiteral(AuxLiteral):
 
     def set_naf(self, value: bool = True) -> None:
         raise Exception(
-            f"Negation as failure cannot be set for literal of type {type(AggrElemLiteral)}."  # noqa
+            f"Negation as failure cannot be set for literal of type {type(self)}."  # noqa
         )
 
     def set_neg(self, value: bool = True) -> None:
         raise Exception(
-            f"Classical negation cannot be set for literal of type {type(AggrElemLiteral)}."  # noqa
+            f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["AggrElemLiteral"]:
+    def pos_occ(self) -> Set["PropElemLiteral"]:
         if self.naf:
             return set()
 
         return {
-            AggrElemLiteral(
-                self.aggr_id,
-                self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                element_id=self.element_id,
+                local_vars=self.local_vars,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
             )
         }
 
-    def neg_occ(self) -> Set["AggrElemLiteral"]:
+    def neg_occ(self) -> Set["PropElemLiteral"]:
         if not self.naf:
             return set()
 
         # NOTE: naf flag gets dropped
         return {
-            AggrElemLiteral(
-                self.aggr_id,
-                self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
+            type(self)(
+                prefix=self.prefix,
+                ref_id=self.ref_id,
+                element_id=self.element_id,
+                local_vars=self.local_vars,
+                glob_vars=self.glob_vars,
+                terms=self.terms,
             )
         }
 
-    def substitute(self, subst: "Substitution") -> "AggrElemLiteral":
+    def substitute(self, subst: "Substitution") -> "PropElemLiteral":
         if self.ground:
             return deepcopy(self)
 
         # substitute terms recursively
-        return AggrElemLiteral(
-            self.aggr_id,
-            self.element_id,
-            self.local_vars,
-            self.glob_vars,
-            TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            element_id=self.element_id,
+            local_vars=self.local_vars,
+            glob_vars=self.glob_vars,
+            terms=TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggrElemLiteral":
-        return AggrElemLiteral(
-            self.aggr_id, self.element_id, self.local_vars, self.glob_vars, self.terms
+    def replace_arith(self, var_table: "VariableTable") -> "PropElemLiteral":
+        return type(self)(
+            prefix=self.prefix,
+            ref_id=self.ref_id,
+            element_id=self.element_id,
+            local_vars=self.local_vars,
+            glob_vars=self.glob_vars,
+            terms=self.terms,
         )
 
     def gather_var_assignment(self) -> Substitution:
@@ -304,282 +375,90 @@ class AggrElemLiteral(AuxLiteral):
         )
 
 
-class ChoicePlaceholder(AuxLiteral):
-    """TODO."""
-
-    def __init__(self, choice_id: int, glob_vars: TermTuple, terms: TermTuple) -> None:
-
-        if len(glob_vars) != len(terms):
-            raise ValueError(
-                f"Number of global variables for {type(self)} does not match number of specified terms."  # noqa
-            )
-
-        super().__init__(f"{SpecialChar.CHI.value}{choice_id}", *terms)
-        self.choice_id = choice_id
-        self.glob_vars = glob_vars
-
-    def __eq__(self, other: "Expr") -> bool:
-        return (
-            isinstance(other, ChoicePlaceholder)
-            and self.choice_id == other.choice_id
-            and set(self.glob_vars) == set(other.glob_vars)
-            and {v: t for v, t in zip(self.glob_vars, self.terms)}
-            == {v: t for v, t in zip(other.glob_vars, other.terms)}
-        )
-
-    def __hash__(self) -> int:
-        return hash(
-            (
-                "choice placeholder",
-                self.choice_id,
-                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
-            )
-        )
-
-    def set_neg(self, value: bool = True) -> None:
-        raise Exception(
-            f"Classical negation cannot be set for literal of type {type(ChoicePlaceholder)}."  # noqa
-        )
-
-    def set_naf(self, value: bool = True) -> None:
-        raise Exception(
-            f"Negation-as-failure cannot be set for literal of type {type(ChoicePlaceholder)}."  # noqa
-        )
-
-    def pos_occ(self) -> Set["ChoicePlaceholder"]:
-        # Gamma literals are always supposed to be positive
-        return {ChoicePlaceholder(self.choice_id, self.glob_vars, self.terms)}
-
-    def neg_occ(self) -> Set["ChoicePlaceholder"]:
-        # Gamma literals are never supposed to be negative
-        return set()
-
-    def substitute(self, subst: "Substitution") -> "ChoicePlaceholder":
-        if self.ground:
-            return deepcopy(self)
-
-        # substitute terms recursively
-        return ChoicePlaceholder(
-            self.choice_id,
-            self.glob_vars,
-            TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
-        )
-
-    def replace_arith(self, var_table: "VariableTable") -> "ChoicePlaceholder":
-        return ChoicePlaceholder(self.choice_id, self.glob_vars, self.terms)
-
-    def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
-        return Substitution(
-            {
-                var: term
-                for (var, term) in zip(self.glob_vars, self.terms)
-                if var != term
-            }
-        )
-
-
-class ChoiceBaseLiteral(AuxLiteral):
-    """TODO."""
-
-    def __init__(self, choice_id: int, glob_vars: TermTuple, terms: TermTuple) -> None:
-
-        if len(glob_vars) != len(terms):
-            raise ValueError(
-                f"Number of global variables for {type(self)} does not match number of specified terms."  # noqa
-            )
-
-        super().__init__(
-            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{choice_id}", *terms
-        )
-        self.choice_id = choice_id
-        # store tuple to have a fixed reference order for variables
-        self.glob_vars = glob_vars
-
-    def __eq__(self, other: "Expr") -> bool:
-        return (
-            isinstance(other, ChoiceBaseLiteral)
-            and self.choice_id == other.choice_id
-            and set(self.glob_vars) == set(other.glob_vars)
-            and {v: t for v, t in zip(self.glob_vars, self.terms)}
-            == {v: t for v, t in zip(other.glob_vars, other.terms)}
-        )
-
-    def __hash__(self) -> int:
-        return hash(
-            (
-                "choice base literal",
-                self.choice_id,
-                frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
-            )
-        )
-
-    def set_naf(self, value: bool = True) -> None:
-        raise Exception(
-            f"Negation as failure cannot be set for literal of type {type(ChoiceBaseLiteral)}."  # noqa
-        )
-
-    def set_neg(self, value: bool = True) -> None:
-        raise Exception(
-            f"Classical negation cannot be set for literal of type {type(ChoiceBaseLiteral)}."  # noqa
-        )
-
-    def pos_occ(self) -> Set["ChoiceBaseLiteral"]:
-        if self.naf:
-            return set()
-
-        return {ChoiceBaseLiteral(self.choice_id, self.glob_vars, self.terms)}
-
-    def neg_occ(self) -> Set["ChoiceBaseLiteral"]:
-        if not self.naf:
-            return set()
-
-        # NOTE: naf flag gets dropped
-        return {ChoiceBaseLiteral(self.choice_id, self.glob_vars, self.terms)}
-
-    def substitute(self, subst: "Substitution") -> "ChoiceBaseLiteral":
-        if self.ground:
-            return deepcopy(self)
-
-        # substitute terms recursively
-        return ChoiceBaseLiteral(
-            self.choice_id,
-            self.glob_vars,
-            TermTuple(*tuple((term.substitute(subst) for term in self.terms))),
-        )
-
-    def replace_arith(self, var_table: "VariableTable") -> "ChoiceBaseLiteral":
-        return ChoiceBaseLiteral(self.choice_id, self.glob_vars, self.terms)
-
-    def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
-        return Substitution(
-            {
-                var: term
-                for (var, term) in zip(self.glob_vars, self.terms)
-                if var != term
-            }
-        )
-
-
-class ChoiceElemLiteral(AuxLiteral):
+class AggrPlaceholder(PropPlaceholder):
     """TODO."""
 
     def __init__(
         self,
-        choice_id: int,
+        ref_id: int,
+        glob_vars: TermTuple,
+        terms: TermTuple,
+        naf: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(SpecialChar.ALPHA.value, ref_id, glob_vars, terms, naf=naf)
+
+
+class AggrBaseLiteral(PropBaseLiteral):
+    """TODO."""
+
+    def __init__(
+        self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
+    ) -> None:
+        super().__init__(SpecialChar.ALPHA.value, ref_id, glob_vars, terms)
+
+
+class AggrElemLiteral(PropElemLiteral):
+    """TODO."""
+
+    def __init__(
+        self,
+        ref_id: int,
         element_id: int,
         local_vars: "TermTuple",
         glob_vars: "TermTuple",
         terms: "TermTuple",
+        *args,
+        **kwargs,
     ) -> None:
-
-        if len(glob_vars) + len(local_vars) != len(terms):
-            raise ValueError(
-                f"Number of global/local variables for {type(self)} does not match number of specified terms."  # noqa
-            )
-
         super().__init__(
-            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{choice_id}_{element_id}",
-            *terms,
-        )
-        self.choice_id = choice_id
-        self.element_id = element_id
-        # store tuples to have a fixed reference order for variables
-        self.local_vars = local_vars
-        self.glob_vars = glob_vars
-
-    def __eq__(self, other: "Expr") -> bool:
-        return (
-            isinstance(other, ChoiceElemLiteral)
-            and self.choice_id == other.choice_id
-            and self.element_id == other.element_id
-            and set(self.glob_vars) == set(other.glob_vars)
-            and set(self.local_vars) == set(other.local_vars)
-            and {v: t for v, t in zip(self.local_vars + self.glob_vars, self.terms)}
-            == {v: t for v, t in zip(other.local_vars + other.glob_vars, other.terms)}
+            SpecialChar.ALPHA.value, ref_id, element_id, local_vars, glob_vars, terms
         )
 
-    def __hash__(self) -> int:
-        return hash(
-            (
-                "choice element literal",
-                self.choice_id,
-                self.element_id,
-                frozenset(
-                    (v, t)
-                    for v, t in zip(self.local_vars, self.terms[: len(self.local_vars)])
-                ),
-                frozenset(
-                    (v, t)
-                    for v, t in zip(self.glob_vars, self.terms[len(self.local_vars) :])
-                ),
-            )
-        )
+
+class ChoicePlaceholder(PropPlaceholder):
+    """TODO."""
+
+    def __init__(
+        self,
+        ref_id: int,
+        glob_vars: TermTuple,
+        terms: TermTuple,
+        naf: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(SpecialChar.CHI.value, ref_id, glob_vars, terms, naf=naf)
 
     def set_naf(self, value: bool = True) -> None:
         raise Exception(
-            f"Negation as failure cannot be set for literal of type {type(ChoiceElemLiteral)}."  # noqa
+            f"Negation-as-failure cannot be set for literal of type {ChoicePlaceholder}."  # noqa
         )
 
-    def set_neg(self, value: bool = True) -> None:
-        raise Exception(
-            f"Classical negation cannot be set for literal of type {type(ChoiceElemLiteral)}."  # noqa
-        )
 
-    def pos_occ(self) -> Set["ChoiceElemLiteral"]:
-        if self.naf:
-            return set()
+class ChoiceBaseLiteral(PropBaseLiteral):
+    """TODO."""
 
-        return {
-            ChoiceElemLiteral(
-                self.choice_id,
-                self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
-            )
-        }
+    def __init__(
+        self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
+    ) -> None:
+        super().__init__(SpecialChar.CHI.value, ref_id, glob_vars, terms)
 
-    def neg_occ(self) -> Set["ChoiceElemLiteral"]:
-        if not self.naf:
-            return set()
 
-        # NOTE: naf flag gets dropped
-        return {
-            ChoiceElemLiteral(
-                self.choice_id,
-                self.element_id,
-                self.local_vars,
-                self.glob_vars,
-                self.terms,
-            )
-        }
+class ChoiceElemLiteral(PropElemLiteral):
+    """TODO."""
 
-    def substitute(self, subst: "Substitution") -> "ChoiceElemLiteral":
-        if self.ground:
-            return deepcopy(self)
-
-        # substitute terms recursively
-        return ChoiceElemLiteral(
-            self.choice_id,
-            self.element_id,
-            self.local_vars,
-            self.glob_vars,
-            TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
-        )
-
-    def replace_arith(self, var_table: "VariableTable") -> "ChoiceElemLiteral":
-        return ChoiceElemLiteral(
-            self.choice_id, self.element_id, self.local_vars, self.glob_vars, self.terms
-        )
-
-    def gather_var_assignment(self) -> Substitution:
-        """Get substitution of global variables from rules. Remaining variables will simply be mapped onto themselves."""  # noqa
-        return Substitution(
-            {
-                var: term
-                for (var, term) in zip(self.local_vars + self.glob_vars, self.terms)
-                if var != term
-            }
+    def __init__(
+        self,
+        ref_id: int,
+        element_id: int,
+        local_vars: "TermTuple",
+        glob_vars: "TermTuple",
+        terms: "TermTuple",
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            SpecialChar.CHI.value, ref_id, element_id, local_vars, glob_vars, terms
         )

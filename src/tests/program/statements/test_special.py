@@ -88,7 +88,7 @@ class TestSpecial(unittest.TestCase):
             LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # two left guards
         # correct initialization
-        self.assertTrue(ground_rule.aggr_id == var_rule.aggr_id == 1)
+        self.assertTrue(ground_rule.ref_id == var_rule.ref_id == 1)
         # string representation
         self.assertEqual(
             str(ground_rule),
@@ -208,7 +208,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # correct initialization
-        self.assertTrue(ground_rule.aggr_id == var_rule.aggr_id == 1)
+        self.assertTrue(ground_rule.ref_id == var_rule.ref_id == 1)
         self.assertTrue(ground_rule.element_id == var_rule.element_id == 3)
         self.assertTrue(ground_rule.element == var_rule.element == element)
         # string representation
@@ -343,7 +343,7 @@ class TestSpecial(unittest.TestCase):
             LiteralCollection(PredLiteral("p", Number(2), Number(3))),
         )  # two left guards
         # correct initialization
-        self.assertTrue(ground_rule.choice_id == var_rule.choice_id == 1)
+        self.assertTrue(ground_rule.ref_id == var_rule.ref_id == 1)
         # string representation
         self.assertEqual(
             str(ground_rule),
@@ -465,7 +465,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # correct initialization
-        self.assertTrue(ground_rule.choice_id == var_rule.choice_id == 1)
+        self.assertTrue(ground_rule.ref_id == var_rule.ref_id == 1)
         self.assertTrue(ground_rule.element_id == var_rule.element_id == 3)
         self.assertTrue(ground_rule.element == var_rule.element == element)
         # string representation

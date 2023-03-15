@@ -32,7 +32,7 @@ class ChoicePropagator:
         for rule in chain(eps_instances, eta_instances):
 
             # get corresponding chi_literal
-            choice, chi_literal, *_ = self.choice_map[rule.choice_id]
+            choice, chi_literal, *_ = self.choice_map[rule.ref_id]
 
             if isinstance(rule, ChoiceBaseRule):
                 # gather variable substitution

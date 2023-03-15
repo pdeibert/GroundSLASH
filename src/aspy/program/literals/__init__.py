@@ -28,4 +28,7 @@ from .special import (
     ChoiceBaseLiteral,
     ChoiceElemLiteral,
     ChoicePlaceholder,
+    PropBaseLiteral,
+    PropElemLiteral,
+    PropPlaceholder,
 )

@@ -28,7 +28,7 @@ class TestSpecial(unittest.TestCase):
         naf_literal = Naf(AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y"))))
 
         # check initialization
-        self.assertTrue(literal.aggr_id == naf_literal.aggr_id == 1)
+        self.assertTrue(literal.ref_id == naf_literal.ref_id == 1)
         self.assertTrue(literal.glob_vars == naf_literal.glob_vars == vars)
         self.assertTrue(
             literal.terms == naf_literal.terms == TermTuple(Number(1), Variable("Y"))
@@ -114,7 +114,7 @@ class TestSpecial(unittest.TestCase):
         literal = AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
 
         # check initialization
-        self.assertEqual(literal.aggr_id, 1)
+        self.assertEqual(literal.ref_id, 1)
         self.assertEqual(literal.glob_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable("Y")))
         # string representation
@@ -200,7 +200,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # check initialization
-        self.assertEqual(literal.aggr_id, 1)
+        self.assertEqual(literal.ref_id, 1)
         self.assertEqual(literal.element_id, 3)
         self.assertEqual(literal.local_vars, local_vars)
         self.assertEqual(literal.glob_vars, global_vars)
@@ -343,7 +343,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # check initialization
-        self.assertEqual(literal.choice_id, 1)
+        self.assertEqual(literal.ref_id, 1)
         self.assertEqual(literal.glob_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable("Y")))
         # string representation
@@ -420,7 +420,7 @@ class TestSpecial(unittest.TestCase):
         literal = ChoiceBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
 
         # check initialization
-        self.assertEqual(literal.choice_id, 1)
+        self.assertEqual(literal.ref_id, 1)
         self.assertEqual(literal.glob_vars, vars)
         self.assertEqual(literal.terms, TermTuple(Number(1), Variable("Y")))
         # string representation
@@ -506,7 +506,7 @@ class TestSpecial(unittest.TestCase):
         )
 
         # check initialization
-        self.assertEqual(literal.choice_id, 1)
+        self.assertEqual(literal.ref_id, 1)
         self.assertEqual(literal.element_id, 3)
         self.assertEqual(literal.local_vars, local_vars)
         self.assertEqual(literal.glob_vars, global_vars)
