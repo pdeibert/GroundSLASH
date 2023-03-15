@@ -18,8 +18,9 @@ if TYPE_CHECKING:  # pragma: no cover
 class Term(Expr, ABC):
     """Abstract base class for all terms.
 
-    Declares some default as well as abstract methods for terms. All terms should inherit from this class.
-    """  # noqa
+    Declares some default as well as abstract methods for terms.
+    All terms should inherit from this class.
+    """
 
     @abstractmethod  # pragma: no cover
     def __eq__(self, other: Expr) -> bool:

@@ -189,7 +189,7 @@ class Equal(BuiltinLiteral):
         Returns:
             `SafetyTriplet` instance as the normalization of the safety characterization with
             all variables marked as unsafe and safety rules for each variable as the depender
-            and the set of variables from the opposing operand as dependees
+            and the set of variables from the opposing operand as dependees.
         """  # noqa
         # overrides inherited safety method
 

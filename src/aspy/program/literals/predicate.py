@@ -67,7 +67,7 @@ class PredLiteral(Literal):
             other: `Expr` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given expression.
         """  # noqa
         return (
             isinstance(other, PredLiteral)
@@ -81,7 +81,7 @@ class PredLiteral(Literal):
         return hash(("predicate literal", self.naf, self.neg, self.name, *self.terms))
 
     def __str__(self) -> str:
-        """Returns the string representation for a predicate literal.
+        """Returns the string representation for the predicate literal.
 
         Returns:
             String representing the predicate literal.

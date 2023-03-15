@@ -30,7 +30,7 @@ def rewrite_aggregate(
         aggr_counter,
         var_tuple,
         *literal.guards,
-        literal.func.base(),
+        literal.func.base,
         LiteralCollection(*body_literals)
     )
 

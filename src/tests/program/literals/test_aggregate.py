@@ -150,7 +150,7 @@ class TestAggregate(unittest.TestCase):
         # string representation
         self.assertEqual(str(aggr_func), "#count")
         # base value
-        self.assertEqual(aggr_func.base(), Number(0))
+        self.assertEqual(aggr_func.base, Number(0))
         # evaluation
         self.assertEqual(
             aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(2)
@@ -283,7 +283,7 @@ class TestAggregate(unittest.TestCase):
         # string representation
         self.assertEqual(str(aggr_func), "#sum")
         # base value
-        self.assertEqual(aggr_func.base(), Number(0))
+        self.assertEqual(aggr_func.base, Number(0))
         # evaluation
         self.assertEqual(
             aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(2)
@@ -452,7 +452,7 @@ class TestAggregate(unittest.TestCase):
         # string representation
         self.assertEqual(str(aggr_func), "#max")
         # base value
-        self.assertEqual(aggr_func.base(), Infimum())
+        self.assertEqual(aggr_func.base, Infimum())
         # evaluation
         self.assertEqual(
             aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(5)
@@ -585,7 +585,7 @@ class TestAggregate(unittest.TestCase):
         # string representation
         self.assertEqual(str(aggr_func), "#min")
         # base value
-        self.assertEqual(aggr_func.base(), Supremum())
+        self.assertEqual(aggr_func.base, Supremum())
         # evaluation
         self.assertEqual(
             aggr_func.eval({TermTuple(Number(5)), TermTuple(Number(-3))}), Number(-3)

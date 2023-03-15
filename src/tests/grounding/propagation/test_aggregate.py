@@ -58,7 +58,7 @@ class TestAggrPropagator(unittest.TestCase):
                     Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                     None,
                     LiteralCollection(
-                        GreaterEqual(AggrCount().base(), Variable("X")),
+                        GreaterEqual(AggrCount().base, Variable("X")),
                         PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
                     ),
@@ -108,7 +108,7 @@ class TestAggrPropagator(unittest.TestCase):
                     None,
                     Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     LiteralCollection(
-                        LessEqual(Number(0), AggrCount().base()),
+                        LessEqual(Number(0), AggrCount().base),
                         PredLiteral("q", Variable("X")),
                         Equal(Number(0), Variable("X")),
                     ),
@@ -138,7 +138,7 @@ class TestAggrPropagator(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), True),
                 None,
                 LiteralCollection(
-                    GreaterEqual(AggrCount().base(), Number(0)),
+                    GreaterEqual(AggrCount().base, Number(0)),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),
@@ -149,7 +149,7 @@ class TestAggrPropagator(unittest.TestCase):
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), False),
                 LiteralCollection(
-                    LessEqual(Number(0), AggrCount().base()),
+                    LessEqual(Number(0), AggrCount().base),
                     PredLiteral("q", Number(0)),
                     Equal(Number(0), Number(0)),
                 ),

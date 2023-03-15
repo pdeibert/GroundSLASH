@@ -23,7 +23,10 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
-    """From https://docs.python.org/3/library/itertools.html#itertools.combinations recipes."""  # noqa
+    """Computes the power set of an iterable.
+
+    From https://docs.python.org/3/library/itertools.html#itertools.combinations.
+    """
     elements = list(element_iterable)
     return chain.from_iterable(
         combinations(elements, n_elements) for n_elements in range(len(elements) + 1)
@@ -31,13 +34,29 @@ def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
 
 
 class AggrElement(Expr):
-    """Represents an aggregate element."""
+    """Represents an aggregate element.
+
+    Attributes:
+        terms: `TermTuple` containing the terms of the element.
+        head: same as `terms`.
+        literals: `LiteralCollection` containing the literals (i.e., condition) of the element.
+        body: same as `literals`
+        ground: Boolean indicating whether or not all terms and literals are ground.
+    """  # noqa
 
     def __init__(
         self,
         terms: Optional[Union[Tuple["Term", ...], "TermTuple"]] = None,
         literals: Optional[Union[Tuple["Literal", ...], "LiteralCollection"]] = None,
     ) -> None:
+        """Initializes the aggregate element instance.
+
+        Args:
+            terms: Optional `TermTuple` instance or tuple of `Term` instances.
+                Defaults to None.
+            literals: Optional `LiteralCollection` instance or tuple of `Literal` instances.
+                Defaults to None.
+        """  # noqa
         if literals is None:
             literals = LiteralCollection()
         if terms is None:
@@ -51,6 +70,16 @@ class AggrElement(Expr):
         )
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the element to a given expression.
+
+        Considered equal if the given expression is also an `AggrElement` instance with same terms and literals.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the element is considered equal to the given expression.
+        """  # noqa
         return (
             isinstance(other, AggrElement)
             and self.terms == other.terms
@@ -61,6 +90,13 @@ class AggrElement(Expr):
         return hash(("aggr element", self.terms, self.literals))
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate element.
+
+        Returns:
+            String representing the aggregate element.
+            Represents literals and terms separated by commas, respectively and joined with a semicolon.
+            If the element has no literals, the semicolon is omitted.
+        """  # noqa
         return ",".join([str(term) for term in self.terms]) + (
             f":{','.join([str(literal) for literal in self.literals])}"
             if self.literals
@@ -82,50 +118,146 @@ class AggrElement(Expr):
         )
 
     def pos_occ(self) -> Set["PredLiteral"]:
+        """Positive literal occurrences.
+
+        Returns:
+            Union of the sets of `Literal` instances that occur positively in the literals.
+        """  # noqa
         return self.literals.pos_occ()
 
     def neg_occ(self) -> Set["PredLiteral"]:
+        """Negative literal occurrences.
+
+        Returns:
+            Union of the sets of `Literal` instances that occur negatively in the literals.
+        """  # noqa
         return self.literals.neg_occ()
 
     @property
     def weight(self) -> int:
+        """Returns the weight of the term tuple.
+
+        Also see `TermTuple.weight`.
+
+        Returns:
+            Integer representing the value of the first term if it is a `Number` instance, and zero else.
+        """  # noqa
         return self.terms.weight
 
     @property
     def pos_weight(self) -> int:
+        """Returns the positive weight of the term tuple.
+
+        Also see `TermTuple.weight`.
+
+        Returns:
+            Integer representing the value of the first term if it is a positive `Number` instance, and zero else.
+        """  # noqa
         return self.terms.pos_weight
 
     @property
     def neg_weight(self) -> int:
+        """Returns the negative weight of the term tuple.
+
+        Also see `TermTuple.weight`.
+
+        Returns:
+            Integer representing the value of the first term if it is a negative `Number` instance, and zero else.
+        """  # noqa
         return self.terms.neg_weight
 
     def satisfied(self, literals: Set["Literal"]) -> bool:
+        """Check whether or not the element is satisfied.
+
+        Args:
+            literals: Set of `Literal` instances interpreted as valid.
+
+        Returns:
+            Boolean indicating whether or not the elements condition is part of the specified set of literals.
+        """  # noqa
         # check if all condition literals are part of the specified set
         return all(literal in literals for literal in self.literals)
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the aggregate element.
+
+        Returns:
+            (Possibly empty) set of 'Variable' instances as union of the variables of all terms and literals.
+        """  # noqa
         return self.head.vars().union(self.body.vars())
 
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        """Returns the global variables associated with the aggregate element.
+
+        Returns:
+            (Possibly empty) set of 'Variable' instances as union of the global variables of all terms and literals.
+        """  # noqa
         return self.head.global_vars().union(self.body.global_vars())
 
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
+        """Returns the the safety characterizations for the aggregate literal.
+
+        Raises an exception, since safety characterization is undefined for aggregate elements
+        without additional context.
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` or `Query` instance the term appears in.
+                Irrelevant for aggregate elements. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance.
+
+        Raises:
+            ValueError: Safety characterization is undefined for aggregate elements
+            without additional context.
+        """  # noqa
         raise ValueError(
             "Safety characterization for aggregate elements is undefined without context."  # noqa
         )
 
     def substitute(self, subst: "Substitution") -> "AggrElement":
+        """Applies a substitution to the aggregate element.
+
+        Substitutes all terms and literals recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `AggrElement` instance with (possibly substituted) terms and literals.
+        """
         return AggrElement(
             self.terms.substitute(subst),
             self.literals.substitute(subst),
         )
 
-    def match(self, other: Expr) -> Set["Substitution"]:
+    def match(self, other: Expr) -> Optional["Substitution"]:
+        """Tries to match the aggregate element with an expression.
+
+        Raises an exception, since matching for aggregate elements is undefined.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            Optional `Substitution` instance.
+        """  # noqa
         raise Exception("Matching for aggregate elements is not defined.")
 
     def replace_arith(self, var_table: "VariableTable") -> "AggrElement":
+        """Replaces arithmetic terms appearing in the aggregate element with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `AggrElement` instance.
+        """  # noqa
         return AggrElement(
             self.terms.replace_arith(var_table),
             self.literals.replace_arith(var_table),
@@ -133,12 +265,26 @@ class AggrElement(Expr):
 
 
 class AggrFunc(ABC):
-    """Abstract base class for all aggregate functions."""
+    """Abstract base class for all aggregate functions.
+
+    Declares some default as well as abstract methods for aggregate functions.
+    All aggregate function should inherit from this class.
+
+    Attributes:
+        base: `Term` instance representing the result of the aggregate operation
+            for an empty set of aggregate elements.
+    """
 
     @abstractmethod  # pragma: no cover
     def eval(self, elements: Set["TermTuple"]) -> Number:
+        """Evaluates the arithmetic function.
+
+        Returns:
+            `Number` instance representing the result of the aggregate operation.
+        """  # noqa
         pass
 
+    @property
     @abstractmethod  # pragma: no cover
     def base(self) -> "Term":
         pass
@@ -148,32 +294,73 @@ class AggrFunc(ABC):
         self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["AggrElement"],
-        literals_literals_I: Set["Literal"],
-        literals_literals_J: Set["Literal"],
+        literals_I: Set["Literal"],
+        literals_J: Set["Literal"],
     ) -> bool:
+        """Aggregate propagation to approximate satisfiability.
+
+        Approximates whether or not the aggregate function is satisfiable for
+        given guards, aggregate elements and domains of literals.
+
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `AggregateElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
         pass
 
 
 class AggrCount(AggrFunc):
-    """Represents a 'count' aggregate."""
+    """Represents a 'count' aggregate.
+
+    Counts the number of unique tuples from elements that are satisfied.
+    Zero for the empty set.
+
+    Attributes:
+        base: `Number(0)` instance representing the result of the aggregate operation
+            for an empty set of aggregate elements.
+    """
+
+    base: Number = Number(0)
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate function.
+
+        Returns:
+            String `"#count"`.
+        """
         return "#count"
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the aggregate function to a given expression.
+
+        Considered equal if the given expression is also a `AggrCount` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the function is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, AggrCount)
 
     def __hash__(self) -> int:
         return hash(("aggregate count"))
 
     @classmethod
-    def eval(cls, elements: Set["TermTuple"]) -> Number:
-        """Returns the number of satisfied aggregate elements."""
-        return Number(len(elements))
+    def eval(cls, tuples: Set["TermTuple"]) -> Number:
+        """Evaluates the aggregate function.
 
-    @classmethod
-    def base(cls) -> Number:
-        return Number(0)
+        Args:
+            tuples: Set of `TermTuple` instances.
+
+        Returns:
+            `Number` instance representing the number of unique tuples.
+        """  # noqa
+        return Number(len(tuples))
 
     def propagate(
         self,
@@ -182,6 +369,21 @@ class AggrCount(AggrFunc):
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
+        """Aggregate propagation to approximate satisfiability.
+
+        Approximates whether or not the aggregate function is satisfiable for
+        given guards, aggregate elements and domains of literals.
+        Note: this procedure is not exact, but only an approximation.
+
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        The implementation here is partly based on `mu-gringo`: https://github.com/potassco/mu-gringo.
+
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `AggregateElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
@@ -255,12 +457,37 @@ class AggrCount(AggrFunc):
 
 
 class AggrSum(AggrFunc):
-    """Represents a 'sum' aggregate."""
+    """Represents a 'sum' aggregate.
+
+    Sums up the first elements of unique tuples from elements that are satisfied,
+    where the first element is a `Number`. Zero for the empty set.
+
+    Attributes:
+        base: `Number(0)` instance representing the result of the aggregate operation
+            for an empty set of aggregate elements.
+    """
+
+    base: Number = Number(0)
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate function.
+
+        Returns:
+            String `"#sum"`.
+        """
         return "#sum"
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the aggregate function to a given expression.
+
+        Considered equal if the given expression is also a `AggrSum` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the function is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, AggrSum)
 
     def __hash__(self) -> int:
@@ -268,26 +495,33 @@ class AggrSum(AggrFunc):
 
     @classmethod
     def eval(
-        cls, elements: Set["TermTuple"], positive: bool = True, negative: bool = True
+        cls, tuples: Set["TermTuple"], positive: bool = True, negative: bool = True
     ) -> Number:
+        """Evaluates the aggregate function.
+
+        Args:
+            tuples: Set of `TermTuple` instances.
+            positive: Boolean indicating whether or not to take positive values into account.
+                Defaults to `True`.
+            negative: Boolean indicating whether or not to take negative values into account.
+                Defaults to `True`.
+
+        Returns:
+            `Number` instance representing the sum of all unique tuples with a number as first element.
+        """  # noqa
 
         # empty tuple set
-        if not elements or (positive == negative == False):  # noqa (chaining is faster)
-            return cls.base()
+        if not tuples or (positive == negative == False):  # noqa (chaining is faster)
+            return cls.base
 
         # non-empty set
         return Number(
             sum(
-                (element.pos_weight if positive else 0)
-                + (element.neg_weight if negative else 0)
-                for element in elements
+                (tup.pos_weight if positive else 0)
+                + (tup.neg_weight if negative else 0)
+                for tup in tuples
             )
         )
-
-    @classmethod
-    def base(cls) -> Number:
-        # TODO: correct?
-        return Number(0)
 
     def propagate(
         self,
@@ -296,6 +530,21 @@ class AggrSum(AggrFunc):
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
+        """Aggregate propagation to approximate satisfiability.
+
+        Approximates whether or not the aggregate function is satisfiable for
+        given guards, aggregate elements and domains of literals.
+        Note: this procedure is not exact, but only an approximation.
+
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        The implementation here is partly based on `mu-gringo`: https://github.com/potassco/mu-gringo.
+
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `AggregateElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
@@ -445,29 +694,59 @@ class AggrSum(AggrFunc):
 
 
 class AggrMin(AggrFunc):
-    """Represents a 'minimum' aggregate."""
+    """Represents a 'minimum' aggregate.
+
+    Gathers the minimal first element of unique tuples from elements that are satisfied.
+    `Supremum` for the empty set.
+
+    Attributes:
+        base: `Supremum` instance representing the result of the aggregate operation
+            for an empty set of aggregate elements.
+    """
+
+    base: Supremum = Supremum()
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate function.
+
+        Returns:
+            String `"#min"`.
+        """
         return "#min"
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the aggregate function to a given expression.
+
+        Considered equal if the given expression is also a `AggrMin` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the function is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, AggrMin)
 
     def __hash__(self) -> int:
         return hash(("aggregate min"))
 
     @classmethod
-    def eval(cls, elements: Set["TermTuple"]) -> Number:
+    def eval(cls, tuples: Set["TermTuple"]) -> "Term":
+        """Evaluates the aggregate function.
+
+        Args:
+            tuples: Set of `TermTuple` instances.
+
+        Returns:
+            `Term` instance representing the minimal first element of all unique non-empty tuples.
+            `Supremum` in case all tuples are empty or the set of tuples itself is empty.
+        """  # noqa
         # return minimum first term across all non-empty elements
         # NOTE: includes 'Supremum' in case all elements are empty
         return reduce(
             lambda t1, t2: t2 if not t1.precedes(t2) else t1,
-            (cls.base(), *tuple(element[0] for element in elements if element)),
+            (cls.base, *tuple(tup[0] for tup in tuples if tup)),
         )
-
-    @classmethod
-    def base(cls) -> Supremum:
-        return Supremum()
 
     def propagate(
         self,
@@ -476,6 +755,21 @@ class AggrMin(AggrFunc):
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
+        """Aggregate propagation to approximate satisfiability.
+
+        Approximates whether or not the aggregate function is satisfiable for
+        given guards, aggregate elements and domains of literals.
+        Note: this procedure is not exact, but only an approximation.
+
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        The implementation here is partly based on `mu-gringo`: https://github.com/potassco/mu-gringo.
+
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `AggregateElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
@@ -586,29 +880,59 @@ class AggrMin(AggrFunc):
 
 
 class AggrMax(AggrFunc):
-    """Represents a 'maximum' aggregate."""
+    """Represents a 'maximum' aggregate.
+
+    Gathers the maximal first element of unique tuples from elements that are satisfied.
+    `Infimum` for the empty set.
+
+    Attributes:
+        base: `Infimum` instance representing the result of the aggregate operation
+            for an empty set of aggregate elements.
+    """
+
+    base: Infimum = Infimum()
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate function.
+
+        Returns:
+            String `"#max"`.
+        """
         return "#max"
 
     def __eq__(self, other: Expr) -> bool:
+        """Compares the aggregate function to a given expression.
+
+        Considered equal if the given expression is also a `AggrMax` instance.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the function is considered equal to the given expression.
+        """  # noqa
         return isinstance(other, AggrMax)
 
     def __hash__(self) -> int:
         return hash(("aggregate max"))
 
     @classmethod
-    def eval(cls, elements: Set["TermTuple"]) -> Number:
+    def eval(cls, tuples: Set["TermTuple"]) -> "Term":
+        """Evaluates the aggregate function.
+
+        Args:
+            tuples: Set of `TermTuple` instances.
+
+        Returns:
+            `Term` instance representing the maximal first element of all unique non-empty tuples.
+            `Infimum` in case all tuples are empty or the set of tuples itself is empty.
+        """  # noqa
         # return maximum first term across all non-empty elements
         # NOTE: includes 'Infimum' in case all elements are empty
         return reduce(
             lambda t1, t2: t2 if not t2.precedes(t1) else t1,
-            (cls.base(), *tuple(element[0] for element in elements if element)),
+            (cls.base, *tuple(tup[0] for tup in tuples if tup)),
         )
-
-    @classmethod
-    def base(self) -> Infimum:
-        return Infimum()
 
     def propagate(
         self,
@@ -617,6 +941,21 @@ class AggrMax(AggrFunc):
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
+        """Aggregate propagation to approximate satisfiability.
+
+        Approximates whether or not the aggregate function is satisfiable for
+        given guards, aggregate elements and domains of literals.
+        Note: this procedure is not exact, but only an approximation.
+
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        The implementation here is partly based on `mu-gringo`: https://github.com/potassco/mu-gringo.
+
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `AggregateElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
 
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
@@ -728,7 +1067,18 @@ class AggrMax(AggrFunc):
 
 
 class AggrLiteral(Literal):
-    """Represents an aggregate literal."""
+    """Represents an aggregate literal.
+
+    Attributes:
+        func: `AggrFunc` instance representing the aggregate function.
+        elements: Tuple of `AggrElement` instances representing the set of aggregate elements.
+        lguard: Optional left `Guard` instance.
+        rguard: Optional right `Guard` instance.
+        guards: Tuple of `lguard` and `rguard`.
+        naf: Boolean indicating whether or not the aggregate literal is default-negated.
+        ground: Boolean indicating whether or not the aggregate literal is ground.
+            The literal is considered ground if all guards and elements are ground.
+    """  # noqa
 
     def __init__(
         self,
@@ -737,6 +1087,20 @@ class AggrLiteral(Literal):
         guards: Union[Guard, Tuple[Guard, ...]],
         naf: bool = False,
     ) -> None:
+        """Initializes the aggregate literal instance.
+
+        Args:
+            func: `AggrFunc` instance representing the aggregate function.
+            elements: Tuple of `AggrElement` instances representing the set of aggregate elements.
+            guards: single `Guard` instance or tuple of (maximum two) `Guard` instances.
+                If two guards are specified, they are expected to represent opposite sides.
+                The order of the guards is irrelevant.
+            naf: Boolean indicating whether or not the aggregate literal is default-negated.
+                Defaults to `False`.
+
+        Raises:
+            ValueError: Invalid number of guards or multiple guards for the same side.
+        """  # noqa
         super().__init__(naf)
 
         # initialize left and right guard to 'None'
@@ -768,6 +1132,15 @@ class AggrLiteral(Literal):
         self.elements = elements
 
     def __str__(self) -> str:
+        """Returns the string representation for the aggregate literal.
+
+        Returns:
+            String representing the aggregate literal.
+            If the predicate literal is default-negated, the string is prefixed by `"not "`.
+            The string then continuous with the string representation of the aggregate function,\
+            followed by the string representations of the elements, separated by semicolons,
+            and enclosed in curly braces.
+        """  # noqa
         elements_str = ";".join([str(element) for element in self.elements])
         lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
         rguard_str = f" {str(self.rguard)}" if self.rguard is not None else ""
@@ -777,6 +1150,17 @@ class AggrLiteral(Literal):
         ) + f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
     def __eq__(self, other: "Expr") -> bool:
+        """Compares the literal to a given expression.
+
+        Considered equal if the given expression is also an `AggrLiteral` instance with same aggregate
+        function, guards, set of elements and identical default-negation.
+
+        Args:
+            other: `Expr` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the literal is considered equal to the given expression.
+        """  # noqa
         return (
             isinstance(other, AggrLiteral)
             and self.func == other.func
@@ -796,33 +1180,88 @@ class AggrLiteral(Literal):
         )
 
     def set_naf(self, value: bool = True) -> None:
+        """Setter for the `naf` attribute.
+
+        Args:
+            value: Boolean value for the `naf` attribute. Defaults to `True`.
+        """
         self.naf = value
 
     def pos_occ(self) -> Set["PredLiteral"]:
+        """Positive literal occurrences.
+
+        Returns:
+            Set of `Literal` instances as the union of all positive
+            literal occurrences in its elements.
+        """
         return set().union(*tuple(element.pos_occ() for element in self.elements))
 
     def neg_occ(self) -> Set["PredLiteral"]:
+        """Negative literal occurrences.
+
+        Returns:
+            Set of `Literal` instances as the union of all negative
+            literal occurrences in its elements.
+        """
         return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     @property
-    def guards(self) -> Tuple[Union[Guard, None], Union[Guard, None]]:
+    def guards(self) -> Tuple[Optional[Guard], Optional[Guard]]:
         return (self.lguard, self.rguard)
 
     def invars(self) -> Set["Variable"]:
+        """Inner variables.
+
+        Returns:
+            Set of `Variable` instances that occurr inside any of the elements.
+        """
         return set().union(*tuple(element.vars() for element in self.elements))
 
     def outvars(self) -> Set["Variable"]:
+        """Outer variables.
+
+        Returns:
+            Set of `Variable` instances that occurr in any of the guards.
+        """
         return set().union(
             *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
         )
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the aggregate literal.
+
+        Union of the sets of inner and outer variables.
+
+        Returns:
+            (Possibly empty) set of 'Variable' instances.
+        """  # noqa
         return self.invars().union(self.outvars())
 
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        """Returns the global variables associated with the aggregate literal.
+
+        For aggregate literals the set of outer variables are considered global.
+
+        Args:
+            statement: Optional `Statement` or `Query` instance the term appears in.
+                Irrelevant for aggregate literals. Defaults to `None`.
+
+        Returns:
+            A (possibly empty) set of `Variable` instances.
+        """
         return self.outvars()
 
     def eval(self) -> bool:
+        """Evaluates the aggregate literal.
+
+        The aggregate must be ground for evaluation.
+
+        Returns:
+            Boolean indicating whether or not the guards hold for the aggregated value.
+
+        Raises:
+            ValueError: Non-ground aggregate.
+        """  # noqa
         if not self.ground:
             raise ValueError("Cannot evaluate non-ground aggregate.")
 
@@ -840,21 +1279,26 @@ class AggrLiteral(Literal):
             else True
         )
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> SafetyTriplet:
+    def safety(self, statement: Union["Statement", "Query"]) -> SafetyTriplet:
+        """Returns the the safety characterizations for the built-in literal.
 
-        if rule is None:
-            raise AttributeError(
-                (
-                    "Computing safety characterization for 'AggrLiteral'"
-                    " requires a reference to the encompassing rule or the set"
-                    " of global variables in it."
-                )
-            )
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
+        Args:
+            statement: `Statement` or `Query` instance the term appears in.
+
+        Returns:
+            `SafetyTriplet` instance as the closure of the safety characterizations of
+            the aggregate w.r.t. to each guard.
+            The safety characterization of the aggregate w.r.t. to a guard marks
+            all global inner and all outer variables as unsafe.
+            If the relation operator is `RelOp.EQUAL` the safety characterization
+            is additionally normalized with safety rules for each safe variable
+            in the guard as the depender and the set of global inner variables
+            as dependees.
+        """  # noqa
         # get global variables from rule
-        global_vars = rule.global_vars()
+        global_vars = statement.global_vars()
 
         # set of global variables that appear inside the aggregate
         aggr_global_invars = self.invars().intersection(global_vars)
@@ -887,6 +1331,16 @@ class AggrLiteral(Literal):
         return SafetyTriplet.closure(*guard_safeties)
 
     def substitute(self, subst: "Substitution") -> "AggrLiteral":
+        """Applies a substitution to the aggregate literal.
+
+        Substitutes all guard terms and aggregate elements recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `AggrLiteral` instance with (possibly substituted) guards and elements.
+        """
         # substitute guard terms recursively
         guards = tuple(
             guard.substitute(subst) if guard is not None else None
@@ -901,9 +1355,30 @@ class AggrLiteral(Literal):
         )
 
     def match(self, other: Expr) -> Set["Substitution"]:
-        raise Exception("Matching for aggregate literals not supported yet.")
+        """Tries to match the aggregate element with an expression.
+
+        Raises an exception, since direct matching for aggregate literals is undefined.
+        During grounding, aggregate literals are rewritten and assembled after instantiation.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            Optional `Substitution` instance.
+        """  # noqa
+        raise Exception("Direct matching for aggregate literals not supported.")
 
     def replace_arith(self, var_table: "VariableTable") -> "AggrLiteral":
+        """Replaces arithmetic terms appearing in the aggregate literal with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `AggrLiteral` instance.
+        """  # noqa
         # replace guards
         guards = (
             None if guard is None else guard.replace_arith(var_table)

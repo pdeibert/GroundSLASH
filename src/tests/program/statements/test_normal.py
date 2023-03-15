@@ -238,7 +238,7 @@ class TestNormal(unittest.TestCase):
                 Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
                 None,
                 LiteralCollection(
-                    GreaterEqual(Variable("X"), AggrCount().base()),
+                    GreaterEqual(Variable("X"), AggrCount().base),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
@@ -292,7 +292,7 @@ class TestNormal(unittest.TestCase):
                 None,
                 Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 LiteralCollection(
-                    LessEqual(AggrCount().base(), Number(0)),
+                    LessEqual(AggrCount().base, Number(0)),
                     PredLiteral("q", Variable("X")),
                     Equal(Number(0), Variable("X")),
                 ),
