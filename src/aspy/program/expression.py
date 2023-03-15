@@ -9,25 +9,59 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Expr(ABC):
-    """Abstract base class for all expressions."""
+    """Abstract base class for all expressions.
+
+    Declares some default as well as abstract methods for expressions.
+    All expressions should inherit from this class.
+    """
 
     __slots__ = "ground"
 
     @abstractmethod  # pragma: no cover
     def vars(self) -> Set["Variable"]:  # type: ignore
+        """Returns the variables associated with the expression.
+
+        Returns:
+            Set of 'Variable' instances.
+        """
         pass
 
     @abstractmethod  # pragma: no cover
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:  # type: ignore # noqa
+        """Returns the global variables associated with the expression.
+
+        Returns:
+            Set of 'Variable' instances.
+        """
         pass
 
     @abstractmethod  # pragma: no cover
     def safety(
         self, rule: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
+        """Returns the safety characterization for the expression.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` or `Query` instance the term appears in.
+                Usually irrelevant for expressions. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance.
+        """  # noqa
         pass
 
     @abstractmethod  # pragma: no cover
     def substitute(self, subst: Dict[str, "Term"]) -> "Expr":  # type: ignore
-        """Substitutes the expression by replacing variables with their assigned terms."""  # noqa
+        """Applies a substitution to the expression.
+
+        Replaces all variables with their substitution terms.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            (Possibly substituted) `Expr` instance.
+        """
         pass
