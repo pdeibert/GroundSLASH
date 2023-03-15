@@ -16,10 +16,19 @@ class RelOp(Enum):
     GREATER_OR_EQ = ">="
 
     def __str__(self) -> str:
+        """String representation of the relational operator.
+
+        Returns:
+            String representing the relational operator.
+        """
         return self._value_
 
     def __neg__(self) -> "RelOp":
-        """Inverts the comparison operator for switched operands."""
+        """Inverts the comparison operator for switched operands.
+
+        Returns:
+            `RelOp` instance.
+        """
         if self == RelOp.EQUAL or self == RelOp.UNEQUAL:
             return self
         elif self == RelOp.LESS:
@@ -32,7 +41,11 @@ class RelOp(Enum):
             return RelOp.LESS_OR_EQ
 
     def __invert__(self) -> "RelOp":
-        """Returns the opposite operator."""
+        """Returns the equivalent operator after negation.
+
+        Returns:
+            `RelOp` instance.
+        """
         if self == RelOp.EQUAL:
             return RelOp.UNEQUAL
         elif self == RelOp.UNEQUAL:
@@ -46,19 +59,29 @@ class RelOp(Enum):
         else:
             return RelOp.LESS
 
-    def eval(self, lterm: "Term", rterm: "Term") -> bool:
+    def eval(self, loperand: "Term", roperand: "Term") -> bool:
+        """Evaluates the relational operator for given operands.
+
+        Args:
+            loperand: `Term` instance representing the left operand.
+            roperand: `Term` instance representing the right operand.
+
+        Returns:
+            Boolean indicating whether or not the relational operation holds
+            for the given operands.
+        """
         if self == RelOp.EQUAL:
-            return lterm.precedes(rterm) and rterm.precedes(lterm)
+            return loperand.precedes(roperand) and roperand.precedes(loperand)
         elif self == RelOp.UNEQUAL:
-            return not (lterm.precedes(rterm) and rterm.precedes(lterm))
+            return not (loperand.precedes(roperand) and roperand.precedes(loperand))
         elif self == RelOp.LESS:
-            return lterm.precedes(rterm) and not rterm.precedes(lterm)
+            return loperand.precedes(roperand) and not roperand.precedes(loperand)
         elif self == RelOp.GREATER:
-            return not lterm.precedes(rterm) and rterm.precedes(lterm)
+            return not loperand.precedes(roperand) and roperand.precedes(loperand)
         elif self == RelOp.LESS_OR_EQ:
-            return lterm.precedes(rterm)
+            return loperand.precedes(roperand)
         else:
-            return rterm.precedes(lterm)
+            return roperand.precedes(loperand)
 
 
 class ArithOp(Enum):
@@ -70,6 +93,11 @@ class ArithOp(Enum):
     DIV = "/"
 
     def __str__(self) -> str:
+        """String representation of the arithmetic operator.
+
+        Returns:
+            String representing the arithmetic operator.
+        """
         return self._value_
 
 
@@ -82,4 +110,9 @@ class AggrOp(Enum):
     MIN = "#min"
 
     def __str__(self) -> str:
+        """String representation of the aggregate operator.
+
+        Returns:
+            String representing the aggregate operator.
+        """
         return self._value_

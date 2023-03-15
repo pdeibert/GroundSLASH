@@ -269,7 +269,7 @@ class Choice(Expr):
 
             if op in {RelOp.GREATER, RelOp.GREATER_OR_EQ}:
                 # make sure there are enough elements to potentially satisfy bound
-                res &= op2rel[op](n_atoms, bound).eval()
+                res &= op.eval(n_atoms, bound)
             elif op in {RelOp.EQUAL}:
                 # make sure there are enough elements to potentially satisfy bound
                 # and that bound is not negative (i.e., unsatisfiable)
@@ -279,7 +279,7 @@ class Choice(Expr):
                 res &= (bound.val != 0) or n_atoms.val > 0
             else:
                 # make sure that upper bound can be satisfied
-                res &= op2rel[op](Number(0), bound).eval()
+                res &= op.eval(Number(0), bound)
 
         return res
 
@@ -362,7 +362,7 @@ class Choice(Expr):
             for X in powerset(
                 {element.atom for element in elements_I.union(elements_J)}
             ):
-                if op2rel[op](bound, Number(len(X))).eval():
+                if op.eval(bound, Number(len(X))):
                     return True
 
             return False

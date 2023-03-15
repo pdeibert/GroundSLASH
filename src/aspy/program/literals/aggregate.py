@@ -4,7 +4,6 @@ from itertools import chain, combinations
 from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Set, Tuple, Union
 
 from aspy.program.expression import Expr
-from aspy.program.literals.builtin import op2rel
 from aspy.program.operators import AggrOp, RelOp
 from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
 from aspy.program.terms import Infimum, Number, Supremum, TermTuple
@@ -415,9 +414,9 @@ class AggrCount(AggrFunc):
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](
+                propagation_cache[(op, bound)] = op.eval(
                     self.eval({element.terms for element in domain}), bound
-                ).eval()
+                )
             return propagation_cache[(op, bound)]
 
         # running boolean tracking the current result of the propagation
@@ -581,7 +580,7 @@ class AggrSum(AggrFunc):
             nonlocal propagation_cache
 
             if (op, bound, adjust, positive, negative) not in propagation_cache:
-                propagation_cache[(op, bound, adjust, positive, negative)] = op2rel[op](
+                propagation_cache[(op, bound, adjust, positive, negative)] = op.eval(
                     Number(
                         self.eval(
                             {element.terms for element in domain}, positive, negative
@@ -589,7 +588,7 @@ class AggrSum(AggrFunc):
                         + adjust
                     ),
                     bound,
-                ).eval()
+                )
             return propagation_cache[(op, bound, adjust, positive, negative)]
 
         def propagate_subset(
@@ -611,7 +610,7 @@ class AggrSum(AggrFunc):
 
             # test all combinations of subsets of candidates
             return any(
-                op2rel[op](bound, baseline + self.eval(X)).eval()
+                op.eval(bound, baseline + self.eval(X))
                 for X in powerset(candidate_terms)
             )
 
@@ -801,9 +800,9 @@ class AggrMin(AggrFunc):
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](
+                propagation_cache[(op, bound)] = op.eval(
                     self.eval({element.terms for element in domain}), bound
-                ).eval()
+                )
             return propagation_cache[(op, bound)]
 
         def propagate_subset(
@@ -826,9 +825,9 @@ class AggrMin(AggrFunc):
             for X in powerset(candidates):
                 value = self.eval({element.terms for element in X})
 
-                if op2rel[op](
+                if op.eval(
                     bound, (value if not baseline.precedes(value) else baseline)
-                ).eval():
+                ):
                     return True
 
             return False
@@ -987,9 +986,9 @@ class AggrMax(AggrFunc):
             nonlocal propagation_cache
 
             if (op, bound) not in propagation_cache:
-                propagation_cache[(op, bound)] = op2rel[op](
+                propagation_cache[(op, bound)] = op.eval(
                     self.eval({element.terms for element in domain}), bound
-                ).eval()
+                )
             return propagation_cache[(op, bound)]
 
         def propagate_subset(
@@ -1012,9 +1011,9 @@ class AggrMax(AggrFunc):
             for X in powerset(candidates):
                 value = self.eval({element.terms for element in X})
 
-                if op2rel[op](
+                if op.eval(
                     bound, (value if not value.precedes(baseline) else baseline)
-                ).eval():
+                ):
                     return True
 
             return False
@@ -1270,11 +1269,11 @@ class AggrLiteral(Literal):
 
         # check guards
         return (
-            op2rel[self.lguard.op](self.lguard.bound, aggr_term).eval()
+            self.lguard.op.eval(self.lguard.bound, aggr_term)
             if self.lguard is not None
             else True
         ) and (
-            op2rel[self.rguard.op](aggr_term, self.rguard.bound).eval()
+            self.rguard.op.eval(aggr_term, self.rguard.bound)
             if self.rguard is not None
             else True
         )
