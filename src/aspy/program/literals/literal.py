@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Iterator, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Union
 
 from aspy.program.expression import Expr
 from aspy.program.safety_characterization import SafetyTriplet
@@ -100,17 +100,17 @@ class LiteralCollection:
     def __len__(self) -> int:
         return len(self.literals)
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal collection to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal collection to a given object.
 
         Considered equal if the given expression is also a `LiteralCollection` instance and contains
         the same terms in any order.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal collection is considered equal to the given expression.
+            Boolean indicating whether or not the literal collection is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, LiteralCollection)
@@ -218,7 +218,7 @@ class LiteralCollection:
 
         return LiteralCollection(*literals)
 
-    def match(self, other: Expr) -> Optional["Substitution"]:
+    def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the literal collection with an expression.
 
         Can only be matched to a literal collection where all literals can be matched (in arbitrary order)

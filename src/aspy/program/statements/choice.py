@@ -66,7 +66,7 @@ class ChoiceElement(Expr):
             else LiteralCollection(*literals)
         )
 
-    def __eq__(self, other: Expr) -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, ChoiceElement)
             and self.atom == other.atom
@@ -120,7 +120,7 @@ class ChoiceElement(Expr):
             self.literals.substitute(subst),
         )
 
-    def match(self, other: Expr) -> Set["Substitution"]:
+    def match(self, other: "Expr") -> Set["Substitution"]:
         raise Exception("Matching for choice elements is not defined.")
 
     def replace_arith(self, var_table: "VariableTable") -> "ChoiceElement":
@@ -176,7 +176,7 @@ class Choice(Expr):
 
         self.elements = elements
 
-    def __eq__(self, other: Expr) -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, Choice)
             and set(self.elements) == set(other.elements)
@@ -461,7 +461,7 @@ class ChoiceFact(Fact):
 
         self.choice = head
 
-    def __eq__(self, other: Expr) -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, ChoiceFact) and self.choice == other.choice
 
     def __hash__(self) -> int:
@@ -580,7 +580,7 @@ class ChoiceRule(Rule):
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
 
-    def __eq__(self, other: Expr) -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, ChoiceRule)
             and self.head == other.head

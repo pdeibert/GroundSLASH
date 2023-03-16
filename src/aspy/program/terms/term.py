@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Iterable, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.expression import Expr
@@ -23,14 +23,14 @@ class Term(Expr, ABC):
     """
 
     @abstractmethod  # pragma: no cover
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         pass
 
@@ -112,7 +112,7 @@ class Term(Expr, ABC):
         """
         return deepcopy(self)
 
-    def match(self, other: Expr) -> Optional[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one.
 
         Args:
@@ -143,16 +143,16 @@ class Infimum(Term):
         """
         return "#inf"
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Infimum` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, Infimum)
 
@@ -191,16 +191,16 @@ class Supremum(Term):
         """
         return "#sup"
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Supremum` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, Supremum)
 
@@ -256,16 +256,16 @@ class Variable(Term):
         """
         return self.val
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Variable` instance with same value.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, Variable) and other.val == self.val
 
@@ -319,7 +319,7 @@ class Variable(Term):
         """  # noqa
         return Variable(self.val)
 
-    def match(self, other: Expr) -> Optional[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one.
 
         Variables can be matched to any expression.
@@ -374,16 +374,16 @@ class AnonVariable(Variable):
         self.val = f"_{id}"
         self.id = id
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `AnonVariable` instance with same id (i.e., value).
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, AnonVariable)
@@ -491,16 +491,16 @@ class Number(Term):
         """
         return str(self.val)
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Number` instance with same integer value.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, Number) and other.val == self.val
 
@@ -592,16 +592,16 @@ class SymbolicConstant(Term):
         """
         return self.val
 
-    def __eq__(self, other: Expr) -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `SymbolicConstant` instance with same identifier value.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
@@ -666,16 +666,16 @@ class String(Term):
         """
         return f'"{self.val}"'
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `String` instance with same value.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, String) and other.val == self.val
 
@@ -732,17 +732,17 @@ class TermTuple:
     def __len__(self) -> int:
         return len(self.terms)
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         """Compares the term tuple to another given term tuple.
 
         Considered equal if the given expression is also a `TermTuple` instance and contains
         the same terms in the exact same order.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term tuple is considered equal to the given expression.
+            Boolean indicating whether or not the term tuple is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, TermTuple)
@@ -859,7 +859,7 @@ class TermTuple:
 
         return 0
 
-    def match(self, other: Expr) -> Optional[Substitution]:
+    def match(self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the term tuple with an expression.
 
         Can only be matched to a term tuple where each corresponding term can be matched

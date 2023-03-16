@@ -1,6 +1,6 @@
 from abc import ABC
 from copy import deepcopy
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING, Any, Set
 
 from aspy.program.literals import PredLiteral
 from aspy.program.substitution import Substitution
@@ -8,7 +8,6 @@ from aspy.program.symbols import SpecialChar
 from aspy.program.terms import TermTuple
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.variable_table import VariableTable
 
 
@@ -71,18 +70,18 @@ class PropPlaceholder(AuxLiteral):
         self.ref_id = ref_id
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal to a given object.
 
         Considered equal if the given expression is also a `PropPlaceholder` instance with same
         prefix, reference id, set of global variables and identical assignment of terms to these
         global variables.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, type(self))
@@ -254,18 +253,18 @@ class PropBaseLiteral(AuxLiteral):
         # store tuple to have a fixed reference order for variables
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal to a given object.
 
         Considered equal if the given expression is also a `PropBaseLiteral` instance with same
         prefix, reference id, set of global variables and identical assignment of terms to these
         global variables.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, type(self))
@@ -442,18 +441,18 @@ class PropElemLiteral(AuxLiteral):
         self.local_vars = local_vars
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal to a given object.
 
         Considered equal if the given expression is also a `PropElemLiteral` instance with same
         prefix, reference and element ids, sets of local and global variables and identical assignment
         of terms to these variables.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, type(self))

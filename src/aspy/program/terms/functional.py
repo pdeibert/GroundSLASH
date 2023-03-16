@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Optional, Set, Union
 
 import aspy
 from aspy.program.safety_characterization import SafetyTriplet
@@ -58,17 +58,17 @@ class Functional(Term):
         """  # noqa
         return self.symbol + (f"({','.join([str(term) for term in self.terms])})")
 
-    def __eq__(self, other: "Expr") -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Functional` instance with same symbol/identifier value
         as well as equal terms.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Functional)

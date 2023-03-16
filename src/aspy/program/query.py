@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 
 from .expression import Expr
 from .literals import LiteralCollection, PredLiteral
@@ -18,7 +18,7 @@ class Query(Expr):
     def __str__(self) -> str:
         return f"{str(self.atom)} ?"
 
-    def __eq__(self, other: Expr) -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, Query) and self.atom == other.atom
 
     def __hash__(self) -> int:

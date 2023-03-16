@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aspy
 from aspy.program.symbols import SpecialChar
@@ -7,7 +7,6 @@ from aspy.program.terms.term import Term
 from .term import Variable
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.terms import ArithTerm
 
 
@@ -49,17 +48,17 @@ class ArithVariable(Variable):
         """
         return self.val
 
-    def __eq__(self, other: "Expr") -> str:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> str:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `ArithVariable` instance with same id (i.e., value)
         and original aritmetic term it replaces.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, ArithVariable)

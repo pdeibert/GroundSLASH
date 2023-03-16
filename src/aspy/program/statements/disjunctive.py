@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.literals import (
@@ -14,7 +14,6 @@ from aspy.program.safety_characterization import SafetyTriplet
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.literals import Literal
     from aspy.program.statements import AggrBaseRule, AggrElemRule, Statement
     from aspy.program.substitution import Substitution
@@ -57,7 +56,7 @@ class DisjunctiveFact(Fact):
 
         self.atoms = LiteralCollection(*atoms)
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, DisjunctiveFact) and self.atoms == other.atoms
 
     def __hash__(self) -> int:
@@ -149,7 +148,7 @@ class DisjunctiveRule(Rule):
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, DisjunctiveRule)
             and set(self.atoms) == set(other.atoms)

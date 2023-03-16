@@ -68,16 +68,16 @@ class AggrElement(Expr):
             else LiteralCollection(literals)
         )
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the element to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the element to a given object.
 
         Considered equal if the given expression is also an `AggrElement` instance with same terms and literals.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the element is considered equal to the given expression.
+            Boolean indicating whether or not the element is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, AggrElement)
@@ -233,7 +233,7 @@ class AggrElement(Expr):
             self.literals.substitute(subst),
         )
 
-    def match(self, other: Expr) -> Optional["Substitution"]:
+    def match(self, other: "Expr") -> Optional["Substitution"]:
         """Tries to match the aggregate element with an expression.
 
         Raises an exception, since matching for aggregate elements is undefined.
@@ -333,16 +333,16 @@ class AggrCount(AggrFunc):
         """
         return "#count"
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the aggregate function to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the aggregate function to a given object.
 
         Considered equal if the given expression is also a `AggrCount` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given expression.
+            Boolean indicating whether or not the function is considered equal to the given object..
         """  # noqa
         return isinstance(other, AggrCount)
 
@@ -476,16 +476,16 @@ class AggrSum(AggrFunc):
         """
         return "#sum"
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the aggregate function to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the aggregate function to a given object.
 
         Considered equal if the given expression is also a `AggrSum` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given expression.
+            Boolean indicating whether or not the function is considered equal to the given object..
         """  # noqa
         return isinstance(other, AggrSum)
 
@@ -713,16 +713,16 @@ class AggrMin(AggrFunc):
         """
         return "#min"
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the aggregate function to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the aggregate function to a given object.
 
         Considered equal if the given expression is also a `AggrMin` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given expression.
+            Boolean indicating whether or not the function is considered equal to the given object..
         """  # noqa
         return isinstance(other, AggrMin)
 
@@ -899,16 +899,16 @@ class AggrMax(AggrFunc):
         """
         return "#max"
 
-    def __eq__(self, other: Expr) -> bool:
-        """Compares the aggregate function to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the aggregate function to a given object.
 
         Considered equal if the given expression is also a `AggrMax` instance.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given expression.
+            Boolean indicating whether or not the function is considered equal to the given object..
         """  # noqa
         return isinstance(other, AggrMax)
 
@@ -1148,17 +1148,17 @@ class AggrLiteral(Literal):
             "not " if self.naf else ""
         ) + f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal to a given object.
 
         Considered equal if the given expression is also an `AggrLiteral` instance with same aggregate
         function, guards, set of elements and identical default-negation.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, AggrLiteral)
@@ -1353,7 +1353,7 @@ class AggrLiteral(Literal):
             naf=self.naf,
         )
 
-    def match(self, other: Expr) -> Set["Substitution"]:
+    def match(self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the aggregate element with an expression.
 
         Raises an exception, since direct matching for aggregate literals is undefined.

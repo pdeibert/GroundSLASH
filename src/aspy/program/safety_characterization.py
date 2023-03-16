@@ -1,6 +1,6 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Any, Optional, Set
 
 if TYPE_CHECKING:  # pragma: no cover
     from .terms import Variable
@@ -11,7 +11,7 @@ class SafetyRule:
     depender: "Variable"
     dependees: Set["Variable"]
 
-    def __eq__(self, other: "SafetyRule") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, SafetyRule)
             and self.depender == other.depender
@@ -33,9 +33,10 @@ class SafetyTriplet:
         self.unsafe = unsafe if unsafe is not None else set()
         self.rules = rules if rules is not None else set()
 
-    def __eq__(self, other: "SafetyTriplet") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
-            self.safe == other.safe
+            isinstance(other, SafetyTriplet)
+            and self.safe == other.safe
             and self.unsafe == self.unsafe
             and self.rules == other.rules
         )

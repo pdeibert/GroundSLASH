@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import reduce
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Term, Variable
@@ -31,7 +31,7 @@ class Substitution(dict):
 
         return f"{{{assignments_str}}}"
 
-    def __eq__(self, other: "Substitution") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, Substitution) and super(Substitution, self).__eq__(
             other
         )

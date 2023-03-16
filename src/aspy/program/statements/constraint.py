@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Set, Tuple
 
 from aspy.program.literals import AggrLiteral, LiteralCollection
 from aspy.program.safety_characterization import SafetyTriplet
@@ -8,7 +8,6 @@ from aspy.program.safety_characterization import SafetyTriplet
 from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.literals import AggrPlaceholder, Literal
     from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.substitution import Substitution
@@ -31,7 +30,7 @@ class Constraint(Statement):
 
         self.literals = LiteralCollection(*literals)
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, Constraint) and set(self.literals) == set(
             other.literals
         )

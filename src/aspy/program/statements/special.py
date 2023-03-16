@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, Union
 
 import aspy
 from aspy.program.literals import (
@@ -18,7 +18,6 @@ from aspy.program.terms import Number, TermTuple
 from .normal import NormalRule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.literals import AggrElement, Guard
     from aspy.program.statements.choice import ChoiceElement
     from aspy.program.terms import Term
@@ -124,7 +123,7 @@ class PropElemRule(NormalRule):
         super().__init__(atom, *literals)
         self.element = element
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, type(self))
             and self.atom == other.atom

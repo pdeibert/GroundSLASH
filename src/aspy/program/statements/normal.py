@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Dict, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Set, Tuple, Union
 
 from aspy.program.literals import (
     AggrLiteral,
@@ -14,7 +14,6 @@ from .constraint import Constraint
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.literals import Literal
     from aspy.program.literals.special import ChoicePlaceholder
     from aspy.program.substitution import Substitution
@@ -45,7 +44,7 @@ class NormalFact(Fact):
     def __str__(self) -> str:
         return f"{str(self.atom)}."
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return isinstance(other, NormalFact) and self.atom == other.atom
 
     def __hash__(self) -> int:
@@ -123,7 +122,7 @@ class NormalRule(Rule):
         self.atom = head
         self.literals = LiteralCollection(*body)
 
-    def __eq__(self, other: "Expr") -> bool:
+    def __eq__(self, other: "Any") -> bool:
         return (
             isinstance(other, NormalRule)
             and self.atom == other.atom

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Set, Tuple, Union
 
 from aspy.program.operators import ArithOp
 from aspy.program.safety_characterization import SafetyTriplet
@@ -183,16 +183,16 @@ class Minus(ArithTerm):
         """  # noqa
         self.operand = operand
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Minus` instance with same operand.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return isinstance(other, Minus) and self.operand == other.operand
 
@@ -286,16 +286,16 @@ class Add(ArithTerm):
         self.loperand = loperand
         self.roperand = roperand
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also an `Add` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Add)
@@ -404,16 +404,16 @@ class Sub(ArithTerm):
         self.loperand = loperand
         self.roperand = roperand
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Sub` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Sub)
@@ -523,16 +523,16 @@ class Mult(ArithTerm):
         self.loperand = loperand
         self.roperand = roperand
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Mult` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Mult)
@@ -660,16 +660,16 @@ class Div(ArithTerm):
         self.loperand = loperand
         self.roperand = roperand
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the term to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the term to a given object.
 
         Considered equal if the given expression is also a `Div` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Div)

@@ -1,8 +1,7 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING, NamedTuple, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, Set, Union
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aspy.program.expression import Expr
     from aspy.program.operators import RelOp
     from aspy.program.query import Query
     from aspy.program.safety_characterization import SafetyTriplet
@@ -40,8 +39,8 @@ class Guard(NamedTuple):
         else:
             return f"{str(self.bound)} {str(self.op)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the guard to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the guard to a given object.
 
         Considered equal if the given expression is also a `Guard` instance with same bound
         and relational operator if moved to the same side.
@@ -50,10 +49,10 @@ class Guard(NamedTuple):
             Guard(>=, 3, True) == Guard(<=, 3, False)
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given expression.
+            Boolean indicating whether or not the term is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Guard)

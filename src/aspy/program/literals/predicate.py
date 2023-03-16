@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.safety_characterization import SafetyTriplet
@@ -57,17 +57,17 @@ class PredLiteral(Literal):
         self.neg = neg
         self.terms = TermTuple(*terms)
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the literal to a given object.
 
         Considered equal if the given expression is also a `PredLiteral` instance with same name/identifier value
         as well as equal terms.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, PredLiteral)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Set, Tuple, Union
 
 from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
@@ -155,16 +155,16 @@ class Equal(BuiltinLiteral):
         """
         return f"{str(self.loperand)}={str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `Equal` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Equal)
@@ -271,16 +271,16 @@ class Unequal(BuiltinLiteral):
         """
         return f"{str(self.loperand)}!={str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `Unequal` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Unequal)
@@ -356,16 +356,16 @@ class Less(BuiltinLiteral):
         """
         return f"{str(self.loperand)}<{str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `Less` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Less)
@@ -441,16 +441,16 @@ class Greater(BuiltinLiteral):
         """
         return f"{str(self.loperand)}>{str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `Greater` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, Greater)
@@ -526,16 +526,16 @@ class LessEqual(BuiltinLiteral):
         """
         return f"{str(self.loperand)}<={str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `LessEqual` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, LessEqual)
@@ -611,16 +611,16 @@ class GreaterEqual(BuiltinLiteral):
         """
         return f"{str(self.loperand)}>={str(self.roperand)}"
 
-    def __eq__(self, other: "Expr") -> bool:
-        """Compares the built-in literal to a given expression.
+    def __eq__(self, other: "Any") -> bool:
+        """Compares the built-in literal to a given object.
 
         Considered equal if the given expression is also an `GreaterEqual` instance with same operands.
 
         Args:
-            other: `Expr` instance to be compared to.
+            other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given expression.
+            Boolean indicating whether or not the literal is considered equal to the given object..
         """  # noqa
         return (
             isinstance(other, GreaterEqual)
