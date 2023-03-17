@@ -16,6 +16,7 @@ from aspy.program.literals import (
 from aspy.program.literals.aggregate import op2aggr
 from aspy.program.literals.builtin import op2rel
 from aspy.program.operators import AggrOp, ArithOp, RelOp
+from aspy.program.query import Query
 from aspy.program.statements import (
     Choice,
     ChoiceElement,
@@ -49,16 +50,27 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class ProgramBuilder(ASPCoreVisitor):
-    """Builds ASP program from ANTLR4 parse tree."""
+    """Builds Answer Set program from ANTLR4 parse tree.
+
+    Attributes:
+        simplify_arithmetic:
+        TODO
+    """
 
     def __init__(self, simplify_arithmetic: bool = True) -> None:
+        """Initializes the program builder instance.
+
+        Args:
+            simplify_arithmetic: Boolean indicating whether or not to simplify
+                arithmetic terms while building the program. Defaults to `True`.
+        """
         self.simplify_arithmetic = simplify_arithmetic
 
     # Visit a parse tree produced by ASPCoreParser#program.
     def visitProgram(
         self, ctx: ASPCoreParser.ProgramContext
     ) -> Tuple[List[Statement], Optional[PredLiteral]]:
-        """Visits 'program'.
+        """Visits 'program' context.
 
         Handles the following rule(s):
 
@@ -78,35 +90,52 @@ class ProgramBuilder(ASPCoreVisitor):
         return (statements, query)
 
     # Visit a parse tree produced by ASPCoreParser#statements.
-    def visitStatements(self, ctx: ASPCoreParser.StatementsContext):
+    def visitStatements(
+        self, ctx: ASPCoreParser.StatementsContext
+    ) -> Tuple["Statement", ...]:
         """Visits 'statements'.
 
         Handles the following rule(s):
-
             statements          :   statement+
+
+        Args:
+            ctx: `ASPCoreParser.StatementsContext` to be visited.
+
+        Returns:
+            Tuple of `Statement` instances.
         """
         return tuple([self.visitStatement(child) for child in ctx.children])
 
     # Visit a parse tree produced by ASPCoreParser#query.
-    def visitQuery(self, ctx: ASPCoreParser.QueryContext) -> PredLiteral:
+    def visitQuery(self, ctx: ASPCoreParser.QueryContext) -> Query:
         """Visits 'query'.
 
         Handles the following rule(s):
-
             query               :   classical_literal QUERY_MARK
+
+        Args:
+            ctx: `ASPCoreParser.QueryContext` to be visited.
+
+        Returns:
+            `Query` instance.
         """
-        return self.visitClassical_literal(ctx.children[0])
+        return Query(self.visitClassical_literal(ctx.children[0]))
 
     # Visit a parse tree produced by ASPCoreParser#statement.
-    def visitStatement(self, ctx: ASPCoreParser.StatementContext):
+    def visitStatement(self, ctx: ASPCoreParser.StatementContext) -> "Statement":
         """Visits 'statement'.
 
         Handles the following rule(s):
-
             statement           :   CONS body? DOT
                                 |   head (CONS body?)? DOT
                                 |   WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
                                 |   optimize DOT
+
+        Args:
+            ctx: `ASPCoreParser.StatementContext` to be visited.
+
+        Returns:
+            `Statement` instance.
         """  # noqa
         # initialize empty variable table (for special counters)
         self.var_table = VariableTable()
@@ -181,9 +210,14 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'head'.
 
         Handles the following rule(s):
-
             head                :   disjunction
                                 |   choice
+
+        Args:
+            ctx: `ASPCoreParser.HeadContext` to be visited.
+
+        Returns:
+            `Choice` instance or tuple of `PredicateLiteral` instances.
         """
         # disjunction
         if isinstance(ctx.children[0], ASPCoreParser.DisjunctionContext):
@@ -197,8 +231,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'body'.
 
         Handles the following rule(s):
-
             body                :   (naf_literal | NAF? aggregate) (COMMA body)?
+
+        Args:
+            ctx: `ASPCoreParser.BodyContext` to be visited.
+
+        Returns:
+            Tuple of `Literal` instances.
         """
         # naf_literal
         if isinstance(ctx.children[0], ASPCoreParser.Naf_literalContext):
@@ -224,8 +263,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'disjunction'.
 
         Handles the following rule(s):
-
             disjunction         :   classical_literal (OR disjunction)?
+
+        Args:
+            ctx: `ASPCoreParser.DisjunctionContext` to be visited.
+
+        Returns:
+            List of `PredicateLiteral` instances.
         """
         # classical_literal
         literals = [self.visitClassical_literal(ctx.children[0])]
@@ -242,8 +286,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'choice'.
 
         Handles the following rule(s):
-
             choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)?
+
+        Args:
+            ctx: `ASPCoreParser.ChoiceContext` to be visited.
+
+        Returns:
+            `Choice` instance.
         """  # noqa
         moving_index = 0
         lguard, rguard = None, None
@@ -283,8 +332,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'choice_elements'.
 
         Handles the following rule(s):
-
             choice_elements     :   choice_element (SEMICOLON choice_elements)?
+
+        Args:
+            ctx: `ASPCoreParser.Choice_elementsContext` to be visited.
+
+        Returns:
+            Tuple of `ChoiceElement` instances.
         """
         # choice_element
         elements = tuple([self.visitChoice_element(ctx.children[0])])
@@ -303,8 +357,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'choice_element'.
 
         Handles the following rule(s):
-
             choice_element      :   classical_literal (COLON naf_literals?)?
+
+        Args:
+            ctx: `ASPCoreParser.Choice_elementContext` to be visited.
+
+        Returns:
+            `ChoiceElement` instance.
         """
         # classical_literal
         atom = self.visitClassical_literal(ctx.children[0])
@@ -323,8 +382,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'aggregate'.
 
         Handles the following rule(s):
-
             aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)?
+
+        Args:
+            ctx: `ASPCoreParser.AggregateContext` to be visited.
+
+        Returns:
+            `AggrLiteral` instance.
         """  # noqa
         moving_index = 0
         lguard, rguard = None, None
@@ -366,8 +430,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'aggregate_elements'.
 
         Handles the following rule(s):
-
             aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)?
+
+        Args:
+            ctx: `ASPCoreParser.Aggregate_elementsContext` to be visited.
+
+        Returns:
+            Tuple of `AggrElement` instances.
         """
         # aggregate_element
         element = self.visitAggregate_element(ctx.children[0])
@@ -383,14 +452,19 @@ class ProgramBuilder(ASPCoreVisitor):
     # Visit a parse tree produced by ASPCoreParser#aggregate_element.
     def visitAggregate_element(
         self, ctx: ASPCoreParser.Aggregate_elementContext
-    ) -> Optional[AggrElement]:
+    ) -> AggrElement:
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
-
             aggregate_element   :   terms COLON?
                                 |   COLON? naf_literals?
                                 |   terms COLON naf_literals
+
+        Args:
+            ctx: `ASPCoreParser.Aggregate_elementContext` to be visited.
+
+        Returns:
+            `AggrElement` instance.
         """
 
         # terms
@@ -419,11 +493,16 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'aggregate_function'.
 
         Handles the following rule(s):
-
             aggregate_function  :   COUNT
                                 |   MAX
                                 |   MIN
                                 |   SUM
+
+        Args:
+            ctx: `ASPCoreParser.Aggregate_functionContext` to be visited.
+
+        Returns:
+            `AggrOp` instance.
         """
         # get token
         token = ctx.children[0].getSymbol()
@@ -435,8 +514,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'optimize'.
 
         Handles the following rule(s):
-
             optimize            :   optimize_function CURLY_OPEN optimize_elements? CURLY_CLOSE
+
+        Args:
+            ctx: `ASPCoreParser.OptimizeContext` to be visited.
+
+        Returns:
+            `OptimizeStatement` instance.
         """  # noqa
         optimization_function = self.visitOptimize_function(ctx.children[0])
 
@@ -459,8 +543,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'optimize_elements'.
 
         Handles the following rule(s):
-
             optimize_elements   :   optimize_element (SEMICOLON optimize_elements)?
+
+        Args:
+            ctx: `ASPCoreParser.Optimize_elementsContext` to be visited.
+
+        Returns:
+            Tuple of `OptimizeElement` instances.
         """
         # optimize_element
         elements = tuple([self.visitOptimize_element(ctx.children[0])])
@@ -479,8 +568,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'optimize_element'.
 
         Handles the following rule(s):
-
             optimize_element    :   weight_at_level (COLON naf_literals?)?
+
+        Args:
+            ctx: `ASPCoreParser.Optimize_elementContext` to be visited.
+
+        Returns:
+            `OptimizeStatement` instance.
         """
         # weight_at_level
         weight, level, terms = self.visitWeight_at_level(ctx.children[0])
@@ -501,9 +595,14 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'optimize_function'.
 
         Handles the following rule(s):
-
             optimize_function   :   MAXIMIZE
                                 |   MINIMIZE
+
+        Args:
+            ctx: `ASPCoreParser.Optimize_functionContext` to be visited.
+
+        Returns:
+            String representing the optimization function.
         """
         return ASPCoreParser.symbolicNames[ctx.getSymbol().type]
 
@@ -514,9 +613,16 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'weight_at_level'.
 
         Handles the following rule(s):
-
             weight_at_level     :   term (AT term)? (COMMA terms)?
-        """
+
+        Args:
+            ctx: `ASPCoreParser.Weight_at_levelContext` to be visited.
+
+        Returns:
+            Tuple consisting of two `Term` instances as well as a tuple of `Term` instances.
+            The first `Term` instance represents the weight, the second one the level.
+            The tuple of `Terms` represents the additional terms for uniqueness purposes.
+        """  # noqa
         # weight
         weight = self.visitTerm(ctx.children[0])
 
@@ -552,8 +658,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'naf_literals'.
 
         Handles the following rule(s):
-
             naf_literals        :   naf_literal (COMMA naf_literals)?
+
+        Args:
+            ctx: `ASPCoreParser.Naf_literalsContext` to be visited.
+
+        Returns:
+            Tuple of `Literal` instances.
         """
         # naf_literal
         literals = tuple([self.visitNaf_literal(ctx.children[0])])
@@ -595,8 +706,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'classical_literal'.
 
         Handles the following rule(s):
-
             classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)?
+
+        Args:
+            ctx: `ASPCoreParser.Classical_literalContext` to be visited.
+
+        Returns:
+            `PredLiteral` instance.
         """
         n_children = len(ctx.children)
 
@@ -624,8 +740,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'builtin_atom'.
 
         Handles the following rule(s):
-
             builtin_atom        :   term relop term
+
+        Args:
+            ctx: `ASPCoreParser.Builtin_atomContext` to be visited.
+
+        Returns:
+            `BuiltinLiteral` instance.
         """
         comp_op = self.visitRelop(ctx.children[1])
 
@@ -638,13 +759,18 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'relop'.
 
         Handles the following rule(s):
-
             relop               :   EQUAL
                                 |   UNEQUAL
                                 |   LESS
                                 |   GREATER
                                 |   LESS_OR_EQ
                                 |   GREATER_OR_EQ
+
+        Args:
+            ctx: `ASPCoreParser.RelOpContext` to be visited.
+
+        Returns:
+            `RelOp` instance.
         """
         # get token
         token = ctx.children[0].getSymbol()
@@ -656,8 +782,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'terms'.
 
         Handles the following rule(s):
-
             terms               :   term (COMMA terms)?
+
+        Args:
+            ctx: `ASPCoreParser.TermsContext` to be visited.
+
+        Returns:
+            Tuple of `Term` instances.
         """
         # term
         terms = tuple([self.visitTerm(ctx.children[0])])
@@ -674,7 +805,6 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'term'.
 
         Handles the following rule(s):
-
             term                :   ID
                                 |   STRING
                                 |   VARIABLE
@@ -682,6 +812,12 @@ class ProgramBuilder(ASPCoreVisitor):
                                 |   PAREN_OPEN term PAREN_CLOSE
                                 |   func_term
                                 |   arith_term
+
+        Args:
+            ctx: `ASPCoreParser.TermContext` to be visited.
+
+        Returns:
+            `Term` instance.
         """
         # first child is a token
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
@@ -719,12 +855,17 @@ class ProgramBuilder(ASPCoreVisitor):
             return arith_term.simplify() if self.simplify_arithmetic else arith_term
 
     # Visit a parse tree produced by ASPCoreParser#func_term.
-    def visitFunc_term(self, ctx: ASPCoreParser.Func_termContext) -> "Term":
+    def visitFunc_term(self, ctx: ASPCoreParser.Func_termContext) -> "Functional":
         """Visits 'func_term'.
 
         Handles the following rule(s):
-
             func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE
+
+        Args:
+            ctx: `ASPCoreParser.Func_termContext` to be visited.
+
+        Returns:
+            `Functional` instance.
         """
 
         # parse terms
@@ -737,8 +878,13 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'arith_term'.
 
         Handles the following rule(s):
-
             arith_term          :   arith_sum
+
+        Args:
+            ctx: `ASPCoreParser.Arith_termContext` to be visited.
+
+        Returns:
+            `Term` instance.
         """
         # TODO: eliminate rule from grammar?
         return self.visitArith_sum(ctx.children[0])
@@ -748,10 +894,15 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'arith_sum'.
 
         Handles the following rule(s):
-
             arith_sum           :   arith_prod
                                 |   arith_sum PLUS arith_prod
                                 |   arith_sum MINUS arith_prod
+
+        Args:
+            ctx: `ASPCoreParser.Arith_sumContext` to be visited.
+
+        Returns:
+            `Term` instance.
         """
         # arith_sum (PLUS | MINUS) arith_prod
         if len(ctx.children) > 1:
@@ -773,10 +924,15 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'arith_prod'.
 
         Handles the following rule(s):
-
             arith_prod          :   arith_atom
                                 |   arith_prod TIMES arith_atom
                                 |   arith_prod DIV arith_atom
+
+        Args:
+            ctx: `ASPCoreParser.Arith_prodContext` to be visited.
+
+        Returns:
+            `Term` instance.
         """
         # arith_prod (TIMES | DIV) arith_atom
         if len(ctx.children) > 1:
@@ -798,11 +954,16 @@ class ProgramBuilder(ASPCoreVisitor):
         """Visits 'arith_atom'.
 
         Handles the following rule(s):
-
             arith_atom          :   NUMBER
                                 |   VARIABLE
                                 |   MINUS arith_atom
                                 |   PAREN_OPEN arith_sum PAREN_CLOSE
+
+        Args:
+            ctx: `ASPCoreParser.Arith_atomContext` to be visited.
+
+        Returns:
+            `Term` instance.
         """
         # TODO: what about anonymous variables ?
 
