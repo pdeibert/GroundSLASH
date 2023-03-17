@@ -8,10 +8,30 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @dataclass
 class SafetyRule:
+    """Safety rule for safety characterization.
+
+    For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+    Attributes:
+        depender: `Variable` instance representing the depender.
+        dependees: Set of `Variable` instances representing the dependees.
+    """  # noqa
+
     depender: "Variable"
     dependees: Set["Variable"]
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the safety rule to a given object.
+
+        Considered equal if the given object is also a `SafetyRule` instance with same
+        depender and dependees.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the safety rule is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, SafetyRule)
             and self.depender == other.depender
@@ -19,21 +39,49 @@ class SafetyRule:
         )
 
     def __hash__(self) -> int:
-        return hash((self.depender, frozenset(self.dependees)))
+        return hash(("safety rule", self.depender, frozenset(self.dependees)))
 
 
 class SafetyTriplet:
+    """Safety characterization.
+
+    For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+    Attributes:
+        safe: Set of `Variable` instances considered safe.
+        unsafe: Set of `Variable` instances considered unsafe.
+        rules: Set of `SafetyRule` instances.
+    """  # noqa
+
     def __init__(
         self,
         safe: Optional[Set["Variable"]] = None,
         unsafe: Optional[Set["Variable"]] = None,
         rules: Optional[Set[SafetyRule]] = None,
     ) -> None:
+        """Initializes the safety triplet instance.
+
+        Args:
+            safe: Set of `Variable` instances considered safe. Defaults to None.
+            unsafe: Set of `Variable` instances considered unsafe. Defaults to None.
+            rules: Optional set of `SafetyRule` instances. Defaults to None.
+        """
         self.safe = safe if safe is not None else set()
         self.unsafe = unsafe if unsafe is not None else set()
         self.rules = rules if rules is not None else set()
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the safety characterization to a given object.
+
+        Considered equal if the given object is also a `SafetyTriplet` instance with same
+        set of safe and unsafe variables as well as rules.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the safety triplet is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, SafetyTriplet)
             and self.safe == other.safe
@@ -42,7 +90,14 @@ class SafetyTriplet:
         )
 
     def normalize(self) -> "SafetyTriplet":
-        """Algorithm 1 in Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition"."""  # noqa
+        """Normalizes the safety characterization.
+
+        Implements Algorithm 1 in Bicheler (2015):
+        "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Returns:
+            Normalized `SafetyTriplet` instance.
+        """  # noqa
 
         # create copy of current safety characterization
         safety = deepcopy(self)
@@ -104,7 +159,15 @@ class SafetyTriplet:
 
     @classmethod
     def closure(cls, *safeties: "SafetyTriplet") -> "SafetyTriplet":
+        """Computes the closure for specified safety characterizations.
 
+        Args:
+            *safeties: Sequence of `SafetyTriplet` instances.
+
+        Returns:
+            `SafetyTriplet` instance representing the closure of the specified
+            safety characterizations.
+        """
         safe = set()
         unsafe = set()
         rules = set()
