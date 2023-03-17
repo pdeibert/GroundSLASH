@@ -103,7 +103,7 @@ class LiteralCollection:
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal collection to a given object.
 
-        Considered equal if the given expression is also a `LiteralCollection` instance and contains
+        Considered equal if the given object is also a `LiteralCollection` instance and contains
         the same terms in any order.
 
         Args:

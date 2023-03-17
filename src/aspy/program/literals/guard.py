@@ -42,7 +42,7 @@ class Guard(NamedTuple):
     def __eq__(self, other: "Any") -> bool:
         """Compares the guard to a given object.
 
-        Considered equal if the given expression is also a `Guard` instance with same bound
+        Considered equal if the given object is also a `Guard` instance with same bound
         and relational operator if moved to the same side.
 
         Example:

@@ -158,7 +158,7 @@ class Equal(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `Equal` instance with same operands.
+        Considered equal if the given object is also an `Equal` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -274,7 +274,7 @@ class Unequal(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `Unequal` instance with same operands.
+        Considered equal if the given object is also an `Unequal` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -359,7 +359,7 @@ class Less(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `Less` instance with same operands.
+        Considered equal if the given object is also an `Less` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -444,7 +444,7 @@ class Greater(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `Greater` instance with same operands.
+        Considered equal if the given object is also an `Greater` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -529,7 +529,7 @@ class LessEqual(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `LessEqual` instance with same operands.
+        Considered equal if the given object is also an `LessEqual` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -614,7 +614,7 @@ class GreaterEqual(BuiltinLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the built-in literal to a given object.
 
-        Considered equal if the given expression is also an `GreaterEqual` instance with same operands.
+        Considered equal if the given object is also an `GreaterEqual` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.

@@ -51,7 +51,7 @@ class ArithVariable(Variable):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `ArithVariable` instance with same id (i.e., value)
+        Considered equal if the given object is also a `ArithVariable` instance with same id (i.e., value)
         and original aritmetic term it replaces.
 
         Args:

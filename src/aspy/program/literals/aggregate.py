@@ -71,7 +71,7 @@ class AggrElement(Expr):
     def __eq__(self, other: "Any") -> bool:
         """Compares the element to a given object.
 
-        Considered equal if the given expression is also an `AggrElement` instance with same terms and literals.
+        Considered equal if the given object is also an `AggrElement` instance with same terms and literals.
 
         Args:
             other: `Any` instance to be compared to.
@@ -336,7 +336,7 @@ class AggrCount(AggrFunc):
     def __eq__(self, other: "Any") -> bool:
         """Compares the aggregate function to a given object.
 
-        Considered equal if the given expression is also a `AggrCount` instance.
+        Considered equal if the given object is also a `AggrCount` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -479,7 +479,7 @@ class AggrSum(AggrFunc):
     def __eq__(self, other: "Any") -> bool:
         """Compares the aggregate function to a given object.
 
-        Considered equal if the given expression is also a `AggrSum` instance.
+        Considered equal if the given object is also a `AggrSum` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -716,7 +716,7 @@ class AggrMin(AggrFunc):
     def __eq__(self, other: "Any") -> bool:
         """Compares the aggregate function to a given object.
 
-        Considered equal if the given expression is also a `AggrMin` instance.
+        Considered equal if the given object is also a `AggrMin` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -902,7 +902,7 @@ class AggrMax(AggrFunc):
     def __eq__(self, other: "Any") -> bool:
         """Compares the aggregate function to a given object.
 
-        Considered equal if the given expression is also a `AggrMax` instance.
+        Considered equal if the given object is also a `AggrMax` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -1151,7 +1151,7 @@ class AggrLiteral(Literal):
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
-        Considered equal if the given expression is also an `AggrLiteral` instance with same aggregate
+        Considered equal if the given object is also an `AggrLiteral` instance with same aggregate
         function, guards, set of elements and identical default-negation.
 
         Args:

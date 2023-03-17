@@ -60,7 +60,7 @@ class PredLiteral(Literal):
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
-        Considered equal if the given expression is also a `PredLiteral` instance with same name/identifier value
+        Considered equal if the given object is also a `PredLiteral` instance with same name/identifier value
         as well as equal terms.
 
         Args:

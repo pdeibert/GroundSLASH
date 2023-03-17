@@ -61,7 +61,7 @@ class Functional(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Functional` instance with same symbol/identifier value
+        Considered equal if the given object is also a `Functional` instance with same symbol/identifier value
         as well as equal terms.
 
         Args:

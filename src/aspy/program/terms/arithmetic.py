@@ -186,7 +186,7 @@ class Minus(ArithTerm):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Minus` instance with same operand.
+        Considered equal if the given object is also a `Minus` instance with same operand.
 
         Args:
             other: `Any` instance to be compared to.
@@ -289,7 +289,7 @@ class Add(ArithTerm):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also an `Add` instance with same operands.
+        Considered equal if the given object is also an `Add` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -407,7 +407,7 @@ class Sub(ArithTerm):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Sub` instance with same operands.
+        Considered equal if the given object is also a `Sub` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -526,7 +526,7 @@ class Mult(ArithTerm):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Mult` instance with same operands.
+        Considered equal if the given object is also a `Mult` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.
@@ -663,7 +663,7 @@ class Div(ArithTerm):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Div` instance with same operands.
+        Considered equal if the given object is also a `Div` instance with same operands.
 
         Args:
             other: `Any` instance to be compared to.

@@ -146,7 +146,7 @@ class Infimum(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Infimum` instance.
+        Considered equal if the given object is also a `Infimum` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -194,7 +194,7 @@ class Supremum(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Supremum` instance.
+        Considered equal if the given object is also a `Supremum` instance.
 
         Args:
             other: `Any` instance to be compared to.
@@ -259,7 +259,7 @@ class Variable(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Variable` instance with same value.
+        Considered equal if the given object is also a `Variable` instance with same value.
 
         Args:
             other: `Any` instance to be compared to.
@@ -377,7 +377,7 @@ class AnonVariable(Variable):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `AnonVariable` instance with same id (i.e., value).
+        Considered equal if the given object is also a `AnonVariable` instance with same id (i.e., value).
 
         Args:
             other: `Any` instance to be compared to.
@@ -494,7 +494,7 @@ class Number(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `Number` instance with same integer value.
+        Considered equal if the given object is also a `Number` instance with same integer value.
 
         Args:
             other: `Any` instance to be compared to.
@@ -595,7 +595,7 @@ class SymbolicConstant(Term):
     def __eq__(self, other: "Any") -> str:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `SymbolicConstant` instance with same identifier value.
+        Considered equal if the given object is also a `SymbolicConstant` instance with same identifier value.
 
         Args:
             other: `Any` instance to be compared to.
@@ -669,7 +669,7 @@ class String(Term):
     def __eq__(self, other: "Any") -> bool:
         """Compares the term to a given object.
 
-        Considered equal if the given expression is also a `String` instance with same value.
+        Considered equal if the given object is also a `String` instance with same value.
 
         Args:
             other: `Any` instance to be compared to.
@@ -735,7 +735,7 @@ class TermTuple:
     def __eq__(self, other: "Any") -> bool:
         """Compares the term tuple to another given term tuple.
 
-        Considered equal if the given expression is also a `TermTuple` instance and contains
+        Considered equal if the given object is also a `TermTuple` instance and contains
         the same terms in the exact same order.
 
         Args:

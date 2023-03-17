@@ -73,7 +73,7 @@ class PropPlaceholder(AuxLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
-        Considered equal if the given expression is also a `PropPlaceholder` instance with same
+        Considered equal if the given object is also a `PropPlaceholder` instance with same
         prefix, reference id, set of global variables and identical assignment of terms to these
         global variables.
 
@@ -256,7 +256,7 @@ class PropBaseLiteral(AuxLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
-        Considered equal if the given expression is also a `PropBaseLiteral` instance with same
+        Considered equal if the given object is also a `PropBaseLiteral` instance with same
         prefix, reference id, set of global variables and identical assignment of terms to these
         global variables.
 
@@ -444,7 +444,7 @@ class PropElemLiteral(AuxLiteral):
     def __eq__(self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
-        Considered equal if the given expression is also a `PropElemLiteral` instance with same
+        Considered equal if the given object is also a `PropElemLiteral` instance with same
         prefix, reference and element ids, sets of local and global variables and identical assignment
         of terms to these variables.
 
