@@ -16,36 +16,103 @@ from aspy.program.literals import (
     PredLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, Constraint
+from aspy.program.statements import AggrBaseRule, AggrElemRule, WeakConstraint
+from aspy.program.statements.weak_constraint import WeightAtLevel
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
 from aspy.program.variable_table import VariableTable
 
 
-class TestConstraint(unittest.TestCase):
-    def test_constraint(self):
+class TestWeakConstraint(unittest.TestCase):
+    def test_weight_at_level(self):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        ground_rule = Constraint(PredLiteral("p", Number(0)), PredLiteral("q"))
-        var_rule = Constraint(
-            PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))
+        ground_term = WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1)))
+        var_term = WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1)))
+
+        # string representation
+        self.assertEqual(str(ground_term), "[0@1, 2,-1]")
+        self.assertEqual(str(var_term), "[0@X, Y,-1]")
+        # equality
+        self.assertEqual(
+            ground_term, WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1)))
+        )
+        self.assertEqual(
+            var_term,
+            WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
+        )
+        # hashing
+        self.assertEqual(
+            hash(ground_term),
+            hash(WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1)))),
+        )
+        self.assertEqual(
+            hash(var_term),
+            hash(WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1)))),
+        )
+        # ground
+        self.assertTrue(ground_term.ground)
+        self.assertFalse(var_term.ground)
+        # safety characterization
+        self.assertTrue(Exception, ground_term.safety)
+        self.assertTrue(Exception, var_term.safety)
+        # variables
+        self.assertTrue(ground_term.vars() == ground_term.global_vars() == set())
+        self.assertTrue(
+            var_term.vars() == var_term.global_vars() == {Variable("X"), Variable("Y")}
+        )
+        # replace arithmetic terms
+        self.assertEqual(
+            WeightAtLevel(
+                Number(0), Minus(Variable("X")), (Variable("Y"), Number(-1))
+            ).replace_arith(VariableTable()),
+            WeightAtLevel(
+                Number(0),
+                ArithVariable(0, Minus(Variable("X"))),
+                (Variable("Y"), Number(-1)),
+            ),
+        )
+
+        # substitution
+        self.assertEqual(
+            var_term.substitute(
+                Substitution({Variable("X"): Number(1), Number(0): String("f")})
+            ),
+            WeightAtLevel(Number(0), Number(1), (Variable("Y"), Number(-1))),
+        )  # NOTE: substitution is invalid
+
+    def test_weak_constraint(self):
+
+        # make sure debug mode is enabled
+        self.assertTrue(aspy.debug())
+
+        ground_rule = WeakConstraint(
+            (PredLiteral("p", Number(0)), PredLiteral("q")),
+            WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
+        )
+        var_rule = WeakConstraint(
+            (PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))),
+            WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
         )
 
         # string representation
-        self.assertEqual(str(ground_rule), ":- p(0), q.")
-        self.assertEqual(str(var_rule), ":- p(X), q(X).")
+        self.assertEqual(str(ground_rule), ":~ p(0),q. [0@1, 2,-1]")
+        self.assertEqual(str(var_rule), ":~ p(X),q(X). [0@X, Y,-1]")
         # equality
         self.assertEqual(
             ground_rule,
-            Constraint(PredLiteral("p", Number(0)), PredLiteral("q")),
+            WeakConstraint(
+                (PredLiteral("p", Number(0)), PredLiteral("q")),
+                WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
+            ),
         )
         self.assertEqual(
             var_rule,
-            Constraint(
-                PredLiteral("p", Variable("X")),
-                PredLiteral("q", Variable("X")),
+            WeakConstraint(
+                (PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))),
+                WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
             ),
         )
         self.assertEqual(ground_rule.head, LiteralCollection())
@@ -64,15 +131,22 @@ class TestConstraint(unittest.TestCase):
         # hashing
         self.assertEqual(
             hash(ground_rule),
-            hash(Constraint(PredLiteral("p", Number(0)), PredLiteral("q"))),
+            hash(
+                WeakConstraint(
+                    (PredLiteral("p", Number(0)), PredLiteral("q")),
+                    WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
+                ),
+            ),
         )
         self.assertEqual(
             hash(var_rule),
             hash(
-                Constraint(
-                    PredLiteral("p", Variable("X")),
-                    PredLiteral("q", Variable("X")),
-                )
+                WeakConstraint(
+                    (PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))),
+                    WeightAtLevel(
+                        Number(0), Variable("X"), (Variable("Y"), Number(-1))
+                    ),
+                ),
             ),
         )
         # ground
@@ -85,9 +159,14 @@ class TestConstraint(unittest.TestCase):
         self.assertFalse(ground_rule.contains_aggregates)
         self.assertFalse(var_rule.contains_aggregates)
         self.assertTrue(
-            Constraint(
-                PredLiteral("p", Variable("X")),
-                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
+            WeakConstraint(
+                (
+                    PredLiteral("p", Variable("X")),
+                    AggrLiteral(
+                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                    ),
+                ),
+                WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
             ).contains_aggregates
         )
         # variables
@@ -95,26 +174,40 @@ class TestConstraint(unittest.TestCase):
         self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(
-            Constraint(PredLiteral("p", Number(0), Minus(Variable("X")))).replace_arith(
-                VariableTable()
-            ),
-            Constraint(
-                PredLiteral("p", Number(0), ArithVariable(0, Minus(Variable("X")))),
+            WeakConstraint(
+                (PredLiteral("p", Number(0), Minus(Variable("X"))),),
+                WeightAtLevel(
+                    Number(0), Minus(Variable("X")), (Variable("Y"), Number(-1))
+                ),
+            ).replace_arith(VariableTable()),
+            WeakConstraint(
+                (PredLiteral("p", Number(0), ArithVariable(0, Minus(Variable("X")))),),
+                WeightAtLevel(
+                    Number(0),
+                    ArithVariable(1, Minus(Variable("X"))),
+                    (Variable("Y"), Number(-1)),
+                ),
             ),
         )
 
         # substitution
-        rule = Constraint(
-            PredLiteral("p", Variable("X"), Number(0)),
-            PredLiteral("q", Variable("X")),
+        rule = WeakConstraint(
+            (
+                PredLiteral("p", Variable("X"), Number(0)),
+                PredLiteral("q", Variable("X")),
+            ),
+            WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
         )
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
-            Constraint(
-                PredLiteral("p", Number(1), Number(0)),
-                PredLiteral("q", Number(1)),
+            WeakConstraint(
+                (
+                    PredLiteral("p", Number(1), Number(0)),
+                    PredLiteral("q", Number(1)),
+                ),
+                WeightAtLevel(Number(0), Number(1), (Variable("Y"), Number(-1))),
             ),
         )  # NOTE: substitution is invalid
 
@@ -133,25 +226,31 @@ class TestConstraint(unittest.TestCase):
                 TermTuple(Number(0)), LiteralCollection(PredLiteral("q", Number(0)))
             ),
         )
-        rule = Constraint(
-            PredLiteral("p", Variable("X"), Number(0)),
-            AggrLiteral(
-                AggrCount(),
-                elements_1,
-                Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
+        rule = WeakConstraint(
+            (
+                PredLiteral("p", Variable("X"), Number(0)),
+                AggrLiteral(
+                    AggrCount(),
+                    elements_1,
+                    Guard(RelOp.GREATER_OR_EQ, Variable("X"), False),
+                ),
+                PredLiteral("q", Variable("X")),
+                Equal(Number(0), Variable("X")),
+                AggrLiteral(
+                    AggrCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
+                ),
             ),
-            PredLiteral("q", Variable("X")),
-            Equal(Number(0), Variable("X")),
-            AggrLiteral(
-                AggrCount(), elements_2, Guard(RelOp.LESS_OR_EQ, Number(0), True)
-            ),
+            WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
         )
-        target_rule = Constraint(
-            PredLiteral("p", Variable("X"), Number(0)),
-            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredLiteral("q", Variable("X")),
-            Equal(Number(0), Variable("X")),
-            AggrPlaceholder(2, TermTuple(), TermTuple()),
+        target_rule = WeakConstraint(
+            (
+                PredLiteral("p", Variable("X"), Number(0)),
+                AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+                PredLiteral("q", Variable("X")),
+                Equal(Number(0), Variable("X")),
+                AggrPlaceholder(2, TermTuple(), TermTuple()),
+            ),
+            WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
         )
         aggr_map = dict()
 
@@ -248,12 +347,15 @@ class TestConstraint(unittest.TestCase):
         )
 
         # assembling
-        target_rule = Constraint(
-            PredLiteral("p", Variable("X"), Number(0)),
-            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
-            PredLiteral("q", Variable("X")),
-            Equal(Number(0), Variable("X")),
-            AggrPlaceholder(2, TermTuple(), TermTuple()),
+        target_rule = WeakConstraint(
+            (
+                PredLiteral("p", Variable("X"), Number(0)),
+                AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Variable("X"))),
+                PredLiteral("q", Variable("X")),
+                Equal(Number(0), Variable("X")),
+                AggrPlaceholder(2, TermTuple(), TermTuple()),
+            ),
+            WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
         )
         elements_1 = (
             AggrElement(
@@ -298,31 +400,34 @@ class TestConstraint(unittest.TestCase):
                     ),
                 }
             ),
-            Constraint(
-                PredLiteral("p", Variable("X"), Number(0)),
-                AggrLiteral(
-                    AggrCount(),
-                    (
-                        AggrElement(
-                            TermTuple(Number(0)),
-                            LiteralCollection(PredLiteral("p", Number(0))),
+            WeakConstraint(
+                (
+                    PredLiteral("p", Variable("X"), Number(0)),
+                    AggrLiteral(
+                        AggrCount(),
+                        (
+                            AggrElement(
+                                TermTuple(Number(0)),
+                                LiteralCollection(PredLiteral("p", Number(0))),
+                            ),
+                            AggrElement(TermTuple(String("f")), LiteralCollection()),
                         ),
-                        AggrElement(TermTuple(String("f")), LiteralCollection()),
+                        Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
                     ),
-                    Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
-                ),
-                PredLiteral("q", Variable("X")),
-                Equal(Number(0), Variable("X")),
-                AggrLiteral(
-                    AggrCount(),
-                    (
-                        AggrElement(
-                            TermTuple(Number(0)),
-                            LiteralCollection(PredLiteral("q", Number(0))),
+                    PredLiteral("q", Variable("X")),
+                    Equal(Number(0), Variable("X")),
+                    AggrLiteral(
+                        AggrCount(),
+                        (
+                            AggrElement(
+                                TermTuple(Number(0)),
+                                LiteralCollection(PredLiteral("q", Number(0))),
+                            ),
                         ),
+                        Guard(RelOp.LESS_OR_EQ, Number(0), True),
                     ),
-                    Guard(RelOp.LESS_OR_EQ, Number(0), True),
                 ),
+                WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1))),
             ),
         )
 

@@ -226,7 +226,6 @@ class TestChoicePropagator(unittest.TestCase):
             PredLiteral("q", Number(0)),
             PredLiteral("q", Number(1)),
         }
-        print()
         J_chi = propagator.propagate(
             eps_instances, eta_instances, domain, domain, set()
         )

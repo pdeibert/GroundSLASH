@@ -367,11 +367,6 @@ class Choice(Expr):
 
             return False
 
-        # print()
-        # print([str(e) for e in elements])
-        # print("I", [str(e) for e in get_I_elements()])
-        # print("J", [str(e) for e in get_J_elements()])
-
         # running boolean tracking the current result of the propagation
         res = True
 

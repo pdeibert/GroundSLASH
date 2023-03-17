@@ -753,6 +753,10 @@ class TermTuple:
     def __hash__(self) -> int:
         return hash(("term tuple", *self.terms))
 
+    def __str__(self) -> str:
+        """TODO"""
+        return ",".join(tuple(str(term) for term in self.terms))
+
     def __iter__(self) -> Iterable[Term]:
         return iter(self.terms)
 

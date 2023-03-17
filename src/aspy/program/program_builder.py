@@ -31,7 +31,9 @@ from aspy.program.statements import (
     NormalRule,
     OptimizeElement,
     Statement,
+    WeakConstraint,
 )
+from aspy.program.statements.weak_constraint import WeightAtLevel
 from aspy.program.terms import (
     Functional,
     Minus,
@@ -160,12 +162,15 @@ class ProgramBuilder(ASPCoreVisitor):
             # WCONS body? DOT SQUARE_OPEN weight_at_level SQUARE_CLOSE
             # (i.e., weak constraint)
             else:
+                weight_at_level = self.visitWeight_at_level(ctx.children[-2])
+
                 # body
                 if n_children > 5:
-                    # TODO: implement weak constraint
-                    raise Exception("Weak constraints not supported yet.")
+                    statement = WeakConstraint(
+                        self.visitBody(ctx.children[1]), weight_at_level
+                    )
                 else:
-                    # TODO: implement empty weak constraint?
+                    # TODO: empty constraint?
                     raise Exception("Empty weak constraints not supported yet.")
         # head (CONS body?)? DOT
         elif isinstance(ctx.children[0], ASPCoreParser.HeadContext):
@@ -577,7 +582,7 @@ class ProgramBuilder(ASPCoreVisitor):
             `OptimizeStatement` instance.
         """
         # weight_at_level
-        weight, level, terms = self.visitWeight_at_level(ctx.children[0])
+        weight_at_level = self.visitWeight_at_level(ctx.children[0])
 
         # COLON naf_literals
         if len(ctx.children) > 2:
@@ -586,7 +591,7 @@ class ProgramBuilder(ASPCoreVisitor):
         else:
             literals = tuple()
 
-        return OptimizeElement(weight, level, terms, literals)
+        return OptimizeElement(weight_at_level, literals)
 
     # Visit a parse tree produced by ASPCoreParser#optimize_function.
     def visitOptimize_function(
@@ -649,7 +654,7 @@ class ProgramBuilder(ASPCoreVisitor):
             level = Number(0)
             terms = tuple()
 
-        return (weight, level, terms)
+        return WeightAtLevel(weight, level, terms)
 
     # Visit a parse tree produced by ASPCoreParser#naf_literals.
     def visitNaf_literals(

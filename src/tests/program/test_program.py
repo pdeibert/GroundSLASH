@@ -32,7 +32,9 @@ from aspy.program.statements import (
     DisjunctiveRule,
     NormalFact,
     NormalRule,
+    WeakConstraint,
 )
+from aspy.program.statements.weak_constraint import WeightAtLevel
 from aspy.program.terms import (
     Add,
     AnonVariable,
@@ -470,7 +472,13 @@ class TestProgram(unittest.TestCase):
         )
 
         # ----- weak constraint -----
-        # TODO
+        self.assertEqual(
+            Program.from_string(":~ p,q. [0@X, Y,-1]").statements[0],
+            WeakConstraint(
+                (PredLiteral("p"), PredLiteral("q")),
+                WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
+            ),
+        )
 
         # ----- optimize statements -----
         # TODO

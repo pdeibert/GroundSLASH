@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, Set, Tuple
 
 from aspy.program.literals import AggrLiteral, LiteralCollection
 from aspy.program.safety_characterization import SafetyTriplet
+from aspy.program.terms import TermTuple
 
 from .statement import Statement
 
@@ -11,6 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AggrPlaceholder, Literal
     from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.substitution import Substitution
+    from aspy.program.variable_table import VariableTable
 
 
 class Constraint(Statement):
@@ -60,15 +62,15 @@ class Constraint(Statement):
     def ground(self) -> bool:
         return all(literal.ground for literal in self.literals)
 
+    @cached_property
+    def contains_aggregates(self) -> bool:
+        return any(isinstance(literal, AggrLiteral) for literal in self.literals)
+
     def substitute(self, subst: "Substitution") -> "Constraint":
         if self.ground:
             return deepcopy(self)
 
         return Constraint(*self.literals.substitute(subst))
-
-    @cached_property
-    def contains_aggregates(self) -> bool:
-        return any(isinstance(literal, AggrLiteral) for literal in self.literals)
 
     def rewrite_aggregates(
         self,
@@ -136,3 +138,16 @@ class Constraint(Statement):
                 for literal in self.body
             ),
         )
+
+    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
+        """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `TermTuple` instance.
+        """  # noqa
+        return Constraint(*self.literals.replace_arith(var_table))
