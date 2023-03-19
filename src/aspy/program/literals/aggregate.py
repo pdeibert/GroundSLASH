@@ -267,7 +267,7 @@ class AggrFunc(ABC):
     """Abstract base class for all aggregate functions.
 
     Declares some default as well as abstract methods for aggregate functions.
-    All aggregate function should inherit from this class.
+    All aggregate function should inherit from this class or a subclass thereof.
 
     Attributes:
         base: `Term` instance representing the result of the aggregate operation

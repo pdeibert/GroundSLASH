@@ -20,7 +20,7 @@ class Literal(Expr, ABC):
     """Abstract base class for all literals.
 
     Declares some default as well as abstract methods for literals.
-    All literals should inherit from this class.
+    All literals should inherit from this class or a subclass thereof.
 
     Attributes:
         naf: Boolean indicating whether or not the literal is default-negated.
@@ -86,7 +86,14 @@ class LiteralCollection:
         Args:
             *literals: Sequence of `Literal` instances.
         """
-        self.literals = tuple(literals)
+
+        # initialize while removing duplicates
+        literal_set = set()
+        self.literals = tuple(
+            literal
+            for literal in literals
+            if not (literal in literal_set or literal_set.add(literal))
+        )
 
     def __str__(self) -> str:
         """Returns the string representation for the literal collection.
