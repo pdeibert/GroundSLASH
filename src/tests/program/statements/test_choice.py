@@ -21,10 +21,8 @@ from aspy.program.statements import (
     ChoiceBaseRule,
     ChoiceElement,
     ChoiceElemRule,
-    ChoiceFact,
     ChoiceRule,
     Constraint,
-    NormalFact,
     NormalRule,
 )
 from aspy.program.substitution import Substitution
@@ -484,7 +482,7 @@ class TestChoice(unittest.TestCase):
             ground_elements,
             guards=Guard(RelOp.LESS, Number(3), False),
         )
-        ground_rule = ChoiceFact(ground_choice)
+        ground_rule = ChoiceRule(ground_choice)
 
         var_elements = (
             ChoiceElement(
@@ -501,7 +499,7 @@ class TestChoice(unittest.TestCase):
         var_choice = Choice(
             var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)
         )
-        var_rule = ChoiceFact(var_choice)
+        var_rule = ChoiceRule(var_choice)
 
         # string representation
         self.assertEqual(
@@ -526,7 +524,7 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             hash(ground_rule),
             hash(
-                ChoiceFact(
+                ChoiceRule(
                     Choice(
                         ground_elements,
                         guards=Guard(RelOp.LESS, Number(3), False),
@@ -537,7 +535,7 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             hash(var_rule),
             hash(
-                ChoiceFact(
+                ChoiceRule(
                     Choice(
                         var_elements, guards=Guard(RelOp.LESS, Variable("Y"), False)
                     ),
@@ -567,7 +565,7 @@ class TestChoice(unittest.TestCase):
                 ),
             ),
         )
-        rule = ChoiceFact(
+        rule = ChoiceRule(
             Choice(
                 arith_elements,
                 Guard(RelOp.EQUAL, Minus(Variable("X")), True),
@@ -575,7 +573,7 @@ class TestChoice(unittest.TestCase):
         )
         self.assertEqual(
             rule.replace_arith(),
-            ChoiceFact(
+            ChoiceRule(
                 Choice(
                     (
                         ChoiceElement(
@@ -594,12 +592,12 @@ class TestChoice(unittest.TestCase):
         )
 
         # substitution
-        rule = ChoiceFact(Choice(var_elements, Guard(RelOp.LESS, Variable("X"), False)))
+        rule = ChoiceRule(Choice(var_elements, Guard(RelOp.LESS, Variable("X"), False)))
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(-3): String("f")})
             ),  # NOTE: substitution is invalid
-            ChoiceFact(
+            ChoiceRule(
                 Choice(
                     (
                         ChoiceElement(
@@ -636,13 +634,13 @@ class TestChoice(unittest.TestCase):
                 LiteralCollection(PredLiteral("p", Number(0))),
             ),
         )
-        rule = ChoiceFact(
+        rule = ChoiceRule(
             Choice(
                 elements,
                 Guard(RelOp.GREATER_OR_EQ, Number(-1), False),
             ),
         )
-        target_rule = NormalFact(
+        target_rule = NormalRule(
             ChoicePlaceholder(
                 1,
                 TermTuple(),
@@ -727,7 +725,7 @@ class TestChoice(unittest.TestCase):
                     ),
                 },
             ),
-            ChoiceFact(
+            ChoiceRule(
                 Choice(
                     (
                         ChoiceElement(
@@ -755,14 +753,6 @@ class TestChoice(unittest.TestCase):
 
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
-
-        # invalid initialization
-        self.assertRaises(
-            ValueError,
-            ChoiceRule,
-            Choice(tuple()),
-            tuple(),
-        )  # not enough literals
 
         ground_elements = (
             ChoiceElement(
@@ -812,7 +802,7 @@ class TestChoice(unittest.TestCase):
         )
         self.assertEqual(
             str(safe_var_rule),
-            'Y < {p(5):p(X),not q;p(-3):not p("str")} :- q(X), q(Y).',
+            'Y < {p(5):p(X),not q;p(-3):not p("str")} :- q(X),q(Y).',
         )
         self.assertEqual(
             str(unsafe_var_rule), 'Y < {p(5):p(X),not q;p(-3):not p("str")} :- q(X).'

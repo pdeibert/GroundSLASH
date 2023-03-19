@@ -11,90 +11,15 @@ from aspy.program.literals import (
 from aspy.program.safety_characterization import SafetyTriplet
 
 from .constraint import Constraint
-from .statement import Fact, Rule
+from .statement import Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
     from aspy.program.literals.special import ChoicePlaceholder
     from aspy.program.substitution import Substitution
 
-    from .choice import Choice, ChoiceFact, ChoiceRule
+    from .choice import Choice, ChoiceRule
     from .special import AggrBaseRule, AggrElemRule
-
-
-class NormalFact(Fact):
-    """Normal fact.
-
-    Rule of form
-
-        h :- .
-
-    for a classical atom h. The symbol ':-' may be omitted.
-
-    Semantically, any answer set must include h.
-    """
-
-    deterministic: bool = True
-
-    def __init__(self, atom: "PredLiteral", **kwargs) -> None:
-        super().__init__(**kwargs)
-
-        self.atom = atom
-
-    def __str__(self) -> str:
-        return f"{str(self.atom)}."
-
-    def __eq__(self, other: "Any") -> bool:
-        return isinstance(other, NormalFact) and self.atom == other.atom
-
-    def __hash__(self) -> int:
-        return hash(("normal fact", self.atom))
-
-    @property
-    def head(self) -> LiteralCollection:
-        return LiteralCollection(self.atom)
-
-    @property
-    def body(self) -> LiteralCollection:
-        return LiteralCollection()
-
-    @cached_property
-    def safe(self) -> bool:
-        return self.body.safety(self) == SafetyTriplet(self.global_vars())
-
-    @cached_property
-    def ground(self) -> bool:
-        return self.atom.ground
-
-    def substitute(self, subst: "Substitution") -> "NormalFact":
-        if self.ground:
-            return deepcopy(self)
-
-        return NormalFact(self.atom.substitute(subst))
-
-    def replace_arith(self) -> "NormalFact":
-        return NormalFact(self.atom.replace_arith(self.var_table))
-
-    def assemble_choices(
-        self,
-        assembling_map: Dict["ChoicePlaceholder", "Choice"],
-    ) -> Union["NormalFact", "ChoiceFact"]:
-        # local import to avoid circular imports
-        from aspy.program.literals.special import ChoicePlaceholder
-
-        from .choice import ChoiceFact
-
-        # choice rule
-        if isinstance(self.atom, ChoicePlaceholder):
-            # satisfiable (instantiate choice rule)
-            if self.atom in assembling_map:
-                return ChoiceFact(assembling_map[self.atom])
-            # unsatisfiable (instantiate constraint)
-            else:
-                return Constraint()
-
-        # non-choice rule (nothing to be done here)
-        return deepcopy(self)
 
 
 class NormalRule(Rule):
@@ -111,15 +36,10 @@ class NormalRule(Rule):
 
     deterministic: bool = True
 
-    def __init__(self, head: "PredLiteral", *body: "Literal", **kwargs) -> None:
+    def __init__(self, atom: "PredLiteral", *body: "Literal", **kwargs) -> None:
         super().__init__(**kwargs)
 
-        if len(body) == 0:
-            raise ValueError(
-                f"Body for {type(self)} may not be empty. Use {NormalFact} instead."
-            )
-
-        self.atom = head
+        self.atom = atom
         self.literals = LiteralCollection(*body)
 
     def __eq__(self, other: "Any") -> bool:
@@ -133,9 +53,7 @@ class NormalRule(Rule):
         return hash(("normal rule", self.atom, self.literals))
 
     def __str__(self) -> str:
-        return (
-            f"{str(self.atom)} :- {', '.join([str(literal) for literal in self.body])}."
-        )
+        return f"{str(self.atom)}{f' :- {str(self.body)}' if self.body else ''}."
 
     @property
     def head(self) -> LiteralCollection:

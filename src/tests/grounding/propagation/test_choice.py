@@ -19,7 +19,6 @@ from aspy.program.statements import (
     ChoiceBaseRule,
     ChoiceElement,
     ChoiceElemRule,
-    ChoiceFact,
     ChoiceRule,
     NormalRule,
 )

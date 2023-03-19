@@ -11,95 +11,13 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
-from .normal import NormalFact, NormalRule
-from .statement import Fact, Rule
+from .normal import NormalRule
+from .statement import Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
     from aspy.program.statements import AggrBaseRule, AggrElemRule, Statement
     from aspy.program.substitution import Substitution
-
-
-class DisjunctiveFact(Fact):
-    """Disjunctive fact.
-
-    Rule of form
-
-        h_1 | ... | h_m :- .
-
-    for classical atoms h_1,...,h_m. The symbol ':-' may be omitted.
-
-    Semantically, any answer set must include exactly one classical atom h_i.
-    """
-
-    deterministic: bool = False
-
-    def __init__(self, *atoms: PredLiteral, **kwargs) -> None:
-        super().__init__(**kwargs)
-
-        if len(atoms) < 2:
-            raise ValueError(
-                (
-                    f"Head for {type(self)} requires at least two literals."
-                    " Use {NormalFact} instead."
-                )
-            )
-
-        if aspy.debug() and not all(
-            isinstance(atom, PredLiteral) and not atom.naf for atom in atoms
-        ):
-            raise ValueError(
-                (
-                    f"Head literals for {type(self)} must all be"
-                    " positive literals of type {PredLiteral}."
-                )
-            )
-
-        self.atoms = LiteralCollection(*atoms)
-
-    def __eq__(self, other: "Any") -> bool:
-        return isinstance(other, DisjunctiveFact) and self.atoms == other.atoms
-
-    def __hash__(self) -> int:
-        return hash(("disjunctive fact", self.atoms))
-
-    def __str__(self) -> str:
-        return f"{' | '.join([str(atom) for atom in self.head])}."
-
-    @property
-    def head(self) -> LiteralCollection:
-        return self.atoms
-
-    @property
-    def body(self) -> LiteralCollection:
-        return LiteralCollection()
-
-    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
-        return SafetyTriplet(unsafe=self.vars())
-
-    @cached_property
-    def safe(self) -> bool:
-        return len(self.vars()) == 0
-
-    @cached_property
-    def ground(self) -> bool:
-        return self.head.ground
-
-    def substitute(
-        self, subst: "Substitution"
-    ) -> Union["DisjunctiveFact", "NormalFact"]:
-        if self.ground:
-            return deepcopy(self)
-
-        subst_head = self.head.substitute(subst)
-
-        if len(set(subst_head)) == 1:
-            return NormalFact(*subst_head)
-
-        return DisjunctiveFact(*subst_head)
-
-    def replace_arith(self) -> "DisjunctiveFact":
-        return DisjunctiveFact(*self.head.replace_arith(self.var_table))
 
 
 class DisjunctiveRule(Rule):
@@ -119,23 +37,19 @@ class DisjunctiveRule(Rule):
     def __init__(
         self,
         head: Union[LiteralCollection, Tuple["Literal", ...]],
-        body: Union[LiteralCollection, Tuple["Literal", ...]],
+        body: Optional[Union[LiteralCollection, Tuple["Literal", ...]]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+
+        if body is None:
+            body = tuple()
 
         if len(head) < 2:
             raise ValueError(
                 (
                     f"Head for {type(self)} requires at least two literals."
                     " Use {NormalRule} instead."
-                )
-            )
-        if len(body) == 0:
-            raise ValueError(
-                (
-                    f"Body for {type(self)} may not be empty. "
-                    "Use {DisjunctiveFact} instead."
                 )
             )
 
@@ -169,8 +83,7 @@ class DisjunctiveRule(Rule):
         )
 
     def __str__(self) -> str:
-        literals_str = ", ".join([str(literal) for literal in self.body])
-        return f"{' | '.join([str(atom) for atom in self.head])} :- {literals_str}."
+        return f"{' | '.join([str(atom) for atom in self.head])}{f' :- {str(self.body)}' if self.body else ''}."  # noqa
 
     @property
     def head(self) -> LiteralCollection:

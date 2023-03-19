@@ -21,11 +21,23 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Statement(Expr, ABC):
-    """Abstract base class for all statements."""
+    """Abstract base class for all statements.
+
+    Declares some default as well as abstract methods for statements.
+    All statements should inherit from this class or a subclass thereof.
+    """
 
     def __init__(
         self, var_table: Optional["VariableTable"] = None, *args, **kwargs
     ) -> None:
+        """Initializes the statement instance.
+
+        Should always be called.
+
+        Args:
+            var_table: Optional `VariableTable` instance corresponding to the statement.
+                Defaults to None.
+        """
         self.__var_table = var_table
 
     @abstractmethod  # pragma: no cover
@@ -54,22 +66,50 @@ class Statement(Expr, ABC):
 
     @property
     def var_table(self) -> "VariableTable":
+        """Variable table of the statement.
+
+        Initializes variable table from scratch if necessary.
+
+        Returns:
+            `VariableTable` instance.
+        """
         if self.__var_table is None:
             self.__init_var_table()
 
         return self.__var_table
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the statement.
+
+        Returns:
+            Set of 'Variable' instances.
+        """
         return self.var_table.vars()
 
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        """Returns the global variables associated with the statement.
+
+        Returns:
+            Set of 'Variable' instances.
+        """
         return self.var_table.global_vars()
 
     def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
+        """Returns the safety characterization for the statement.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` or `Query` instance the term appears in.
+                Irrelevant for statements. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance.
+        """  # noqa
         raise Exception()
 
     def __init_var_table(self) -> None:
-
+        """Initializes the variable table from scratch."""
         # initialize variable table
         self.__var_table = VariableTable(self.head.vars().union(self.body.vars()))
 
@@ -97,12 +137,14 @@ class Statement(Expr, ABC):
             ],
         ],
     ) -> "Statement":
+        """TODO"""
         pass
 
     @abstractmethod  # pragma: no cover
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Statement":
+        """TODO"""
         pass
 
     def rewrite_choices(
@@ -134,34 +176,12 @@ class Statement(Expr, ABC):
 
 
 class Rule(Statement, ABC):
-    """Abstract base class for all rules."""
+    """Abstract base class for all rules.
+
+    Declares some default as well as abstract methods for rules.
+    All rules should inherit from this class or a subclass thereof.
+    """
 
     @cached_property
     def contains_aggregates(self) -> bool:
         return any(isinstance(literal, AggrLiteral) for literal in self.body)
-
-
-class Fact(Rule, ABC):
-    """Abstract base class for all facts."""
-
-    contains_aggregates: bool = False
-
-    def rewrite_aggregates(
-        self,
-        aggr_counter: int,
-        aggr_map: Dict[
-            int,
-            Tuple[
-                "AggrLiteral",
-                "AggrPlaceholder",
-                "AggrBaseRule",
-                Set["AggrElemRule"],
-            ],
-        ],
-    ) -> "Fact":
-        return deepcopy(self)
-
-    def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
-    ) -> "Fact":
-        return deepcopy(self)

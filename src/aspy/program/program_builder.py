@@ -17,17 +17,14 @@ from aspy.program.literals.aggregate import op2aggr
 from aspy.program.literals.builtin import op2rel
 from aspy.program.operators import AggrOp, ArithOp, RelOp
 from aspy.program.query import Query
-from aspy.program.statements import (
+from aspy.program.statements import (  # ChoiceFact,; DisjunctiveFact,; NormalFact,
     Choice,
     ChoiceElement,
-    ChoiceFact,
     ChoiceRule,
     Constraint,
-    DisjunctiveFact,
     DisjunctiveRule,
     MaximizeStatement,
     MinimizeStatement,
-    NormalFact,
     NormalRule,
     OptimizeElement,
     Statement,
@@ -176,7 +173,15 @@ class ProgramBuilder(ASPCoreVisitor):
         elif isinstance(ctx.children[0], ASPCoreParser.HeadContext):
             # TODO: what about choice rule???
             head = self.visitHead(ctx.children[0])
+            body = self.visitBody(ctx.children[2]) if n_children >= 4 else tuple()
 
+            if isinstance(head, Choice):
+                statement = ChoiceRule(head, body)
+            elif len(head) > 1:
+                statement = DisjunctiveRule(head, body)
+            else:
+                statement = NormalRule(head[0], *body)
+            """
             # head DOT | head CONS DOT (i.e., fact)
             if n_children < 4:
                 if not isinstance(head, Choice):
@@ -202,6 +207,7 @@ class ProgramBuilder(ASPCoreVisitor):
                         statement = NormalRule(head[0], *body)
                 else:
                     statement = ChoiceRule(head, body)
+            """
         # optimize DOT
         else:
             statement = self.visitOptimize(ctx.children[0])
@@ -310,6 +316,8 @@ class ProgramBuilder(ASPCoreVisitor):
                 False,
             )
             moving_index += 3  # should now point to 'choice_elements' of 'CURLY_CLOSE'
+        else:
+            moving_index += 1
 
         # CURLY_OPEN CURLY_CLOSE
         if isinstance(ctx.children[moving_index], antlr4.tree.Tree.TerminalNode):

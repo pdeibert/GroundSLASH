@@ -16,7 +16,7 @@ from aspy.program.literals import (
     PredLiteral,
 )
 from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalFact, NormalRule
+from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalRule
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
 
@@ -27,8 +27,8 @@ class TestNormal(unittest.TestCase):
         # make sure debug mode is enabled
         self.assertTrue(aspy.debug())
 
-        ground_rule = NormalFact(PredLiteral("p", Number(0)))
-        var_rule = NormalFact(PredLiteral("p", Variable("X")))
+        ground_rule = NormalRule(PredLiteral("p", Number(0)))
+        var_rule = NormalRule(PredLiteral("p", Variable("X")))
 
         # string representation
         self.assertEqual(str(ground_rule), "p(0).")
@@ -44,10 +44,10 @@ class TestNormal(unittest.TestCase):
         self.assertEqual(var_rule.body, LiteralCollection())
         # hashing
         self.assertEqual(
-            hash(ground_rule), hash(NormalFact(PredLiteral("p", Number(0))))
+            hash(ground_rule), hash(NormalRule(PredLiteral("p", Number(0))))
         )
         self.assertEqual(
-            hash(var_rule), hash(NormalFact(PredLiteral("p", Variable("X"))))
+            hash(var_rule), hash(NormalRule(PredLiteral("p", Variable("X"))))
         )
         # ground
         self.assertTrue(ground_rule.ground)
@@ -60,21 +60,21 @@ class TestNormal(unittest.TestCase):
         self.assertTrue(var_rule.vars() == var_rule.global_vars() == {Variable("X")})
         # replace arithmetic terms
         self.assertEqual(
-            NormalFact(
+            NormalRule(
                 PredLiteral("p", Minus(Variable("X"))),
             ).replace_arith(),
-            NormalFact(
+            NormalRule(
                 PredLiteral("p", ArithVariable(0, Minus(Variable("X")))),
             ),
         )
 
         # substitution
-        rule = NormalFact(PredLiteral("p", Variable("X"), Number(0)))
+        rule = NormalRule(PredLiteral("p", Variable("X"), Number(0)))
         self.assertEqual(
             rule.substitute(
                 Substitution({Variable("X"): Number(1), Number(0): String("f")})
             ),
-            NormalFact(PredLiteral("p", Number(1), Number(0))),
+            NormalRule(PredLiteral("p", Number(1), Number(0))),
         )  # NOTE: substitution is invalid
 
         # rewrite aggregates
@@ -94,9 +94,6 @@ class TestNormal(unittest.TestCase):
         safe_var_rule = NormalRule(
             PredLiteral("p", Variable("X")), PredLiteral("q", Variable("X"))
         )
-
-        # invalid initialization
-        self.assertRaises(ValueError, NormalRule, PredLiteral("p"))
 
         # string representation
         self.assertEqual(str(ground_rule), "p(0) :- q.")

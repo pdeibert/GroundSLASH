@@ -92,11 +92,11 @@ class TestSpecial(unittest.TestCase):
         # string representation
         self.assertEqual(
             str(ground_rule),
-            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(10,3) :- -1>=0, 0<=10, p(2,3).",  # noqa
+            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(10,3) :- -1>=0,0<=10,p(2,3).",  # noqa
         )
         self.assertEqual(
             str(var_rule),
-            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y).",  # noqa
+            f"{SpecialChar.EPS.value}{SpecialChar.ALPHA.value}{1}(X,Y) :- -1>=0,0<=X,p(2,Y).",  # noqa
         )
         # equality
         self.assertEqual(len(ground_rule.body), 3)
@@ -214,11 +214,11 @@ class TestSpecial(unittest.TestCase):
         # string representation
         self.assertEqual(
             str(ground_rule),
-            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(5,10,3) :- p(5), p(2,3).",  # noqa
+            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(5,10,3) :- p(5),p(2,3).",  # noqa
         )
         self.assertEqual(
             str(var_rule),
-            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(L,X,Y) :- p(L), p(2,Y).",  # noqa
+            f"{SpecialChar.ETA.value}{SpecialChar.ALPHA.value}{1}_{3}(L,X,Y) :- p(L),p(2,Y).",  # noqa
         )
         # equality
         self.assertEqual(len(ground_rule.body), 2)
@@ -347,11 +347,11 @@ class TestSpecial(unittest.TestCase):
         # string representation
         self.assertEqual(
             str(ground_rule),
-            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{1}(10,3) :- -1>=0, 0<=10, p(2,3).",  # noqa
+            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{1}(10,3) :- -1>=0,0<=10,p(2,3).",  # noqa
         )
         self.assertEqual(
             str(var_rule),
-            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{1}(X,Y) :- -1>=0, 0<=X, p(2,Y).",  # noqa
+            f"{SpecialChar.EPS.value}{SpecialChar.CHI.value}{1}(X,Y) :- -1>=0,0<=X,p(2,Y).",  # noqa
         )
 
         # equality
@@ -471,11 +471,11 @@ class TestSpecial(unittest.TestCase):
         # string representation
         self.assertEqual(
             str(ground_rule),
-            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{1}_{3}(5,10,3) :- p(5), p(2,3).",  # noqa
+            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{1}_{3}(5,10,3) :- p(5),p(2,3).",  # noqa
         )
         self.assertEqual(
             str(var_rule),
-            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{1}_{3}(L,X,Y) :- p(L), p(2,Y).",  # noqa
+            f"{SpecialChar.ETA.value}{SpecialChar.CHI.value}{1}_{3}(L,X,Y) :- p(L),p(2,Y).",  # noqa
         )
         # equality
         self.assertEqual(len(ground_rule.body), 2)

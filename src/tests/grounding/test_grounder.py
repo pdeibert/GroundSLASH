@@ -18,14 +18,8 @@ from aspy.program.literals import (
 from aspy.program.operators import RelOp
 from aspy.program.program import Program
 from aspy.program.statements import (
-    Choice,
-    ChoiceElement,
-    ChoiceFact,
-    ChoiceRule,
     Constraint,
-    DisjunctiveFact,
     DisjunctiveRule,
-    NormalFact,
     NormalRule,
     WeakConstraint,
 )
@@ -35,6 +29,39 @@ from aspy.program.terms import Add, ArithVariable, Number, Variable
 
 
 class TestGrounder(unittest.TestCase):
+    def compare_to_clingo(self, prog_str: str) -> None:
+        """Helper method (not a test case on its own)."""
+
+        def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
+
+            ctl = clingo.Control(message_limit=0)
+            # instruct to return all models
+            ctl.configuration.solve.models = 0
+            ctl.add("prog", [], prog)
+            # TODO: optional?
+            ctl.ground([("prog", [])])
+
+            models = []
+            sat = ctl.solve(
+                on_model=lambda m: models.append(frozenset(str(m).split(" ")))
+            )
+
+            return sat.satisfiable, set(models)
+
+        # build & ground program
+        prog = Program.from_string(prog_str)
+        grounder = Grounder(prog)
+        ground_prog = grounder.ground()
+
+        # solve our ground program using clingo
+        our_sat, our_models = solve_using_clingo(str(ground_prog))
+        # ground & solve original program using clingo
+        gringo_sat, gringo_models = solve_using_clingo(prog_str)
+
+        self.assertEqual(our_sat, gringo_sat)
+        self.assertEqual(len(our_models), len(gringo_models))
+        self.assertEqual(our_models, gringo_models)
+
     def test_select(self):
 
         # make sure debug mode is enabled
@@ -179,7 +206,7 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(
             ValueError,
             Grounder.ground_statement,
-            NormalFact(PredLiteral("p", Variable("X"))),
+            NormalRule(PredLiteral("p", Variable("X"))),
         )
         # statement containing aggregates
         self.assertRaises(
@@ -195,8 +222,8 @@ class TestGrounder(unittest.TestCase):
 
         # ground fact
         self.assertEqual(
-            Grounder.ground_statement(NormalFact(PredLiteral("p", Number(1)))),
-            {NormalFact(PredLiteral("p", Number(1)))},
+            Grounder.ground_statement(NormalRule(PredLiteral("p", Number(1)))),
+            {NormalRule(PredLiteral("p", Number(1)))},
         )
 
         # ----- normal rules -----
@@ -252,11 +279,11 @@ class TestGrounder(unittest.TestCase):
         # ground fact
         self.assertEqual(
             Grounder.ground_statement(
-                DisjunctiveFact(
+                DisjunctiveRule((
                     PredLiteral("p", Number(1)), PredLiteral("p", Number(2))
-                )
+                ))
             ),
-            {DisjunctiveFact(PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))},
+            {DisjunctiveRule((PredLiteral("p", Number(1)), PredLiteral("p", Number(2))))},
         )
 
         # ----- disjunctive rules -----
@@ -471,39 +498,6 @@ class TestGrounder(unittest.TestCase):
 
         # TODO
 
-    def compare_to_clingo(self, prog_str: str) -> None:
-        """Helper method (not a test case on its own)."""
-
-        def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
-
-            ctl = clingo.Control(message_limit=0)
-            # instruct to return all models
-            ctl.configuration.solve.models = 0
-            ctl.add("prog", [], prog)
-            # TODO: optional?
-            ctl.ground([("prog", [])])
-
-            models = []
-            sat = ctl.solve(
-                on_model=lambda m: models.append(frozenset(str(m).split(" ")))
-            )
-
-            return sat.satisfiable, set(models)
-
-        # build & ground program
-        prog = Program.from_string(prog_str)
-        grounder = Grounder(prog)
-        ground_prog = grounder.ground()
-
-        # solve our ground program using clingo
-        our_sat, our_models = solve_using_clingo(str(ground_prog))
-        # ground & solve original program using clingo
-        gringo_sat, gringo_models = solve_using_clingo(prog_str)
-
-        self.assertEqual(our_sat, gringo_sat)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
-
     def test_example_1(self):
 
         # make sure debug mode is enabled
@@ -711,7 +705,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_11(self):
+    def test_example_roads(self):
 
         # from "Answer Set Solving in Practice"
 
@@ -734,7 +728,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_12(self):
+    def test_example_graph_color(self):
 
         # from "Answer Set Solving in Practice"
 

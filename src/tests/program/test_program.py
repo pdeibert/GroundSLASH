@@ -25,12 +25,9 @@ from aspy.program.program import Program
 from aspy.program.statements import (
     Choice,
     ChoiceElement,
-    ChoiceFact,
     ChoiceRule,
     Constraint,
-    DisjunctiveFact,
     DisjunctiveRule,
-    NormalFact,
     NormalRule,
     WeakConstraint,
 )
@@ -60,7 +57,7 @@ class TestProgram(unittest.TestCase):
             (
                 NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
                 NormalRule(PredLiteral("b"), Naf(PredLiteral("a"))),
-                NormalFact(PredLiteral("c")),
+                NormalRule(PredLiteral("c")),
                 NormalRule(
                     PredLiteral("d"),
                     AggrLiteral(
@@ -96,7 +93,7 @@ class TestProgram(unittest.TestCase):
             Program(
                 (
                     NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
-                    NormalFact(PredLiteral("c")),
+                    NormalRule(PredLiteral("c")),
                     NormalRule(
                         PredLiteral("d"),
                         AggrLiteral(
@@ -406,7 +403,7 @@ class TestProgram(unittest.TestCase):
 
         # ----- normal facts -----'
         self.assertEqual(
-            Program.from_string("p.").statements[0], NormalFact(PredLiteral("p"))
+            Program.from_string("p.").statements[0], NormalRule(PredLiteral("p"))
         )
 
         # ----- normal rules -----
@@ -418,7 +415,7 @@ class TestProgram(unittest.TestCase):
         # ----- disjunctive facts -----
         self.assertEqual(
             Program.from_string("p | u | v.").statements[0],
-            DisjunctiveFact(PredLiteral("p"), PredLiteral("u"), PredLiteral("v")),
+            DisjunctiveRule((PredLiteral("p"), PredLiteral("u"), PredLiteral("v"))),
         )
 
         # ----- disjunctive rules -----
@@ -433,7 +430,7 @@ class TestProgram(unittest.TestCase):
         # ----- choice facts -----
         self.assertEqual(
             Program.from_string(r"3 < {u:p;v:q} > 5.").statements[0],
-            ChoiceFact(
+            ChoiceRule(
                 Choice(
                     (
                         ChoiceElement(PredLiteral("u"), (PredLiteral("p"),)),

@@ -25,9 +25,9 @@ from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Number
 
-from .normal import NormalFact, NormalRule
+from .normal import NormalRule
 from .special import ChoiceBaseRule, ChoiceElemRule
-from .statement import Fact, Rule
+from .statement import Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AggrPlaceholder, Literal, PredLiteral
@@ -432,112 +432,6 @@ class Choice(Expr):
         )
 
 
-class ChoiceFact(Fact):
-    """Choice fact.
-
-    Rule of form
-
-        u_1 R_1 { h_1,...,h_m } R_2 u_2 :- .
-
-    for classical atoms h_1,...,h_m, terms u_1,u_2 and comparison operators R_1,R_2.
-    The symbol ':-' may be omitted.
-
-    TODO: R_1, R_2 may be omitted
-    TODO: u_1,R_1 u_2,R_2 may be omitted.
-
-    Semantically, any answer set may include any subset of {h_1,...,h_m} (including the empty set).
-    """  # noqa
-
-    def __init__(self, head: Choice, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        # TODO: correctly infer determinism after propagation/grounding?
-        self.deterministic: bool = False
-
-        self.choice = head
-
-    def __eq__(self, other: "Any") -> bool:
-        return isinstance(other, ChoiceFact) and self.choice == other.choice
-
-    def __hash__(self) -> int:
-        return hash(("choice fact", self.choice))
-
-    def __str__(self) -> str:
-        return f"{str(self.choice)}."
-
-    @property
-    def head(self) -> Choice:
-        return self.choice
-
-    @property
-    def body(self) -> LiteralCollection:
-        return LiteralCollection()
-
-    def consequents(self) -> "LiteralCollection":
-        return self.choice.head
-
-    def antecedents(self) -> "LiteralCollection":
-        return self.choice.body
-
-    @cached_property
-    def safe(self) -> bool:
-
-        for element in self.choice:
-
-            if element.body.safety(self) != SafetyTriplet(self.global_vars()):
-                return False
-
-        return True
-
-    @cached_property
-    def ground(self) -> bool:
-        return self.choice.ground
-
-    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
-        raise Exception("Safety characterization for choice facts not supported yet.")
-
-    def substitute(self, subst: "Substitution") -> "ChoiceFact":
-        if self.ground:
-            return deepcopy(self)
-
-        return ChoiceFact(self.choice.substitute(subst))
-
-    def replace_arith(self) -> "ChoiceFact":
-        return ChoiceFact(self.head.replace_arith(self.var_table))
-
-    def rewrite_choices(
-        self,
-        choice_counter: int,
-        choice_map: Dict[
-            int,
-            Tuple[
-                "Choice",
-                "ChoicePlaceholder",
-                "ChoiceBaseRule",
-                Set["ChoiceElemRule"],
-            ],
-        ],
-    ) -> "NormalFact":
-
-        # global variables
-        glob_vars = self.global_vars()
-
-        # local import due to circular import
-        from .rewrite import rewrite_choice
-
-        chi_literal, eps_rule, eta_rules = rewrite_choice(
-            self.choice, choice_counter, glob_vars, LiteralCollection()
-        )
-
-        # store choice information
-        choice_map[choice_counter] = (self.choice, chi_literal, eps_rule, eta_rules)
-
-        # replace original rule with modified one
-        chi_rule = NormalFact(chi_literal)
-
-        return chi_rule
-
-
 class ChoiceRule(Rule):
     """Choice rule.
 
@@ -553,19 +447,13 @@ class ChoiceRule(Rule):
     def __init__(
         self,
         head: Choice,
-        body: Union[LiteralCollection, Iterable["Literal"]],
+        body: Optional[Union[LiteralCollection, Iterable["Literal"]]] = None,
         *args,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
-
-        if len(body) == 0:
-            raise ValueError(
-                (
-                    f"Body for {type(self)} may not be empty. "
-                    "Use {ChoiceFact} instead."
-                )
-            )
+        if body is None:
+            body = tuple()
 
         # TODO: correctly infer determinism after propagation/grounding?
         self.deterministic: bool = False
@@ -586,9 +474,7 @@ class ChoiceRule(Rule):
         return hash(("choice rule", self.head, self.literals))
 
     def __str__(self) -> str:
-        return (
-            f"{str(self.head)} :- {', '.join([str(literal) for literal in self.body])}."
-        )
+        return f"{str(self.head)}{f' :- {str(self.body)}' if self.body else ''}."
 
     @property
     def head(self) -> Choice:
