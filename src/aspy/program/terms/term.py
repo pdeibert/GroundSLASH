@@ -19,7 +19,7 @@ class Term(Expr, ABC):
     """Abstract base class for all terms.
 
     Declares some default as well as abstract methods for terms.
-    All terms should inherit from this class.
+    All terms should inherit from this class or a subclass thereof.
     """
 
     @abstractmethod  # pragma: no cover

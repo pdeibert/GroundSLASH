@@ -21,7 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class ArithTerm(Term, ABC):
     """Abstract base class for all arithmetic terms.
 
-    Declares some default as well as abstract methods for terms. All terms should inherit from this class.
+    Declares some default as well as abstract methods for terms. All terms should inherit from this class or a subclass thereof.
 
     Attributes:
         ground: Boolean indicating whether or not all operands are ground.

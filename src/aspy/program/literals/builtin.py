@@ -22,7 +22,7 @@ class BuiltinLiteral(Literal, ABC):
     """Abstract base class for all built-in literals.
 
     Declares some default as well as abstract methods for built-in literal.
-    All built-in literals should inherit from this class.
+    All built-in literals should inherit from this class or a subclass thereof.
 
     Attributes:
         operands: Tuple consisting of the left and right operands.

@@ -12,7 +12,7 @@ class Expr(ABC):
     """Abstract base class for all expressions.
 
     Declares some default as well as abstract methods for expressions.
-    All expressions should inherit from this class.
+    All expressions should inherit from this class or a subclass thereof.
     """
 
     __slots__ = "ground"
