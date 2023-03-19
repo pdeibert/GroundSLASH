@@ -33,8 +33,8 @@ class TestWeakConstraint(unittest.TestCase):
         var_term = WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1)))
 
         # string representation
-        self.assertEqual(str(ground_term), "[0@1, 2,-1]")
-        self.assertEqual(str(var_term), "[0@X, Y,-1]")
+        self.assertEqual(str(ground_term), "0@1, 2,-1")
+        self.assertEqual(str(var_term), "0@X, Y,-1")
         # equality
         self.assertEqual(
             ground_term, WeightAtLevel(Number(0), Number(1), (Number(2), Number(-1)))

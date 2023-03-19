@@ -37,7 +37,7 @@ class WeightAtLevel(Expr):
         self.terms = TermTuple(*terms) if not isinstance(terms, TermTuple) else terms
 
     def __str__(self) -> str:
-        return f"[{str(self.weight)}@{str(self.level)}, {str(self.terms)}]"
+        return f"{str(self.weight)}@{str(self.level)}, {str(self.terms)}"
 
     def __eq__(self, other: "Any") -> bool:
         return (
@@ -91,7 +91,7 @@ class WeightAtLevel(Expr):
             "Safety characterization for weight at level not supported yet."
         )
 
-    def substitute(self, subst: "Substitution") -> "WeakConstraint":
+    def substitute(self, subst: "Substitution") -> "WeightAtLevel":
         if self.ground:
             return deepcopy(self)
 
@@ -163,7 +163,7 @@ class WeakConstraint(Statement):
         return hash(("weak constraint", self.literals, self.weight_at_level))
 
     def __str__(self) -> str:
-        return f":~ {str(self.body)}. {str(self.weight_at_level)}"
+        return f":~ {str(self.body)}. [{str(self.weight_at_level)}]"
 
     def __init_var_table(self) -> None:
 
