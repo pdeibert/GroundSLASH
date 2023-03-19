@@ -17,7 +17,19 @@ from aspy.program.literals import (
 )
 from aspy.program.operators import RelOp
 from aspy.program.program import Program
-from aspy.program.statements import NormalFact, NormalRule
+from aspy.program.statements import (
+    Choice,
+    ChoiceElement,
+    ChoiceFact,
+    ChoiceRule,
+    Constraint,
+    DisjunctiveFact,
+    DisjunctiveRule,
+    NormalFact,
+    NormalRule,
+    WeakConstraint,
+)
+from aspy.program.statements.weak_constraint import WeightAtLevel
 from aspy.program.substitution import Substitution
 from aspy.program.terms import Add, ArithVariable, Number, Variable
 
@@ -181,7 +193,7 @@ class TestGrounder(unittest.TestCase):
 
         # ----- normal facts -----
 
-        # ground fact (no need to ground)
+        # ground fact
         self.assertEqual(
             Grounder.ground_statement(NormalFact(PredLiteral("p", Number(1)))),
             {NormalFact(PredLiteral("p", Number(1)))},
@@ -189,7 +201,7 @@ class TestGrounder(unittest.TestCase):
 
         # ----- normal rules -----
 
-        # ground rule (no need to ground)
+        # ground rule
         self.assertEqual(
             Grounder.ground_statement(
                 NormalRule(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
@@ -236,21 +248,165 @@ class TestGrounder(unittest.TestCase):
         )  # not all literals have matches in 'possible'
 
         # ----- disjunctive facts -----
-        # TODO
+
+        # ground fact
+        self.assertEqual(
+            Grounder.ground_statement(
+                DisjunctiveFact(
+                    PredLiteral("p", Number(1)), PredLiteral("p", Number(2))
+                )
+            ),
+            {DisjunctiveFact(PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))},
+        )
+
         # ----- disjunctive rules -----
-        # TODO
+
+        # ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
+                    (PredLiteral("q", Number(0)),),
+                ),
+                possible={PredLiteral("q", Number(0))},
+            ),
+            {
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
+                    (PredLiteral("q", Number(0)),),
+                )
+            },
+        )
+        # non-ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(0)), PredLiteral("p", Variable("X"))),
+                    (PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))),
+                ),
+                possible={
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("q", Number(0)),
+                },
+            ),
+            {
+                NormalRule(
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
+                ),  # simplified to normal rule since head reduces to a single atom
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(0)), PredLiteral("p", Number(1))),
+                    (PredLiteral("q", Number(1)), PredLiteral("q", Number(0))),
+                ),
+            },
+        )  # all literals have matches in 'possible'
+        self.assertEqual(
+            Grounder.ground_statement(
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(0)), PredLiteral("p", Variable("X"))),
+                    (PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))),
+                ),
+                possible={PredLiteral("q", Number(1))},
+            ),
+            set(),
+        )  # not all literals have matches in 'possible'
+
         # ----- choice facts -----
-        # TODO
+        # NOTE: not instantiated directly via 'ground_statement'
+
         # ----- choice rules -----
-        # TODO
+        # NOTE: not instantiated directly via 'ground_statement'
+
         # ----- strong constraints -----
-        # TODO
+
+        # ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+                possible={PredLiteral("p", Number(1)), PredLiteral("q", Number(0))},
+            ),
+            {Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0)))},
+        )
+        # non-ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                Constraint(
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
+                ),
+                possible={
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
+                },
+            ),
+            {
+                Constraint(
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
+                ),
+            },
+        )  # all literals have matches in 'possible'
+        self.assertEqual(
+            Grounder.ground_statement(
+                Constraint(
+                    PredLiteral("p", Variable("X")),
+                    PredLiteral("q", Variable("X")),
+                ),
+                possible={PredLiteral("q", Number(1))},
+            ),
+            set(),
+        )  # not all literals have matches in 'possible'
+
         # ----- weak constraints -----
-        # TODO
+
+        # ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                WeakConstraint(
+                    (PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
+                ),
+                possible={PredLiteral("p", Number(1)), PredLiteral("q", Number(0))},
+            ),
+            {
+                WeakConstraint(
+                    (PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
+                ),
+            },
+        )
+        # non-ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                WeakConstraint(
+                    (PredLiteral("p", Variable("X")), PredLiteral("q", Number(0))),
+                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
+                ),
+                possible={
+                    PredLiteral("p", Number(0)),
+                    PredLiteral("q", Number(0)),
+                },
+            ),
+            {
+                WeakConstraint(
+                    (PredLiteral("p", Number(0)), PredLiteral("q", Number(0))),
+                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
+                ),
+            },
+        )  # all literals have matches in 'possible'
+        self.assertEqual(
+            Grounder.ground_statement(
+                WeakConstraint(
+                    (PredLiteral("p", Variable("X")), PredLiteral("q", Number(0))),
+                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
+                ),
+                possible={PredLiteral("q", Number(1))},
+            ),
+            set(),
+        )  # not all literals have matches in 'possible'
+
         # ----- optimize statements -----
         # TODO
-
-        # TODO: redundancey check (duplicate and body literals)
 
         # arithmetic terms
         rule = NormalRule(
