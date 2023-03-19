@@ -11,6 +11,7 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
+from .normal import NormalFact, NormalRule
 from .statement import Fact, Rule
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -84,11 +85,18 @@ class DisjunctiveFact(Fact):
     def ground(self) -> bool:
         return self.head.ground
 
-    def substitute(self, subst: "Substitution") -> "DisjunctiveFact":
+    def substitute(
+        self, subst: "Substitution"
+    ) -> Union["DisjunctiveFact", "NormalFact"]:
         if self.ground:
             return deepcopy(self)
 
-        return DisjunctiveFact(*self.head.substitute(subst))
+        subst_head = self.head.substitute(subst)
+
+        if len(set(subst_head)) == 1:
+            return NormalFact(*subst_head)
+
+        return DisjunctiveFact(*subst_head)
 
     def replace_arith(self) -> "DisjunctiveFact":
         return DisjunctiveFact(*self.head.replace_arith(self.var_table))
@@ -180,13 +188,18 @@ class DisjunctiveRule(Rule):
     def ground(self) -> bool:
         return self.head.ground and self.body.ground
 
-    def substitute(self, subst: "Substitution") -> "DisjunctiveRule":
+    def substitute(
+        self, subst: "Substitution"
+    ) -> Union["DisjunctiveRule", "NormalRule"]:
         if self.ground:
             return deepcopy(self)
 
-        return DisjunctiveRule(
-            self.head.substitute(subst), self.literals.substitute(subst)
-        )
+        subst_head = self.head.substitute(subst)
+
+        if len(set(subst_head)) == 1:
+            return NormalRule(*subst_head, *self.literals.substitute(subst))
+
+        return DisjunctiveRule(subst_head, self.literals.substitute(subst))
 
     def rewrite_aggregates(
         self,
