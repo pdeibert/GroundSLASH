@@ -10,5 +10,5 @@ from .optimize import (
 )
 from .rewrite import rewrite_aggregate
 from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule
-from .statement import Rule, Statement
+from .statement import Statement
 from .weak_constraint import WeakConstraint

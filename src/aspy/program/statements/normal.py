@@ -10,8 +10,8 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
+from .statement import Statement
 from .constraint import Constraint
-from .statement import Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
@@ -22,7 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .special import AggrBaseRule, AggrElemRule
 
 
-class NormalRule(Rule):
+class NormalRule(Statement):
     """Normal rule.
 
     Rule of form:

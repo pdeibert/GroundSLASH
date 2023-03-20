@@ -25,6 +25,15 @@ class Statement(Expr, ABC):
 
     Declares some default as well as abstract methods for statements.
     All statements should inherit from this class or a subclass thereof.
+
+    Attributes:
+        head: TODO
+        body: TODO
+        var_table: `VariableTable` instance for the statement.
+        safe: Boolean indicating whether or not the statement is considered safe.
+        ground: Boolean indicating whether or not the statement is ground.
+        contains_aggregates: Boolean indicating whether or not the statement contains
+            aggregate expressions.
     """
 
     def __init__(
@@ -32,7 +41,7 @@ class Statement(Expr, ABC):
     ) -> None:
         """Initializes the statement instance.
 
-        Should always be called.
+        Should always be called to allow passing of variable table.
 
         Args:
             var_table: Optional `VariableTable` instance corresponding to the statement.
@@ -42,16 +51,23 @@ class Statement(Expr, ABC):
 
     @abstractmethod  # pragma: no cover
     def __str__(self) -> str:
+        """Returns the string representation of the statement.
+
+        Returns:
+            String representation of the statement.
+        """
         pass
 
     @property
     @abstractmethod  # pragma: no cover
     def head(self) -> Any:
+        # TODO: necessary to require for all statements?
         pass
 
     @property
     @abstractmethod  # pragma: no cover
     def body(self) -> Any:
+        # TODO: necessary to require for all statements?
         pass
 
     @property
@@ -63,6 +79,10 @@ class Statement(Expr, ABC):
     @abstractmethod  # pragma: no cover
     def ground(self) -> bool:
         pass
+
+    @cached_property
+    def contains_aggregates(self) -> bool:
+        return any(isinstance(literal, AggrLiteral) for literal in self.body)
 
     @property
     def var_table(self) -> "VariableTable":
@@ -137,14 +157,37 @@ class Statement(Expr, ABC):
             ],
         ],
     ) -> "Statement":
-        """TODO"""
+        """Rewrites aggregates expressions inside the statement.
+
+        Args:
+            aggr_counter: Integer representing the current count of rewritten aggregates
+                in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer aggregate ids to tuples consisting of
+                the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
+                instance replacing it in the original statement, an `AggrBaseRule`
+                instance and a set of `AggrElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for 
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `Statement` instance representing the rewritten original statement without
+            any aggregate expressions.
+        """
         pass
 
     @abstractmethod  # pragma: no cover
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Statement":
-        """TODO"""
+        """Reassembles rewritten aggregates expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `AggrPlaceholder` instances to
+                `AggrLiteral` instances to be replaced with.
+
+        Returns:
+            `Statement` instance representing the reassembled original statement.
+        """
         pass
 
     def rewrite_choices(
@@ -160,28 +203,51 @@ class Statement(Expr, ABC):
             ],
         ],
     ) -> "Statement":
+        """Rewrites choice expressions inside the statement.
+
+        Args:
+            choice_counter: Integer representing the current count of rewritten choice
+                expressions in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer choice ids to tuples consisting of
+                the original `Choice` instance replaced, the `ChoicePlaceholder`
+                instance replacing it in the original statement, a `ChoiceBaseRule`
+                instance and a set of `ChoiceElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for 
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `Statement` instance representing the rewritten original statement without
+            any choice expressions.
+        """
         return deepcopy(self)
 
     def assemble_choices(
         self,
         assembling_map: Dict["ChoicePlaceholder", "Choice"],
     ) -> "Statement":
+        """Reassembles rewritten choice expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `ChoicePlaceholder` instances to
+                `Choice` instances to be replaced with.
+
+        Returns:
+            `Statement` instance representing the reassembled original statement.
+        """
         return deepcopy(self)
 
     def consequents(self) -> "LiteralCollection":
+        """Returns the consequents of the statement.
+
+        Returns:
+            `LiteralCollection` instance.
+        """
         return self.head
 
     def antecedents(self) -> "LiteralCollection":
+        """Returns the antecedents of the statement.
+
+        Returns:
+            `LiteralCollection` instance.
+        """
         return self.body
-
-
-class Rule(Statement, ABC):
-    """Abstract base class for all rules.
-
-    Declares some default as well as abstract methods for rules.
-    All rules should inherit from this class or a subclass thereof.
-    """
-
-    @cached_property
-    def contains_aggregates(self) -> bool:
-        return any(isinstance(literal, AggrLiteral) for literal in self.body)

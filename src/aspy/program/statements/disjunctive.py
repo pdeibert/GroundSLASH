@@ -11,16 +11,16 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
+from .statement import Statement
 from .normal import NormalRule
-from .statement import Rule
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal
-    from aspy.program.statements import AggrBaseRule, AggrElemRule, Statement
+    from aspy.program.statements import AggrBaseRule, AggrElemRule
     from aspy.program.substitution import Substitution
 
 
-class DisjunctiveRule(Rule):
+class DisjunctiveRule(Statement):
     """Disjunctive rule.
 
     Rule of form:
