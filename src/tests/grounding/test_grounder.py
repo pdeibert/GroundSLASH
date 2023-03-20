@@ -279,11 +279,15 @@ class TestGrounder(unittest.TestCase):
         # ground fact
         self.assertEqual(
             Grounder.ground_statement(
-                DisjunctiveRule((
-                    PredLiteral("p", Number(1)), PredLiteral("p", Number(2))
-                ))
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))
+                )
             ),
-            {DisjunctiveRule((PredLiteral("p", Number(1)), PredLiteral("p", Number(2))))},
+            {
+                DisjunctiveRule(
+                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))
+                )
+            },
         )
 
         # ----- disjunctive rules -----

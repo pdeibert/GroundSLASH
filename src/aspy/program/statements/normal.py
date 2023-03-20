@@ -10,8 +10,8 @@ from aspy.program.literals import (
 )
 from aspy.program.safety_characterization import SafetyTriplet
 
-from .statement import Statement
 from .constraint import Constraint
+from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import Literal

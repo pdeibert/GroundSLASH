@@ -25,9 +25,9 @@ from aspy.program.operators import RelOp
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.terms import Number
 
-from .statement import Statement
 from .normal import NormalRule
 from .special import ChoiceBaseRule, ChoiceElemRule
+from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.literals import AggrPlaceholder, Literal, PredLiteral

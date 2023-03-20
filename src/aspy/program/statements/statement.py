@@ -166,7 +166,7 @@ class Statement(Expr, ABC):
                 the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
                 instance replacing it in the original statement, an `AggrBaseRule`
                 instance and a set of `AggrElemRule` instances representing rules for
-                propagation. Pre-existing content in the dictionary is irrelevant for 
+                propagation. Pre-existing content in the dictionary is irrelevant for
                 the method, the dictionary is simply updated in-place.
 
         Returns:
@@ -212,7 +212,7 @@ class Statement(Expr, ABC):
                 the original `Choice` instance replaced, the `ChoicePlaceholder`
                 instance replacing it in the original statement, a `ChoiceBaseRule`
                 instance and a set of `ChoiceElemRule` instances representing rules for
-                propagation. Pre-existing content in the dictionary is irrelevant for 
+                propagation. Pre-existing content in the dictionary is irrelevant for
                 the method, the dictionary is simply updated in-place.
 
         Returns:
