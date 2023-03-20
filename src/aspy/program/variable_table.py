@@ -226,7 +226,7 @@ class VariableTable:
         """Returns all variables in the table.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances.
+            (Possibly empty) set of `Variable` instances.
         """  # noqa
         return set(self.variables.keys())
 
@@ -234,7 +234,7 @@ class VariableTable:
         """Returns all global variables in the table.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances.
+            (Possibly empty) set of `Variable` instances.
         """  # noqa
         return set(var for (var, is_global) in self.variables.items() if is_global)
 

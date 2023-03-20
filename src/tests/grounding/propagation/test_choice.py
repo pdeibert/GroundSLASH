@@ -240,13 +240,11 @@ class TestChoicePropagator(unittest.TestCase):
         # assembling
         rule_1 = NormalRule(
             ChoicePlaceholder(1, TermTuple(Variable("X")), TermTuple(Number(0))),
-            PredLiteral("q", Number(0)),
-            Equal(Number(0), Number(0)),
+            [PredLiteral("q", Number(0)), Equal(Number(0), Number(0))],
         )
         rule_2 = NormalRule(
             ChoicePlaceholder(2, TermTuple(), TermTuple()),
-            PredLiteral("q", Number(0)),
-            Equal(Number(0), Number(0)),
+            [PredLiteral("q", Number(0)), Equal(Number(0), Number(0))],
         )
         rules = propagator.assemble({rule_1, rule_2}, J_chi)
 

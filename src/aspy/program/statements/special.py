@@ -35,7 +35,7 @@ class PropBaseRule(NormalRule):
         literals: "LiteralCollection",
     ) -> None:
 
-        super().__init__(atom, *literals)
+        super().__init__(atom, literals)
         self.guards = (lguard, rguard)
 
     @property
@@ -100,6 +100,16 @@ class PropBaseRule(NormalRule):
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "PropBaseRule":
+        """Replaces arithmetic terms appearing in the statement with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `PropBaseRule` instance.
+        """  # noqa
         return type(self)(
             self.atom.replace_arith(var_table),
             *self.guards,
@@ -120,7 +130,7 @@ class PropElemRule(NormalRule):
         element: Union["AggrElement", "ChoiceElement"],
         literals: "LiteralCollection",
     ) -> None:
-        super().__init__(atom, *literals)
+        super().__init__(atom, literals)
         self.element = element
 
     def __eq__(self, other: "Any") -> bool:

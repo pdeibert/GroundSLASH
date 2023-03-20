@@ -32,9 +32,13 @@ class Statement(Expr, ABC):
         var_table: `VariableTable` instance for the statement.
         safe: Boolean indicating whether or not the statement is considered safe.
         ground: Boolean indicating whether or not the statement is ground.
+        deterministic: Boolean indicating whehter or not the consequent of the statement
+            is deterministic.
         contains_aggregates: Boolean indicating whether or not the statement contains
             aggregate expressions.
     """
+
+    __slots__ = "deterministic"
 
     def __init__(
         self, var_table: Optional["VariableTable"] = None, *args, **kwargs
@@ -102,7 +106,7 @@ class Statement(Expr, ABC):
         """Returns the variables associated with the statement.
 
         Returns:
-            Set of 'Variable' instances.
+            Set of `Variable` instances.
         """
         return self.var_table.vars()
 
@@ -110,11 +114,11 @@ class Statement(Expr, ABC):
         """Returns the global variables associated with the statement.
 
         Returns:
-            Set of 'Variable' instances.
+            Set of `Variable` instances.
         """
         return self.var_table.global_vars()
 
-    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
+    def safety(self, statment: Optional["Statement"] = None) -> "SafetyTriplet":
         """Returns the safety characterization for the statement.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".

@@ -91,7 +91,7 @@ class AggrPropagator:
 
         return possible_alpha_literals
 
-    def assemble(self, rules: Set["Statement"]) -> Set["Statement"]:
+    def assemble(self, statements: Set["Statement"]) -> Set["Statement"]:
         # map ground alpha literals to corresponding
         # assembled aggr. literals to be replaced with
         assembling_map = {
@@ -106,4 +106,6 @@ class AggrPropagator:
         }
 
         # return assembled rules
-        return set(rule.assemble_aggregates(assembling_map) for rule in rules)
+        return set(
+            statement.assemble_aggregates(assembling_map) for statement in statements
+        )

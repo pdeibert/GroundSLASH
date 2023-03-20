@@ -24,7 +24,14 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class WeightAtLevel(Expr):
-    """TODO"""
+    """Weight at level for weak constraints and optimize statements.
+
+    Attributes:
+        weight: `Term` instance.
+        level: `Term` instance.
+        terms: `TermTuple` instance.
+        ground: Boolean indicating whether or not the term is ground.
+    """
 
     def __init__(
         self, weight: "Term", level: "Term", terms: Optional[Iterable["Term"]] = None
@@ -37,9 +44,25 @@ class WeightAtLevel(Expr):
         self.terms = TermTuple(*terms) if not isinstance(terms, TermTuple) else terms
 
     def __str__(self) -> str:
+        """Returns the string representation for the weight at level.
+
+        Returns:
+            String representing the weight at level.
+        """
         return f"{str(self.weight)}@{str(self.level)}, {str(self.terms)}"
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the weight at level to a given object.
+
+        Considered equal if the given object is also a `WeightAtLevel` instance
+        with same weight, level and terms.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the weight at level is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, WeightAtLevel)
             and self.weight == other.weight
@@ -59,10 +82,10 @@ class WeightAtLevel(Expr):
         )
 
     def vars(self) -> Set["Variable"]:
-        """Returns the variables associated with the expression.
+        """Returns the variables associated with the weight at level.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the variables of all terms.
         """  # noqa
         return set().union(
             self.weight.vars(),
@@ -78,7 +101,7 @@ class WeightAtLevel(Expr):
                 Irrelevant for this expression. Defaults to `None`.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the (global) variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the (global) variables of all terms.
         """  # noqa
         return set().union(
             self.weight.global_vars(),
@@ -86,12 +109,33 @@ class WeightAtLevel(Expr):
             self.terms.global_vars(),
         )
 
-    def safety(self, rule: Optional["Statement"]) -> "SafetyTriplet":
+    def safety(self, statement: Optional["Statement"] = None) -> "SafetyTriplet":
+        """Returns the safety characterization for the weight at level.
+
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` instance the weight at level appears in.
+                Irrelevant for weight at level. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance with the `Variable` instance marked as 'safe'.
+        """  # noqa
         raise Exception(
             "Safety characterization for weight at level not supported yet."
         )
 
     def substitute(self, subst: "Substitution") -> "WeightAtLevel":
+        """Applies a substitution to the weight at level.
+
+        Substitutes all terms recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `WeightAtLevel` instance with (possibly substituted) terms.
+        """
         if self.ground:
             return deepcopy(self)
 
@@ -101,8 +145,8 @@ class WeightAtLevel(Expr):
             self.terms.substitute(subst),
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
-        """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
+    def replace_arith(self, var_table: "VariableTable") -> "WeightAtLevel":
+        """Replaces arithmetic terms appearing in the weight at level with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
 
@@ -110,7 +154,7 @@ class WeightAtLevel(Expr):
             var_table: `VariableTable` instance.
 
         Returns:
-            `TermTuple` instance.
+            `WeightAtLevel` instance.
         """  # noqa
         return WeightAtLevel(
             self.weight.replace_arith(var_table),
@@ -120,29 +164,44 @@ class WeightAtLevel(Expr):
 
 
 class WeakConstraint(Statement):
-    """Weak constraint.
+    r"""Weak constraint.
 
     Statement of form:
+        :~ :math:`b_1,\dots,b_n`. [:math:`w`@:math:`l`,:math:`t_1,\dots,t_m`]
 
-        :~ b_1,...,b_n . [ w@l,t_1,...,t_m ]
+    where:
+        :math:`b_1,\dots,b_n` are literals with :math:`n\ge0`.
+        :math:`w,l,t_1,\dots,t_m` are terms.
 
-    for literals b_1,...,b_n and terms w,l,t_1,...,t_m.
-    '@ l' may be omitted if l=0.
+    Semantics: TODO.
 
     Attributes:
-        head:
-        body:
-        literals
-        weight_at_level
-    """
+        literals: TODO
+        weight_at_level: TODO
+        head: TODO
+        body: TODO
+        var_table: `VariableTable` instance for the statement.
+        safe: Boolean indicating whether or not the statement is considered safe.
+        ground: Boolean indicating whether or not the statement is ground.
+        deterministic: Boolean indicating whether or not the consequent of the rule is
+            deterministic. Always `True` for weak constraints.
+        contains_aggregates: Boolean indicating whether or not the statement contains
+            aggregate expressions.
+    """  # noqa
 
-    deterministic: bool = True  # TODO: correct?
+    deterministic: bool = True
 
     def __init__(
         self,
         literals: Iterable["Literal"],
         weight_at_level: "WeightAtLevel",
     ) -> None:
+        """Initializes the weak constraint instance.
+
+        Args:
+            literals: Iterable over `PredLiteral` instances.
+            weight_at_level: `WeightAtLevel` instance.
+        """
         super().__init__()
 
         self.literals = (
@@ -153,6 +212,17 @@ class WeakConstraint(Statement):
         self.weight_at_level = weight_at_level
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the statement to a given object.
+
+        Considered equal if the given object is also a `WeakConstraint` instance with same literals
+        and weight at level.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the statement is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, WeakConstraint)
             and self.literals == other.literals
@@ -163,6 +233,11 @@ class WeakConstraint(Statement):
         return hash(("weak constraint", self.literals, self.weight_at_level))
 
     def __str__(self) -> str:
+        """Returns the string representation for the statement.
+
+        Returns:
+            String representing the statement.
+        """
         return f":~ {str(self.body)}. [{str(self.weight_at_level)}]"
 
     def __init_var_table(self) -> None:
@@ -205,6 +280,17 @@ class WeakConstraint(Statement):
         return any(isinstance(literal, AggrLiteral) for literal in self.literals)
 
     def substitute(self, subst: "Substitution") -> "WeakConstraint":
+        """Applies a substitution to the statement.
+
+        Substitutes all literals and terms in weight at level recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `WeakConstraint` instance with (possibly substituted) literals and
+            weight at level.
+        """
         if self.ground:
             return deepcopy(self)
 
@@ -226,6 +312,22 @@ class WeakConstraint(Statement):
             ],
         ],
     ) -> "WeakConstraint":
+        """Rewrites aggregates expressions inside the statement.
+
+        Args:
+            aggr_counter: Integer representing the current count of rewritten aggregates
+                in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer aggregate ids to tuples consisting of
+                the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
+                instance replacing it in the original statement, an `AggrBaseRule`
+                instance and a set of `AggrElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `WeakConstraint` instance representing the rewritten original statement
+            without any aggregate expressions.
+        """
 
         # global variables
         glob_vars = self.global_vars(self)
@@ -274,6 +376,15 @@ class WeakConstraint(Statement):
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "WeakConstraint":
+        """Reassembles rewritten aggregates expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `AggrPlaceholder` instances to
+                `AggrLiteral` instances to be replaced with.
+
+        Returns:
+            `WeakConstraint` instance representing the reassembled original statement.
+        """
         return WeakConstraint(
             tuple(
                 literal if literal not in assembling_map else assembling_map[literal]
@@ -283,7 +394,7 @@ class WeakConstraint(Statement):
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
-        """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
+        """Replaces arithmetic terms appearing in the statement with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
 
@@ -291,7 +402,7 @@ class WeakConstraint(Statement):
             var_table: `VariableTable` instance.
 
         Returns:
-            `TermTuple` instance.
+            `WeakConstraint` instance.
         """  # noqa
         return WeakConstraint(
             self.literals.replace_arith(var_table),

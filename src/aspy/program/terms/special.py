@@ -58,7 +58,7 @@ class ArithVariable(Variable):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, ArithVariable)

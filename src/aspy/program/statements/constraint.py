@@ -16,23 +16,52 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Constraint(Statement):
-    """Constraint.
+    r"""Constraint.
 
     Statement of form:
+        :- :math:`b_1,\dots,b_n`.
 
-        :- b_1,...,b_n .
+    where:
+        :math:`b_1,\dots,b_n` are literals with :math:`n\ge0`.
 
-    for literals b_1,...,b_n.
-    """
+    Semantically, no answer set may include :math:`b_1,\dots,b_n`.
+
+    Attributes:
+        literals: TODO
+        head: TODO
+        body: TODO
+        var_table: `VariableTable` instance for the statement.
+        safe: Boolean indicating whether or not the statement is considered safe.
+        ground: Boolean indicating whether or not the statement is ground.
+        deterministic: Boolean indicating whether or not the consequent of the rule is
+            deterministic. Always `True` for constraints.
+        contains_aggregates: Boolean indicating whether or not the statement contains
+            aggregate expressions.
+    """  # noqa
 
     deterministic: bool = True
 
     def __init__(self, *literals: "Literal", **kwargs) -> None:
+        """Initializes the constraint instance.
+
+        Args:
+            *literals: Sequence of `PredLiteral` instances.
+        """
         super().__init__(**kwargs)
 
         self.literals = LiteralCollection(*literals)
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the statement to a given object.
+
+        Considered equal if the given object is also a `Constraint` instance with same literals.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the statement is considered equal to the given object.
+        """  # noqa
         return isinstance(other, Constraint) and set(self.literals) == set(
             other.literals
         )
@@ -41,6 +70,11 @@ class Constraint(Statement):
         return hash(("constraint", frozenset(self.literals)))
 
     def __str__(self) -> str:
+        """Returns the string representation for the statement.
+
+        Returns:
+            String representing the statement.
+        """
         return f":- {', '.join([str(literal) for literal in self.body])}."
 
     @property
@@ -67,6 +101,16 @@ class Constraint(Statement):
         return any(isinstance(literal, AggrLiteral) for literal in self.literals)
 
     def substitute(self, subst: "Substitution") -> "Constraint":
+        """Applies a substitution to the statement.
+
+        Substitutes all literals recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `Constraint` instance with (possibly substituted) literals.
+        """
         if self.ground:
             return deepcopy(self)
 
@@ -85,7 +129,22 @@ class Constraint(Statement):
             ],
         ],
     ) -> "Constraint":
+        """Rewrites aggregates expressions inside the statement.
 
+        Args:
+            aggr_counter: Integer representing the current count of rewritten aggregates
+                in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer aggregate ids to tuples consisting of
+                the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
+                instance replacing it in the original statement, an `AggrBaseRule`
+                instance and a set of `AggrElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `Constraint` instance representing the rewritten original statement without
+            any aggregate expressions.
+        """
         # global variables
         glob_vars = self.global_vars(self)
 
@@ -132,6 +191,15 @@ class Constraint(Statement):
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "Constraint":
+        """Reassembles rewritten aggregates expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `AggrPlaceholder` instances to
+                `AggrLiteral` instances to be replaced with.
+
+        Returns:
+            `Constraint` instance representing the reassembled original statement.
+        """
         return Constraint(
             *tuple(
                 literal if literal not in assembling_map else assembling_map[literal]
@@ -140,7 +208,7 @@ class Constraint(Statement):
         )
 
     def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
-        """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
+        """Replaces arithmetic terms appearing in the statement with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
 
@@ -148,6 +216,6 @@ class Constraint(Statement):
             var_table: `VariableTable` instance.
 
         Returns:
-            `TermTuple` instance.
+            `Constraint` instance.
         """  # noqa
         return Constraint(*self.literals.replace_arith(var_table))

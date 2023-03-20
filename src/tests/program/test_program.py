@@ -55,27 +55,29 @@ class TestProgram(unittest.TestCase):
 
         prog = Program(
             (
-                NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
-                NormalRule(PredLiteral("b"), Naf(PredLiteral("a"))),
+                NormalRule(PredLiteral("a"), [Naf(PredLiteral("b"))]),
+                NormalRule(PredLiteral("b"), [Naf(PredLiteral("a"))]),
                 NormalRule(PredLiteral("c")),
                 NormalRule(
                     PredLiteral("d"),
-                    AggrLiteral(
-                        AggrSum(),
-                        (
-                            AggrElement(
-                                TermTuple(Number(1)),
-                                LiteralCollection(PredLiteral("a")),
+                    [
+                        AggrLiteral(
+                            AggrSum(),
+                            (
+                                AggrElement(
+                                    TermTuple(Number(1)),
+                                    LiteralCollection(PredLiteral("a")),
+                                ),
+                                AggrElement(
+                                    TermTuple(Number(1)),
+                                    LiteralCollection(PredLiteral("c")),
+                                ),
                             ),
-                            AggrElement(
-                                TermTuple(Number(1)),
-                                LiteralCollection(PredLiteral("c")),
-                            ),
-                        ),
-                        Guard(RelOp.EQUAL, Number(1), True),
-                    ),
+                            Guard(RelOp.EQUAL, Number(1), True),
+                        )
+                    ],
                 ),
-                NormalRule(PredLiteral("e"), Naf(PredLiteral("d"))),
+                NormalRule(PredLiteral("e"), [Naf(PredLiteral("d"))]),
             )
         )
         # TODO: query!
@@ -92,24 +94,26 @@ class TestProgram(unittest.TestCase):
             prog.reduct({("a", 0), ("d", 0)}),
             Program(
                 (
-                    NormalRule(PredLiteral("a"), Naf(PredLiteral("b"))),
+                    NormalRule(PredLiteral("a"), [Naf(PredLiteral("b"))]),
                     NormalRule(PredLiteral("c")),
                     NormalRule(
                         PredLiteral("d"),
-                        AggrLiteral(
-                            AggrSum(),
-                            (
-                                AggrElement(
-                                    TermTuple(Number(1)),
-                                    LiteralCollection(PredLiteral("a")),
+                        [
+                            AggrLiteral(
+                                AggrSum(),
+                                (
+                                    AggrElement(
+                                        TermTuple(Number(1)),
+                                        LiteralCollection(PredLiteral("a")),
+                                    ),
+                                    AggrElement(
+                                        TermTuple(Number(1)),
+                                        LiteralCollection(PredLiteral("c")),
+                                    ),
                                 ),
-                                AggrElement(
-                                    TermTuple(Number(1)),
-                                    LiteralCollection(PredLiteral("c")),
-                                ),
-                            ),
-                            Guard(RelOp.EQUAL, Number(1), True),
-                        ),
+                                Guard(RelOp.EQUAL, Number(1), True),
+                            )
+                        ],
                     ),
                 )
             ),
@@ -409,7 +413,7 @@ class TestProgram(unittest.TestCase):
         # ----- normal rules -----
         self.assertEqual(
             Program.from_string("p :- q.").statements[0],
-            NormalRule(PredLiteral("p"), PredLiteral("q")),
+            NormalRule(PredLiteral("p"), [PredLiteral("q")]),
         )
 
         # ----- disjunctive facts -----

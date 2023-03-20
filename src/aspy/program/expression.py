@@ -22,7 +22,7 @@ class Expr(ABC):
         """Returns the variables associated with the expression.
 
         Returns:
-            Set of 'Variable' instances.
+            Set of `Variable` instances.
         """
         pass
 
@@ -31,13 +31,13 @@ class Expr(ABC):
         """Returns the global variables associated with the expression.
 
         Returns:
-            Set of 'Variable' instances.
+            Set of `Variable` instances.
         """
         pass
 
     @abstractmethod  # pragma: no cover
     def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
+        self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         """Returns the safety characterization for the expression.
 

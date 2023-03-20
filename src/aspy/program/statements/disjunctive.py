@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, Tuple, Union
 
 import aspy
 from aspy.program.literals import (
@@ -21,25 +21,50 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class DisjunctiveRule(Statement):
-    """Disjunctive rule.
+    r"""Disjunctive rule.
 
-    Rule of form:
+    Statement of form:
+        :math:`h_1 | \dots | h_m` :- :math:`b_1,\dots,b_n`.
 
-        h_1 | ... | h_m :- b_1,...,b_n .
+    where:
+        :math:`h_1|\dots|h_m` are classical atoms (non-default-negated predicate literals)
+            with :math:`m>1`.
+        :math:`b_1,\dots,b_n` are literals with :math:`n\ge0`.
 
-    for classical atoms h_1,...,h_m and literals b_1,...,b_n.
+    for :math:`n=0` the rule is called a fact.
 
-    Semantically, any answer set that includes b_1,...,b_n must also include exactly one h_i.
+    Semantically, any answer set that includes :math:`b_1,\dots,b_n` must also choose precisely
+    one :math:`h\in\{h_1,\dots,h_m}`.
+
+    Attributes:
+        atoms: TODO
+        literals: TODO
+        head: TODO
+        body: TODO
+        var_table: `VariableTable` instance for the statement.
+        safe: Boolean indicating whether or not the statement is considered safe.
+        ground: Boolean indicating whether or not the statement is ground.
+        deterministic: Boolean indicating whether or not the consequent of the rule is
+            deterministic. Always `False` for disjunctive rules.
+        contains_aggregates: Boolean indicating whether or not the statement contains
+            aggregate expressions.
     """  # noqa
 
     deterministic: bool = False
 
     def __init__(
         self,
-        head: Union[LiteralCollection, Tuple["Literal", ...]],
-        body: Optional[Union[LiteralCollection, Tuple["Literal", ...]]] = None,
+        head: Iterable["Literal"],
+        body: Optional[Iterable["Literal"]] = None,
         **kwargs,
     ) -> None:
+        """Initializes the disjunctive rule instance.
+
+        Args:
+            head: Iterable over `PredLiteral` instances.
+            body: Optional iterable over `Literal` instances.
+                Defaults to None.
+        """
         super().__init__(**kwargs)
 
         if body is None:
@@ -71,6 +96,17 @@ class DisjunctiveRule(Statement):
         )
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the statement to a given object.
+
+        Considered equal if the given object is also a `DisjunctiveRule` instance with same atoms
+        and literals.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the statement is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, DisjunctiveRule)
             and set(self.atoms) == set(other.atoms)
@@ -78,11 +114,14 @@ class DisjunctiveRule(Statement):
         )
 
     def __hash__(self) -> int:
-        return hash(
-            ("disjunctive rule", frozenset(self.atoms), frozenset(self.literals))
-        )
+        return hash(("disjunctive rule", self.atoms, self.literals))
 
     def __str__(self) -> str:
+        """Returns the string representation for the statement.
+
+        Returns:
+            String representing the statement.
+        """
         return f"{' | '.join([str(atom) for atom in self.head])}{f' :- {str(self.body)}' if self.body else ''}."  # noqa
 
     @property
@@ -104,13 +143,25 @@ class DisjunctiveRule(Statement):
     def substitute(
         self, subst: "Substitution"
     ) -> Union["DisjunctiveRule", "NormalRule"]:
+        """Applies a substitution to the statement.
+
+        Substitutes all atoms and literals recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `DisjunctiveRule` or `NormalRule` instance with (possibly substituted)
+            atoms and literals. `NormalRule` is returned if the substitution results
+            in a single unique head atom.
+        """
         if self.ground:
             return deepcopy(self)
 
         subst_head = self.head.substitute(subst)
 
         if len(set(subst_head)) == 1:
-            return NormalRule(*subst_head, *self.literals.substitute(subst))
+            return NormalRule(*subst_head, self.literals.substitute(subst))
 
         return DisjunctiveRule(subst_head, self.literals.substitute(subst))
 
@@ -127,6 +178,22 @@ class DisjunctiveRule(Statement):
             ],
         ],
     ) -> "DisjunctiveRule":
+        """Rewrites aggregates expressions inside the statement.
+
+        Args:
+            aggr_counter: Integer representing the current count of rewritten aggregates
+                in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer aggregate ids to tuples consisting of
+                the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
+                instance replacing it in the original statement, an `AggrBaseRule`
+                instance and a set of `AggrElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `DisjunctiveRule` instance representing the rewritten original statement
+            without any aggregate expressions.
+        """
 
         # global variables
         glob_vars = self.global_vars(self)
@@ -175,6 +242,15 @@ class DisjunctiveRule(Statement):
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "DisjunctiveRule":
+        """Reassembles rewritten aggregates expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `AggrPlaceholder` instances to
+                `AggrLiteral` instances to be replaced with.
+
+        Returns:
+            `DisjunctiveRule` instance representing the reassembled original statement.
+        """
         return DisjunctiveRule(
             deepcopy(self.atoms),
             tuple(
@@ -184,6 +260,16 @@ class DisjunctiveRule(Statement):
         )
 
     def replace_arith(self) -> "DisjunctiveRule":
+        """Replaces arithmetic terms appearing in the statement with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `DisjunctiveRule` instance.
+        """  # noqa
         return DisjunctiveRule(
             self.head.replace_arith(self.var_table),
             self.body.replace_arith(self.var_table),

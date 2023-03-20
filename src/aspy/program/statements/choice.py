@@ -48,13 +48,27 @@ def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
 
 
 class ChoiceElement(Expr):
-    """Choice element."""
+    """Choice element for choice expressions.
+
+    Attributes:
+        atom: TODO
+        literals: TODO
+        head: TODO
+        body: TODO
+        ground: Boolean indicating whether or not the element is ground.
+    """
 
     def __init__(
         self,
         atom: "PredLiteral",
-        literals: Optional[Union[Tuple["Literal", ...], "LiteralCollection"]] = None,
+        literals: Optional[Iterable["Literal"]] = None,
     ) -> None:
+        """Initializes the choice element instance.
+
+        Args:
+            atom: `PredLiteral` instance.
+            literals: Iterable over `Literal` instances.
+        """
         if literals is None:
             literals = LiteralCollection()
 
@@ -66,6 +80,16 @@ class ChoiceElement(Expr):
         )
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the element to a given object.
+
+        Considered equal if the given object is also a `ChoiceElement` instance with same atom and literals.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the element is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, ChoiceElement)
             and self.atom == other.atom
@@ -76,6 +100,13 @@ class ChoiceElement(Expr):
         return hash(("choice element", self.atom, self.literals))
 
     def __str__(self) -> str:
+        """Returns the string representation for the choice element.
+
+        Returns:
+            String representing the choice element.
+            Joins the atom and the literals (separated by commas) with a colon
+            If the element has no literals, the colon is omitted.
+        """  # noqa
         return str(self.atom) + (
             f":{','.join([str(literal) for literal in self.literals])}"
             if self.literals
@@ -95,52 +126,149 @@ class ChoiceElement(Expr):
         return self.atom.ground and self.literals.ground
 
     def pos_occ(self) -> Set["PredLiteral"]:
+        """Positive literal occurrences.
+
+        Returns:
+            Set of `Literal` instances that occur positively in the element.
+        """
         return self.atom.pos_occ().union(self.literals.pos_occ())
 
     def neg_occ(self) -> Set["PredLiteral"]:
+        """Negative literal occurrences.
+
+        Returns:
+            Set of `Literal` instances that occur negatively in the element.
+        """
         return self.atom.neg_occ().union(self.literals.neg_occ())
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the element.
+
+        Returns:
+            A (possibly empty) set of `Variable` instances.
+        """
         return self.atom.vars().union(self.literals.vars())
 
     def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+        """Returns the global variables associated with the literal.
+
+        Args:
+            statement: Optional `Statement` instance the element appears in.
+                Usually irrelevant for choice elements. Defaults to `None`.
+
+        Returns:
+            A (possibly empty) set of `Variable` instances.
+        """
         return self.vars()
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> SafetyTriplet:
+    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
+        """Returns the the safety characterizations for the choice literal.
+
+        Raises an exception, since safety characterization is undefined for choice elements
+        without additional context.
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` instance the term appears in.
+                Irrelevant for choice elements. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance.
+
+        Raises:
+            ValueError: Safety characterization is undefined for choice elements
+            without additional context.
+        """  # noqa
         raise ValueError(
             "Safety characterization for choice elements is undefined without context."  # noqa
         )
 
     def substitute(self, subst: "Substitution") -> "ChoiceElement":
+        """Applies a substitution to the choice element.
+
+        Substitutes all literals recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `ChoiceElement` instance with (possibly substituted) literals.
+        """
         return ChoiceElement(
             self.atom.substitute(subst),
             self.literals.substitute(subst),
         )
 
     def match(self, other: "Expr") -> Set["Substitution"]:
+        """Tries to match the choice element with an expression.
+
+        Raises an exception, since matching for choice elements is undefined.
+
+        Args:
+            other: `Expr` instance to be matched to.
+
+        Returns:
+            Optional `Substitution` instance.
+        """  # noqa
         raise Exception("Matching for choice elements is not defined.")
 
     def replace_arith(self, var_table: "VariableTable") -> "ChoiceElement":
+        """Replaces arithmetic terms appearing in the element with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `ChoiceElement` instance.
+        """  # noqa
         return ChoiceElement(
             self.atom.replace_arith(var_table),
             self.literals.replace_arith(var_table),
         )
 
     def satisfied(self, literals: Set["Literal"]) -> bool:
+        """Check whether or not the element is satisfied.
+
+        Args:
+            literals: Set of `Literal` instances interpreted as valid.
+
+        Returns:
+            Boolean indicating whether or not the element condition is part of the specified set of literals.
+        """  # noqa
         # check if all condition literals are part of the specified set
         return all(literal in literals for literal in self.literals)
 
 
 class Choice(Expr):
-    """Choice."""
+    """Choice expression.
+
+    Attributes:
+        elements: Tuple of `ChoiceElement` instances representing the set of choice elements.
+        lguard: Optional left `Guard` instance.
+        rguard: Optional right `Guard` instance.
+        guards: Tuple of `lguard` and `rguard`.
+        ground: Boolean indicating whether or not the choice expression is ground.
+            The expression is considered ground if all guards and elements are ground.
+    """  # noqa
 
     def __init__(
         self,
         elements: Tuple[ChoiceElement],
         guards: Optional[Union["Guard", Tuple["Guard", ...]]] = None,
     ):
+        """Initializes the choice expression instance.
+
+        Args:
+            elements: Tuple of `ChoiceElement` instances representing the set of choice elements.
+            guards: Optional single `Guard` instance or tuple of (maximum two) `Guard` instances.
+                If two guards are specified, they are expected to represent opposite sides.
+                The order of the guards is irrelevant. Defaults to None.
+
+        Raises:
+            ValueError: Invalid number of guards or multiple guards for the same side.
+        """  # noqa
         # initialize left and right guard to 'None'
         self.lguard, self.rguard = None, None
 
@@ -176,6 +304,18 @@ class Choice(Expr):
         self.elements = elements
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the choice expression to a given object.
+
+        Considered equal if the given object is also a `Choice` instance with same
+        elements and guards.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the choice expression is considered equal
+            to the given object.
+        """
         return (
             isinstance(other, Choice)
             and set(self.elements) == set(other.elements)
@@ -186,6 +326,13 @@ class Choice(Expr):
         return hash(("choice", frozenset(self.elements), self.guards))
 
     def __str__(self) -> str:
+        """Returns the string representation for the choice expression.
+
+        Returns:
+            String representing the choice expression.
+            Contains the string representations of the elements, separated by semicolons,
+            Guard representations precede or succeed the string if specified.
+        """  # noqa
         elements_str = ";".join([str(literal) for literal in self.elements])
         lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
         rguard_str = f" {str(self.rguard)}" if self.rguard is not None else ""
@@ -214,45 +361,84 @@ class Choice(Expr):
         return (self.lguard, self.rguard)
 
     def invars(self) -> Set["Variable"]:
-        # TODO: correct ???
+        """Inner variables.
+
+        Returns:
+            Set of `Variable` instances that occurr inside any of the elements.
+        """
         return set().union(*tuple(element.vars() for element in self.elements))
 
     def outvars(self) -> Set["Variable"]:
-        # TODO: correct ???
+        """Outer variables.
+
+        Returns:
+            Set of `Variable` instances that occurr in any of the guards.
+        """
         return set().union(
             *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
         )
 
     def vars(self) -> Set["Variable"]:
+        """Returns the variables associated with the choice expressions.
+
+        Union of the sets of inner and outer variables.
+
+        Returns:
+            (Possibly empty) set of `Variable` instances.
+        """  # noqa
         return self.invars().union(self.outvars())
 
     def global_vars(self, statement: "Statement") -> Set["Variable"]:
-        # TODO: correct ?
+        """Returns the global variables associated with the choice expression.
+
+        For choice exressions the set of inner and outer variables that are global
+        in the body of the specified statement are considered global.
+
+        Args:
+            statement: Optional `Statement` instance the choice expression appears in.
+
+        Returns:
+            A (possibly empty) set of `Variable` instances.
+        """
         glob_body_vars = statement.body.global_vars()
 
         return self.outvars().union(self.invars().intersection(glob_body_vars))
-        # return self.head.vars().union(self.outvars())
-        # return self.vars().intersection(statement.global_vars())
-        # return set().union(
-        #    self.outvars(),
-        #    self.head.global_vars(statement),
-        #    self.body.global_vars(statement),
-        # )
 
     def pos_occ(self) -> Set["PredLiteral"]:
+        """Positive literal occurrences.
+
+        Returns:
+            Union of the sets of `Literal` instances that occur positively in the elements.
+        """  # noqa
         return set().union(*tuple(element.pos_occ() for element in self.elements))
 
     def neg_occ(self) -> Set["PredLiteral"]:
+        """Negative literal occurrences.
+
+        Returns:
+            Union of the sets of `Literal` instances that occur negatively in the elements.
+        """  # noqa
         return set().union(*tuple(element.neg_occ() for element in self.elements))
 
     @classmethod
     def eval(
-        cls, elements: Set["Literal"], guards: Tuple[Optional[Guard], Optional[Guard]]
+        cls, atoms: Set["PredLiteral"], guards: Tuple[Optional[Guard], Optional[Guard]]
     ) -> bool:
-        if not all(element.ground for element in elements):
+        """Evaluates a choice aggregate.
+
+        Args:
+            atoms: Set of `PredLiteral` instances.
+            guards: Tuple of optional left and right `Guard` instances.
+                The order is irrelevant.
+
+        Returns:
+            Boolean indicating whether or not the specified guards are satisfiable
+            for a choice expression with given atoms.
+        """  # noqa
+        if not all(atom.ground for atom in atoms):
             raise ValueError("Cannot evaluate non-ground choice expression.")
 
-        n_atoms = Number(len(elements))
+        n_atoms = Number(len(atoms))
 
         res = True
 
@@ -289,32 +475,23 @@ class Choice(Expr):
         literals_I: Set["Literal"],
         literals_J: Set["Literal"],
     ) -> bool:
+        """Choice propagation to approximate satisfiability.
 
-        # TODO: avoid creating objects???
-        # TODO
-        """
-        TODO:
-        AggrPlaceholder
-        ChoicePlaceholder
-        PropBaseLiteral
-        PropElemLiteral
+        Approximates whether or not the choice expression is satisfiable for
+        given guards, choice elements and domains of literals.
+        Note: this procedure is not exact, but only an approximation.
 
-        PropBaseRule
-        PropElemRule
-                ref_id
-                element: Union["AggrElement", "ChoiceElement"]
+        For details see Kaminski & Schaub (2022): "On the Foundations of Grounding in Answer Set Programming".
+        The implementation here is partly based on the aggregate propagation in
+        `mu-gringo`: https://github.com/potassco/mu-gringo.
 
-        to check if deterministic:
-        check if bound true and if != bound false
-        or bound false (deterministic as it is unsatisfiable)
-                -> important: do NOT count consequent literals as possible!
-                -> rewrite as constraint!
+        Args:
+            guards: Tuple of two optional `Guard` instances. The order is irrelevant.
+            elements: Set of `ChoiceElements` to be used.
+            literals_I: domain of literals (`I` in the paper).
+            literals_J: domain of literals (`J` in the paper).
+        """  # noqa
 
-        example:
-                1 >= 1 and not 1 != 1 (deterministic)
-                2 >= 1 and 2 != 1 (not deterministic)
-
-        """
         # cache holding intermediate results (to avoid recomputation)
         propagation_cache = dict()
         # elements that are satisfied by I and J, respectively (initialize to None)
@@ -398,12 +575,35 @@ class Choice(Expr):
 
         return res
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> SafetyTriplet:
+    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
+        """Returns the the safety characterizations for the choice expression.
+
+        Raises an exception, since safety characterization is undefined for choice expressions.
+        For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
+
+        Args:
+            statement: Optional `Statement` instance the term appears in.
+                Irrelevant for aggregate elements. Defaults to `None`.
+
+        Returns:
+            `SafetyTriplet` instance.
+
+        Raises:
+            ValueError: Safety characterization is undefined for choice expressions.
+        """  # noqa
         raise Exception("Safety characterization not defined for choice expressions.")
 
     def substitute(self, subst: "Substitution") -> "Choice":
+        """Applies a substitution to the choice expression.
+
+        Substitutes all guards and elements recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `Choice` instance with (possibly substituted) guards and elements.
+        """
         if self.ground:
             return deepcopy(self)
 
@@ -419,6 +619,16 @@ class Choice(Expr):
         return Choice(elements, guards)
 
     def replace_arith(self, var_table: "VariableTable") -> "Choice":
+        """Replaces arithmetic terms appearing in the choice expression with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `Choice` instance.
+        """  # noqa
         # replace guards
         guards = (
             None if guard is None else guard.replace_arith(var_table)
@@ -432,25 +642,57 @@ class Choice(Expr):
 
 
 class ChoiceRule(Statement):
-    """Choice rule.
+    r"""Choice rule.
 
-    Rule of form:
+    Statement of form:
+        :math:`t_1` :math:`\prec_1` {:math:`e_1`;:math:`\dots`;:math:`e_m`} :math:`\prec_2` :math:`t_2` :- :math:`b_1,\dots,b_n` or
+        :math:`t_1` :math:`\prec_1` {:math:`e_1`;:math:`\dots`;:math:`e_m`} :- :math:`b_1,\dots,b_n` or
+        {:math:`e_1`;:math:`\dots`;:math:`e_m`} :math:`\prec_2` :math:`t_2` :- :math:`b_1,\dots,b_n` or
+        {:math:`e_1`;:math:`\dots`;:math:`e_m`} :- :math:`b_1,\dots,b_n`.
 
-        u_1 R_1 { h_1 ; ... ; h_m } R_2 u_2 :- b_1,...,b_n .
+    where:
+        :math:`e_1,\dots,e_m` are choice elements with :math:`m\ge0`.
+            Each element is of form :math:`h_i`::math:`c_{i1},\dots,c_{ik_i}`
+            with atom :math:`h_i`, literals :math:`c_{i1},\dots,c_{ik_i}` (called condition),
+            :math:`i\in\{1,\dots,m\}` and :math:`k_i\ge0`.
+        :math:`b_1,\dots,b_n` are literals with :math:`n\ge0`.
+        :math:`t_1,t_2` are bound terms with corresponding relational operators :math:`\prec_1,\prec_2`.
 
-    for classical atoms h_1,...,h_m, literals b_1,...,b_n, terms u_1,u_2 and comparison operators R_1,R_2.
+    Semantically, any answer set that includes :math:`b_1,\dots,b_n` may include any bound-satisfying subset
+    of atoms :math:`h_i,i=1,...,m` whose corresponding elements are satisfied. An element is satisfied
+    if its condition :math:`c_{i1},\dots,c_{ik_i}` is part of the answer set.
+    If no bounds are specified, any subset is valid.
 
-    Semantically, any answer set that includes b_1,...,b_n may also include any subset of {h_1,...,h_m} (including the empty set).
+    Attributes:
+        choice: TODO
+        literals: TODO
+        head: TODO
+        body: TODO
+        var_table: `VariableTable` instance for the statement.
+        safe: Boolean indicating whether or not the statement is considered safe.
+        ground: Boolean indicating whether or not the statement is ground.
+        deterministic: Boolean indicating whether or not the consequent of the rule is
+            deterministic. Always `False` for choice rules.
+        contains_aggregates: Boolean indicating whether or not the statement contains
+            aggregate expressions.
     """  # noqa
 
     def __init__(
         self,
         head: Choice,
-        body: Optional[Union[LiteralCollection, Iterable["Literal"]]] = None,
+        body: Optional[Iterable["Literal"]] = None,
         *args,
         **kwargs,
     ) -> None:
+        """Initializes the choice rule instance.
+
+        Args:
+            head: `Choice` instance.
+            body: Optional iterable over `Literal` instances.
+                Defaults to None.
+        """
         super().__init__(*args, **kwargs)
+
         if body is None:
             body = tuple()
 
@@ -463,6 +705,17 @@ class ChoiceRule(Statement):
         )
 
     def __eq__(self, other: "Any") -> bool:
+        """Compares the statement to a given object.
+
+        Considered equal if the given object is also a `ChoiceRule` instance with same choice and
+        literals.
+
+        Args:
+            other: `Any` instance to be compared to.
+
+        Returns:
+            Boolean indicating whether or not the statement is considered equal to the given object.
+        """  # noqa
         return (
             isinstance(other, ChoiceRule)
             and self.head == other.head
@@ -473,26 +726,23 @@ class ChoiceRule(Statement):
         return hash(("choice rule", self.head, self.literals))
 
     def __str__(self) -> str:
+        """Returns the string representation for the statement.
+
+        Returns:
+            String representing the statement.
+        """
         return f"{str(self.head)}{f' :- {str(self.body)}' if self.body else ''}."
 
     @property
     def head(self) -> Choice:
-        # TODO: correct?
         return self.choice
 
     @property
     def body(self) -> LiteralCollection:
         return self.literals
 
-    def consequents(self) -> "LiteralCollection":
-        return self.choice.head
-
-    def antecedents(self) -> "LiteralCollection":
-        return LiteralCollection(*self.literals, *self.choice.body)
-
     @cached_property
     def safe(self) -> bool:
-
         outside_glob_vars = self.body.global_vars().union(self.choice.outvars())
 
         for element in self.choice:
@@ -509,16 +759,54 @@ class ChoiceRule(Statement):
     def ground(self) -> bool:
         return self.head.ground and self.body.ground
 
-    def safety(self, rule: Optional["Statement"] = None) -> "SafetyTriplet":
+    def consequents(self) -> "LiteralCollection":
+        """Returns the consequents of the statement.
+
+        Returns:
+            `LiteralCollection` instance.
+        """
+        return self.choice.head
+
+    def antecedents(self) -> "LiteralCollection":
+        """Returns the antecedents of the statement.
+
+        Returns:
+            `LiteralCollection` instance.
+        """
+        return LiteralCollection(*self.literals, *self.choice.body)
+
+    def safety(
+        self, statement: Optional[Union["Statement", "Query"]] = None
+    ) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice rules not supported yet.")
 
     def substitute(self, subst: "Substitution") -> "ChoiceRule":
+        """Applies a substitution to the statement.
+
+        Substitutes the choice and all literals recursively.
+
+        Args:
+            subst: `Substitution` instance.
+
+        Returns:
+            `ChoiceRule` instance with (possibly substituted) choice and literals.
+        """
         if self.ground:
             return deepcopy(self)
 
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))
 
     def replace_arith(self) -> "ChoiceRule":
+        """Replaces arithmetic terms appearing in the statement with arithmetic variables.
+
+        Note: arithmetic terms are not replaced in-place.
+
+        Args:
+            var_table: `VariableTable` instance.
+
+        Returns:
+            `ChoiceRule` instance.
+        """  # noqa
         return ChoiceRule(
             self.head.replace_arith(self.var_table),
             self.body.replace_arith(self.var_table),
@@ -537,6 +825,22 @@ class ChoiceRule(Statement):
             ],
         ],
     ) -> "ChoiceRule":
+        """Rewrites aggregates expressions inside the statement.
+
+        Args:
+            aggr_counter: Integer representing the current count of rewritten aggregates
+                in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer aggregate ids to tuples consisting of
+                the original `AggrLiteral` instance replaced, the `AggrPlaceholder`
+                instance replacing it in the original statement, an `AggrBaseRule`
+                instance and a set of `AggrElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `ChoiceRule` instance representing the rewritten original statement without
+            any aggregate expressions.
+        """
 
         # global variables
         glob_vars = self.global_vars()
@@ -585,6 +889,15 @@ class ChoiceRule(Statement):
     def assemble_aggregates(
         self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "ChoiceRule":
+        """Reassembles rewritten aggregates expressions inside the statement.
+
+        Args:
+            assembling_map: Dictionary mapping `AggrPlaceholder` instances to
+                `AggrLiteral` instances to be replaced with.
+
+        Returns:
+            `ChoiceRule` instance representing the reassembled original statement.
+        """
         return ChoiceRule(
             self.choice,
             *tuple(
@@ -606,6 +919,22 @@ class ChoiceRule(Statement):
             ],
         ],
     ) -> "NormalRule":
+        """Rewrites choice expressions inside the statement.
+
+        Args:
+            choice_counter: Integer representing the current count of rewritten choice
+                expressions in the Program. Used as unique ids for placeholder literals.
+            aggr_map: Dictionary mapping integer choice ids to tuples consisting of
+                the original `Choice` instance replaced, the `ChoicePlaceholder`
+                instance replacing it in the original statement, a `ChoiceBaseRule`
+                instance and a set of `ChoiceElemRule` instances representing rules for
+                propagation. Pre-existing content in the dictionary is irrelevant for
+                the method, the dictionary is simply updated in-place.
+
+        Returns:
+            `NormalRule` instance representing the rewritten original statement without
+            any choice expressions.
+        """
 
         # global variables
         glob_vars = self.global_vars()  # TODO: correct ???
@@ -621,6 +950,6 @@ class ChoiceRule(Statement):
         choice_map[choice_counter] = (self.choice, chi_literal, eps_rule, eta_rules)
 
         # replace original rule with modified one
-        chi_rule = NormalRule(chi_literal, *self.literals)
+        chi_rule = NormalRule(chi_literal, self.literals)
 
         return chi_rule

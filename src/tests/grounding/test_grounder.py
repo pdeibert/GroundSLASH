@@ -214,7 +214,11 @@ class TestGrounder(unittest.TestCase):
             Grounder.ground_statement,
             NormalRule(
                 PredLiteral("p", Variable("X")),
-                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)),
+                [
+                    AggrLiteral(
+                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)
+                    )
+                ],
             ),
         )
 
@@ -231,18 +235,17 @@ class TestGrounder(unittest.TestCase):
         # ground rule
         self.assertEqual(
             Grounder.ground_statement(
-                NormalRule(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+                NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))]),
                 possible={PredLiteral("q", Number(0))},
             ),
-            {NormalRule(PredLiteral("p", Number(1)), PredLiteral("q", Number(0)))},
+            {NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))])},
         )
         # non-ground rule
         self.assertEqual(
             Grounder.ground_statement(
                 NormalRule(
                     PredLiteral("p", Variable("X")),
-                    PredLiteral("q", Variable("X")),
-                    PredLiteral("q", Number(0)),
+                    [PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))],
                 ),
                 possible={
                     PredLiteral("q", Number(1)),
@@ -252,13 +255,17 @@ class TestGrounder(unittest.TestCase):
             {
                 NormalRule(
                     PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(0)),
-                    PredLiteral("q", Number(0)),
+                    [
+                        PredLiteral("q", Number(0)),
+                        PredLiteral("q", Number(0)),
+                    ],
                 ),
                 NormalRule(
                     PredLiteral("p", Number(1)),
-                    PredLiteral("q", Number(1)),
-                    PredLiteral("q", Number(0)),
+                    [
+                        PredLiteral("q", Number(1)),
+                        PredLiteral("q", Number(0)),
+                    ],
                 ),
             },
         )  # all literals have matches in 'possible'
@@ -266,8 +273,10 @@ class TestGrounder(unittest.TestCase):
             Grounder.ground_statement(
                 NormalRule(
                     PredLiteral("p", Variable("X")),
-                    PredLiteral("q", Variable("X")),
-                    PredLiteral("q", Number(0)),
+                    [
+                        PredLiteral("q", Variable("X")),
+                        PredLiteral("q", Number(0)),
+                    ],
                 ),
                 possible={PredLiteral("q", Number(1))},
             ),
@@ -323,7 +332,7 @@ class TestGrounder(unittest.TestCase):
             {
                 NormalRule(
                     PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(0)),
+                    [PredLiteral("q", Number(0))],
                 ),  # simplified to normal rule since head reduces to a single atom
                 DisjunctiveRule(
                     (PredLiteral("p", Number(0)), PredLiteral("p", Number(1))),
@@ -443,9 +452,11 @@ class TestGrounder(unittest.TestCase):
         rule = NormalRule(
             # due to safety, all variables in arithmetic terms occurr outside of it too
             PredLiteral("p", Number(0)),
-            PredLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
-            PredLiteral("q", Variable("X")),
-            PredLiteral("q", Variable("Y")),
+            [
+                PredLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
+                PredLiteral("q", Variable("X")),
+                PredLiteral("q", Variable("Y")),
+            ],
         )
         self.assertEqual(
             Grounder.ground_statement(
@@ -460,21 +471,27 @@ class TestGrounder(unittest.TestCase):
             {
                 NormalRule(
                     PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(5)),
-                    PredLiteral("q", Number(3)),
-                    PredLiteral("q", Number(2)),
+                    [
+                        PredLiteral("q", Number(5)),
+                        PredLiteral("q", Number(3)),
+                        PredLiteral("q", Number(2)),
+                    ],
                 ),
                 NormalRule(
                     PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(3)),
-                    PredLiteral("q", Number(2)),
-                    PredLiteral("q", Number(1)),
+                    [
+                        PredLiteral("q", Number(3)),
+                        PredLiteral("q", Number(2)),
+                        PredLiteral("q", Number(1)),
+                    ],
                 ),
                 NormalRule(
                     PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(2)),
-                    PredLiteral("q", Number(1)),
-                    PredLiteral("q", Number(1)),
+                    [
+                        PredLiteral("q", Number(2)),
+                        PredLiteral("q", Number(1)),
+                        PredLiteral("q", Number(1)),
+                    ],
                 ),
             },  # does not contain duplicate instantiations
         )

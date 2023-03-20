@@ -68,7 +68,7 @@ class Functional(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Functional)
@@ -108,7 +108,7 @@ class Functional(Term):
         """Returns the variables associated with the functional term.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the variables of all terms.
         """  # noqa
         return self.terms.vars()
 

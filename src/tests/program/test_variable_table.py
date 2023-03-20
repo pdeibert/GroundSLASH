@@ -16,10 +16,12 @@ class TestVariableTable(unittest.TestCase):
 
         statement = NormalRule(
             PredLiteral("p", Variable("X")),
-            Naf(PredLiteral("q", AnonVariable(0))),
-            PredLiteral("u", AnonVariable(1)),
-            PredLiteral("v", Variable("Y")),
-            PredLiteral("q", ArithVariable(0, Variable("Z"))),
+            [
+                Naf(PredLiteral("q", AnonVariable(0))),
+                PredLiteral("u", AnonVariable(1)),
+                PredLiteral("v", Variable("Y")),
+                PredLiteral("q", ArithVariable(0, Variable("Z"))),
+            ],
         )
 
         var_table = statement.var_table

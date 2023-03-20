@@ -78,7 +78,7 @@ class ArithTerm(Term, ABC):
         """Returns the variables associated with the arithmetic term.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all operands.
+            (Possibly empty) set of `Variable` instances as union of the variables of all operands.
         """  # noqa
         return set().union(*tuple(operand.vars() for operand in self.operands))
 
@@ -192,7 +192,7 @@ class Minus(ArithTerm):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, Minus) and self.operand == other.operand
 
@@ -295,7 +295,7 @@ class Add(ArithTerm):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Add)
@@ -413,7 +413,7 @@ class Sub(ArithTerm):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Sub)
@@ -532,7 +532,7 @@ class Mult(ArithTerm):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Mult)
@@ -669,7 +669,7 @@ class Div(ArithTerm):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Div)

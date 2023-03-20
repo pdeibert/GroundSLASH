@@ -180,34 +180,7 @@ class ProgramBuilder(ASPCoreVisitor):
             elif len(head) > 1:
                 statement = DisjunctiveRule(head, body)
             else:
-                statement = NormalRule(head[0], *body)
-            """
-            # head DOT | head CONS DOT (i.e., fact)
-            if n_children < 4:
-                if not isinstance(head, Choice):
-                    # disjunctive fact
-                    if len(head) > 1:
-                        statement = DisjunctiveFact(*head)
-                    # normal fact
-                    elif isinstance(head[0], PredLiteral):
-                        statement = NormalFact(head[0])
-                # choice fact
-                else:
-                    statement = ChoiceFact(head)
-            # head CONS body DOT (i.e., disjunctive rule)
-            else:
-                body = self.visitBody(ctx.children[2])
-
-                if not isinstance(head, Choice):
-                    # disjunctive rule
-                    if len(head) > 1:
-                        statement = DisjunctiveRule(head, body)
-                    # normal rule
-                    elif isinstance(head[0], PredLiteral):
-                        statement = NormalRule(head[0], *body)
-                else:
-                    statement = ChoiceRule(head, body)
-            """
+                statement = NormalRule(head[0], body)
         # optimize DOT
         else:
             statement = self.visitOptimize(ctx.children[0])

@@ -980,8 +980,7 @@ class TestChoice(unittest.TestCase):
                 TermTuple(Variable("X"), Variable("Y")),
                 TermTuple(Variable("X"), Variable("Y")),
             ),
-            PredLiteral("q", Variable("Y")),
-            Equal(Number(0), Variable("X")),
+            [PredLiteral("q", Variable("Y")), Equal(Number(0), Variable("X"))],
         )
         choice_map = dict()
 

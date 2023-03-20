@@ -52,7 +52,7 @@ class Guard(NamedTuple):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Guard)
@@ -90,7 +90,7 @@ class Guard(NamedTuple):
         """Returns the variables associated with the guard.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as the variables of the bound.
+            (Possibly empty) set of `Variable` instances as the variables of the bound.
         """  # noqa
         return self.bound.vars()
 
@@ -102,7 +102,7 @@ class Guard(NamedTuple):
                 Usually irrelevant for literals. Defaults to `None`.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as the global variables of the bound.
+            (Possibly empty) set of `Variable` instances as the global variables of the bound.
         """  # noqa
         return self.bound.global_vars(statement)
 

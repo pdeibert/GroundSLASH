@@ -30,7 +30,7 @@ class Term(Expr, ABC):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         pass
 
@@ -52,7 +52,7 @@ class Term(Expr, ABC):
         """Returns the variables associated with the term.
 
         Returns:
-            Empty set of 'Variable' instances.
+            Empty set of `Variable` instances.
         """
         return set()
 
@@ -152,7 +152,7 @@ class Infimum(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, Infimum)
 
@@ -200,7 +200,7 @@ class Supremum(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, Supremum)
 
@@ -265,7 +265,7 @@ class Variable(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, Variable) and other.val == self.val
 
@@ -383,7 +383,7 @@ class AnonVariable(Variable):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, AnonVariable)
@@ -500,7 +500,7 @@ class Number(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, Number) and other.val == self.val
 
@@ -601,7 +601,7 @@ class SymbolicConstant(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
@@ -675,7 +675,7 @@ class String(Term):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term is considered equal to the given object..
+            Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return isinstance(other, String) and other.val == self.val
 
@@ -742,7 +742,7 @@ class TermTuple:
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the term tuple is considered equal to the given object..
+            Boolean indicating whether or not the term tuple is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, TermTuple)
@@ -782,7 +782,7 @@ class TermTuple:
         """Returns the variables associated with the term tuple.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the variables of all terms.
         """  # noqa
         return set().union(*tuple(term.vars() for term in self.terms))
 
@@ -794,7 +794,7 @@ class TermTuple:
                 Usually irrelevant for terms. Defaults to `None`.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the (global) variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the (global) variables of all terms.
         """  # noqa
         return self.vars()
 

@@ -90,7 +90,7 @@ class ChoicePropagator:
         return possible_chi_literals
 
     def assemble(
-        self, rules: Set["Statement"], satisfiable: Set[ChoicePlaceholder]
+        self, statements: Set["Statement"], satisfiable: Set[ChoicePlaceholder]
     ) -> Set["Statement"]:
 
         # map ground chi literals to corresponding
@@ -105,4 +105,6 @@ class ChoicePropagator:
         }
 
         # return assembled rules
-        return set(rule.assemble_choices(assembling_map) for rule in rules)
+        return set(
+            statement.assemble_choices(assembling_map) for statement in statements
+        )

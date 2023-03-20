@@ -67,7 +67,7 @@ class PredLiteral(Literal):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, PredLiteral)
@@ -158,7 +158,7 @@ class PredLiteral(Literal):
         """Returns the variables associated with the predicate literal.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all terms.
+            (Possibly empty) set of `Variable` instances as union of the variables of all terms.
         """  # noqa
         return set().union(self.terms.vars())
 

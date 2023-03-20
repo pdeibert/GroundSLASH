@@ -117,7 +117,7 @@ class LiteralCollection:
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal collection is considered equal to the given object..
+            Boolean indicating whether or not the literal collection is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, LiteralCollection)
@@ -161,7 +161,7 @@ class LiteralCollection:
         """Returns the variables associated with the literal collection.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all literals.
+            (Possibly empty) set of `Variable` instances as union of the variables of all literals.
         """  # noqa
         return set().union(*tuple(literal.vars() for literal in self.literals))
 
@@ -169,7 +169,7 @@ class LiteralCollection:
         """Returns the global variables associated with the literal collection.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the global variables of all literals.
+            (Possibly empty) set of `Variable` instances as union of the global variables of all literals.
         """  # noqa
         return set().union(
             *tuple(literal.global_vars(statement) for literal in self.literals)

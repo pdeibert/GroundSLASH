@@ -81,7 +81,7 @@ class PropPlaceholder(AuxLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, type(self))
@@ -264,7 +264,7 @@ class PropBaseLiteral(AuxLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, type(self))
@@ -452,7 +452,7 @@ class PropElemLiteral(AuxLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, type(self))

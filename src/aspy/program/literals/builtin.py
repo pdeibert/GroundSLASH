@@ -68,7 +68,7 @@ class BuiltinLiteral(Literal, ABC):
         """Returns the variables associated with the built-in literal.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of both operands.
+            (Possibly empty) set of `Variable` instances as union of the variables of both operands.
         """  # noqa
         return self.loperand.vars().union(self.roperand.vars())
 
@@ -164,7 +164,7 @@ class Equal(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Equal)
@@ -280,7 +280,7 @@ class Unequal(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Unequal)
@@ -365,7 +365,7 @@ class Less(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Less)
@@ -450,7 +450,7 @@ class Greater(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, Greater)
@@ -535,7 +535,7 @@ class LessEqual(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, LessEqual)
@@ -620,7 +620,7 @@ class GreaterEqual(BuiltinLiteral):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, GreaterEqual)

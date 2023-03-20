@@ -77,7 +77,7 @@ class AggrElement(Expr):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the element is considered equal to the given object..
+            Boolean indicating whether or not the element is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, AggrElement)
@@ -93,8 +93,8 @@ class AggrElement(Expr):
 
         Returns:
             String representing the aggregate element.
-            Represents literals and terms separated by commas, respectively and joined with a semicolon.
-            If the element has no literals, the semicolon is omitted.
+            Represents literals and terms separated by commas, respectively and joined with a colon.
+            If the element has no literals, the colon is omitted.
         """  # noqa
         return ",".join([str(term) for term in self.terms]) + (
             f":{','.join([str(literal) for literal in self.literals])}"
@@ -172,7 +172,7 @@ class AggrElement(Expr):
             literals: Set of `Literal` instances interpreted as valid.
 
         Returns:
-            Boolean indicating whether or not the elements condition is part of the specified set of literals.
+            Boolean indicating whether or not the element condition is part of the specified set of literals.
         """  # noqa
         # check if all condition literals are part of the specified set
         return all(literal in literals for literal in self.literals)
@@ -181,7 +181,7 @@ class AggrElement(Expr):
         """Returns the variables associated with the aggregate element.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the variables of all terms and literals.
+            (Possibly empty) set of `Variable` instances as union of the variables of all terms and literals.
         """  # noqa
         return self.head.vars().union(self.body.vars())
 
@@ -189,13 +189,11 @@ class AggrElement(Expr):
         """Returns the global variables associated with the aggregate element.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances as union of the global variables of all terms and literals.
+            (Possibly empty) set of `Variable` instances as union of the global variables of all terms and literals.
         """  # noqa
         return self.head.global_vars().union(self.body.global_vars())
 
-    def safety(
-        self, rule: Optional[Union["Statement", "Query"]] = None
-    ) -> SafetyTriplet:
+    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
         """Returns the the safety characterizations for the aggregate literal.
 
         Raises an exception, since safety characterization is undefined for aggregate elements
@@ -203,7 +201,7 @@ class AggrElement(Expr):
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
 
         Args:
-            statement: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` instance the term appears in.
                 Irrelevant for aggregate elements. Defaults to `None`.
 
         Returns:
@@ -342,7 +340,7 @@ class AggrCount(AggrFunc):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given object..
+            Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
         return isinstance(other, AggrCount)
 
@@ -485,7 +483,7 @@ class AggrSum(AggrFunc):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given object..
+            Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
         return isinstance(other, AggrSum)
 
@@ -722,7 +720,7 @@ class AggrMin(AggrFunc):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given object..
+            Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
         return isinstance(other, AggrMin)
 
@@ -908,7 +906,7 @@ class AggrMax(AggrFunc):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the function is considered equal to the given object..
+            Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
         return isinstance(other, AggrMax)
 
@@ -1139,6 +1137,7 @@ class AggrLiteral(Literal):
             The string then continuous with the string representation of the aggregate function,\
             followed by the string representations of the elements, separated by semicolons,
             and enclosed in curly braces.
+            Guard representations precede or succeed the string if specified.
         """  # noqa
         elements_str = ";".join([str(element) for element in self.elements])
         lguard_str = f"{str(self.lguard)} " if self.lguard is not None else ""
@@ -1158,7 +1157,7 @@ class AggrLiteral(Literal):
             other: `Any` instance to be compared to.
 
         Returns:
-            Boolean indicating whether or not the literal is considered equal to the given object..
+            Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
             isinstance(other, AggrLiteral)
@@ -1232,7 +1231,7 @@ class AggrLiteral(Literal):
         Union of the sets of inner and outer variables.
 
         Returns:
-            (Possibly empty) set of 'Variable' instances.
+            (Possibly empty) set of `Variable` instances.
         """  # noqa
         return self.invars().union(self.outvars())
 
@@ -1242,7 +1241,7 @@ class AggrLiteral(Literal):
         For aggregate literals the set of outer variables are considered global.
 
         Args:
-            statement: Optional `Statement` or `Query` instance the term appears in.
+            statement: Optional `Statement` instance the literal appears in.
                 Irrelevant for aggregate literals. Defaults to `None`.
 
         Returns:

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Union
 
 from .expression import Expr
 from .literals import LiteralCollection, PredLiteral
@@ -7,6 +7,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.terms import Term, Variable
 
     from .safety_characterization import SafetyTriplet
+    from .statements import Statement
 
 
 class Query(Expr):
@@ -42,7 +43,9 @@ class Query(Expr):
     def global_vars(self) -> Set["Variable"]:
         return self.atom.global_vars()
 
-    def safety(self, rule: Optional["Query"] = None) -> "SafetyTriplet":
+    def safety(
+        self, statement: Optional[Union["Statement", "Query"]] = None
+    ) -> "SafetyTriplet":
         return self.atom.safety(self)
 
     def substitute(self, subst: Dict[str, "Term"]) -> "Query":  # type: ignore
