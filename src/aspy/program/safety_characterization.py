@@ -38,6 +38,9 @@ class SafetyRule:
             and self.dependees == other.dependees
         )
 
+    def __str__(self) -> str:
+        return f"{str(self.depender)} <- {','.join(tuple(str(v) for v in self.dependees))}"
+
     def __hash__(self) -> int:
         return hash(("safety rule", self.depender, frozenset(self.dependees)))
 
@@ -100,62 +103,46 @@ class SafetyTriplet:
         """  # noqa
 
         # create copy of current safety characterization
-        safety = deepcopy(self)
+        safe = self.safe.copy()
+        unsafe = self.safe.copy()
+        rules = self.rules.copy()
 
-        for rule in safety.rules.copy():
-            # remove rules whose depender depends on itself
-            if rule.depender in rule.dependees:
-                safety.rules.remove(rule)
+        # remove rules whose depender depends on itself
+        rules = {rule for rule in self.rules if rule.depender not in rule.dependees}
 
-        last_safety = SafetyTriplet()
+        prev_safe = set()
+        prev_unsafe = set()
+        prev_rules = set()
 
         # until there is no more change
-        while safety != last_safety:
+        while rules != prev_rules or safe != prev_safe or unsafe != prev_unsafe:
 
-            last_safety = deepcopy(safety)
-            # list of rules to remove
-            remove = []
+            prev_safe = safe.copy()
+            prev_unsafe = unsafe.copy()
+            prev_rules = rules.copy()
 
-            for rule in safety.rules:
-                # remove rules whose depender depends on itself
-                if rule.depender in rule.dependees:
-                    # mark rule for removal
-                    remove.append(rule)
+            rules.clear()
 
-            for rule in remove:
-                safety.rules.remove(rule)
-            remove.clear()
+            for rule in prev_rules:
+                if not (rule.depender in rule.dependees or rule.depender in safe):
 
-            for rule in safety.rules:
-                # if depender is safe
-                if rule.depender in safety.safe:
-                    # mark rule for removal
-                    remove.append(rule)
-                # if depender is unsafe
-                else:
-                    # remove safe variables from dependees
-                    rule.dependees = rule.dependees - safety.safe
+                    # remove safe variables from dependees and check if it becomes empty
+                    if not (updated_dependees := rule.dependees-safe):
+                        # drop rule and add depender to safe variables
+                        safe.add(rule.depender)
+                    else:
+                        # updated rule
+                        rules.add(SafetyRule(rule.depender, updated_dependees))
 
-                    # if set of dependees empty
-                    if not rule.dependees:
-                        # add depender to safe variables
-                        safety.safe.add(rule.depender)
-                        # mark rule for removal
-                        remove.append(rule)
-
-            for rule in remove:
-                safety.rules.remove(rule)
-            remove.clear()
-
-        for rule in safety.rules:
+        for rule in rules:
             # mark rule variables as unsafe
-            safety.unsafe.add(rule.depender)
-            safety.unsafe.update(rule.dependees)
+            unsafe.add(rule.depender)
+            unsafe.update(rule.dependees)
 
         # remove safe variables from set of unsafe ones
-        safety.unsafe = safety.unsafe - safety.safe
+        unsafe = unsafe - safe
 
-        return safety
+        return SafetyTriplet(safe, unsafe, rules)
 
     @classmethod
     def closure(cls, *safeties: "SafetyTriplet") -> "SafetyTriplet":
