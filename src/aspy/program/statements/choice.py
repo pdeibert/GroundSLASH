@@ -953,3 +953,7 @@ class ChoiceRule(Statement):
         chi_rule = NormalRule(chi_literal, self.literals)
 
         return chi_rule
+
+    @property
+    def is_fact(self) -> bool:
+        raise Exception()

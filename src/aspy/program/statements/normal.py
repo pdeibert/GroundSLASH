@@ -275,3 +275,7 @@ class NormalRule(Statement):
 
         # non-choice rule (nothing to be done here)
         return deepcopy(self)
+
+    @cached_property
+    def is_fact(self) -> bool:
+        return not bool(len(self.body))

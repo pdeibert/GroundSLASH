@@ -15,6 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.terms import Variable
+    from aspy.program.literals import PredLiteral
 
     from .choice import Choice
     from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule
@@ -255,3 +256,15 @@ class Statement(Expr, ABC):
             `LiteralCollection` instance.
         """
         return self.body
+
+    def pos_occ(self) -> Set["PredLiteral"]:
+        """TODO"""
+        return self.head.pos_occ().union(self.body.pos_occ())
+
+    def neg_occ(self) -> Set["PredLiteral"]:
+        """TODO"""
+        return self.head.neg_occ().union(self.body.neg_occ())
+
+    @property
+    def is_fact(self) -> bool:
+        return False

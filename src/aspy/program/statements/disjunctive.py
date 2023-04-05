@@ -274,3 +274,7 @@ class DisjunctiveRule(Statement):
             self.head.replace_arith(self.var_table),
             self.body.replace_arith(self.var_table),
         )
+
+    @cached_property
+    def is_fact(self) -> bool:
+        return not bool(len(self.body))
