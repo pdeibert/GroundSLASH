@@ -137,6 +137,26 @@ class LiteralCollection:
     def __getitem__(self, index: int) -> "Literal":
         return self.literals[index]
 
+    def __lt__(self, other: "LiteralCollection") -> bool:
+        return isinstance(other, LiteralCollection) and set(self.literals) < set(
+            other.literals
+        )
+
+    def __gt__(self, other: "LiteralCollection") -> bool:
+        return isinstance(other, LiteralCollection) and set(self.literals) > set(
+            other.literals
+        )
+
+    def __le__(self, other: "LiteralCollection") -> bool:
+        return isinstance(other, LiteralCollection) and set(self.literals) <= set(
+            other.literals
+        )
+
+    def __ge__(self, other: "LiteralCollection") -> bool:
+        return isinstance(other, LiteralCollection) and set(self.literals) >= set(
+            other.literals
+        )
+
     @cached_property
     def ground(self) -> bool:
         return all(literal.ground for literal in self.literals)
@@ -279,9 +299,3 @@ class LiteralCollection:
         return LiteralCollection(
             *tuple(literal.replace_arith(var_table) for literal in self.literals)
         )
-
-    def issuperset(self, other: "LiteralCollection") -> bool:
-        return set(self.literals).issuperset(set(other.literals))
-
-    def issubset(self, other: "LiteralCollection") -> bool:
-        return set(self.literals).issubset(set(other.literals))
