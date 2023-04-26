@@ -279,3 +279,9 @@ class LiteralCollection:
         return LiteralCollection(
             *tuple(literal.replace_arith(var_table) for literal in self.literals)
         )
+
+    def issuperset(self, other: "LiteralCollection") -> bool:
+        return set(self.literals).issuperset(set(other.literals))
+
+    def issubset(self, other: "LiteralCollection") -> bool:
+        return set(self.literals).issubset(set(other.literals))
