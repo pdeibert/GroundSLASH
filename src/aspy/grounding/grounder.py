@@ -33,6 +33,8 @@ class Grounder:
             # initialize with empty/identity substitution
             subst = Substitution()
 
+        # TODO: apply subst?
+
         # find appropriate literal
         for literal in literals:
             if isinstance(literal, AggrLiteral):
@@ -47,7 +49,7 @@ class Grounder:
                 return literal
 
         raise ValueError(
-            "Tuple of literals does not contain any appropriate literals for 'select'."
+            f"Tuple of literals {tuple(str(literal.substitute(subst)) for literal in literals)} does not contain any appropriate literals for 'select'."
         )
 
     @classmethod
@@ -439,6 +441,12 @@ class Grounder:
                     for literal in statement.consequents():
                         # increment counter for literal predicate signature
                         pred_counter[literal.pred()] -= 1
+
+        # keep track of possible and certain atoms & rules
+        self.certain_literals = certain_literals
+        self.possible_literals = possible_literals
+        self.certain_instances = certain_inst
+        self.possible_instances = possible_inst
 
         # return possible instances (includes certain instances)
         return Program(tuple(possible_inst))
