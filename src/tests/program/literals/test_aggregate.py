@@ -90,8 +90,12 @@ class TestAggregate(unittest.TestCase):
         # ground
         self.assertFalse(element.ground)
         # positive/negative literal occurrences
-        self.assertEqual(element.pos_occ(), {PredLiteral("p", String("str"))})
-        self.assertEqual(element.neg_occ(), {PredLiteral("q", Variable("Y"))})
+        self.assertEqual(
+            element.pos_occ(), LiteralCollection(PredLiteral("p", String("str")))
+        )
+        self.assertEqual(
+            element.neg_occ(), LiteralCollection(PredLiteral("q", Variable("Y")))
+        )
         # weight
         self.assertEqual(element.weight, 5)
         self.assertEqual(AggrElement(TermTuple(Variable("X"), Number(5))).weight, 0)
@@ -838,10 +842,12 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(var_literal.vars(), {Variable("X"), Variable("Y")})
         self.assertEqual(var_literal.global_vars(), {Variable("Y")})
         # positive/negative literal occurrences
-        self.assertEqual(var_literal.pos_occ(), {PredLiteral("p", Variable("X"))})
+        self.assertEqual(
+            var_literal.pos_occ(), LiteralCollection(PredLiteral("p", Variable("X")))
+        )
         self.assertEqual(
             var_literal.neg_occ(),
-            {PredLiteral("p", String("str")), PredLiteral("q")},
+            LiteralCollection(PredLiteral("p", String("str")), PredLiteral("q")),
         )
 
         # safety characterization

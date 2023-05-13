@@ -12,7 +12,6 @@ if TYPE_CHECKING:  # pragma: no cover
         AggrPlaceholder,
         ChoicePlaceholder,
         LiteralCollection,
-        PredLiteral,
     )
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.terms import Variable
@@ -257,13 +256,13 @@ class Statement(Expr, ABC):
         """
         return self.body
 
-    def pos_occ(self) -> Set["PredLiteral"]:
+    def pos_occ(self) -> "LiteralCollection":
         """TODO"""
-        return self.head.pos_occ().union(self.body.pos_occ())
+        return self.head.pos_occ() + self.body.pos_occ()
 
-    def neg_occ(self) -> Set["PredLiteral"]:
+    def neg_occ(self) -> "LiteralCollection":
         """TODO"""
-        return self.head.neg_occ().union(self.body.neg_occ())
+        return self.head.neg_occ() + self.body.neg_occ()
 
     @property
     def is_fact(self) -> bool:

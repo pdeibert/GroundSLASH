@@ -102,9 +102,13 @@ class TestChoice(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             element.pos_occ(),
-            {PredLiteral("p", String("str")), PredLiteral("p", Number(0))},
+            LiteralCollection(
+                PredLiteral("p", String("str")), PredLiteral("p", Number(0))
+            ),
         )
-        self.assertEqual(element.neg_occ(), {PredLiteral("q", Variable("Y"))})
+        self.assertEqual(
+            element.neg_occ(), LiteralCollection(PredLiteral("q", Variable("Y")))
+        )
         # vars
         self.assertTrue(element.vars() == element.global_vars() == {Variable("Y")})
         # safety
@@ -286,15 +290,15 @@ class TestChoice(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             var_choice.pos_occ(),
-            {
+            LiteralCollection(
                 PredLiteral("p", Number(5)),
                 PredLiteral("p", Number(-3)),
                 PredLiteral("p", Variable("X")),
-            },
+            ),
         )
         self.assertEqual(
             var_choice.neg_occ(),
-            {PredLiteral("p", String("str")), PredLiteral("q")},
+            LiteralCollection(PredLiteral("p", String("str")), PredLiteral("q")),
         )
         # evaluation
         self.assertTrue(

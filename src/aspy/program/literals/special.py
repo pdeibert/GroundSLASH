@@ -1,8 +1,8 @@
 from abc import ABC
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Set
+from typing import TYPE_CHECKING, Any
 
-from aspy.program.literals import PredLiteral
+from aspy.program.literals import LiteralCollection, PredLiteral
 from aspy.program.substitution import Substitution
 from aspy.program.symbols import SpecialChar
 from aspy.program.terms import TermTuple
@@ -114,7 +114,7 @@ class PropPlaceholder(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["PropPlaceholder"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -122,18 +122,18 @@ class PropPlaceholder(AuxLiteral):
             Else a singleton set with a copy is returned.
         """
         if self.naf:
-            return set()
+            return LiteralCollection()
 
-        return {
+        return LiteralCollection(
             type(self)(
                 prefix=self.prefix,
                 ref_id=self.ref_id,
                 glob_vars=self.glob_vars,
                 terms=self.terms,
             )
-        }
+        )
 
-    def neg_occ(self) -> Set["PropPlaceholder"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -141,17 +141,17 @@ class PropPlaceholder(AuxLiteral):
             Else a singleton set with a non-default-negated copy is returned.
         """
         if not self.naf:
-            return set()
+            return LiteralCollection()
 
         # NOTE: naf flag gets dropped
-        return {
+        return LiteralCollection(
             type(self)(
                 prefix=self.prefix,
                 ref_id=self.ref_id,
                 glob_vars=self.glob_vars,
                 terms=self.terms,
             )
-        }
+        )
 
     def substitute(self, subst: "Substitution") -> "PropPlaceholder":
         """Applies a substitution to the literal.
@@ -309,28 +309,28 @@ class PropBaseLiteral(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["PropBaseLiteral"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Singleton set with a copy (literal is always positive).
         """
-        return {
+        return LiteralCollection(
             type(self)(
                 prefix=self.prefix,
                 ref_id=self.ref_id,
                 glob_vars=self.glob_vars,
                 terms=self.terms,
             )
-        }
+        )
 
-    def neg_occ(self) -> Set["PropBaseLiteral"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Empty set (literal is never default-negated).
         """
-        return set()
+        return LiteralCollection()
 
     def substitute(self, subst: "Substitution") -> "PropBaseLiteral":
         """Applies a substitution to the literal.
@@ -507,13 +507,13 @@ class PropElemLiteral(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> Set["PropElemLiteral"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Singleton set with a copy (literal is always positive).
         """
-        return {
+        return LiteralCollection(
             type(self)(
                 prefix=self.prefix,
                 ref_id=self.ref_id,
@@ -522,15 +522,15 @@ class PropElemLiteral(AuxLiteral):
                 glob_vars=self.glob_vars,
                 terms=self.terms,
             )
-        }
+        )
 
-    def neg_occ(self) -> Set["PropElemLiteral"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Empty set (literal is never default-negated).
         """
-        return set()
+        return LiteralCollection()
 
     def substitute(self, subst: "Substitution") -> "PropElemLiteral":
         """Applies a substitution to the literal.

@@ -7,6 +7,7 @@ from aspy.program.literals import (
     GreaterEqual,
     Less,
     LessEqual,
+    LiteralCollection,
     PredLiteral,
     Unequal,
 )
@@ -40,7 +41,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literal occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # safety characterization
@@ -115,7 +118,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literal occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # safety characterization
@@ -195,7 +200,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literal occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # safety characterization
@@ -271,7 +278,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literal occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # safety characterization
@@ -353,7 +362,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literals occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # replace arithmetic terms
@@ -441,7 +452,9 @@ class TestBuiltin(unittest.TestCase):
             var_literal.vars() == var_literal.global_vars() == {Variable("X")}
         )
         # positive/negative literal occurrences
-        self.assertTrue(ground_literal.pos_occ() == ground_literal.neg_occ() == set())
+        self.assertTrue(
+            ground_literal.pos_occ() == ground_literal.neg_occ() == LiteralCollection()
+        )
         # operands
         self.assertEqual(ground_literal.operands, (Number(0), String("x")))
         # replace arithmetic variables

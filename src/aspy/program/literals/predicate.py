@@ -8,7 +8,7 @@ from aspy.program.substitution import Substitution
 from aspy.program.symbols import SYM_CONST_RE
 from aspy.program.terms import TermTuple
 
-from .literal import Literal
+from .literal import Literal, LiteralCollection
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
@@ -129,7 +129,7 @@ class PredLiteral(Literal):
         """
         return (self.name, self.arity)
 
-    def pos_occ(self) -> Set["Literal"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -137,11 +137,13 @@ class PredLiteral(Literal):
             Else a singleton set with a copy is returned.
         """
         if self.naf:
-            return set()
+            return LiteralCollection()
 
-        return {PredLiteral(self.name, *self.terms.terms, neg=self.neg)}
+        return LiteralCollection(
+            PredLiteral(self.name, *self.terms.terms, neg=self.neg)
+        )
 
-    def neg_occ(self) -> Set["Literal"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -149,10 +151,12 @@ class PredLiteral(Literal):
             Else a singleton set with a non-default-negated copy is returned.
         """
         if not self.naf:
-            return set()
+            return LiteralCollection()
 
         # NOTE: naf flag gets dropped
-        return {PredLiteral(self.name, *self.terms.terms, neg=self.neg)}
+        return LiteralCollection(
+            PredLiteral(self.name, *self.terms.terms, neg=self.neg)
+        )
 
     def vars(self) -> Set["Variable"]:
         """Returns the variables associated with the predicate literal.

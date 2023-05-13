@@ -8,7 +8,7 @@ from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithTerm, Number, TermTuple
 
-from .literal import Literal
+from .literal import Literal, LiteralCollection
 
 if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.expression import Expr
@@ -48,21 +48,21 @@ class BuiltinLiteral(Literal, ABC):
     def ground(self) -> bool:
         return self.loperand.ground and self.roperand.ground
 
-    def pos_occ(self) -> Set["Literal"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Empty set (built-in literals are considered neither positive nor negative).
         """
-        return set()
+        return LiteralCollection()
 
-    def neg_occ(self) -> Set["Literal"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Empty set (built-in literals are considered neither positive nor negative).
         """
-        return set()
+        return LiteralCollection()
 
     def vars(self) -> Set["Variable"]:
         """Returns the variables associated with the built-in literal.

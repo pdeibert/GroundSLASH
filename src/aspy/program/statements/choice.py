@@ -1,3 +1,4 @@
+import itertools
 from copy import deepcopy
 from functools import cached_property
 from itertools import chain, combinations
@@ -125,21 +126,21 @@ class ChoiceElement(Expr):
     def ground(self) -> bool:
         return self.atom.ground and self.literals.ground
 
-    def pos_occ(self) -> Set["PredLiteral"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Set of `Literal` instances that occur positively in the element.
         """
-        return self.atom.pos_occ().union(self.literals.pos_occ())
+        return self.atom.pos_occ() + self.literals.pos_occ()
 
-    def neg_occ(self) -> Set["PredLiteral"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Set of `Literal` instances that occur negatively in the element.
         """
-        return self.atom.neg_occ().union(self.literals.neg_occ())
+        return self.atom.neg_occ() + self.literals.neg_occ()
 
     def vars(self) -> Set["Variable"]:
         """Returns the variables associated with the element.
@@ -404,21 +405,25 @@ class Choice(Expr):
 
         return self.outvars().union(self.invars().intersection(glob_body_vars))
 
-    def pos_occ(self) -> Set["PredLiteral"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Union of the sets of `Literal` instances that occur positively in the elements.
         """  # noqa
-        return set().union(*tuple(element.pos_occ() for element in self.elements))
+        return LiteralCollection(
+            *itertools.chain(*tuple(element.pos_occ() for element in self.elements))
+        )
 
-    def neg_occ(self) -> Set["PredLiteral"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Union of the sets of `Literal` instances that occur negatively in the elements.
         """  # noqa
-        return set().union(*tuple(element.neg_occ() for element in self.elements))
+        return LiteralCollection(
+            *itertools.chain(*tuple(element.neg_occ() for element in self.elements))
+        )
 
     @classmethod
     def eval(

@@ -1,3 +1,4 @@
+import itertools
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
@@ -30,7 +31,7 @@ class Literal(Expr, ABC):
     naf: bool = False
 
     @abstractmethod  # pragma: no cover
-    def pos_occ(self) -> Set["Literal"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -39,7 +40,7 @@ class Literal(Expr, ABC):
         pass
 
     @abstractmethod  # pragma: no cover
-    def neg_occ(self) -> Set["Literal"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -87,13 +88,8 @@ class LiteralCollection:
             *literals: Sequence of `Literal` instances.
         """
 
-        # initialize while removing duplicates
-        literal_set = set()
-        self.literals = tuple(
-            literal
-            for literal in literals
-            if not (literal in literal_set or literal_set.add(literal))
-        )
+        # initialize while removing duplicates and preserving order
+        self.literals = tuple(dict.fromkeys(literals))
 
     def __str__(self) -> str:
         """Returns the string representation for the literal collection.
@@ -137,45 +133,61 @@ class LiteralCollection:
     def __getitem__(self, index: int) -> "Literal":
         return self.literals[index]
 
-    def __lt__(self, other: "LiteralCollection") -> bool:
-        return isinstance(other, LiteralCollection) and set(self.literals) < set(
-            other.literals
-        )
+    def __lt__(self, other: Union["LiteralCollection", Set["Literal"]]) -> bool:
+        if isinstance(other, set):
+            return set(self.literals) < other
+        elif isinstance(other, LiteralCollection):
+            return set(self.literals) < set(other.literals)
 
-    def __gt__(self, other: "LiteralCollection") -> bool:
-        return isinstance(other, LiteralCollection) and set(self.literals) > set(
-            other.literals
-        )
+        return False
 
-    def __le__(self, other: "LiteralCollection") -> bool:
-        return isinstance(other, LiteralCollection) and set(self.literals) <= set(
-            other.literals
-        )
+    def __gt__(self, other: Union["LiteralCollection", Set["Literal"]]) -> bool:
+        if isinstance(other, set):
+            return set(self.literals) > other
+        elif isinstance(other, LiteralCollection):
+            return set(self.literals) > set(other.literals)
 
-    def __ge__(self, other: "LiteralCollection") -> bool:
-        return isinstance(other, LiteralCollection) and set(self.literals) >= set(
-            other.literals
-        )
+        return False
+
+    def __le__(self, other: Union["LiteralCollection", Set["Literal"]]) -> bool:
+        if isinstance(other, set):
+            return set(self.literals) <= other
+        elif isinstance(other, LiteralCollection):
+            return set(self.literals) <= set(other.literals)
+
+        return False
+
+    def __ge__(self, other: Union["LiteralCollection", Set["Literal"]]) -> bool:
+        if isinstance(other, set):
+            return set(self.literals) >= other
+        elif isinstance(other, LiteralCollection):
+            return set(self.literals) >= set(other.literals)
+
+        return False
 
     @cached_property
     def ground(self) -> bool:
         return all(literal.ground for literal in self.literals)
 
-    def pos_occ(self) -> Set["Literal"]:
+    def pos_occ(self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
             Union of the sets of `Literal` instances that occur positively in the literals.
         """  # noqa
-        return set().union(*tuple(literal.pos_occ() for literal in self.literals))
+        return LiteralCollection(
+            *itertools.chain(*tuple(literal.pos_occ() for literal in self.literals))
+        )
 
-    def neg_occ(self) -> Set["Literal"]:
+    def neg_occ(self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
             Union of the sets of `Literal` instances that occur negatively in the literals.
         """  # noqa
-        return set().union(*tuple(literal.neg_occ() for literal in self.literals))
+        return LiteralCollection(
+            *itertools.chain(*tuple(literal.neg_occ() for literal in self.literals))
+        )
 
     def vars(self) -> Set["Variable"]:
         """Returns the variables associated with the literal collection.

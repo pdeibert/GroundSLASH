@@ -1,3 +1,4 @@
+import itertools
 from abc import ABC, abstractmethod
 from functools import cached_property, reduce
 from itertools import chain, combinations
@@ -17,8 +18,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from aspy.program.substitution import Substitution
     from aspy.program.terms import Term, Variable
     from aspy.program.variable_table import VariableTable
-
-    from .predicate import PredLiteral
 
 
 def powerset(element_iterable: Iterable[Any]) -> Iterator[Tuple[Any, ...]]:
@@ -116,7 +115,7 @@ class AggrElement(Expr):
             literal.ground for literal in self.literals
         )
 
-    def pos_occ(self) -> Set["PredLiteral"]:
+    def pos_occ(self) -> LiteralCollection():
         """Positive literal occurrences.
 
         Returns:
@@ -124,7 +123,7 @@ class AggrElement(Expr):
         """  # noqa
         return self.literals.pos_occ()
 
-    def neg_occ(self) -> Set["PredLiteral"]:
+    def neg_occ(self) -> LiteralCollection():
         """Negative literal occurrences.
 
         Returns:
@@ -1185,23 +1184,27 @@ class AggrLiteral(Literal):
         """
         self.naf = value
 
-    def pos_occ(self) -> Set["PredLiteral"]:
+    def pos_occ(self) -> LiteralCollection():
         """Positive literal occurrences.
 
         Returns:
             Set of `Literal` instances as the union of all positive
             literal occurrences in its elements.
         """
-        return set().union(*tuple(element.pos_occ() for element in self.elements))
+        return LiteralCollection(
+            *itertools.chain(*tuple(element.pos_occ() for element in self.elements))
+        )
 
-    def neg_occ(self) -> Set["PredLiteral"]:
+    def neg_occ(self) -> LiteralCollection():
         """Negative literal occurrences.
 
         Returns:
             Set of `Literal` instances as the union of all negative
             literal occurrences in its elements.
         """
-        return set().union(*tuple(element.neg_occ() for element in self.elements))
+        return LiteralCollection(
+            *itertools.chain(*tuple(element.neg_occ() for element in self.elements))
+        )
 
     @property
     def guards(self) -> Tuple[Optional[Guard], Optional[Guard]]:

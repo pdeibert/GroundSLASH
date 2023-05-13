@@ -8,6 +8,7 @@ from aspy.program.literals import (
     ChoiceBaseLiteral,
     ChoiceElemLiteral,
     ChoicePlaceholder,
+    LiteralCollection,
     Naf,
 )
 from aspy.program.safety_characterization import SafetyTriplet
@@ -57,13 +58,17 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))},
+            LiteralCollection(
+                AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
-        self.assertEqual(naf_literal.pos_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
+        self.assertEqual(naf_literal.pos_occ(), LiteralCollection())
         self.assertEqual(
             naf_literal.neg_occ(),
-            {AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))},
+            LiteralCollection(
+                AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
+            ),
         )
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
@@ -144,9 +149,11 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
+            LiteralCollection(
+                AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
@@ -251,7 +258,7 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {
+            LiteralCollection(
                 AggrElemLiteral(
                     1,
                     3,
@@ -259,9 +266,9 @@ class TestSpecial(unittest.TestCase):
                     global_vars,
                     TermTuple(Variable("L"), Number(1), Variable("Y")),
                 )
-            },
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
         # safety characterization
         self.assertEqual(
             literal.safety(), SafetyTriplet({Variable("L"), Variable("Y")})
@@ -370,9 +377,11 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {ChoicePlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))},
+            LiteralCollection(
+                ChoicePlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
 
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
@@ -450,9 +459,11 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {ChoiceBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))},
+            LiteralCollection(
+                ChoiceBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet({Variable("Y")}))
 
@@ -557,7 +568,7 @@ class TestSpecial(unittest.TestCase):
         # positive/negative literal occurrences
         self.assertEqual(
             literal.pos_occ(),
-            {
+            LiteralCollection(
                 ChoiceElemLiteral(
                     1,
                     3,
@@ -565,9 +576,9 @@ class TestSpecial(unittest.TestCase):
                     global_vars,
                     TermTuple(Variable("L"), Number(1), Variable("Y")),
                 )
-            },
+            ),
         )
-        self.assertEqual(literal.neg_occ(), set())
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
         # safety characterization
         self.assertEqual(
             literal.safety(), SafetyTriplet({Variable("L"), Variable("Y")})

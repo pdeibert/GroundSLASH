@@ -828,6 +828,7 @@ class ProgramBuilder(ASPCoreVisitor):
             elif token_type == "PAREN_OPEN":
                 return self.visitTerm(ctx.children[1])  # parse term
             else:
+                # TODO: ???
                 raise Exception(f"TODO: REMOVE RULE: TOKEN {token_type}.")
         # func_term
         elif isinstance(ctx.children[0], ASPCoreParser.Func_termContext):

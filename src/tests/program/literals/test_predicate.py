@@ -1,7 +1,7 @@
 import unittest
 
 import aspy
-from aspy.program.literals import Naf, Neg, PredLiteral
+from aspy.program.literals import LiteralCollection, Naf, Neg, PredLiteral
 from aspy.program.safety_characterization import SafetyTriplet
 from aspy.program.substitution import Substitution
 from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
@@ -63,11 +63,15 @@ class TestPredicate(unittest.TestCase):
             PredLiteral("p", Number(0), ArithVariable(0, Minus(Variable("X")))),
         )  # non-ground arithmetic term should be replaced
         # positive/negative literal occurrences
-        self.assertEqual(literal.pos_occ(), {PredLiteral("p", Number(0), String("x"))})
-        self.assertEqual(literal.neg_occ(), set())
-        self.assertEqual(naf_literal.pos_occ(), set())
         self.assertEqual(
-            naf_literal.neg_occ(), {PredLiteral("p", Number(0), String("x"))}
+            literal.pos_occ(),
+            LiteralCollection(PredLiteral("p", Number(0), String("x"))),
+        )
+        self.assertEqual(literal.neg_occ(), LiteralCollection())
+        self.assertEqual(naf_literal.pos_occ(), LiteralCollection())
+        self.assertEqual(
+            naf_literal.neg_occ(),
+            LiteralCollection(PredLiteral("p", Number(0), String("x"))),
         )
         # safety characterization
         self.assertEqual(literal.safety(), SafetyTriplet())

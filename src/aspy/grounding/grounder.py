@@ -168,9 +168,7 @@ class Grounder:
             # instantiate final (ground) statement
             ground_statement = statement.substitute(subst)
 
-            if not duplicate or not ground_statement.body.pos_occ().issubset(
-                prev_possible
-            ):
+            if not duplicate or not ground_statement.body.pos_occ() <= prev_possible:
                 return {ground_statement}
 
         # duplicate instantiation
