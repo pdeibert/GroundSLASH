@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Union
 
 from .aggregate import AggrLiteral
@@ -23,6 +24,9 @@ def Neg(
     if not isinstance(literal, PredLiteral):
         raise ValueError("Classical negation only applicable to predicate literals.")
 
-    literal.set_neg(value)
+    naf_literal = deepcopy(literal)
+    naf_literal.set_neg(value)
+
+    return naf_literal
 
     return literal

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Union
 
 from .aggregate import AggrLiteral
@@ -25,6 +26,7 @@ def Naf(
             "Negation as failure is only applicable to predicate and aggregate literals."  # noqa
         )
 
-    literal.set_naf(value)
+    naf_literal = deepcopy(literal)
+    naf_literal.set_naf(value)
 
-    return literal
+    return naf_literal
