@@ -954,6 +954,6 @@ class ChoiceRule(Statement):
 
         return chi_rule
 
-    @property
+    @cached_property
     def is_fact(self) -> bool:
-        raise Exception()
+        return bool(self.literals)
