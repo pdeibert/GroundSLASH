@@ -12,10 +12,10 @@ if TYPE_CHECKING:  # pragma: no cover
         AggrPlaceholder,
         ChoicePlaceholder,
         LiteralCollection,
+        PredLiteral,
     )
     from aspy.program.safety_characterization import SafetyTriplet
     from aspy.program.terms import Variable
-    from aspy.program.literals import PredLiteral
 
     from .choice import Choice
     from .special import AggrBaseRule, AggrElemRule, ChoiceBaseRule, ChoiceElemRule

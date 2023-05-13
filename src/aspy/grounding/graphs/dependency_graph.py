@@ -13,9 +13,6 @@ class DependencyGraph:
 
         for dependee in rules:
 
-            # TODO: use "consequents"
-            # TODO: use "antecedents"
-
             head_predicates = set(literal.pred() for literal in dependee.consequents())
 
             for depender in rules:

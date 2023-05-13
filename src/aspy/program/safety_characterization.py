@@ -39,7 +39,9 @@ class SafetyRule:
         )
 
     def __str__(self) -> str:
-        return f"{str(self.depender)} <- {','.join(tuple(str(v) for v in self.dependees))}"
+        return (
+            f"{str(self.depender)} <- {','.join(tuple(str(v) for v in self.dependees))}"
+        )
 
     def __hash__(self) -> int:
         return hash(("safety rule", self.depender, frozenset(self.dependees)))
@@ -127,7 +129,7 @@ class SafetyTriplet:
                 if not (rule.depender in rule.dependees or rule.depender in safe):
 
                     # remove safe variables from dependees and check if it becomes empty
-                    if not (updated_dependees := rule.dependees-safe):
+                    if not (updated_dependees := rule.dependees - safe):
                         # drop rule and add depender to safe variables
                         safe.add(rule.depender)
                     else:
