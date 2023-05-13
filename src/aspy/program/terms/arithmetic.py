@@ -163,7 +163,7 @@ class ArithTerm(Term, ABC):
         # substitute operands recursively
         operands = (operand.substitute(subst) for operand in self.operands)
 
-        return type(self)(*operands)
+        return type(self)(*operands).simplify()
 
 
 class Minus(ArithTerm):

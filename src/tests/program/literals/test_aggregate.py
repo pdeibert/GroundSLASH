@@ -127,7 +127,7 @@ class TestAggregate(unittest.TestCase):
                 Substitution({Variable("X"): Number(1), Number(5): String("f")})
             ),  # NOTE: substitution is invalid
             AggrElement(
-                TermTuple(Number(5), Minus(Number(1))),
+                TermTuple(Number(5), Number(-1)),
                 LiteralCollection(
                     PredLiteral("p", String("str")),
                     Naf(PredLiteral("q", Variable("Y"))),

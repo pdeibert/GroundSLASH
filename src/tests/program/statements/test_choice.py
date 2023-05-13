@@ -137,7 +137,7 @@ class TestChoice(unittest.TestCase):
                 PredLiteral("p", String("str")),
                 LiteralCollection(
                     PredLiteral("p", Number(0)),
-                    Naf(PredLiteral("q", Minus(Number(1)))),
+                    Naf(PredLiteral("q", Number(-1))),
                 ),
             ),
         )
