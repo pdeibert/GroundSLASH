@@ -60,11 +60,11 @@ class AggrElement(Expr):
         if terms is None:
             terms = TermTuple()
 
-        self.terms = terms if isinstance(terms, TermTuple) else TermTuple(terms)
+        self.terms = terms if isinstance(terms, TermTuple) else TermTuple(*terms)
         self.literals = (
             literals
             if isinstance(literals, LiteralCollection)
-            else LiteralCollection(literals)
+            else LiteralCollection(*literals)
         )
 
     def __eq__(self, other: "Any") -> bool:
