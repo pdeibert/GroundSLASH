@@ -47,7 +47,7 @@ class TestNaf(unittest.TestCase):
         )
 
         # builtin literal
-        self.assertRaises(ValueError, Naf, Equal(Number(0), Variable("Y")))
+        self.assertRaises(NotImplementedError, Naf, Equal(Number(0), Variable("Y")))
 
 
 if __name__ == "__main__":  # pragma: no cover

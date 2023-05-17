@@ -259,6 +259,14 @@ class AggrElement(Expr):
             self.literals.replace_arith(var_table),
         )
 
+    def set_naf(self, value: bool = True) -> None:
+        """Setter for the `naf` attribute.
+
+        Args:
+            value: Boolean value for the `naf` attribute. Defaults to `True`.
+        """
+        self.naf = value
+
 
 class AggrFunc(ABC):
     """Abstract base class for all aggregate functions.

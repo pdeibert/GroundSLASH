@@ -72,6 +72,36 @@ class Literal(Expr, ABC):
         """
         return self.vars()
 
+    def set_neg(self, value: bool = True) -> None:
+        """Setter for the `naf` attribute.
+
+        Raises an error if not overridden.
+
+        Args:
+            value: Boolean value for the `naf` attribute. Defaults to `True`.
+
+        Raises:
+            NotImplementedError: negation not defined as valid.
+        """
+        raise NotImplementedError(
+            f"Setting negation for literal of type {type(self)} not defined."
+        )
+
+    def set_naf(self, value: bool = True) -> None:
+        """Setter for the `naf` attribute.
+
+        Raises an error if not overridden.
+
+        Args:
+            value: Boolean value for the `naf` attribute. Defaults to `True`.
+
+        Raises:
+            NotImplementedError: negation-as-failure not defined as valid.
+        """
+        raise NotImplementedError(
+            f"Setting negation for literal of type {type(self)} not defined."
+        )
+
 
 class LiteralCollection:
     """Represents an order-preserving unordered collection of literals.

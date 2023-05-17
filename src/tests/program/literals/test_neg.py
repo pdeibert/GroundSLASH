@@ -25,13 +25,13 @@ class TestNaf(unittest.TestCase):
 
         # aggregate literal
         self.assertRaises(
-            ValueError,
+            NotImplementedError,
             Neg,
             AggrLiteral(AggrCount(), tuple(), Guard(RelOp.LESS, Number(3), False)),
         )
 
         # builtin literal
-        self.assertRaises(ValueError, Neg, Equal(Number(0), Variable("Y")))
+        self.assertRaises(NotImplementedError, Neg, Equal(Number(0), Variable("Y")))
 
 
 if __name__ == "__main__":  # pragma: no cover
