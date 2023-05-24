@@ -3,9 +3,9 @@ from typing import FrozenSet, Set, Tuple
 
 import clingo  # type: ignore
 
-import aspy
-from aspy.grounding import Grounder
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.grounding import Grounder
+from ground_slash.program.literals import (
     AggrCount,
     AggrLiteral,
     Equal,
@@ -15,17 +15,11 @@ from aspy.program.literals import (
     Neg,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.program import Program
-from aspy.program.statements import (
-    Constraint,
-    DisjunctiveRule,
-    NormalRule,
-    WeakConstraint,
-)
-from aspy.program.statements.weak_constraint import WeightAtLevel
-from aspy.program.substitution import Substitution
-from aspy.program.terms import Add, ArithVariable, Number, Variable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.program import Program
+from ground_slash.program.statements import Constraint, DisjunctiveRule, NormalRule
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import Add, ArithVariable, Number, Variable
 
 
 class TestGrounder(unittest.TestCase):
@@ -65,7 +59,7 @@ class TestGrounder(unittest.TestCase):
     def test_select(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         self.assertEqual(
             Grounder.select(
@@ -137,7 +131,7 @@ class TestGrounder(unittest.TestCase):
     def test_matches(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # ground positive predicate literal
         self.assertEqual(
@@ -200,7 +194,7 @@ class TestGrounder(unittest.TestCase):
     def test_ground_statement(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # unsafe statement
         self.assertRaises(
@@ -397,111 +391,12 @@ class TestGrounder(unittest.TestCase):
             set(),
         )  # not all literals have matches in 'possible'
 
-        # ----- weak constraints -----
-
-        # ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                WeakConstraint(
-                    (PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
-                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
-                ),
-                possible={PredLiteral("p", Number(1)), PredLiteral("q", Number(0))},
-            ),
-            {
-                WeakConstraint(
-                    (PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
-                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
-                ),
-            },
-        )
-        # non-ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                WeakConstraint(
-                    (PredLiteral("p", Variable("X")), PredLiteral("q", Number(0))),
-                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
-                ),
-                possible={
-                    PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(0)),
-                },
-            ),
-            {
-                WeakConstraint(
-                    (PredLiteral("p", Number(0)), PredLiteral("q", Number(0))),
-                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
-                ),
-            },
-        )  # all literals have matches in 'possible'
-        self.assertEqual(
-            Grounder.ground_statement(
-                WeakConstraint(
-                    (PredLiteral("p", Variable("X")), PredLiteral("q", Number(0))),
-                    WeightAtLevel(Number(1), Number(1), (Number(-1), Number(2))),
-                ),
-                possible={PredLiteral("q", Number(1))},
-            ),
-            set(),
-        )  # not all literals have matches in 'possible'
-
-        # ----- optimize statements -----
-        # TODO
-
-        # arithmetic terms
-        rule = NormalRule(
-            # due to safety, all variables in arithmetic terms occurr outside of it too
-            PredLiteral("p", Number(0)),
-            [
-                PredLiteral("q", ArithVariable(0, Add(Variable("X"), Variable("Y")))),
-                PredLiteral("q", Variable("X")),
-                PredLiteral("q", Variable("Y")),
-            ],
-        )
-        self.assertEqual(
-            Grounder.ground_statement(
-                rule,
-                possible={
-                    PredLiteral("q", Number(1)),
-                    PredLiteral("q", Number(3)),
-                    PredLiteral("q", Number(5)),
-                    PredLiteral("q", Number(2)),
-                },
-            ),
-            {
-                NormalRule(
-                    PredLiteral("p", Number(0)),
-                    [
-                        PredLiteral("q", Number(5)),
-                        PredLiteral("q", Number(3)),
-                        PredLiteral("q", Number(2)),
-                    ],
-                ),
-                NormalRule(
-                    PredLiteral("p", Number(0)),
-                    [
-                        PredLiteral("q", Number(3)),
-                        PredLiteral("q", Number(2)),
-                        PredLiteral("q", Number(1)),
-                    ],
-                ),
-                NormalRule(
-                    PredLiteral("p", Number(0)),
-                    [
-                        PredLiteral("q", Number(2)),
-                        PredLiteral("q", Number(1)),
-                        PredLiteral("q", Number(1)),
-                    ],
-                ),
-            },  # does not contain duplicate instantiations
-        )
-
         # TODO: aggregates
 
     def test_ground_unsafe(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # unsafe program
         prog_str = r"""
@@ -515,14 +410,14 @@ class TestGrounder(unittest.TestCase):
     def test_ground_component(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # TODO
 
     def test_example_1(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(X) :- not q(X), u(X).  u(1). u(2).
@@ -537,7 +432,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_2(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(1).
@@ -555,7 +450,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_3(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         d(1).
@@ -576,7 +471,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_4(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(1).
@@ -595,7 +490,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_5(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(a,1).
@@ -629,7 +524,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_6(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(a,1).
@@ -663,7 +558,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_7(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(0) | p(1).
@@ -676,7 +571,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_8(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         p(0). p(1).
@@ -690,7 +585,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_9(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         u(1).
@@ -710,7 +605,7 @@ class TestGrounder(unittest.TestCase):
     def test_example_10(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         u(1).
@@ -731,7 +626,7 @@ class TestGrounder(unittest.TestCase):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         road(berlin,potsdam).
@@ -754,7 +649,7 @@ class TestGrounder(unittest.TestCase):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog_str = r"""
         node(1). node(2). node(3). node(4). node(5). node(6).

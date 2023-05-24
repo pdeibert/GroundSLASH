@@ -1,16 +1,23 @@
 import unittest
 
-import aspy
-from aspy.program.literals import AggrCount, AggrLiteral, Equal, Guard, Naf, PredLiteral
-from aspy.program.operators import RelOp
-from aspy.program.terms import Number, Variable
+import ground_slash
+from ground_slash.program.literals import (
+    AggrCount,
+    AggrLiteral,
+    Equal,
+    Guard,
+    Naf,
+    PredLiteral,
+)
+from ground_slash.program.operators import RelOp
+from ground_slash.program.terms import Number, Variable
 
 
 class TestNaf(unittest.TestCase):
     def test_naf(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # predicate literal
         literal = PredLiteral("p", Number(0), Variable("Y"))

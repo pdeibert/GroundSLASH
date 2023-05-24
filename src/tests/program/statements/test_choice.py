@@ -1,8 +1,8 @@
 import unittest
 from typing import Set
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrCount,
     AggrLiteral,
     ChoiceBaseLiteral,
@@ -15,8 +15,8 @@ from aspy.program.literals import (
     Naf,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import (
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import (
     Choice,
     ChoiceBaseRule,
     ChoiceElement,
@@ -25,9 +25,16 @@ from aspy.program.statements import (
     Constraint,
     NormalRule,
 )
-from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
+    ArithVariable,
+    Minus,
+    Number,
+    String,
+    TermTuple,
+    Variable,
+)
+from ground_slash.program.variable_table import VariableTable
 
 
 class DummyBody:  # pragma: no cover
@@ -47,7 +54,7 @@ class TestChoice(unittest.TestCase):
     def test_choice_element(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         element = ChoiceElement(
             PredLiteral("p", String("str")),
@@ -151,7 +158,7 @@ class TestChoice(unittest.TestCase):
     def test_choice(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_elements = (
             ChoiceElement(
@@ -468,7 +475,7 @@ class TestChoice(unittest.TestCase):
     def test_choice_fact(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_elements = (
             ChoiceElement(
@@ -756,7 +763,7 @@ class TestChoice(unittest.TestCase):
     def test_choice_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_elements = (
             ChoiceElement(

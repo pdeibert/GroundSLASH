@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     Equal,
     Greater,
     GreaterEqual,
@@ -11,17 +11,17 @@ from aspy.program.literals import (
     PredLiteral,
     Unequal,
 )
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, Variable
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import ArithVariable, Minus, Number, String, Variable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestBuiltin(unittest.TestCase):
     def test_equal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = Equal(Number(0), String("x"))
         var_literal = Equal(Number(0), Variable("X"))
@@ -98,7 +98,7 @@ class TestBuiltin(unittest.TestCase):
     def test_unequal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = Unequal(Number(0), String("x"))
         var_literal = Unequal(Number(0), Variable("X"))
@@ -180,7 +180,7 @@ class TestBuiltin(unittest.TestCase):
     def test_less(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = Less(Number(0), String("x"))
         var_literal = Less(Number(0), Variable("X"))
@@ -258,7 +258,7 @@ class TestBuiltin(unittest.TestCase):
     def test_greater(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = Greater(Number(0), String("x"))
         var_literal = Greater(Number(0), Variable("X"))
@@ -342,7 +342,7 @@ class TestBuiltin(unittest.TestCase):
     def test_less_equal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = LessEqual(Number(0), String("x"))
         var_literal = LessEqual(Number(0), Variable("X"))
@@ -430,7 +430,7 @@ class TestBuiltin(unittest.TestCase):
     def test_greater_equal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_literal = GreaterEqual(Number(0), String("x"))
         var_literal = GreaterEqual(Number(0), Variable("X"))

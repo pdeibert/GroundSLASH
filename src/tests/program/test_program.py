@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrCount,
     AggrElement,
     AggrLiteral,
@@ -20,19 +20,17 @@ from aspy.program.literals import (
     PredLiteral,
     Unequal,
 )
-from aspy.program.operators import RelOp
-from aspy.program.program import Program
-from aspy.program.statements import (
+from ground_slash.program.operators import RelOp
+from ground_slash.program.program import Program
+from ground_slash.program.statements import (
     Choice,
     ChoiceElement,
     ChoiceRule,
     Constraint,
     DisjunctiveRule,
     NormalRule,
-    WeakConstraint,
 )
-from aspy.program.statements.weak_constraint import WeightAtLevel
-from aspy.program.terms import (
+from ground_slash.program.terms import (
     Add,
     AnonVariable,
     Div,
@@ -51,7 +49,7 @@ class TestProgram(unittest.TestCase):
     def test_program(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         prog = Program(
             (
@@ -471,18 +469,6 @@ class TestProgram(unittest.TestCase):
             Program.from_string(":- p, q.").statements[0],
             Constraint(PredLiteral("p"), PredLiteral("q")),
         )
-
-        # ----- weak constraint -----
-        self.assertEqual(
-            Program.from_string(":~ p,q. [0@X, Y,-1]").statements[0],
-            WeakConstraint(
-                (PredLiteral("p"), PredLiteral("q")),
-                WeightAtLevel(Number(0), Variable("X"), (Variable("Y"), Number(-1))),
-            ),
-        )
-
-        # ----- optimize statements -----
-        # TODO
 
 
 if __name__ == "__main__":  # pragma: no cover

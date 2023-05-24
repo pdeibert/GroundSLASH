@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrCount,
     AggrElement,
@@ -15,16 +15,20 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, rewrite_aggregate
-from aspy.program.terms import Number, TermTuple, Variable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import (
+    AggrBaseRule,
+    AggrElemRule,
+    rewrite_aggregate,
+)
+from ground_slash.program.terms import Number, TermTuple, Variable
 
 
 class TestRewrite(unittest.TestCase):
     def test_rewrite_aggregate(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # rewrite aggregates
         elements_1 = (

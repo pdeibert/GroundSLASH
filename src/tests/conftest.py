@@ -1,6 +1,6 @@
-import aspy
+import ground_slash
 
 
 def pytest_sessionstart(session):
     # set debug mode
-    aspy.debug(True)
+    ground_slash.debug(True)

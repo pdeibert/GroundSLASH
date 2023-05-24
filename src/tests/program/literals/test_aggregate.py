@@ -1,8 +1,8 @@
 import unittest
 from typing import Set
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrCount,
     AggrElement,
     AggrLiteral,
@@ -14,10 +14,10 @@ from aspy.program.literals import (
     Naf,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.terms import (
+from ground_slash.program.operators import RelOp
+from ground_slash.program.safety_characterization import SafetyRule, SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
     ArithVariable,
     Infimum,
     Minus,
@@ -27,7 +27,7 @@ from aspy.program.terms import (
     TermTuple,
     Variable,
 )
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.variable_table import VariableTable
 
 
 class DummyRule:
@@ -42,7 +42,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_element(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         element = AggrElement(
             TermTuple(Number(5), Variable("X")),
@@ -144,7 +144,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_count(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         aggr_func = AggrCount()
         # equality
@@ -277,7 +277,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_sum(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         aggr_func = AggrSum()
         # equality
@@ -446,7 +446,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_max(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         aggr_func = AggrMax()
         # equality
@@ -579,7 +579,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_min(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         aggr_func = AggrMin()
         # equality
@@ -712,7 +712,7 @@ class TestAggregate(unittest.TestCase):
     def test_aggregate_literal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_elements = (
             AggrElement(

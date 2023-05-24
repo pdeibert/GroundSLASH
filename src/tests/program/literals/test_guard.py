@@ -1,16 +1,16 @@
 import unittest
 
-import aspy
-from aspy.program.literals import Guard
-from aspy.program.operators import RelOp
-from aspy.program.terms import ArithVariable, Minus, Number, Variable
-from aspy.program.variable_table import VariableTable
+import ground_slash
+from ground_slash.program.literals import Guard
+from ground_slash.program.operators import RelOp
+from ground_slash.program.terms import ArithVariable, Minus, Number, Variable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestGuard(unittest.TestCase):
     def test_guard(self):
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         rguard = Guard(RelOp.GREATER, Number(3), True)
         lguard = Guard(RelOp.LESS, Number(3), False)

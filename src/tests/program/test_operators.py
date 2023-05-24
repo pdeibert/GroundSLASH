@@ -1,14 +1,14 @@
 import unittest
 
-import aspy
-from aspy.program.operators import AggrOp, ArithOp, RelOp
+import ground_slash
+from ground_slash.program.operators import AggrOp, ArithOp, RelOp
 
 
 class TestSubstitution(unittest.TestCase):
     def test_relop(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # string representation
         self.assertEqual(str(RelOp.EQUAL), "=")
@@ -39,7 +39,7 @@ class TestSubstitution(unittest.TestCase):
     def test_arithop(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # string representation
         self.assertEqual(str(ArithOp.PLUS), "+")
@@ -50,7 +50,7 @@ class TestSubstitution(unittest.TestCase):
     def test_aggrop(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # string representation
         self.assertEqual(str(AggrOp.COUNT), "#count")

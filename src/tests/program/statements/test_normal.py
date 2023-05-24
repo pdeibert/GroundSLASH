@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrCount,
     AggrElement,
@@ -15,17 +15,24 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalRule
-from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import AggrBaseRule, AggrElemRule, NormalRule
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
+    ArithVariable,
+    Minus,
+    Number,
+    String,
+    TermTuple,
+    Variable,
+)
 
 
 class TestNormal(unittest.TestCase):
     def test_normal_fact(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_rule = NormalRule(PredLiteral("p", Number(0)))
         var_rule = NormalRule(PredLiteral("p", Variable("X")))
@@ -87,7 +94,7 @@ class TestNormal(unittest.TestCase):
     def test_normal_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_rule = NormalRule(PredLiteral("p", Number(0)), [PredLiteral("q")])
         unsafe_var_rule = NormalRule(

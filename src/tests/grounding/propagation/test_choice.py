@@ -1,8 +1,8 @@
 import unittest
 
-import aspy
-from aspy.grounding.propagation import ChoicePropagator
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.grounding.propagation import ChoicePropagator
+from ground_slash.program.literals import (
     ChoiceBaseLiteral,
     ChoiceElemLiteral,
     ChoicePlaceholder,
@@ -13,8 +13,8 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import (
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import (
     Choice,
     ChoiceBaseRule,
     ChoiceElement,
@@ -22,14 +22,14 @@ from aspy.program.statements import (
     ChoiceRule,
     NormalRule,
 )
-from aspy.program.terms import Number, TermTuple, Variable
+from ground_slash.program.terms import Number, TermTuple, Variable
 
 
 class TestChoicePropagator(unittest.TestCase):
     def test_choice_propagator(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         elements_1 = (
             ChoiceElement(

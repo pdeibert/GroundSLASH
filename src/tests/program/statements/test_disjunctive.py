@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrCount,
     AggrElement,
@@ -16,18 +16,25 @@ from aspy.program.literals import (
     Naf,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.statements import AggrBaseRule, AggrElemRule, DisjunctiveRule
-from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.statements import AggrBaseRule, AggrElemRule, DisjunctiveRule
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
+    ArithVariable,
+    Minus,
+    Number,
+    String,
+    TermTuple,
+    Variable,
+)
 
 
 class TestDisjunctive(unittest.TestCase):
     def test_disjunctive_fact(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(
@@ -139,7 +146,7 @@ class TestDisjunctive(unittest.TestCase):
     def test_disjunctive_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(

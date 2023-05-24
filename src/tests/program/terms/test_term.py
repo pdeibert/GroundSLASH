@@ -1,9 +1,9 @@
 import unittest
 
-import aspy
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.terms import (
+import ground_slash
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
     AnonVariable,
     ArithVariable,
     Infimum,
@@ -15,14 +15,14 @@ from aspy.program.terms import (
     TermTuple,
     Variable,
 )
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestTerm(unittest.TestCase):
     def test_infimum(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         term = Infimum()
         # string representation
@@ -53,7 +53,7 @@ class TestTerm(unittest.TestCase):
     def test_supremum(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         term = Supremum()
         # string representation
@@ -84,7 +84,7 @@ class TestTerm(unittest.TestCase):
     def test_variable(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(ValueError, Variable, "x")
@@ -127,7 +127,7 @@ class TestTerm(unittest.TestCase):
     def test_anon_variable(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(ValueError, AnonVariable, -1)
@@ -170,7 +170,7 @@ class TestTerm(unittest.TestCase):
     def test_number(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         term = Number(5)
         # string representation
@@ -217,7 +217,7 @@ class TestTerm(unittest.TestCase):
     def test_symbolic_constant(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(ValueError, SymbolicConstant, "1")
@@ -261,7 +261,7 @@ class TestTerm(unittest.TestCase):
     def test_string(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         term = String("!?$#b")
         # string representation
@@ -296,7 +296,7 @@ class TestTerm(unittest.TestCase):
     def test_term_tuple(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         terms = TermTuple(Number(0), Variable("X"))
         # length

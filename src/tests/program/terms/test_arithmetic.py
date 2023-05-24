@@ -1,9 +1,9 @@
 import unittest
 
-import aspy
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.terms import (
+import ground_slash
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
     Add,
     ArithVariable,
     Div,
@@ -13,14 +13,14 @@ from aspy.program.terms import (
     Sub,
     Variable,
 )
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestArithmetic(unittest.TestCase):
     def test_minus(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_term = Minus(Number(1))
         var_term = Minus(Variable("X"))
@@ -76,7 +76,7 @@ class TestArithmetic(unittest.TestCase):
     def test_add(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_term = Add(Number(1), Number(2))
         var_term = Add(Number(1), Variable("X"))
@@ -152,7 +152,7 @@ class TestArithmetic(unittest.TestCase):
     def test_sub(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_term = Sub(Number(1), Number(2))
         var_term = Sub(Number(1), Variable("X"))
@@ -227,7 +227,7 @@ class TestArithmetic(unittest.TestCase):
     def test_mult(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_term = Mult(Number(3), Number(2))
         var_term = Mult(Number(3), Variable("X"))
@@ -327,7 +327,7 @@ class TestArithmetic(unittest.TestCase):
     def test_div(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_term = Div(Number(1), Number(2))
         var_term = Div(Number(1), Variable("X"))

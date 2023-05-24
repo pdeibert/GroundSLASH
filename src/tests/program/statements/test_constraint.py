@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrCount,
     AggrElement,
@@ -15,18 +15,25 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, Constraint
-from aspy.program.substitution import Substitution
-from aspy.program.terms import ArithVariable, Minus, Number, String, TermTuple, Variable
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import AggrBaseRule, AggrElemRule, Constraint
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
+    ArithVariable,
+    Minus,
+    Number,
+    String,
+    TermTuple,
+    Variable,
+)
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestConstraint(unittest.TestCase):
     def test_constraint(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         ground_rule = Constraint(PredLiteral("p", Number(0)), PredLiteral("q"))
         var_rule = Constraint(

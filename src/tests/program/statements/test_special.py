@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrElement,
     AggrElemLiteral,
@@ -13,24 +13,24 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import (
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import (
     AggrBaseRule,
     AggrElemRule,
     ChoiceBaseRule,
     ChoiceElement,
     ChoiceElemRule,
 )
-from aspy.program.substitution import Substitution
-from aspy.program.symbols import SpecialChar
-from aspy.program.terms import Number, TermTuple, Variable
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.symbols import SpecialChar
+from ground_slash.program.terms import Number, TermTuple, Variable
 
 
 class TestSpecial(unittest.TestCase):
     def test_aggr_base_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         global_vars = TermTuple(Variable("X"), Variable("Y"))
         base_value = Number(0)
@@ -177,7 +177,7 @@ class TestSpecial(unittest.TestCase):
     def test_aggr_element_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         local_vars = TermTuple(Variable("L"))
         global_vars = TermTuple(Variable("X"), Variable("Y"))
@@ -287,7 +287,7 @@ class TestSpecial(unittest.TestCase):
     def test_choice_base_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         global_vars = TermTuple(Variable("X"), Variable("Y"))
         base_value = Number(0)
@@ -433,7 +433,7 @@ class TestSpecial(unittest.TestCase):
     def test_choice_element_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         local_vars = TermTuple(Variable("L"))
         global_vars = TermTuple(Variable("X"), Variable("Y"))

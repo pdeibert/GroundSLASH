@@ -1,7 +1,7 @@
 import unittest
 
-import aspy
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrElemLiteral,
     AggrPlaceholder,
@@ -11,18 +11,18 @@ from aspy.program.literals import (
     LiteralCollection,
     Naf,
 )
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.symbols import SpecialChar
-from aspy.program.terms import Number, String, TermTuple, Variable
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.symbols import SpecialChar
+from ground_slash.program.terms import Number, String, TermTuple, Variable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestSpecial(unittest.TestCase):
     def test_aggr_placeholder(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
         literal = AggrPlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
@@ -113,7 +113,7 @@ class TestSpecial(unittest.TestCase):
     def test_aggr_base_literal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
         literal = AggrBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
@@ -194,7 +194,7 @@ class TestSpecial(unittest.TestCase):
     def test_aggr_elem_literal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         global_vars = TermTuple(Variable("L"))
         local_vars = TermTuple(Variable("X"), Variable("Y"))
@@ -339,7 +339,7 @@ class TestSpecial(unittest.TestCase):
     def test_choice_placeholder(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
         literal = ChoicePlaceholder(1, vars, TermTuple(Number(1), Variable("Y")))
@@ -423,7 +423,7 @@ class TestSpecial(unittest.TestCase):
     def test_choice_base_literal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         vars = TermTuple(Variable("X"), Variable("Y"))
         literal = ChoiceBaseLiteral(1, vars, TermTuple(Number(1), Variable("Y")))
@@ -504,7 +504,7 @@ class TestSpecial(unittest.TestCase):
     def test_choice_elem_literal(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         global_vars = TermTuple(Variable("L"))
         local_vars = TermTuple(Variable("X"), Variable("Y"))

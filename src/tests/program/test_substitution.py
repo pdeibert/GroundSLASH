@@ -1,15 +1,15 @@
 import unittest
 
-import aspy
-from aspy.program.substitution import AssignmentError, Substitution
-from aspy.program.terms import Number, String, Variable
+import ground_slash
+from ground_slash.program.substitution import AssignmentError, Substitution
+from ground_slash.program.terms import Number, String, Variable
 
 
 class TestSubstitution(unittest.TestCase):
     def test_substitution(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # empty substitution
         subst = Substitution()

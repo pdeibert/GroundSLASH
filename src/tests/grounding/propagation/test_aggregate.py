@@ -1,8 +1,8 @@
 import unittest
 
-import aspy
-from aspy.grounding.propagation import AggrPropagator
-from aspy.program.literals import (
+import ground_slash
+from ground_slash.grounding.propagation import AggrPropagator
+from ground_slash.program.literals import (
     AggrBaseLiteral,
     AggrCount,
     AggrElement,
@@ -16,16 +16,16 @@ from aspy.program.literals import (
     LiteralCollection,
     PredLiteral,
 )
-from aspy.program.operators import RelOp
-from aspy.program.statements import AggrBaseRule, AggrElemRule, NormalRule
-from aspy.program.terms import Number, TermTuple, Variable
+from ground_slash.program.operators import RelOp
+from ground_slash.program.statements import AggrBaseRule, AggrElemRule, NormalRule
+from ground_slash.program.terms import Number, TermTuple, Variable
 
 
 class TestAggrPropagator(unittest.TestCase):
     def test_aggr_propagator(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         elements_1 = (
             AggrElement(

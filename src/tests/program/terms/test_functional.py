@@ -1,9 +1,9 @@
 import unittest
 
-import aspy
-from aspy.program.safety_characterization import SafetyTriplet
-from aspy.program.substitution import Substitution
-from aspy.program.terms import (
+import ground_slash
+from ground_slash.program.safety_characterization import SafetyTriplet
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.terms import (
     ArithVariable,
     Functional,
     Infimum,
@@ -13,14 +13,14 @@ from aspy.program.terms import (
     Supremum,
     Variable,
 )
-from aspy.program.variable_table import VariableTable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestFunctional(unittest.TestCase):
     def test_functional(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(ValueError, Functional, "F")

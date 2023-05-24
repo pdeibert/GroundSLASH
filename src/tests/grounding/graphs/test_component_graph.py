@@ -1,15 +1,15 @@
 import unittest
 
-import aspy
-from aspy.grounding.graphs.component_graph import ComponentGraph
-from aspy.program import Program
+import ground_slash
+from ground_slash.grounding.graphs.component_graph import ComponentGraph
+from ground_slash.program import Program
 
 
 class TestComponentGraph(unittest.TestCase):
     def test_component_graph(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # example modified from Example 17 in Kaminski, Schaub (2022):
         # "On the Foundations of Grounding in Answer Set Programming".

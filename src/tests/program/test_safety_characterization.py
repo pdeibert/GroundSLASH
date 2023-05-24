@@ -1,15 +1,15 @@
 import unittest
 
-import aspy
-from aspy.program.safety_characterization import SafetyRule, SafetyTriplet
-from aspy.program.terms import Variable
+import ground_slash
+from ground_slash.program.safety_characterization import SafetyRule, SafetyTriplet
+from ground_slash.program.terms import Variable
 
 
 class TestSafetyCharacterization(unittest.TestCase):
     def test_safety_rule(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         rule = SafetyRule(Variable("X"), {Variable("Y")})
 
@@ -21,7 +21,7 @@ class TestSafetyCharacterization(unittest.TestCase):
     def test_safety_triple(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # TODO
 

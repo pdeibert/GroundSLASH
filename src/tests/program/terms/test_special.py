@@ -1,16 +1,16 @@
 import unittest
 
-import aspy
-from aspy.program.substitution import Substitution
-from aspy.program.symbols import SpecialChar
-from aspy.program.terms import Add, ArithVariable, Minus, Number, Variable
+import ground_slash
+from ground_slash.program.substitution import Substitution
+from ground_slash.program.symbols import SpecialChar
+from ground_slash.program.terms import Add, ArithVariable, Minus, Number, Variable
 
 
 class TestSpecial(unittest.TestCase):
     def test_arith_variable(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # invalid initialization
         self.assertRaises(ValueError, ArithVariable, -1, Add(Variable("X"), Number(1)))

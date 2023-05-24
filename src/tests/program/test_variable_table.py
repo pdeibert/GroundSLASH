@@ -1,18 +1,18 @@
 import unittest
 
-import aspy
-from aspy.program.literals import Naf, PredLiteral
-from aspy.program.statements import NormalRule
-from aspy.program.symbols import SpecialChar
-from aspy.program.terms import AnonVariable, ArithVariable, Minus, Variable
-from aspy.program.variable_table import VariableTable
+import ground_slash
+from ground_slash.program.literals import Naf, PredLiteral
+from ground_slash.program.statements import NormalRule
+from ground_slash.program.symbols import SpecialChar
+from ground_slash.program.terms import AnonVariable, ArithVariable, Minus, Variable
+from ground_slash.program.variable_table import VariableTable
 
 
 class TestVariableTable(unittest.TestCase):
     def test_variable_table(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         statement = NormalRule(
             PredLiteral("p", Variable("X")),
