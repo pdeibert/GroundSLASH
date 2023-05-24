@@ -1,6 +1,6 @@
 __pycache__/
-src/aspy/antlr/
+src/ground_slash/antlr/
 
-!src/aspy/antlr/__init__.py
-!src/aspy/antlr/SLASH.g4
-!src/aspy/antlr/generate.sh
+!src/ground_slash/antlr/__init__.py
+!src/ground_slash/antlr/SLASH.g4
+!src/ground_slash/antlr/generate.sh
