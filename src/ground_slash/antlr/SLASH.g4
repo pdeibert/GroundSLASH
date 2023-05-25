@@ -19,6 +19,7 @@ statement           :   CONS body? DOT
 
 head                :   disjunction
                     |   choice
+                    |   npp_declaration
                     ;
 
 body                :   (naf_literal | NAF? aggregate) (COMMA body)? ;
@@ -73,6 +74,8 @@ term                :   ID
                     |   func_term
                     |   arith_term
                     ;
+
+npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? COMMA SQUARE_OPEN terms? SQUARE_CLOSE PAREN_CLOSE ;
 
 // functional terms
 func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE ;
@@ -133,6 +136,7 @@ COUNT               :   '#count' ;
 MAX                 :   '#max' ;
 MIN                 :   '#min' ;
 SUM                 :   '#sum' ;
+NPP                 :   '#npp' ;
 COMMENT             :   '%' ~[\r\n]* -> skip ;
 MULTI_LINE_COMMENT  :   '%*' .*? '*%' -> skip ;
 BLANK               :   [ \t\n]+ -> skip ;
