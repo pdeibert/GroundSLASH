@@ -18,12 +18,14 @@ from ground_slash.program.literals.builtin import op2rel
 from ground_slash.program.operators import AggrOp, ArithOp, RelOp
 from ground_slash.program.query import Query
 from ground_slash.program.statements import (  # ChoiceFact,; DisjunctiveFact,; NormalFact,
+    NPP,
     Choice,
     ChoiceElement,
     ChoiceRule,
     Constraint,
     DisjunctiveRule,
     NormalRule,
+    NPPRule,
     Statement,
 )
 from ground_slash.program.terms import (
@@ -150,6 +152,8 @@ class ProgramBuilder(SLASHVisitor):
 
             if isinstance(head, Choice):
                 statement = ChoiceRule(head, body)
+            elif isinstance(head, NPP):
+                statement = NPPRule(head, body)
             elif len(head) > 1:
                 statement = DisjunctiveRule(head, body)
             else:
@@ -160,12 +164,13 @@ class ProgramBuilder(SLASHVisitor):
     # Visit a parse tree produced by SLASHParser#head.
     def visitHead(
         self, ctx: SLASHParser.HeadContext
-    ) -> Union[Choice, Tuple[PredLiteral, ...]]:
+    ) -> Union[Choice, Tuple[PredLiteral, ...], NPP]:
         """Visits 'head'.
 
         Handles the following rule(s):
             head                :   disjunction
                                 |   choice
+                                |   npp_declaration
 
         Args:
             ctx: `SLASHParser.HeadContext` to be visited.
@@ -177,8 +182,11 @@ class ProgramBuilder(SLASHVisitor):
         if isinstance(ctx.children[0], SLASHParser.DisjunctionContext):
             return self.visitDisjunction(ctx.children[0])
         # choice
-        else:
+        elif isinstance(ctx.children[0], SLASHParser.ChoiceContext):
             return self.visitChoice(ctx.children[0])
+        # npp_declaration
+        else:
+            return self.visitNpp_declaration(ctx.children[0])
 
     # Visit a parse tree produced by SLASHParser#body.
     def visitBody(self, ctx: SLASHParser.BodyContext) -> Tuple["Literal", ...]:
@@ -668,6 +676,43 @@ class ProgramBuilder(SLASHVisitor):
 
             # return (simplified arithmetic term)
             return arith_term.simplify() if self.simplify_arithmetic else arith_term
+
+    # Visit a parse tree produced by SLASHParser#npp_declaration.
+    def visitNpp_declaration(self, ctx: SLASHParser.Npp_declarationContext) -> NPP:
+        """Visits 'npp_declaration'.
+
+        Handles the following rule(s):
+            npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
+
+        Args:
+            ctx: `SLASHParser.TermContext` to be visited.
+
+        Returns:
+            `Term` instance.
+        """  # noqa
+
+        # get identifier
+        name = ctx.children[2].getSymbol().text
+
+        # get next token
+        token_type = SLASHParser.symbolicNames[ctx.children[3].getSymbol().type]
+
+        # PAREN_OPEN terms? PAREN_CLOSE
+        terms = (
+            self.visitTerms(ctx.children[4])
+            if token_type == "PAREN_OPEN"
+            and isinstance(ctx.children[4], SLASHParser.TermsContext)
+            else TermTuple()
+        )
+
+        # COMMA SQUARE_OPEN terms? SQUARE_CLOSE
+        outcomes = (
+            self.visitTerms(ctx.children[-3])
+            if isinstance(ctx.children[-3], SLASHParser.TermsContext)
+            else TermTuple()
+        )
+
+        return NPP(name, terms, outcomes)
 
     # Visit a parse tree produced by SLASHParser#func_term.
     def visitFunc_term(self, ctx: SLASHParser.Func_termContext) -> "Functional":

@@ -17,9 +17,15 @@ from ground_slash.program.literals import (
 )
 from ground_slash.program.operators import RelOp
 from ground_slash.program.program import Program
-from ground_slash.program.statements import Constraint, DisjunctiveRule, NormalRule
+from ground_slash.program.statements import (
+    NPP,
+    Constraint,
+    DisjunctiveRule,
+    NormalRule,
+    NPPRule,
+)
 from ground_slash.program.substitution import Substitution
-from ground_slash.program.terms import Add, ArithVariable, Number, Variable
+from ground_slash.program.terms import Number, Variable
 
 
 class TestGrounder(unittest.TestCase):
@@ -392,6 +398,66 @@ class TestGrounder(unittest.TestCase):
         )  # not all literals have matches in 'possible'
 
         # TODO: aggregates
+
+        # ----- NPP facts -----
+
+        # ground fact
+        self.assertEqual(
+            Grounder.ground_statement(
+                NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),))),
+            ),
+            {NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)))},
+        )
+
+        # ----- NPP rules -----
+
+        # ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                NPPRule(
+                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
+                    (PredLiteral("q", Number(0)),),
+                ),
+                possible={PredLiteral("q", Number(0))},
+            ),
+            {
+                NPPRule(
+                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
+                    (PredLiteral("q", Number(0)),),
+                ),
+            },
+        )
+        # non-ground rule
+        self.assertEqual(
+            Grounder.ground_statement(
+                NPPRule(
+                    NPP("my_npp", (PredLiteral("p", Variable("X")),), (Variable("Y"),)),
+                    (PredLiteral("q", Variable("X")), PredLiteral("p", Variable("Y"))),
+                ),
+                possible={
+                    PredLiteral("q", Number(1)),
+                    PredLiteral("p", Number(0)),
+                },
+            ),
+            {
+                NPPRule(
+                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(0),)),
+                    (PredLiteral("q", Number(1)), PredLiteral("p", Number(0))),
+                ),
+            },
+        )  # all literals have matches in 'possible'
+        self.assertEqual(
+            Grounder.ground_statement(
+                NPPRule(
+                    NPP("my_npp", (PredLiteral("p", Variable("X")),), (Variable("Y"),)),
+                    (PredLiteral("q", Variable("X")), PredLiteral("p", Variable("Y"))),
+                ),
+                possible={
+                    PredLiteral("q", Number(1)),
+                },
+            ),
+            set(),
+        )  # not all literals have matches in 'possible'
 
     def test_ground_unsafe(self):
 

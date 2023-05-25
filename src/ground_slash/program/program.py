@@ -2,6 +2,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import antlr4  # type: ignore
+
 from ground_slash.antlr.SLASHLexer import SLASHLexer
 from ground_slash.antlr.SLASHParser import SLASHParser
 

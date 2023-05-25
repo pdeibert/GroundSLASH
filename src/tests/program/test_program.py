@@ -23,12 +23,14 @@ from ground_slash.program.literals import (
 from ground_slash.program.operators import RelOp
 from ground_slash.program.program import Program
 from ground_slash.program.statements import (
+    NPP,
     Choice,
     ChoiceElement,
     ChoiceRule,
     Constraint,
     DisjunctiveRule,
     NormalRule,
+    NPPRule,
 )
 from ground_slash.program.terms import (
     Add,
@@ -468,6 +470,39 @@ class TestProgram(unittest.TestCase):
         self.assertEqual(
             Program.from_string(":- p, q.").statements[0],
             Constraint(PredLiteral("p"), PredLiteral("q")),
+        )
+
+        # ----- NPP fact -----
+        self.assertEqual(
+            Program.from_string("#npp(h,[]).").statements[0],
+            NPPRule(NPP("h", TermTuple(), TermTuple())),
+        )
+        self.assertEqual(
+            Program.from_string("#npp(h(),[p,0]):-.").statements[0],
+            NPPRule(NPP("h", TermTuple(), TermTuple(SymbolicConstant("p"), Number(0)))),
+        )
+        self.assertEqual(
+            Program.from_string('#npp(h("f"),[p,0]).').statements[0],
+            NPPRule(
+                NPP(
+                    "h",
+                    TermTuple(String("f")),
+                    TermTuple(SymbolicConstant("p"), Number(0)),
+                )
+            ),
+        )
+
+        # ----- NPP rule -----
+        self.assertEqual(
+            Program.from_string('#npp(h("f"),[p,0]) :- p, q.').statements[0],
+            NPPRule(
+                NPP(
+                    "h",
+                    TermTuple(String("f")),
+                    TermTuple(SymbolicConstant("p"), Number(0)),
+                ),
+                (PredLiteral("p"), PredLiteral("q")),
+            ),
         )
 
 
