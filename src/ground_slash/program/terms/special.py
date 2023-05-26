@@ -30,7 +30,7 @@ class ArithVariable(Variable):
             orig_term: `ArithTerm` instance that is replaced by the arithmetic variable.
 
         Raises:
-            ValueError: Negative id specified for the variable. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Negative id specified for the variable. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         # check if id is valid
         if ground_slash.debug() and id < 0:

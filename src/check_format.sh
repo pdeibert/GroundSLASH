@@ -1,3 +1,3 @@
 #!/bin/bash
-isort . --check-only --profile black --skip aspy/antlr/
-black . --check --extend-exclude aspy/antlr/
+isort . --check-only --profile black --skip ground_slash/antlr/
+black . --check --extend-exclude ground_slash/antlr/

@@ -240,7 +240,7 @@ class Variable(Term):
                 Valid identifiers start with an upper-case latin letter, followed by zero or more alphanumerics and underscores.
 
         Raises:
-            ValueError: Invalid value specified for the variable. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Invalid value specified for the variable. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         # check if variable name is valid
         if ground_slash.debug() and not (
@@ -367,7 +367,7 @@ class AnonVariable(Variable):
                 Should be unique within each statement or query.
 
         Raises:
-            ValueError: Negative id specified for the variable. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Negative id specified for the variable. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         # check if id is valid
         if ground_slash.debug() and id < 0:
@@ -578,7 +578,7 @@ class SymbolicConstant(Term):
                 '\u03b5\u03C7', '\u03b7\u03b1', or '\u03b7\u03C7', but are reserved for internal use.
 
         Raises:
-            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Invalid value specified for the symbolic constant. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         # check if symbolic constant name is valid
         if ground_slash.debug() and not SYM_CONST_RE.fullmatch(

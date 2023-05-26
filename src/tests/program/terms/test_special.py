@@ -59,7 +59,7 @@ class TestSpecial(unittest.TestCase):
     def test_replace_arith(self):
 
         # make sure debug mode is enabled
-        self.assertTrue(aspy.debug())
+        self.assertTrue(ground_slash.debug())
 
         # ----- terms -----
         for expr in (Infimum(), Supremum(), Variable('X'), AnonVariable(0), Number(10), SymbolicConstant('f'), String('!?$#b'), TermTuple(Number(0), Variable('X'))):

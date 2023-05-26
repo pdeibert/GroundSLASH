@@ -38,7 +38,7 @@ class Functional(Term):
             *terms: Sequence of `Term` instances.
 
         Raises:
-            ValueError: Invalid value specified for the symbolic constant. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Invalid value specified for the symbolic constant. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         # check if functor name is valid
         if ground_slash.debug() and not SYM_CONST_RE.fullmatch(symbol):

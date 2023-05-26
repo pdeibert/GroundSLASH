@@ -45,7 +45,7 @@ class PredLiteral(Literal):
             naf: Boolean indicating whether or not the literal is default-negated. Defaults to False.
 
         Raises:
-            ValueError: Invalid name/identifier. Only checked if `aspy.debug()` returns `True`.
+            ValueError: Invalid name/identifier. Only checked if `ground_slash.debug()` returns `True`.
         """  # noqa
         super().__init__(naf)
 
