@@ -3,11 +3,13 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, Tuple, Union
 
 from ground_slash.program.expression import Expr
-from ground_slash.program.literals import LiteralCollection, PredLiteral
+from ground_slash.program.literals import Guard, LiteralCollection, PredLiteral
+from ground_slash.program.operators import RelOp
 from ground_slash.program.safety_characterization import SafetyTriplet
 from ground_slash.program.substitution import Substitution
-from ground_slash.program.terms import Term, TermTuple
+from ground_slash.program.terms import Number, Term, TermTuple
 
+from .choice import Choice, ChoiceElement
 from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -199,6 +201,13 @@ class NPP(Expr):
             self.name,
             self.terms.replace_arith(var_table),
             self.outcomes.replace_arith(var_table),
+        )
+
+    def as_choice(self) -> Choice:
+        """TODO"""
+        return Choice(
+            tuple(ChoiceElement(atom) for atom in self.atoms),
+            guards=(Guard(RelOp.EQUAL, Number(1), False), None),
         )
 
 
