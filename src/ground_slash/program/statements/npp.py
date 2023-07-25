@@ -210,6 +210,9 @@ class NPP(Expr):
             guards=(Guard(RelOp.EQUAL, Number(1), False), None),
         )
 
+    def __len__(self) -> int:
+        return len(self.outcomes)
+
 
 class NPPRule(Statement):
     r"""NPP rule.
