@@ -6,7 +6,7 @@ import ground_slash
 from ground_slash.program.safety_characterization import SafetyTriplet
 from ground_slash.program.substitution import Substitution
 from ground_slash.program.symbols import SYM_CONST_RE
-from ground_slash.program.terms import TermTuple
+from ground_slash.program.terms import Functional, TermTuple
 
 from .literal import Literal, LiteralCollection
 
@@ -31,7 +31,11 @@ class PredLiteral(Literal):
     """  # noqa
 
     def __init__(
-        self, name: str, *terms: "Term", neg: bool = False, naf: bool = False
+        self,
+        name: str,
+        *terms: "Term",
+        neg: bool = False,
+        naf: bool = False,
     ) -> None:
         """Initializes predicate literal instance.
 
@@ -246,3 +250,7 @@ class PredLiteral(Literal):
         return PredLiteral(
             self.name, *self.terms.replace_arith(var_table), neg=self.neg, naf=self.naf
         )
+
+    def as_term(self) -> Functional:
+        """TODO"""
+        return Functional(self.name, *self.terms)
