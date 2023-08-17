@@ -3,7 +3,12 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, Tuple, Union
 
 from ground_slash.program.expression import Expr
-from ground_slash.program.literals import Guard, LiteralCollection, PredLiteral, AggrLiteral
+from ground_slash.program.literals import (
+    AggrLiteral,
+    Guard,
+    LiteralCollection,
+    PredLiteral,
+)
 from ground_slash.program.operators import RelOp
 from ground_slash.program.safety_characterization import SafetyTriplet
 from ground_slash.program.substitution import Substitution
@@ -13,7 +18,7 @@ from .choice import Choice, ChoiceElement
 from .statement import Statement
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ground_slash.program.literals import  AggrPlaceholder, Literal
+    from ground_slash.program.literals import AggrPlaceholder, Literal
     from ground_slash.program.query import Query
     from ground_slash.program.statements import AggrBaseRule, AggrElemRule
     from ground_slash.program.terms import Variable
@@ -263,6 +268,10 @@ class NPPRule(Statement):
         self.literals = (
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
+
+        # TODO: helpful?
+        self.input_key = PredLiteral(head.name, head.terms)
+        self.output_keys = self.literals
 
     def __eq__(self, other: "Any") -> bool:
         """Compares the statement to a given object.

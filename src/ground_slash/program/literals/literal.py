@@ -102,6 +102,16 @@ class Literal(Expr, ABC):
             f"Setting negation for literal of type {type(self)} not defined."
         )
 
+    def __abs__(self) -> "Literal":
+        """TODO"""
+        if self.naf:
+            copy = deepcopy(self)
+            copy.naf = False
+
+            return copy
+
+        return self
+
 
 class LiteralCollection:
     """Represents an order-preserving unordered collection of literals.
@@ -264,7 +274,7 @@ class LiteralCollection:
         Returns:
             `LiteralCollection` instance excluding any of the specified literals.
         """
-        return LiteralCollection(
+        return type(self)(
             *(literal for literal in self.literals if literal not in literals)
         )
 
