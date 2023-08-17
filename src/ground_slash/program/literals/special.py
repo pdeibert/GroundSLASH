@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from ground_slash.program.variable_table import VariableTable
 
 
+# TODO: even necessary ???
 class AuxLiteral(PredLiteral, ABC):
     """Abstract base class for auxiliary predicate literals."""
 
@@ -19,7 +20,7 @@ class AuxLiteral(PredLiteral, ABC):
 
         Args:
             name: String representing the predicate identifier.
-                Does not need to standard identifier limitations, but should
+                Does not need to adhere to standard identifier limitations, but should
                 make sense when printed.
         """
         super().__init__("f", *args, **kwargs)
