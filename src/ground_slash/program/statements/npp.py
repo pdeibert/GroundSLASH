@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.literals import (
@@ -474,3 +474,11 @@ class NPPRule(Statement):
     @cached_property
     def is_fact(self) -> bool:
         return bool(self.literals)
+
+    def powerset(
+        self,
+    ) -> List[Tuple[int, ...]]:
+        """TODO"""
+
+        # return all possible outcomes once
+        return [(i,) for i in range(len(self.npp))]

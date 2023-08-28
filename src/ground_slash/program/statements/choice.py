@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Iterable,
     Iterator,
+    List,
     Optional,
     Set,
     Tuple,
@@ -24,7 +25,7 @@ from ground_slash.program.literals import (
 from ground_slash.program.literals.builtin import GreaterEqual, op2rel
 from ground_slash.program.operators import RelOp
 from ground_slash.program.safety_characterization import SafetyTriplet
-from ground_slash.program.terms import Number
+from ground_slash.program.terms import Infimum, Number
 
 from .normal import NormalRule
 from .special import ChoiceBaseRule, ChoiceElemRule
@@ -343,6 +344,9 @@ class Choice(Expr):
     def __iter__(self) -> Iterator[ChoiceElement]:
         return iter(self.elements)
 
+    def __len__(self) -> int:
+        return len(self.head)
+
     @property
     def head(self) -> LiteralCollection:
         return LiteralCollection(*tuple(element.atom for element in self.elements))
@@ -644,6 +648,58 @@ class Choice(Expr):
             tuple(element.replace_arith(var_table) for element in self.elements),
             guards,
         )
+
+    def range(self) -> Iterator[int]:
+        """TODO"""
+
+        # empty set is smallest possible choice
+        lb = 0
+        # maximum unique atoms available
+        ub = len(self.head)
+
+        # list of invalid numbers of atoms to choose
+        exclude = set()
+
+        for guard in self.guards:
+
+            if guard is None:
+                continue
+            elif guard.right:
+                # transform to left guard for convenience
+                guard = guard.to_left()
+
+            # evaluate bound
+            if isinstance(guard.bound, Infimum):
+                # bound is smaller than all integers
+                bound = -float("inf")
+            elif not isinstance(guard.bound, Number):
+                # bound is larger than all integers
+                bound = float("inf")
+            else:
+                # bound is an integer
+                bound = guard.bound.eval()
+
+            # process bounds
+            if guard.op == RelOp.EQUAL:
+                if bound in exclude or lb > bound or ub < bound:
+                    # choice cannot be satisfied (no valid choices)
+                    return tuple()
+
+                # set both lower & upper bound
+                lb = bound
+                ub = bound
+            elif guard.op == RelOp.UNEQUAL:
+                exclude.add(bound)
+            elif guard.op == RelOp.LESS:
+                lb = max(lb, bound - 1) if bound != float("inf") else tuple()
+            elif guard.op == RelOp.GREATER:
+                ub = min(ub, bound - 1) if bound != -float("inf") else tuple()
+            elif guard.op == RelOp.LESS_OR_EQ:
+                lb = max(lb, bound) if bound != float("inf") else tuple()
+            elif guard.op == RelOp.GREATER_OR_EQ:
+                ub = min(ub, bound) if bound != -float("inf") else tuple()
+
+        return (r for r in range(lb, ub + 1) if r not in exclude)
 
 
 class ChoiceRule(Statement):
@@ -962,3 +1018,16 @@ class ChoiceRule(Statement):
     @cached_property
     def is_fact(self) -> bool:
         return bool(self.literals)
+
+    def powerset(
+        self,
+    ) -> List[Tuple[int, ...]]:
+        """TODO"""
+
+        n_out = len(self.choice)
+
+        # return all possible combinations with ub >= n >= lb, n not excluded
+        return sum(
+            [list(combinations(range(n_out), r=n)) for n in self.choice.range()],
+            [],
+        )

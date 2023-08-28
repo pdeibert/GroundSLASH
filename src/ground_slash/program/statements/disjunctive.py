@@ -1,6 +1,7 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional, Set, Tuple, Union
+from itertools import combinations
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -278,3 +279,16 @@ class DisjunctiveRule(Statement):
     @cached_property
     def is_fact(self) -> bool:
         return not bool(len(self.body))
+
+    def powerset(
+        self,
+    ) -> List[Tuple[int, ...]]:
+        """TODO"""
+
+        n_out = len(self.head)
+
+        # return all possible combinations with n >= 1
+        return sum(
+            [list(combinations(range(n_out), r=n)) for n in range(1, n_out + 1)],
+            [],
+        )
