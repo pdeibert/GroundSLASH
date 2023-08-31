@@ -269,9 +269,8 @@ class NPPRule(Statement):
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
 
-        # TODO: helpful?
-        self.input_key = PredLiteral(head.name, head.terms)
-        self.output_keys = self.literals
+        self.output_key = PredLiteral(head.name, head.terms)
+        self.inputs_keys = self.literals
 
     def __eq__(self, other: "Any") -> bool:
         """Compares the statement to a given object.

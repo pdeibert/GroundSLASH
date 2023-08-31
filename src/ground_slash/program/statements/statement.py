@@ -130,7 +130,7 @@ class Statement(Expr, ABC):
         Returns:
             `SafetyTriplet` instance.
         """  # noqa
-        raise Exception()
+        raise NotImplementedError()
 
     def __init_var_table(self) -> None:
         """Initializes the variable table from scratch."""
