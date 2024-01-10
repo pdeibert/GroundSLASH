@@ -30,6 +30,7 @@ class Grounder:
             raise ValueError("Grounding requires program to be safe.")
 
         self.prog = prog
+        self.certain_literals = set()
 
     @classmethod
     def select(
