@@ -1,12 +1,12 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.operators import AggrOp, ArithOp, RelOp
 
 
 class TestSubstitution(unittest.TestCase):
-    def test_relop(self):
-
+    def test_relop(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -36,8 +36,7 @@ class TestSubstitution(unittest.TestCase):
 
         # TODO: eval
 
-    def test_arithop(self):
-
+    def test_arithop(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -47,8 +46,7 @@ class TestSubstitution(unittest.TestCase):
         self.assertEqual(str(ArithOp.TIMES), "*")
         self.assertEqual(str(ArithOp.DIV), "/")
 
-    def test_aggrop(self):
-
+    def test_aggrop(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

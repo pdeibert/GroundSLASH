@@ -1,5 +1,5 @@
 import unittest
-from typing import FrozenSet, Set, Tuple
+from typing import FrozenSet, Self, Set, Tuple
 
 import clingo  # type: ignore
 
@@ -29,11 +29,10 @@ from ground_slash.program.terms import Number, Variable
 
 
 class TestGrounder(unittest.TestCase):
-    def compare_to_clingo(self, prog_str: str) -> None:
+    def compare_to_clingo(self: Self, prog_str: str) -> None:
         """Helper method (not a test case on its own)."""
 
         def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
-
             ctl = clingo.Control(message_limit=0)
             # instruct to return all models
             ctl.configuration.solve.models = 0
@@ -62,8 +61,7 @@ class TestGrounder(unittest.TestCase):
         self.assertEqual(len(our_models), len(gringo_models))
         self.assertEqual(our_models, gringo_models)
 
-    def test_select(self):
-
+    def test_select(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -134,8 +132,7 @@ class TestGrounder(unittest.TestCase):
             ),
         )
 
-    def test_matches(self):
-
+    def test_matches(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -197,8 +194,7 @@ class TestGrounder(unittest.TestCase):
             AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
         )  # aggregate literal
 
-    def test_ground_statement(self):
-
+    def test_ground_statement(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -459,8 +455,7 @@ class TestGrounder(unittest.TestCase):
             set(),
         )  # not all literals have matches in 'possible'
 
-    def test_ground_unsafe(self):
-
+    def test_ground_unsafe(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -473,15 +468,13 @@ class TestGrounder(unittest.TestCase):
         prog = Program.from_string(prog_str)
         self.assertRaises(ValueError, Grounder, prog)
 
-    def test_ground_component(self):
-
+    def test_ground_component(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
         # TODO
 
-    def test_example_1(self):
-
+    def test_example_1(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -495,8 +488,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_2(self):
-
+    def test_example_2(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -513,8 +505,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_3(self):
-
+    def test_example_3(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -534,8 +525,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_4(self):
-
+    def test_example_4(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -553,8 +543,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_5(self):
-
+    def test_example_5(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -587,8 +576,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_6(self):
-
+    def test_example_6(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -621,8 +609,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_7(self):
-
+    def test_example_7(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -634,8 +621,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_8(self):
-
+    def test_example_8(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -648,8 +634,7 @@ class TestGrounder(unittest.TestCase):
         with self.assertWarns(Warning):
             self.compare_to_clingo(prog_str)
 
-    def test_example_9(self):
-
+    def test_example_9(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -668,8 +653,7 @@ class TestGrounder(unittest.TestCase):
         with self.assertWarns(Warning):
             self.compare_to_clingo(prog_str)
 
-    def test_example_10(self):
-
+    def test_example_10(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -687,8 +671,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_roads(self):
-
+    def test_example_roads(self: Self):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
@@ -710,8 +693,7 @@ class TestGrounder(unittest.TestCase):
 
         self.compare_to_clingo(prog_str)
 
-    def test_example_graph_color(self):
-
+    def test_example_graph_color(self: Self):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled

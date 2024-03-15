@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import LiteralCollection, PredLiteral
@@ -9,8 +10,7 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class TestLiteral(unittest.TestCase):
-    def test_literal_collection(self):
-
+    def test_literal_collection(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

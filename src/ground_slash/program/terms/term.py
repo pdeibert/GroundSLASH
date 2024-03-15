@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional, Self, Set, Tuple, Union
 
 import ground_slash
 from ground_slash.program.expression import Expr
@@ -23,7 +23,7 @@ class Term(Expr, ABC):
     """
 
     @abstractmethod  # pragma: no cover
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the term to a given object.
 
         Args:
@@ -35,7 +35,7 @@ class Term(Expr, ABC):
         pass
 
     @abstractmethod  # pragma: no cover
-    def precedes(self, other: "Term") -> bool:
+    def precedes(self: Self, other: "Term") -> bool:
         """Checks precendence of w.r.t. a given term.
 
         For details see https://www.mat.unical.it/aspcomp2013/files/ASP-CORE-2.03c.pdf.
@@ -48,7 +48,7 @@ class Term(Expr, ABC):
         """  # noqa
         pass
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the term.
 
         Returns:
@@ -57,7 +57,7 @@ class Term(Expr, ABC):
         return set()
 
     def global_vars(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> Set["Variable"]:
         """Returns the global variables associated with the term.
 
@@ -71,7 +71,7 @@ class Term(Expr, ABC):
         return self.vars()
 
     def safety(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the safety characterization for the term.
 
@@ -86,7 +86,7 @@ class Term(Expr, ABC):
         """  # noqa
         return SafetyTriplet()
 
-    def replace_arith(self, var_table: "VariableTable") -> "Term":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "Term":
         """Replaces arithmetic terms appearing in the term with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -99,7 +99,7 @@ class Term(Expr, ABC):
         """
         return deepcopy(self)
 
-    def substitute(self, subst: Substitution) -> "Term":
+    def substitute(self: Self, subst: Substitution) -> "Term":
         """Applies a substitution to the term.
 
         Replaces all variables with their substitution terms.
@@ -112,7 +112,7 @@ class Term(Expr, ABC):
         """
         return deepcopy(self)
 
-    def match(self, other: "Expr") -> Optional[Substitution]:
+    def match(self: Self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one.
 
         Args:
@@ -135,7 +135,7 @@ class Infimum(Term):
 
     ground: bool = True
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for an infimum.
 
         Returns:
@@ -143,7 +143,7 @@ class Infimum(Term):
         """
         return "#inf"
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `Infimum` instance.
@@ -156,10 +156,10 @@ class Infimum(Term):
         """  # noqa
         return isinstance(other, Infimum)
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("inf",))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
 
         As the least element in the total ordering for terms, `Infimum` precedes any term.
@@ -183,7 +183,7 @@ class Supremum(Term):
 
     ground: bool = True
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for a supremum.
 
         Returns:
@@ -191,7 +191,7 @@ class Supremum(Term):
         """
         return "#sup"
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `Supremum` instance.
@@ -204,10 +204,10 @@ class Supremum(Term):
         """  # noqa
         return isinstance(other, Supremum)
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("sup",))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
 
         As the greatest element in the total ordering for terms, `Supremum` precedes only itself.
@@ -232,7 +232,7 @@ class Variable(Term):
 
     ground: bool = False
 
-    def __init__(self, val: str) -> None:
+    def __init__(self: Self, val: str) -> None:
         """Initializes the variable instance.
 
         Args:
@@ -250,7 +250,7 @@ class Variable(Term):
 
         self.val = val
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for a variable.
 
         Returns:
@@ -258,7 +258,7 @@ class Variable(Term):
         """
         return self.val
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `Variable` instance with same value.
@@ -271,10 +271,10 @@ class Variable(Term):
         """  # noqa
         return isinstance(other, Variable) and other.val == self.val
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("var", self.val))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence w.r.t. a given term.
 
         Undefined for variables (i.e., non-ground terms). Raises an exception.
@@ -287,7 +287,7 @@ class Variable(Term):
         """  # noqa
         raise Exception("Total ordering is undefined for non-ground terms.")
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the term.
 
         Returns:
@@ -296,7 +296,7 @@ class Variable(Term):
         return {self}
 
     def safety(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> SafetyTriplet:
         """Returns the safety characterization for a variable.
 
@@ -311,17 +311,17 @@ class Variable(Term):
         """  # noqa
         return SafetyTriplet({self})
 
-    def simplify(self) -> "Variable":
+    def simplify(self: Self) -> "Variable":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as variables cannot be simplified.
 
         Returns:
             Copy of the `Variable` instance.
         """  # noqa
         return Variable(self.val)
 
-    def match(self, other: "Expr") -> Optional[Substitution]:
+    def match(self: Self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the expression with another one.
 
         Variables can be matched to any expression.
@@ -334,7 +334,7 @@ class Variable(Term):
         """  # noqa
         return Substitution({self: other}) if not self == other else Substitution()
 
-    def substitute(self, subst: Substitution) -> Term:
+    def substitute(self: Self, subst: Substitution) -> Term:
         """Applies a substitution to the term.
 
         Replaces the variable with its substitution term.
@@ -357,7 +357,7 @@ class AnonVariable(Variable):
         ground: Boolean indicating whether or not the term is ground (always `False`).
     """
 
-    def __init__(self, id: int) -> None:
+    def __init__(self: Self, id: int) -> None:
         """Initializes the anonymous variable instance.
 
         The variable identifier is initialized as `"_{id}"`.
@@ -376,7 +376,7 @@ class AnonVariable(Variable):
         self.val = f"_{id}"
         self.id = id
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `AnonVariable` instance with same id (i.e., value).
@@ -393,13 +393,13 @@ class AnonVariable(Variable):
             and other.id == self.id
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("anon var", self.val))
 
-    def simplify(self) -> "AnonVariable":
+    def simplify(self: Self) -> "AnonVariable":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as variables cannot be simplified.
 
         Returns:
             Copy of the `AnonVariable` instance.
@@ -417,7 +417,7 @@ class Number(Term):
 
     ground: bool = True
 
-    def __init__(self, val: int) -> None:
+    def __init__(self: Self, val: int) -> None:
         """Initializes the number instance.
 
         Args:
@@ -425,7 +425,7 @@ class Number(Term):
         """
         self.val = val
 
-    def __add__(self, other: "Number") -> "Number":
+    def __add__(self: Self, other: "Number") -> "Number":
         """Returns a number representing the sum of this and a given number.
 
         Args:
@@ -436,7 +436,7 @@ class Number(Term):
         """
         return Number(self.val + other.val)
 
-    def __sub__(self, other: "Number") -> "Number":
+    def __sub__(self: Self, other: "Number") -> "Number":
         """Returns a number representing the difference of this and a given number.
 
         Args:
@@ -447,7 +447,7 @@ class Number(Term):
         """
         return Number(self.val - other.val)
 
-    def __mul__(self, other: "Number") -> "Number":
+    def __mul__(self: Self, other: "Number") -> "Number":
         """Returns a number representing the product of this and a given number.
 
         Args:
@@ -458,7 +458,7 @@ class Number(Term):
         """
         return Number(self.val * other.val)
 
-    def __floordiv__(self, other: "Number") -> "Number":
+    def __floordiv__(self: Self, other: "Number") -> "Number":
         """Returns a number representing the integer division of this and a given number.
 
         Args:
@@ -469,7 +469,7 @@ class Number(Term):
         """  # noqa
         return Number(self.val // other.val)
 
-    def __neg__(self) -> "Number":
+    def __neg__(self: Self) -> "Number":
         """Returns the negation of the number.
 
         Returns:
@@ -477,7 +477,7 @@ class Number(Term):
         """  # noqa
         return Number(-self.val)
 
-    def __abs__(self) -> "Number":
+    def __abs__(self: Self) -> "Number":
         """Returns the absolute number.
 
         Returns:
@@ -485,7 +485,7 @@ class Number(Term):
         """  # noqa
         return Number(abs(self.val))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for a number.
 
         Returns:
@@ -493,7 +493,7 @@ class Number(Term):
         """
         return str(self.val)
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `Number` instance with same integer value.
@@ -506,10 +506,10 @@ class Number(Term):
         """  # noqa
         return isinstance(other, Number) and other.val == self.val
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("num", self.val))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
 
         A number is preceded by `Infimum` and all `Number` instances with smaller or equal integer value.
@@ -539,17 +539,17 @@ class Number(Term):
         else:
             return True
 
-    def simplify(self) -> "Number":
+    def simplify(self: Self) -> "Number":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as numbers cannot be further simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as numbers cannot be further simplified.
 
         Returns:
             Copy of the `Number` instance.
         """  # noqa
         return Number(self.val)
 
-    def eval(self) -> int:
+    def eval(self: Self) -> int:
         """Evaluates the number.
 
         Returns:
@@ -568,7 +568,7 @@ class SymbolicConstant(Term):
 
     ground: bool = True
 
-    def __init__(self, val: str) -> None:
+    def __init__(self: Self, val: str) -> None:
         """Initializes the symbolic constant instance.
 
         Args:
@@ -588,7 +588,7 @@ class SymbolicConstant(Term):
 
         self.val = val
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for a symbolic constant.
 
         Returns:
@@ -596,7 +596,7 @@ class SymbolicConstant(Term):
         """
         return self.val
 
-    def __eq__(self, other: "Any") -> str:
+    def __eq__(self: Self, other: "Any") -> str:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `SymbolicConstant` instance with same identifier value.
@@ -609,10 +609,10 @@ class SymbolicConstant(Term):
         """  # noqa
         return isinstance(other, SymbolicConstant) and other.val == self.val
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("symbolic const", self.val))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
 
         A symbolic constant is preceded by `Infimum`, `Number` instances,
@@ -654,7 +654,7 @@ class String(Term):
 
     ground: bool = True
 
-    def __init__(self, val: str) -> None:
+    def __init__(self: Self, val: str) -> None:
         """Initializes the string instance.
 
         Args:
@@ -662,7 +662,7 @@ class String(Term):
         """
         self.val = val
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for a string.
 
         Returns:
@@ -670,7 +670,7 @@ class String(Term):
         """
         return f'"{self.val}"'
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the term to a given object.
 
         Considered equal if the given object is also a `String` instance with same value.
@@ -683,10 +683,10 @@ class String(Term):
         """  # noqa
         return isinstance(other, String) and other.val == self.val
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("str", self.val))
 
-    def precedes(self, other: Term) -> bool:
+    def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
 
         A string is preceded by all (ground) terms except `Supremum` and all `String` instances with lexicographically greater identifier values.
@@ -725,7 +725,7 @@ class TermTuple:
         ground: Boolean indicating whether or not all terms are ground.
     """
 
-    def __init__(self, *terms: Term) -> None:
+    def __init__(self: Self, *terms: Term) -> None:
         """Initializes the term tuple instance.
 
         Args:
@@ -733,10 +733,10 @@ class TermTuple:
         """
         self.terms = terms
 
-    def __len__(self) -> int:
+    def __len__(self: Self) -> int:
         return len(self.terms)
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the term tuple to another given term tuple.
 
         Considered equal if the given object is also a `TermTuple` instance and contains
@@ -754,17 +754,17 @@ class TermTuple:
             and all(t1 == t2 for t1, t2 in zip(self, other))
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("term tuple", *self.terms))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """TODO"""
         return ",".join(tuple(str(term) for term in self.terms))
 
-    def __iter__(self) -> Iterable[Term]:
+    def __iter__(self: Self) -> Iterable[Term]:
         return iter(self.terms)
 
-    def __add__(self, other: "TermTuple") -> "TermTuple":
+    def __add__(self: Self, other: "TermTuple") -> "TermTuple":
         """Concatenates another given term tuple.
 
         Args:
@@ -775,14 +775,14 @@ class TermTuple:
         """
         return TermTuple(*self.terms, *other.terms)
 
-    def __getitem__(self, index: int) -> "Term":
+    def __getitem__(self: Self, index: int) -> "Term":
         return self.terms[index]
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return all(term.ground for term in self.terms)
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the term tuple.
 
         Returns:
@@ -790,7 +790,9 @@ class TermTuple:
         """  # noqa
         return set().union(*tuple(term.vars() for term in self.terms))
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+    def global_vars(
+        self: Self, statement: Optional["Statement"] = None
+    ) -> Set["Variable"]:
         """Returns the global variables associated with the term tuple.
 
         Args:
@@ -803,7 +805,7 @@ class TermTuple:
         return self.vars()
 
     def safety(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> Tuple["SafetyTriplet", ...]:
         """Returns the safety characterizations for all individual terms.
 
@@ -818,7 +820,7 @@ class TermTuple:
         """  # noqa
         return tuple(term.safety(statement) for term in self.terms)
 
-    def replace_arith(self, var_table: "VariableTable") -> "TermTuple":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "TermTuple":
         """Replaces arithmetic terms appearing in the term tuple with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -832,7 +834,7 @@ class TermTuple:
         return TermTuple(*tuple(term.replace_arith(var_table) for term in self.terms))
 
     @cached_property
-    def weight(self) -> int:
+    def weight(self: Self) -> int:
         """Returns the weight of the term tuple.
 
         Returns:
@@ -844,7 +846,7 @@ class TermTuple:
         return 0
 
     @cached_property
-    def pos_weight(self) -> int:
+    def pos_weight(self: Self) -> int:
         """Returns the positive weight of the term tuple.
 
         Returns:
@@ -856,7 +858,7 @@ class TermTuple:
         return 0
 
     @cached_property
-    def neg_weight(self) -> int:
+    def neg_weight(self: Self) -> int:
         """Returns the negative weight of the term tuple.
 
         Returns:
@@ -867,7 +869,7 @@ class TermTuple:
 
         return 0
 
-    def match(self, other: "Expr") -> Optional[Substitution]:
+    def match(self: Self, other: "Expr") -> Optional[Substitution]:
         """Tries to match the term tuple with an expression.
 
         Can only be matched to a term tuple where each corresponding term can be matched
@@ -897,7 +899,7 @@ class TermTuple:
 
         return subst
 
-    def substitute(self, subst: "Substitution") -> "TermTuple":
+    def substitute(self: Self, subst: "Substitution") -> "TermTuple":
         """Applies a substitution to the term tuple.
 
         Substitutes all terms recursively.

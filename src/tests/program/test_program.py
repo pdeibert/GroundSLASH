@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -48,8 +49,7 @@ from ground_slash.program.terms import (
 
 
 class TestProgram(unittest.TestCase):
-    def test_program(self):
-
+    def test_program(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -121,8 +121,7 @@ class TestProgram(unittest.TestCase):
         # TODO: replace arithmetic terms
         # TODO: rewrite aggregates
 
-    def test_from_string(self):
-
+    def test_from_string(self: Self):
         # ----- terms -----
         # NOTE: use normal facts and predicate literals to check
         # (somewhat of a circular test)

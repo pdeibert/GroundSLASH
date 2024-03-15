@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -30,8 +31,7 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class TestConstraint(unittest.TestCase):
-    def test_constraint(self):
-
+    def test_constraint(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from lark import Lark
 
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class SLASHParser:
-    def __init__(self) -> None:
+    def __init__(self: Self) -> None:
         self.lark = Lark.open(
             "SLASH.lark",
             rel_to=__file__,
@@ -15,5 +15,5 @@ class SLASHParser:
             start="program",
         )
 
-    def parse(self, prog_str: str) -> "Tree":
+    def parse(self: Self, prog_str: str) -> "Tree":
         return self.lark.parse(prog_str)

@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import Guard
@@ -8,7 +9,7 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class TestGuard(unittest.TestCase):
-    def test_guard(self):
+    def test_guard(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

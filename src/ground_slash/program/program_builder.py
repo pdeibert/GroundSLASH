@@ -1,11 +1,13 @@
-from typing import List, Optional, Tuple, Union, Any
+from typing import Any, List, Optional, Self, Tuple, Union
 
 from lark import Token, Transformer
 
 from ground_slash.program.literals import (
     AggrElement,
     AggrLiteral,
+    BuiltinLiteral,
     Guard,
+    Literal,
     LiteralCollection,
     Naf,
     Neg,
@@ -32,10 +34,9 @@ from ground_slash.program.terms import (
     Number,
     String,
     SymbolicConstant,
+    Term,
     TermTuple,
 )
-from ground_slash.program.literals import BuiltinLiteral, Literal
-from ground_slash.program.terms import Term
 from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
 
@@ -47,7 +48,8 @@ class ProgramBuilder(Transformer):
         simplify_arithmetic:
         TODO
     """
-    def __init__(self, simplify_arithmetic: bool = True) -> None:
+
+    def __init__(self: Self, simplify_arithmetic: bool = True) -> None:
         """Initializes the program builder instance.
 
         Args:
@@ -57,8 +59,8 @@ class ProgramBuilder(Transformer):
         self.simplify_arithmetic = simplify_arithmetic
 
     def program(
-        self, args: List[Any]
-    ) -> Tuple[Tuple[Statement,...], Optional[PredLiteral]]:
+        self: Self, args: List[Any]
+    ) -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
         """Visits 'program' context.
 
         Handles the following rule(s):
@@ -84,9 +86,7 @@ class ProgramBuilder(Transformer):
 
         return (statements, query)
 
-    def statements(
-        self, args: List[Any]
-    ) -> Tuple["Statement", ...]:
+    def statements(self: Self, args: List[Any]) -> Tuple["Statement", ...]:
         """Visits 'statements'.
 
         Handles the following rule(s):
@@ -100,7 +100,7 @@ class ProgramBuilder(Transformer):
         """
         return tuple(args)
 
-    def query(self, args: List[Any]) -> Query:
+    def query(self: Self, args: List[Any]) -> Query:
         """Visits 'query'.
 
         Handles the following rule(s):
@@ -114,7 +114,7 @@ class ProgramBuilder(Transformer):
         """
         return Query(args[0])
 
-    def statement(self, args: List[Any]) -> "Statement":
+    def statement(self: Self, args: List[Any]) -> "Statement":
         """Visits 'statement'.
 
         Handles the following rule(s):
@@ -159,7 +159,7 @@ class ProgramBuilder(Transformer):
         return statement
 
     def head(
-        self, args: List[Any]
+        self: Self, args: List[Any]
     ) -> Union[Choice, Tuple[PredLiteral, ...], NPP]:
         """Visits 'head'.
 
@@ -184,7 +184,7 @@ class ProgramBuilder(Transformer):
         else:
             return args[0]
 
-    def body(self, args: List[Any]) -> Tuple["Literal", ...]:
+    def body(self: Self, args: List[Any]) -> Tuple["Literal", ...]:
         """Visits 'body'.
 
         Handles the following rule(s):
@@ -214,9 +214,7 @@ class ProgramBuilder(Transformer):
 
         return tuple(literals)
 
-    def disjunction(
-        self, args: List[Any]
-    ) -> List[PredLiteral]:
+    def disjunction(self: Self, args: List[Any]) -> List[PredLiteral]:
         """Visits 'disjunction'.
 
         Handles the following rule(s):
@@ -238,7 +236,7 @@ class ProgramBuilder(Transformer):
 
         return literals
 
-    def choice(self, args: List[Any]) -> Choice:
+    def choice(self: Self, args: List[Any]) -> Choice:
         """Visits 'choice'.
 
         Handles the following rule(s):
@@ -283,9 +281,7 @@ class ProgramBuilder(Transformer):
 
         return Choice(elements, (lguard, rguard))
 
-    def choice_elements(
-        self, args: List[Any]
-    ) -> Tuple[ChoiceElement, ...]:
+    def choice_elements(self: Self, args: List[Any]) -> Tuple[ChoiceElement, ...]:
         """Visits 'choice_elements'.
 
         Handles the following rule(s):
@@ -307,9 +303,7 @@ class ProgramBuilder(Transformer):
 
         return elements
 
-    def choice_element(
-        self, args: List[Any]
-    ) -> ChoiceElement:
+    def choice_element(self: Self, args: List[Any]) -> ChoiceElement:
         """Visits 'choice_element'.
 
         Handles the following rule(s):
@@ -333,7 +327,7 @@ class ProgramBuilder(Transformer):
 
         return ChoiceElement(atom, literals)
 
-    def aggregate(self, args: List[Any]) -> "AggrLiteral":
+    def aggregate(self: Self, args: List[Any]) -> "AggrLiteral":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
@@ -350,9 +344,7 @@ class ProgramBuilder(Transformer):
 
         # term relop
         if isinstance(args[0], Term):
-            lguard = Guard(
-                args[1], args[0], False
-            )
+            lguard = Guard(args[1], args[0], False)
             moving_index += 2  # should now point to 'aggregate_function'
 
         # aggregate_function
@@ -378,9 +370,7 @@ class ProgramBuilder(Transformer):
 
         return AggrLiteral(func, elements, (lguard, rguard))
 
-    def aggregate_elements(
-        self, args: List[Any]
-    ) -> Tuple[AggrElement, ...]:
+    def aggregate_elements(self: Self, args: List[Any]) -> Tuple[AggrElement, ...]:
         """Visits 'aggregate_elements'.
 
         Handles the following rule(s):
@@ -403,9 +393,7 @@ class ProgramBuilder(Transformer):
 
         return elements
 
-    def aggregate_element(
-        self, args: List[Any]
-    ) -> AggrElement:
+    def aggregate_element(self: Self, args: List[Any]) -> AggrElement:
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
@@ -421,27 +409,17 @@ class ProgramBuilder(Transformer):
         """
 
         # terms
-        terms = (
-            args[0]
-            if isinstance(args[0], tuple)
-            else tuple()
-        )
+        terms = args[0] if isinstance(args[0], tuple) else tuple()
 
         # literals
-        literals = (
-            args[-1]
-            if isinstance(args[-1], Literal)
-            else tuple()
-        )
+        literals = args[-1] if isinstance(args[-1], Literal) else tuple()
 
         if not terms and not literals:
             return None
         else:
             return AggrElement(TermTuple(*terms), LiteralCollection(*literals))
 
-    def aggregate_function(
-        self, args: List[Any]
-    ) -> AggrOp:
+    def aggregate_function(self: Self, args: List[Any]) -> AggrOp:
         """Visits 'aggregate_function'.
 
         Handles the following rule(s):
@@ -461,9 +439,7 @@ class ProgramBuilder(Transformer):
 
         return AggrOp(token.value)
 
-    def naf_literals(
-        self, args: List[Any]
-    ) -> Tuple["Literal", ...]:
+    def naf_literals(self: Self, args: List[Any]) -> Tuple["Literal", ...]:
         """Visits 'naf_literals'.
 
         Handles the following rule(s):
@@ -485,14 +461,14 @@ class ProgramBuilder(Transformer):
 
         return literals
 
-    def naf_literal(self, args: List[Any]) -> "Literal":
+    def naf_literal(self: Self, args: List[Any]) -> "Literal":
         """Visits 'naf_literal'.
 
         Handles the following rule(s):
 
             naf_literal         :   NAF? classical_literal
                                 |   builtin_atom ;
-        
+
         Args:
             args: List of arguments.
 
@@ -513,9 +489,7 @@ class ProgramBuilder(Transformer):
 
             return literal
 
-    def classical_literal(
-        self, args: List[Any]
-    ) -> PredLiteral:
+    def classical_literal(self: Self, args: List[Any]) -> PredLiteral:
         """Visits 'classical_literal'.
 
         Handles the following rule(s):
@@ -546,9 +520,7 @@ class ProgramBuilder(Transformer):
 
         return Neg(PredLiteral(args[minus].value, *terms), minus)
 
-    def builtin_atom(
-        self, args: List[Any]
-    ) -> "BuiltinLiteral":
+    def builtin_atom(self: Self, args: List[Any]) -> "BuiltinLiteral":
         """Visits 'builtin_atom'.
 
         Handles the following rule(s):
@@ -562,11 +534,9 @@ class ProgramBuilder(Transformer):
         """
         comp_op = args[1]
 
-        return op2rel[comp_op](
-            args[0], args[2]
-        )
+        return op2rel[comp_op](args[0], args[2])
 
-    def relop(self, args: List[Any]) -> RelOp:
+    def relop(self: Self, args: List[Any]) -> RelOp:
         """Visits 'relop'.
 
         Handles the following rule(s):
@@ -588,7 +558,7 @@ class ProgramBuilder(Transformer):
 
         return RelOp(token.value)
 
-    def terms(self, args: List[Any]) -> Tuple["Term", ...]:
+    def terms(self: Self, args: List[Any]) -> Tuple["Term", ...]:
         """Visits 'terms'.
 
         Handles the following rule(s):
@@ -610,7 +580,7 @@ class ProgramBuilder(Transformer):
 
         return terms
 
-    def term(self, args: List[Any]) -> "Term":
+    def term(self: Self, args: List[Any]) -> "Term":
         """Visits 'term'.
 
         Handles the following rule(s):
@@ -630,7 +600,6 @@ class ProgramBuilder(Transformer):
         """
         # first child is a token
         if isinstance(args[0], Token):
-
             # get token
             token = args[0]
             token_type = token.type
@@ -664,7 +633,7 @@ class ProgramBuilder(Transformer):
             # return (simplified arithmetic term)
             return arith_term.simplify() if self.simplify_arithmetic else arith_term
 
-    def npp_declaration(self, args: List[Any]) -> NPP:
+    def npp_declaration(self: Self, args: List[Any]) -> NPP:
         """Visits 'npp_declaration'.
 
         Handles the following rule(s):
@@ -686,21 +655,16 @@ class ProgramBuilder(Transformer):
         # PAREN_OPEN terms? PAREN_CLOSE
         terms = (
             args[4]
-            if token_type == "PAREN_OPEN"
-            and isinstance(args[4], tuple)
+            if token_type == "PAREN_OPEN" and isinstance(args[4], tuple)
             else TermTuple()
         )
 
         # COMMA SQUARE_OPEN terms? SQUARE_CLOSE
-        outcomes = (
-            args[-3]
-            if isinstance(args[-3], tuple)
-            else TermTuple()
-        )
+        outcomes = args[-3] if isinstance(args[-3], tuple) else TermTuple()
 
         return NPP(name, terms, outcomes)
 
-    def func_term(self, args: List[Any]) -> "Functional":
+    def func_term(self: Self, args: List[Any]) -> "Functional":
         """Visits 'func_term'.
 
         Handles the following rule(s):
@@ -718,7 +682,7 @@ class ProgramBuilder(Transformer):
 
         return Functional(args[0].value, *terms)
 
-    def arith_term(self, args: List[Any]) -> "Term":
+    def arith_term(self: Self, args: List[Any]) -> "Term":
         """Visits 'arith_term'.
 
         Handles the following rule(s):
@@ -733,7 +697,7 @@ class ProgramBuilder(Transformer):
         # TODO: eliminate rule from grammar?
         return args[0]
 
-    def arith_sum(self, args: List[Any]) -> "Term":
+    def arith_sum(self: Self, args: List[Any]) -> "Term":
         """Visits 'arith_sum'.
 
         Handles the following rule(s):
@@ -749,7 +713,6 @@ class ProgramBuilder(Transformer):
         """
         # arith_sum (PLUS | MINUS) arith_prod
         if len(args) > 1:
-
             # get operands and operator token
             loperand, op_token, roperand = args
 
@@ -759,7 +722,7 @@ class ProgramBuilder(Transformer):
         else:
             return self.visitArith_prod(args[0])
 
-    def arith_prod(self, args: List[Any]) -> "Term":
+    def arith_prod(self: Self, args: List[Any]) -> "Term":
         """Visits 'arith_prod'.
 
         Handles the following rule(s):
@@ -775,7 +738,6 @@ class ProgramBuilder(Transformer):
         """
         # arith_prod (TIMES | DIV) arith_atom
         if len(args) > 1:
-
             # get operands and operator token
             loperand, op_token, roperand = args
 
@@ -785,7 +747,7 @@ class ProgramBuilder(Transformer):
         else:
             return args[0]
 
-    def arith_atom(self, args: List[Any]) -> "Term":
+    def arith_atom(self: Self, args: List[Any]) -> "Term":
         """Visits 'arith_atom'.
 
         Handles the following rule(s):

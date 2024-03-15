@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -29,8 +30,7 @@ from ground_slash.program.terms import (
 
 
 class TestNormal(unittest.TestCase):
-    def test_normal_fact(self):
-
+    def test_normal_fact(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -91,8 +91,7 @@ class TestNormal(unittest.TestCase):
 
         # TODO: propagate
 
-    def test_normal_rule(self):
-
+    def test_normal_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

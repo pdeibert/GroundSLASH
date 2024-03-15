@@ -1,5 +1,5 @@
 import unittest
-from typing import Set
+from typing import Self, Set
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -31,16 +31,15 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class DummyRule:
-    def __init__(self, vars: Set["Variable"]) -> None:
+    def __init__(self: Self, vars: Set["Variable"]) -> None:
         self.vars = vars
 
-    def global_vars(self) -> Set["Variable"]:
+    def global_vars(self: Self) -> Set["Variable"]:
         return self.vars
 
 
 class TestAggregate(unittest.TestCase):
-    def test_aggregate_element(self):
-
+    def test_aggregate_element(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -141,8 +140,7 @@ class TestAggregate(unittest.TestCase):
         # match
         self.assertRaises(Exception, element.match, element)
 
-    def test_aggregate_count(self):
-
+    def test_aggregate_count(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -274,8 +272,7 @@ class TestAggregate(unittest.TestCase):
         # TODO: two different guards at a time
         # TODO: special cases?
 
-    def test_aggregate_sum(self):
-
+    def test_aggregate_sum(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -443,8 +440,7 @@ class TestAggregate(unittest.TestCase):
         # TODO: two different guards at a time
         # TODO: special cases?
 
-    def test_aggregate_max(self):
-
+    def test_aggregate_max(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -576,8 +572,7 @@ class TestAggregate(unittest.TestCase):
         # TODO: two different guards at a time
         # TODO: special cases?
 
-    def test_aggregate_min(self):
-
+    def test_aggregate_min(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -709,8 +704,7 @@ class TestAggregate(unittest.TestCase):
         # TODO: two different guards at a time
         # TODO: special cases?
 
-    def test_aggregate_literal(self):
-
+    def test_aggregate_literal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

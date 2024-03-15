@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -18,8 +19,7 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class TestBuiltin(unittest.TestCase):
-    def test_equal(self):
-
+    def test_equal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -95,8 +95,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # assignment conflict
 
-    def test_unequal(self):
-
+    def test_unequal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -177,8 +176,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # assignment conflict
 
-    def test_less(self):
-
+    def test_less(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -255,8 +253,7 @@ class TestBuiltin(unittest.TestCase):
             Less(Variable("X"), Variable("X")).match(Less(Number(1), String("f"))), None
         )  # assignment conflict
 
-    def test_greater(self):
-
+    def test_greater(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -339,8 +336,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # assignment conflict
 
-    def test_less_equal(self):
-
+    def test_less_equal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -427,8 +423,7 @@ class TestBuiltin(unittest.TestCase):
             None,
         )  # assignment conflict
 
-    def test_greater_equal(self):
-
+    def test_greater_equal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

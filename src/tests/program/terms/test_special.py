@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.substitution import Substitution
@@ -7,8 +8,7 @@ from ground_slash.program.terms import Add, ArithVariable, Minus, Number, Variab
 
 
 class TestSpecial(unittest.TestCase):
-    def test_arith_variable(self):
-
+    def test_arith_variable(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -56,7 +56,7 @@ class TestSpecial(unittest.TestCase):
         )
 
     """
-    def test_replace_arith(self):
+    def test_replace_arith(self: Self):
 
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())

@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -27,8 +28,7 @@ from ground_slash.program.terms import Number, TermTuple, Variable
 
 
 class TestSpecial(unittest.TestCase):
-    def test_aggr_base_rule(self):
-
+    def test_aggr_base_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -174,8 +174,7 @@ class TestSpecial(unittest.TestCase):
         # TODO: ground terms don't match
         # TODO: assignment conflict
 
-    def test_aggr_element_rule(self):
-
+    def test_aggr_element_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -284,8 +283,7 @@ class TestSpecial(unittest.TestCase):
         # TODO: ground terms don't match
         # TODO: assignment conflict
 
-    def test_choice_base_rule(self):
-
+    def test_choice_base_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -430,8 +428,7 @@ class TestSpecial(unittest.TestCase):
         # TODO: ground terms don't match
         # TODO: assignment conflict
 
-    def test_choice_element_rule(self):
-
+    def test_choice_element_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

@@ -1,5 +1,5 @@
 import unittest
-from typing import Set
+from typing import Self, Set
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -25,21 +25,20 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class DummyBody:  # pragma: no cover
-    def __init__(self, vars: Set["Variable"]) -> None:
+    def __init__(self: Self, vars: Set["Variable"]) -> None:
         self.vars = vars
 
-    def global_vars(self) -> Set["Variable"]:
+    def global_vars(self: Self) -> Set["Variable"]:
         return self.vars
 
 
 class DummyRule:  # pragma: no cover
-    def __init__(self, vars: Set["Variable"]) -> None:
+    def __init__(self: Self, vars: Set["Variable"]) -> None:
         self.body = DummyBody(vars)
 
 
 class TestNPP(unittest.TestCase):
-    def test_npp(self):
-
+    def test_npp(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -165,8 +164,7 @@ class TestNPP(unittest.TestCase):
             ),
         )
 
-    def test_npp_fact(self):
-
+    def test_npp_fact(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -269,8 +267,7 @@ class TestNPP(unittest.TestCase):
         # assembling
         self.assertEqual(rule, rule.assemble_aggregates(dict()))
 
-    def test_npp_rule(self):
-
+    def test_npp_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

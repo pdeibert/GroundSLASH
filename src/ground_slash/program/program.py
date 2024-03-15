@@ -1,9 +1,8 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple
-
-from lark import Lark
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Self, Set, Tuple
 
 from ground_slash.lark.parser import SLASHParser
+
 from .program_builder import ProgramBuilder
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -29,7 +28,7 @@ class Program:
     """
 
     def __init__(
-        self, statements: Iterable["Statement"], query: Optional["Query"] = None
+        self: Self, statements: Iterable["Statement"], query: Optional["Query"] = None
     ) -> None:
         """Initializes the program instance.
 
@@ -40,7 +39,7 @@ class Program:
         self.statements = tuple(statements)
         self.query = query
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the program to a given object.
 
         Args:
@@ -55,7 +54,7 @@ class Program:
             and self.query == other.query
         )
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the program.
 
         Returns:
@@ -67,7 +66,7 @@ class Program:
             "\n" + str(self.query) if self.query is not None else ""
         )
 
-    def reduct(self, preds: Set[Tuple[str, int]]) -> "Program":
+    def reduct(self: Self, preds: Set[Tuple[str, int]]) -> "Program":
         """Computes the program reduction.
 
         Computes the program reduction as described in Kaminski & Schaub (2022):
@@ -93,7 +92,7 @@ class Program:
             )
         )
 
-    def replace_arith(self) -> "Program":
+    def replace_arith(self: Self) -> "Program":
         """Replaces arithmetic terms appearing in the program.
 
         Note: arithmetic terms are not replaced in-place.
@@ -108,7 +107,7 @@ class Program:
         )
 
     def rewrite_aggregates(
-        self,
+        self: Self,
     ) -> Tuple[
         "Program",
         "Program",
@@ -145,7 +144,6 @@ class Program:
         aggr_map = dict()
 
         for statement in self.statements:
-
             alpha_statement = statement.rewrite_aggregates(aggr_counter, aggr_map)
 
             for *_, eps_statement, eta_statements in aggr_map.values():
@@ -163,7 +161,7 @@ class Program:
         )
 
     def rewrite_choices(
-        self,
+        self: Self,
     ) -> Tuple[
         "Program",
         "Program",
@@ -200,7 +198,6 @@ class Program:
         aggr_map = dict()
 
         for statement in self.statements:
-
             chi_statement = statement.rewrite_choices(choice_counter, aggr_map)
 
             for *_, eps_statement, eta_statements in aggr_map.values():
@@ -218,11 +215,11 @@ class Program:
         )
 
     @cached_property
-    def safe(self) -> bool:
+    def safe(self: Self) -> bool:
         return all(statement.safe for statement in self.statements)  # TODO: query?
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return all(statement.ground for statement in self.statements)  # TODO: query?
 
     @classmethod

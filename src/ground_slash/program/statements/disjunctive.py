@@ -1,7 +1,18 @@
 from copy import deepcopy
 from functools import cached_property
 from itertools import combinations
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Self,
+    Set,
+    Tuple,
+    Union,
+)
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -54,7 +65,7 @@ class DisjunctiveRule(Statement):
     deterministic: bool = False
 
     def __init__(
-        self,
+        self: Self,
         head: Iterable["Literal"],
         body: Optional[Iterable["Literal"]] = None,
         **kwargs,
@@ -96,7 +107,7 @@ class DisjunctiveRule(Statement):
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the statement to a given object.
 
         Considered equal if the given object is also a `DisjunctiveRule` instance with same atoms
@@ -114,10 +125,10 @@ class DisjunctiveRule(Statement):
             and set(self.literals) == set(other.literals)
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("disjunctive rule", self.atoms, self.literals))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the statement.
 
         Returns:
@@ -126,23 +137,23 @@ class DisjunctiveRule(Statement):
         return f"{' | '.join([str(atom) for atom in self.head])}{f' :- {str(self.body)}' if self.body else ''}."  # noqa
 
     @property
-    def head(self) -> LiteralCollection:
+    def head(self: Self) -> LiteralCollection:
         return self.atoms
 
     @property
-    def body(self) -> LiteralCollection:
+    def body(self: Self) -> LiteralCollection:
         return self.literals
 
     @cached_property
-    def safe(self) -> bool:
+    def safe(self: Self) -> bool:
         return self.body.safety(self) == SafetyTriplet(self.global_vars())
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return self.head.ground and self.body.ground
 
     def substitute(
-        self, subst: "Substitution"
+        self: Self, subst: "Substitution"
     ) -> Union["DisjunctiveRule", "NormalRule"]:
         """Applies a substitution to the statement.
 
@@ -167,7 +178,7 @@ class DisjunctiveRule(Statement):
         return DisjunctiveRule(subst_head, self.literals.substitute(subst))
 
     def rewrite_aggregates(
-        self,
+        self: Self,
         aggr_counter: int,
         aggr_map: Dict[
             int,
@@ -241,7 +252,7 @@ class DisjunctiveRule(Statement):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
+        self: Self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "DisjunctiveRule":
         """Reassembles rewritten aggregates expressions inside the statement.
 
@@ -260,7 +271,7 @@ class DisjunctiveRule(Statement):
             ),
         )
 
-    def replace_arith(self) -> "DisjunctiveRule":
+    def replace_arith(self: Self) -> "DisjunctiveRule":
         """Replaces arithmetic terms appearing in the statement with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -277,11 +288,11 @@ class DisjunctiveRule(Statement):
         )
 
     @cached_property
-    def is_fact(self) -> bool:
+    def is_fact(self: Self) -> bool:
         return not bool(len(self.body))
 
     def powerset(
-        self,
+        self: Self,
     ) -> List[Tuple[int, ...]]:
         """TODO"""
 

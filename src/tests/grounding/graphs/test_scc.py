@@ -1,12 +1,12 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.grounding.graphs import compute_SCCs
 
 
 class TestSCC(unittest.TestCase):
-    def test_compute_SCCs(self):
-
+    def test_compute_SCCs(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

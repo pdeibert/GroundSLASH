@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -17,7 +18,6 @@ from ground_slash.program.literals import (
     PredLiteral,
 )
 from ground_slash.program.operators import RelOp
-from ground_slash.program.safety_characterization import SafetyTriplet
 from ground_slash.program.statements import AggrBaseRule, AggrElemRule, DisjunctiveRule
 from ground_slash.program.substitution import Substitution
 from ground_slash.program.terms import (
@@ -31,8 +31,7 @@ from ground_slash.program.terms import (
 
 
 class TestDisjunctive(unittest.TestCase):
-    def test_disjunctive_fact(self):
-
+    def test_disjunctive_fact(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -143,8 +142,7 @@ class TestDisjunctive(unittest.TestCase):
 
         # TODO: propagate
 
-    def test_disjunctive_rule(self):
-
+    def test_disjunctive_rule(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

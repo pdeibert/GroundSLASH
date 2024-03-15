@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.grounding.graphs import DependencyGraph
@@ -6,8 +7,7 @@ from ground_slash.program import Program
 
 
 class TestDependencyGraph(unittest.TestCase):
-    def test_dependency_graph(self):
-
+    def test_dependency_graph(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

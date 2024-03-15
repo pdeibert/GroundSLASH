@@ -10,6 +10,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Self,
     Set,
     Tuple,
     Union,
@@ -61,7 +62,7 @@ class ChoiceElement(Expr):
     """
 
     def __init__(
-        self,
+        self: Self,
         atom: "PredLiteral",
         literals: Optional[Iterable["Literal"]] = None,
     ) -> None:
@@ -81,7 +82,7 @@ class ChoiceElement(Expr):
             else LiteralCollection(*literals)
         )
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the element to a given object.
 
         Considered equal if the given object is also a `ChoiceElement` instance with same atom and literals.
@@ -98,10 +99,10 @@ class ChoiceElement(Expr):
             and self.literals == other.literals
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("choice element", self.atom, self.literals))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the choice element.
 
         Returns:
@@ -116,18 +117,18 @@ class ChoiceElement(Expr):
         )
 
     @property
-    def head(self) -> LiteralCollection:
+    def head(self: Self) -> LiteralCollection:
         return LiteralCollection(self.atom)
 
     @property
-    def body(self) -> LiteralCollection:
+    def body(self: Self) -> LiteralCollection:
         return self.literals
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return self.atom.ground and self.literals.ground
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -135,7 +136,7 @@ class ChoiceElement(Expr):
         """
         return self.atom.pos_occ() + self.literals.pos_occ()
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -143,7 +144,7 @@ class ChoiceElement(Expr):
         """
         return self.atom.neg_occ() + self.literals.neg_occ()
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the element.
 
         Returns:
@@ -151,7 +152,9 @@ class ChoiceElement(Expr):
         """
         return self.atom.vars().union(self.literals.vars())
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+    def global_vars(
+        self: Self, statement: Optional["Statement"] = None
+    ) -> Set["Variable"]:
         """Returns the global variables associated with the literal.
 
         Args:
@@ -163,7 +166,7 @@ class ChoiceElement(Expr):
         """
         return self.vars()
 
-    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
+    def safety(self: Self, statement: Optional["Statement"] = None) -> SafetyTriplet:
         """Returns the the safety characterizations for the choice literal.
 
         Raises an exception, since safety characterization is undefined for choice elements
@@ -185,7 +188,7 @@ class ChoiceElement(Expr):
             "Safety characterization for choice elements is undefined without context."  # noqa
         )
 
-    def substitute(self, subst: "Substitution") -> "ChoiceElement":
+    def substitute(self: Self, subst: "Substitution") -> "ChoiceElement":
         """Applies a substitution to the choice element.
 
         Substitutes all literals recursively.
@@ -201,7 +204,7 @@ class ChoiceElement(Expr):
             self.literals.substitute(subst),
         )
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
+    def match(self: Self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the choice element with an expression.
 
         Raises an exception, since matching for choice elements is undefined.
@@ -214,7 +217,7 @@ class ChoiceElement(Expr):
         """  # noqa
         raise Exception("Matching for choice elements is not defined.")
 
-    def replace_arith(self, var_table: "VariableTable") -> "ChoiceElement":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "ChoiceElement":
         """Replaces arithmetic terms appearing in the element with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -230,7 +233,7 @@ class ChoiceElement(Expr):
             self.literals.replace_arith(var_table),
         )
 
-    def satisfied(self, literals: Set["Literal"]) -> bool:
+    def satisfied(self: Self, literals: Set["Literal"]) -> bool:
         """Check whether or not the element is satisfied.
 
         Args:
@@ -256,7 +259,7 @@ class Choice(Expr):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         elements: Tuple[ChoiceElement],
         guards: Optional[Union["Guard", Tuple["Guard", ...]]] = None,
     ):
@@ -305,7 +308,7 @@ class Choice(Expr):
 
         self.elements = elements
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the choice expression to a given object.
 
         Considered equal if the given object is also a `Choice` instance with same
@@ -324,10 +327,10 @@ class Choice(Expr):
             and self.guards == other.guards
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("choice", frozenset(self.elements), self.guards))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the choice expression.
 
         Returns:
@@ -341,31 +344,31 @@ class Choice(Expr):
 
         return f"{lguard_str}{{{elements_str}}}{rguard_str}"
 
-    def __iter__(self) -> Iterator[ChoiceElement]:
+    def __iter__(self: Self) -> Iterator[ChoiceElement]:
         return iter(self.elements)
 
-    def __len__(self) -> int:
+    def __len__(self: Self) -> int:
         return len(self.head)
 
     @property
-    def head(self) -> LiteralCollection:
+    def head(self: Self) -> LiteralCollection:
         return LiteralCollection(*tuple(element.atom for element in self.elements))
 
     @property
-    def body(self) -> LiteralCollection:
+    def body(self: Self) -> LiteralCollection:
         return LiteralCollection(
             *chain(*tuple(element.literals for element in self.elements))
         )
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return all(element.ground for element in self.elements)
 
     @property
-    def guards(self) -> Tuple[Union["Guard", None], Union["Guard", None]]:
+    def guards(self: Self) -> Tuple[Union["Guard", None], Union["Guard", None]]:
         return (self.lguard, self.rguard)
 
-    def invars(self) -> Set["Variable"]:
+    def invars(self: Self) -> Set["Variable"]:
         """Inner variables.
 
         Returns:
@@ -373,7 +376,7 @@ class Choice(Expr):
         """
         return set().union(*tuple(element.vars() for element in self.elements))
 
-    def outvars(self) -> Set["Variable"]:
+    def outvars(self: Self) -> Set["Variable"]:
         """Outer variables.
 
         Returns:
@@ -383,7 +386,7 @@ class Choice(Expr):
             *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
         )
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the choice expressions.
 
         Union of the sets of inner and outer variables.
@@ -393,7 +396,7 @@ class Choice(Expr):
         """  # noqa
         return self.invars().union(self.outvars())
 
-    def global_vars(self, statement: "Statement") -> Set["Variable"]:
+    def global_vars(self: Self, statement: "Statement") -> Set["Variable"]:
         """Returns the global variables associated with the choice expression.
 
         For choice exressions the set of inner and outer variables that are global
@@ -409,7 +412,7 @@ class Choice(Expr):
 
         return self.outvars().union(self.invars().intersection(glob_body_vars))
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -419,7 +422,7 @@ class Choice(Expr):
             *itertools.chain(*tuple(element.pos_occ() for element in self.elements))
         )
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -478,7 +481,7 @@ class Choice(Expr):
         return res
 
     def propagate(
-        self,
+        self: Self,
         guards: Tuple[Optional[Guard], Optional[Guard]],
         elements: Set["ChoiceElement"],
         literals_I: Set["Literal"],
@@ -584,7 +587,7 @@ class Choice(Expr):
 
         return res
 
-    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
+    def safety(self: Self, statement: Optional["Statement"] = None) -> SafetyTriplet:
         """Returns the the safety characterizations for the choice expression.
 
         Raises an exception, since safety characterization is undefined for choice expressions.
@@ -602,7 +605,7 @@ class Choice(Expr):
         """  # noqa
         raise Exception("Safety characterization not defined for choice expressions.")
 
-    def substitute(self, subst: "Substitution") -> "Choice":
+    def substitute(self: Self, subst: "Substitution") -> "Choice":
         """Applies a substitution to the choice expression.
 
         Substitutes all guards and elements recursively.
@@ -627,7 +630,7 @@ class Choice(Expr):
 
         return Choice(elements, guards)
 
-    def replace_arith(self, var_table: "VariableTable") -> "Choice":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "Choice":
         """Replaces arithmetic terms appearing in the choice expression with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -649,7 +652,7 @@ class Choice(Expr):
             guards,
         )
 
-    def range(self) -> Iterator[int]:
+    def range(self: Self) -> Iterator[int]:
         """TODO"""
 
         # empty set is smallest possible choice
@@ -661,7 +664,6 @@ class Choice(Expr):
         exclude = set()
 
         for guard in self.guards:
-
             if guard is None:
                 continue
             elif guard.right:
@@ -739,7 +741,7 @@ class ChoiceRule(Statement):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         head: Choice,
         body: Optional[Iterable["Literal"]] = None,
         *args,
@@ -765,7 +767,7 @@ class ChoiceRule(Statement):
             body if isinstance(body, LiteralCollection) else LiteralCollection(*body)
         )
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the statement to a given object.
 
         Considered equal if the given object is also a `ChoiceRule` instance with same choice and
@@ -783,10 +785,10 @@ class ChoiceRule(Statement):
             and self.literals == other.literals
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("choice rule", self.head, self.literals))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the statement.
 
         Returns:
@@ -795,15 +797,15 @@ class ChoiceRule(Statement):
         return f"{str(self.head)}{f' :- {str(self.body)}' if self.body else ''}."
 
     @property
-    def head(self) -> Choice:
+    def head(self: Self) -> Choice:
         return self.choice
 
     @property
-    def body(self) -> LiteralCollection:
+    def body(self: Self) -> LiteralCollection:
         return self.literals
 
     @cached_property
-    def safe(self) -> bool:
+    def safe(self: Self) -> bool:
         outside_glob_vars = self.body.global_vars().union(self.choice.outvars())
 
         for element in self.choice:
@@ -817,10 +819,10 @@ class ChoiceRule(Statement):
         return True
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return self.head.ground and self.body.ground
 
-    def consequents(self) -> "LiteralCollection":
+    def consequents(self: Self) -> "LiteralCollection":
         """Returns the consequents of the statement.
 
         Returns:
@@ -828,7 +830,7 @@ class ChoiceRule(Statement):
         """
         return self.choice.head
 
-    def antecedents(self) -> "LiteralCollection":
+    def antecedents(self: Self) -> "LiteralCollection":
         """Returns the antecedents of the statement.
 
         Returns:
@@ -837,11 +839,11 @@ class ChoiceRule(Statement):
         return LiteralCollection(*self.literals, *self.choice.body)
 
     def safety(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         raise Exception("Safety characterization for choice rules not supported yet.")
 
-    def substitute(self, subst: "Substitution") -> "ChoiceRule":
+    def substitute(self: Self, subst: "Substitution") -> "ChoiceRule":
         """Applies a substitution to the statement.
 
         Substitutes the choice and all literals recursively.
@@ -857,7 +859,7 @@ class ChoiceRule(Statement):
 
         return ChoiceRule(self.head.substitute(subst), self.body.substitute(subst))
 
-    def replace_arith(self) -> "ChoiceRule":
+    def replace_arith(self: Self) -> "ChoiceRule":
         """Replaces arithmetic terms appearing in the statement with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -874,7 +876,7 @@ class ChoiceRule(Statement):
         )
 
     def rewrite_aggregates(
-        self,
+        self: Self,
         aggr_counter: int,
         aggr_map: Dict[
             int,
@@ -948,7 +950,7 @@ class ChoiceRule(Statement):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
+        self: Self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "ChoiceRule":
         """Reassembles rewritten aggregates expressions inside the statement.
 
@@ -968,7 +970,7 @@ class ChoiceRule(Statement):
         )
 
     def rewrite_choices(
-        self,
+        self: Self,
         choice_counter: int,
         choice_map: Dict[
             int,
@@ -1016,11 +1018,11 @@ class ChoiceRule(Statement):
         return chi_rule
 
     @cached_property
-    def is_fact(self) -> bool:
+    def is_fact(self: Self) -> bool:
         return bool(self.literals)
 
     def powerset(
-        self,
+        self: Self,
     ) -> List[Tuple[int, ...]]:
         """TODO"""
 

@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.substitution import AssignmentError, Substitution
@@ -6,8 +7,7 @@ from ground_slash.program.terms import Number, String, Variable
 
 
 class TestSubstitution(unittest.TestCase):
-    def test_substitution(self):
-
+    def test_substitution(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

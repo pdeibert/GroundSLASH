@@ -1,7 +1,7 @@
 import warnings
 from collections import defaultdict
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Optional, Self, Set
 
 from ground_slash.program.literals import (
     AggrLiteral,
@@ -24,8 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Grounder:
-    def __init__(self, prog: Program) -> None:
-
+    def __init__(self: Self, prog: Program) -> None:
         if not prog.safe:
             raise ValueError("Grounding requires program to be safe.")
 
@@ -182,7 +181,7 @@ class Grounder:
         return set()
 
     def ground_component(
-        self,
+        self: Self,
         component: Program,
         literals_I: Optional[Set["Literal"]] = None,
         literals_J: Optional[Set["Literal"]] = None,
@@ -237,7 +236,6 @@ class Grounder:
         converged = False
 
         while not converged:
-
             # ground aggregate epsilon rules
             # (encode the satisfiability of aggregates without any element instances)
             aggr_eps_instances.update(
@@ -369,8 +367,7 @@ class Grounder:
         # return re-assembled rules
         return assembled_instances
 
-    def ground(self) -> Program:
-
+    def ground(self: Self) -> Program:
         # compute component graph for rules/facts only
         component_graph = ComponentGraph(self.prog.statements)  # rules/facts only???
 

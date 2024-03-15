@@ -1,6 +1,6 @@
 from abc import ABC
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from ground_slash.program.literals import LiteralCollection, PredLiteral
 from ground_slash.program.substitution import Substitution
@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class AuxLiteral(PredLiteral, ABC):
     """Abstract base class for auxiliary predicate literals."""
 
-    def __init__(self, name: str, *args, **kwargs) -> None:
+    def __init__(self: Self, name: str, *args, **kwargs) -> None:
         """Initializes the auxiliary literal instance.
 
         Args:
@@ -42,7 +42,7 @@ class PropPlaceholder(AuxLiteral):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         prefix: str,
         ref_id: int,
         glob_vars: TermTuple,
@@ -71,7 +71,7 @@ class PropPlaceholder(AuxLiteral):
         self.ref_id = ref_id
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
         Considered equal if the given object is also a `PropPlaceholder` instance with same
@@ -93,7 +93,7 @@ class PropPlaceholder(AuxLiteral):
             == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(
             (
                 "prop placeholder",
@@ -103,7 +103,7 @@ class PropPlaceholder(AuxLiteral):
             )
         )
 
-    def set_neg(self, value: bool = True) -> None:
+    def set_neg(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as placeholder literals cannot be classically negated.
@@ -115,7 +115,7 @@ class PropPlaceholder(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -134,7 +134,7 @@ class PropPlaceholder(AuxLiteral):
             )
         )
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -154,7 +154,7 @@ class PropPlaceholder(AuxLiteral):
             )
         )
 
-    def substitute(self, subst: "Substitution") -> "PropPlaceholder":
+    def substitute(self: Self, subst: "Substitution") -> "PropPlaceholder":
         """Applies a substitution to the literal.
 
         Substitutes all terms recursively.
@@ -177,7 +177,7 @@ class PropPlaceholder(AuxLiteral):
             naf=self.naf,
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "PropPlaceholder":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "PropPlaceholder":
         """Replaces arithmetic terms appearing in the literal with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -196,7 +196,7 @@ class PropPlaceholder(AuxLiteral):
             naf=self.naf,
         )
 
-    def gather_var_assignment(self) -> Substitution:
+    def gather_var_assignment(self: Self) -> Substitution:
         """Get assignment of global variables from current terms.
 
         Returns:
@@ -228,7 +228,7 @@ class PropBaseLiteral(AuxLiteral):
     """  # noqa
 
     def __init__(
-        self, prefix: str, ref_id: int, glob_vars: TermTuple, terms: TermTuple
+        self: Self, prefix: str, ref_id: int, glob_vars: TermTuple, terms: TermTuple
     ) -> None:
         """Initializes the literal instance representing an empty propagatable expression.
 
@@ -254,7 +254,7 @@ class PropBaseLiteral(AuxLiteral):
         # store tuple to have a fixed reference order for variables
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
         Considered equal if the given object is also a `PropBaseLiteral` instance with same
@@ -276,7 +276,7 @@ class PropBaseLiteral(AuxLiteral):
             == {v: t for v, t in zip(other.glob_vars, other.terms)}
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(
             (
                 "prop base literal",
@@ -286,7 +286,7 @@ class PropBaseLiteral(AuxLiteral):
             )
         )
 
-    def set_naf(self, value: bool = True) -> None:
+    def set_naf(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as propagation literals cannot be default-negated.
@@ -298,7 +298,7 @@ class PropBaseLiteral(AuxLiteral):
             f"Negation as failure cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def set_neg(self, value: bool = True) -> None:
+    def set_neg(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as propagation literals cannot be classically negated.
@@ -310,7 +310,7 @@ class PropBaseLiteral(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -325,7 +325,7 @@ class PropBaseLiteral(AuxLiteral):
             )
         )
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -333,7 +333,7 @@ class PropBaseLiteral(AuxLiteral):
         """
         return LiteralCollection()
 
-    def substitute(self, subst: "Substitution") -> "PropBaseLiteral":
+    def substitute(self: Self, subst: "Substitution") -> "PropBaseLiteral":
         """Applies a substitution to the literal.
 
         Substitutes all terms recursively.
@@ -355,7 +355,7 @@ class PropBaseLiteral(AuxLiteral):
             terms=TermTuple(*tuple((term.substitute(subst) for term in self.terms))),
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "PropBaseLiteral":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "PropBaseLiteral":
         """Replaces arithmetic terms appearing in the literal with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -373,7 +373,7 @@ class PropBaseLiteral(AuxLiteral):
             terms=self.terms,
         )
 
-    def gather_var_assignment(self) -> Substitution:
+    def gather_var_assignment(self: Self) -> Substitution:
         """Get assignment of global variables from current terms.
 
         Returns:
@@ -406,7 +406,7 @@ class PropElemLiteral(AuxLiteral):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         prefix: str,
         ref_id: int,
         element_id: int,
@@ -442,7 +442,7 @@ class PropElemLiteral(AuxLiteral):
         self.local_vars = local_vars
         self.glob_vars = glob_vars
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
         Considered equal if the given object is also a `PropElemLiteral` instance with same
@@ -466,7 +466,7 @@ class PropElemLiteral(AuxLiteral):
             == {v: t for v, t in zip(other.local_vars + other.glob_vars, other.terms)}
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(
             (
                 "prop element literal",
@@ -484,7 +484,7 @@ class PropElemLiteral(AuxLiteral):
             )
         )
 
-    def set_naf(self, value: bool = True) -> None:
+    def set_naf(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as propagation literals cannot be default-negated.
@@ -496,7 +496,7 @@ class PropElemLiteral(AuxLiteral):
             f"Negation as failure cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def set_neg(self, value: bool = True) -> None:
+    def set_neg(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as propagation literals cannot be default-negated.
@@ -508,7 +508,7 @@ class PropElemLiteral(AuxLiteral):
             f"Classical negation cannot be set for literal of type {type(self)}."  # noqa
         )
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -525,7 +525,7 @@ class PropElemLiteral(AuxLiteral):
             )
         )
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -533,7 +533,7 @@ class PropElemLiteral(AuxLiteral):
         """
         return LiteralCollection()
 
-    def substitute(self, subst: "Substitution") -> "PropElemLiteral":
+    def substitute(self: Self, subst: "Substitution") -> "PropElemLiteral":
         """Applies a substitution to the literal.
 
         Substitutes all terms recursively.
@@ -557,7 +557,7 @@ class PropElemLiteral(AuxLiteral):
             terms=TermTuple(*tuple(term.substitute(subst) for term in self.terms)),
         )
 
-    def replace_arith(self, var_table: "VariableTable") -> "PropElemLiteral":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "PropElemLiteral":
         """Replaces arithmetic terms appearing in the literal with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -577,7 +577,7 @@ class PropElemLiteral(AuxLiteral):
             terms=self.terms,
         )
 
-    def gather_var_assignment(self) -> Substitution:
+    def gather_var_assignment(self: Self) -> Substitution:
         """Get assignment of variables from current terms.
 
         Returns:
@@ -606,7 +606,7 @@ class AggrPlaceholder(PropPlaceholder):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         ref_id: int,
         glob_vars: TermTuple,
         terms: TermTuple,
@@ -644,7 +644,7 @@ class AggrBaseLiteral(PropBaseLiteral):
     """  # noqa
 
     def __init__(
-        self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
+        self: Self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
     ) -> None:
         """Initializes the literal instance representing an empty propagated aggregate expression.
 
@@ -677,7 +677,7 @@ class AggrElemLiteral(PropElemLiteral):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         ref_id: int,
         element_id: int,
         local_vars: "TermTuple",
@@ -716,7 +716,7 @@ class ChoicePlaceholder(PropPlaceholder):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         ref_id: int,
         glob_vars: TermTuple,
         terms: TermTuple,
@@ -737,7 +737,7 @@ class ChoicePlaceholder(PropPlaceholder):
         """  # noqa
         super().__init__(SpecialChar.CHI.value, ref_id, glob_vars, terms, naf=naf)
 
-    def set_naf(self, value: bool = True) -> None:
+    def set_naf(self: Self, value: bool = True) -> None:
         """Setter for the `neg` attribute.
 
         Raises an exception as placeholder literals for choice expressions cannot be default-negated.
@@ -766,7 +766,7 @@ class ChoiceBaseLiteral(PropBaseLiteral):
     """  # noqa
 
     def __init__(
-        self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
+        self: Self, ref_id: int, glob_vars: TermTuple, terms: TermTuple, *args, **kwargs
     ) -> None:
         """Initializes the literal instance representing an empty propagated choice expression.
 
@@ -799,7 +799,7 @@ class ChoiceElemLiteral(PropElemLiteral):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         ref_id: int,
         element_id: int,
         local_vars: "TermTuple",

@@ -1,4 +1,5 @@
 import unittest
+from typing import Self
 
 import ground_slash
 from ground_slash.program.literals import (
@@ -19,8 +20,7 @@ from ground_slash.program.variable_table import VariableTable
 
 
 class TestSpecial(unittest.TestCase):
-    def test_aggr_placeholder(self):
-
+    def test_aggr_placeholder(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -110,8 +110,7 @@ class TestSpecial(unittest.TestCase):
             Substitution({Variable("X"): Number(1)}),
         )
 
-    def test_aggr_base_literal(self):
-
+    def test_aggr_base_literal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -191,8 +190,7 @@ class TestSpecial(unittest.TestCase):
             Substitution({Variable("X"): Number(1)}),
         )
 
-    def test_aggr_elem_literal(self):
-
+    def test_aggr_elem_literal(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -336,8 +334,7 @@ class TestSpecial(unittest.TestCase):
             None,
         )  # ground terms don't match
 
-    def test_choice_placeholder(self):
-
+    def test_choice_placeholder(self: Self):
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -421,7 +418,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_choice_base_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -502,7 +498,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_choice_elem_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
