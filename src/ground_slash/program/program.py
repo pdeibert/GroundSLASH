@@ -1,11 +1,9 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple
 
-import antlr4  # type: ignore
+from lark import Lark
 
-from ground_slash.antlr.SLASHLexer import SLASHLexer
-from ground_slash.antlr.SLASHParser import SLASHParser
-
+from ground_slash.lark.parser import SLASHParser
 from .program_builder import ProgramBuilder
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -237,17 +235,10 @@ class Program:
         Returns:
             `Program` instance.
         """
-        input_stream = antlr4.InputStream(prog_str)  # type: ignore
+        parser = SLASHParser()
+        tree = parser.parse(prog_str)
 
-        # tokenize input program
-        lexer = SLASHLexer(input_stream)
-        stream = antlr4.CommonTokenStream(lexer)  # type: ignore
-        stream.fill()
-
-        parser = SLASHParser(stream)
-        tree = parser.program()
-
-        # traverse parse tree using visitor
-        statements, query = ProgramBuilder().visit(tree)
+        # transform parse tree to SLASH expression objects
+        statements, query = ProgramBuilder().transform(tree)
 
         return Program(tuple(statements), query)
