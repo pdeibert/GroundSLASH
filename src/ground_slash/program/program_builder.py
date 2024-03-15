@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Self, Tuple, Union
+from typing import Any, List, Optional, Self, Tuple, Union, TYPE_CHECKING
 
 from lark import Token, Transformer
 
@@ -40,6 +40,9 @@ from ground_slash.program.terms import (
 from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
 
+if TYPE_CHECKING:
+    from lark import Tree
+
 
 class ProgramBuilder(Transformer):
     """Builds a SLASH program from a Lark parse tree.
@@ -57,6 +60,12 @@ class ProgramBuilder(Transformer):
                 arithmetic terms while building the program. Defaults to `True`.
         """
         self.simplify_arithmetic = simplify_arithmetic
+        self.var_table = None
+
+    def transform(self: Self, tree: "Tree") -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
+        # initialize new variable table
+        self.var_table = VariableTable()
+        return super().transform(tree)
 
     def program(
         self: Self, args: List[Any]
@@ -137,7 +146,7 @@ class ProgramBuilder(Transformer):
         if isinstance(args[0], Token):
             # body
             if n_children > 2:
-                statement = Constraint(*self.visitBody(args[1]))
+                statement = Constraint(*args[1])
             else:
                 # TODO: empty constraint?
                 raise Exception("Empty constraints not supported yet.")
@@ -409,15 +418,15 @@ class ProgramBuilder(Transformer):
         """
 
         # terms
-        terms = args[0] if isinstance(args[0], tuple) else tuple()
+        terms = args[0] if isinstance(args[0], TermTuple) else TermTuple()
 
         # literals
-        literals = args[-1] if isinstance(args[-1], Literal) else tuple()
+        literals = args[-1] if isinstance(args[-1], LiteralCollection) else LiteralCollection()
 
         if not terms and not literals:
             return None
         else:
-            return AggrElement(TermTuple(*terms), LiteralCollection(*literals))
+            return AggrElement(TermTuple(*terms), literals)
 
     def aggregate_function(self: Self, args: List[Any]) -> AggrOp:
         """Visits 'aggregate_function'.
@@ -439,7 +448,7 @@ class ProgramBuilder(Transformer):
 
         return AggrOp(token.value)
 
-    def naf_literals(self: Self, args: List[Any]) -> Tuple["Literal", ...]:
+    def naf_literals(self: Self, args: List[Any]) -> LiteralCollection:
         """Visits 'naf_literals'.
 
         Handles the following rule(s):
@@ -452,7 +461,7 @@ class ProgramBuilder(Transformer):
             Tuple of `Literal` instances.
         """
         # naf_literal
-        literals = tuple([args[0]])
+        literals = LiteralCollection(args[0])
 
         # COMMA naf_literals
         if len(args) > 1:
@@ -558,7 +567,7 @@ class ProgramBuilder(Transformer):
 
         return RelOp(token.value)
 
-    def terms(self: Self, args: List[Any]) -> Tuple["Term", ...]:
+    def terms(self: Self, args: List[Any]) -> TermTuple:
         """Visits 'terms'.
 
         Handles the following rule(s):
@@ -571,7 +580,7 @@ class ProgramBuilder(Transformer):
             Tuple of `Term` instances.
         """
         # term
-        terms = tuple([args[0]])
+        terms = TermTuple(args[0])
 
         # COMMA terms
         if len(args) > 1:
@@ -655,12 +664,12 @@ class ProgramBuilder(Transformer):
         # PAREN_OPEN terms? PAREN_CLOSE
         terms = (
             args[4]
-            if token_type == "PAREN_OPEN" and isinstance(args[4], tuple)
+            if token_type == "PAREN_OPEN" and isinstance(args[4], TermTuple)
             else TermTuple()
         )
 
         # COMMA SQUARE_OPEN terms? SQUARE_CLOSE
-        outcomes = args[-3] if isinstance(args[-3], tuple) else TermTuple()
+        outcomes = args[-3] if isinstance(args[-3], TermTuple) else TermTuple()
 
         return NPP(name, terms, outcomes)
 
@@ -720,7 +729,7 @@ class ProgramBuilder(Transformer):
             return op2arith[ArithOp(op_token.value)](loperand, roperand)
         # arith_prod
         else:
-            return self.visitArith_prod(args[0])
+            return args[0]
 
     def arith_prod(self: Self, args: List[Any]) -> "Term":
         """Visits 'arith_prod'.
@@ -762,8 +771,6 @@ class ProgramBuilder(Transformer):
         Returns:
             `Term` instance.
         """
-        # TODO: what about anonymous variables ?
-
         # get first token
         token = args[0]
         token_type = token.type

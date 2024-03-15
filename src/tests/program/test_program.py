@@ -476,6 +476,8 @@ class TestProgram(unittest.TestCase):
             Program.from_string("#npp(h,[]).").statements[0],
             NPPRule(NPP("h", TermTuple(), TermTuple())),
         )
+        print(Program.from_string("#npp(h(),[p,0]):-.").statements[0])
+        print(NPPRule(NPP("h", TermTuple(), TermTuple(SymbolicConstant("p"), Number(0)))))
         self.assertEqual(
             Program.from_string("#npp(h(),[p,0]):-.").statements[0],
             NPPRule(NPP("h", TermTuple(), TermTuple(SymbolicConstant("p"), Number(0)))),
