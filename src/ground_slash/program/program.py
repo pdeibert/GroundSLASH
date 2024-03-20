@@ -1,9 +1,7 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Self, Set, Tuple
 
-from ground_slash.lark.parser import SLASHParser
-
-from .program_builder import ProgramBuilder
+from ground_slash.lark import Parser, EarleyTransformer, LALRTransformer
 
 if TYPE_CHECKING:  # pragma: no cover
     from .literals import AggrPlaceholder, ChoicePlaceholder
@@ -223,7 +221,7 @@ class Program:
         return all(statement.ground for statement in self.statements)  # TODO: query?
 
     @classmethod
-    def from_string(cls, prog_str: str) -> "Program":
+    def from_string(cls, prog_str: str, mode: str="earley") -> "Program":
         """Creates program from a raw string encoding.
 
         Args:
@@ -232,10 +230,15 @@ class Program:
         Returns:
             `Program` instance.
         """
-        parser = SLASHParser()
+        # check if mode is valid
+        if mode not in ("earley", "lalr"):
+            raise ValueError(f"Invalid value {mode} for 'mode'.")
+
+        parser = Parser(mode=mode)
+        transformer = EarleyTransformer() if mode == "earley" else LALRTransformer()
         tree = parser.parse(prog_str)
 
         # transform parse tree to SLASH expression objects
-        statements, query = ProgramBuilder().transform(tree)
+        statements, query = transformer.transform(tree)
 
         return Program(tuple(statements), query)
