@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class Parser:
-    def __init__(self: Self, mode: str="earley") -> None:
+    def __init__(self: Self, mode: str = "earley") -> None:
         # cast string to lower case
         mode = mode.lower()
 

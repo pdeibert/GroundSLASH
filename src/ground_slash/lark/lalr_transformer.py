@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Self, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
 from lark import Token, Transformer
 
@@ -29,6 +29,7 @@ from ground_slash.program.statements import (
     Statement,
 )
 from ground_slash.program.terms import (
+    ArithTerm,
     Functional,
     Minus,
     Number,
@@ -36,7 +37,6 @@ from ground_slash.program.terms import (
     SymbolicConstant,
     Term,
     TermTuple,
-    ArithTerm,
 )
 from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
@@ -63,7 +63,9 @@ class LALRTransformer(Transformer):
         self.simplify_arithmetic = simplify_arithmetic
         self.var_table = None
 
-    def transform(self: Self, tree: "Tree") -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
+    def transform(
+        self: Self, tree: "Tree"
+    ) -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
         # initialize new variable table
         self.var_table = VariableTable()
         return super().transform(tree)
@@ -224,7 +226,13 @@ class LALRTransformer(Transformer):
         """
         # NAF? aggregate
         if isinstance(args[-1], AggrLiteral):
-            literals = tuple([Naf(args[-1]) if len(args) > 1 and isinstance(args[-2], Token) else args[-1]])
+            literals = tuple(
+                [
+                    Naf(args[-1])
+                    if len(args) > 1 and isinstance(args[-2], Token)
+                    else args[-1]
+                ]
+            )
         # naf_literal
         else:
             literals = tuple([args[-1]])
@@ -455,7 +463,9 @@ class LALRTransformer(Transformer):
         terms = args[0] if isinstance(args[0], TermTuple) else TermTuple()
 
         # literals
-        literals = args[-1] if isinstance(args[-1], LiteralCollection) else LiteralCollection()
+        literals = (
+            args[-1] if isinstance(args[-1], LiteralCollection) else LiteralCollection()
+        )
 
         if not terms and not literals:
             return None
@@ -681,7 +691,7 @@ class LALRTransformer(Transformer):
         # TODO: eliminate rule from grammar?
         if isinstance(args[0], ArithTerm) and self.simplify_arithmetic:
             return args[0].simplify()
-        
+
         return args[0]
 
     def term_sum(self: Self, args: List[Any]) -> "Term":
@@ -760,7 +770,9 @@ class LALRTransformer(Transformer):
             elif token_type == "MINUS":
                 # make sure that argument is of valid type
                 if not isinstance(args[1], (Number, ArithTerm)):
-                    raise ValueError(f"Invalid argument of type {type(args[1])} for arithmetic operation 'MINUS'.")
+                    raise ValueError(
+                        f"Invalid argument of type {type(args[1])} for arithmetic operation 'MINUS'."
+                    )
                 return Minus(args[1])
             # PAREN_OPEN term_sum PAREN_CLOSE
             else:
@@ -770,7 +782,9 @@ class LALRTransformer(Transformer):
         else:
             return args[0]
 
-    def symbolic_term(self: Self, args: List[Any]) -> Union[SymbolicConstant, Functional]:
+    def symbolic_term(
+        self: Self, args: List[Any]
+    ) -> Union[SymbolicConstant, Functional]:
         """Visits 'symbolic_term'.
 
         Handles the following rule(s):
@@ -787,7 +801,7 @@ class LALRTransformer(Transformer):
         # ID
         if len(args) == 1:
             # return symbolic constant
-            return SymbolicConstant(args[0].value)        
+            return SymbolicConstant(args[0].value)
         # ID PAREN_OPEN terms? PAREN_CLOSE
         else:
             # parse terms

@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Self, Tuple, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
 from lark import Token, Transformer
 
@@ -62,7 +62,9 @@ class EarleyTransformer(Transformer):
         self.simplify_arithmetic = simplify_arithmetic
         self.var_table = None
 
-    def transform(self: Self, tree: "Tree") -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
+    def transform(
+        self: Self, tree: "Tree"
+    ) -> Tuple[Tuple[Statement, ...], Optional[PredLiteral]]:
         # initialize new variable table
         self.var_table = VariableTable()
         return super().transform(tree)
@@ -421,7 +423,9 @@ class EarleyTransformer(Transformer):
         terms = args[0] if isinstance(args[0], TermTuple) else TermTuple()
 
         # literals
-        literals = args[-1] if isinstance(args[-1], LiteralCollection) else LiteralCollection()
+        literals = (
+            args[-1] if isinstance(args[-1], LiteralCollection) else LiteralCollection()
+        )
 
         if not terms and not literals:
             return None

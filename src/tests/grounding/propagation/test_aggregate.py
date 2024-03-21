@@ -1,4 +1,3 @@
-import unittest
 from typing import Self
 
 import ground_slash
@@ -22,10 +21,10 @@ from ground_slash.program.statements import AggrBaseRule, AggrElemRule, NormalRu
 from ground_slash.program.terms import Number, TermTuple, Variable
 
 
-class TestAggrPropagator(unittest.TestCase):
+class TestAggrPropagator:
     def test_aggr_propagator(self: Self):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         elements_1 = (
             AggrElement(
@@ -127,8 +126,8 @@ class TestAggrPropagator(unittest.TestCase):
             ),
         }
         propagator = AggrPropagator(aggr_map)
-        self.assertEqual(propagator.aggr_map, aggr_map)
-        self.assertEqual(propagator.instance_map, dict())
+        assert propagator.aggr_map == aggr_map
+        assert propagator.instance_map == dict()
 
         # propagation
         eps_instances = {
@@ -221,13 +220,10 @@ class TestAggrPropagator(unittest.TestCase):
         J_alpha = propagator.propagate(
             eps_instances, eta_instances, domain, domain, set()
         )
-        self.assertEqual(
-            J_alpha,
-            {
-                AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Number(0))),
-                AggrPlaceholder(2, TermTuple(), TermTuple()),
-            },
-        )
+        assert J_alpha == {
+            AggrPlaceholder(1, TermTuple(Variable("X")), TermTuple(Number(0))),
+            AggrPlaceholder(2, TermTuple(), TermTuple()),
+        }
 
         # assembling
         rule = NormalRule(
@@ -240,10 +236,9 @@ class TestAggrPropagator(unittest.TestCase):
             ],
         )
         rules = propagator.assemble({rule})
-        self.assertEqual(len(rules), 1)
-        self.assertTrue(
-            rules.pop()
-            == NormalRule(
+        assert len(rules) == 1
+        assert rules.pop() in (
+            NormalRule(
                 PredLiteral("p", Variable("X"), Number(0)),
                 [
                     AggrLiteral(
@@ -273,8 +268,8 @@ class TestAggrPropagator(unittest.TestCase):
                         Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     ),
                 ],
-            )
-            or NormalRule(
+            ),
+            NormalRule(
                 PredLiteral("p", Variable("X"), Number(0)),
                 [
                     AggrLiteral(
@@ -304,9 +299,5 @@ class TestAggrPropagator(unittest.TestCase):
                         Guard(RelOp.LESS_OR_EQ, Number(0), False),
                     ),
                 ],
-            )
+            ),
         )
-
-
-if __name__ == "__main__":  # pragma: no cover
-    unittest.main()

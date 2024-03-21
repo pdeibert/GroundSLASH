@@ -1,7 +1,7 @@
-import unittest
 from typing import FrozenSet, Self, Set, Tuple
 
 import clingo  # type: ignore
+import pytest  # type: ignore
 
 import ground_slash
 from ground_slash.grounding import Grounder
@@ -28,8 +28,9 @@ from ground_slash.program.substitution import Substitution
 from ground_slash.program.terms import Number, Variable
 
 
-class TestGrounder(unittest.TestCase):
-    def compare_to_clingo(self: Self, prog_str: str) -> None:
+@pytest.mark.parametrize("mode", ["earley", "lalr"])
+class TestGrounder:
+    def compare_to_clingo(self: Self, prog_str: str, mode: str) -> None:
         """Helper method (not a test case on its own)."""
 
         def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
@@ -48,7 +49,7 @@ class TestGrounder(unittest.TestCase):
             return sat.satisfiable, set(models)
 
         # build & ground program
-        prog = Program.from_string(prog_str)
+        prog = Program.from_string(prog_str, mode)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -57,215 +58,197 @@ class TestGrounder(unittest.TestCase):
         # ground & solve original program using clingo
         gringo_sat, gringo_models = solve_using_clingo(prog_str)
 
-        self.assertEqual(our_sat, gringo_sat)
-        self.assertEqual(len(our_models), len(gringo_models))
-        self.assertEqual(our_models, gringo_models)
+        assert our_sat == gringo_sat
+        assert len(our_models) == len(gringo_models)
+        assert our_models == gringo_models
 
-    def test_select(self: Self):
+    def test_select(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
-        self.assertEqual(
-            Grounder.select(
-                LiteralCollection(
-                    Neg(PredLiteral("p", Variable("X"))),
-                    PredLiteral("q", Number(1)),
-                )
-            ),
-            Neg(PredLiteral("p", Variable("X"))),
+        assert Grounder.select(
+            LiteralCollection(
+                Neg(PredLiteral("p", Variable("X"))),
+                PredLiteral("q", Number(1)),
+            )
+        ) == Neg(
+            PredLiteral("p", Variable("X"))
         )  # first predicate literal gets selected (even if it is non-ground)
-        self.assertEqual(
-            Grounder.select(
-                LiteralCollection(
-                    Naf(PredLiteral("p", Variable("X"))),
-                    PredLiteral("q", Number(1)),
-                )
-            ),
-            PredLiteral("q", Number(1)),
+        assert Grounder.select(
+            LiteralCollection(
+                Naf(PredLiteral("p", Variable("X"))),
+                PredLiteral("q", Number(1)),
+            )
+        ) == PredLiteral(
+            "q", Number(1)
         )  # first predicate literal gets skipped (NAF and NON-ground)
-        self.assertEqual(
-            Grounder.select(
-                LiteralCollection(
-                    Naf(PredLiteral("p", Number(1))),
-                    PredLiteral("q", Number(1)),
-                )
-            ),
-            Naf(PredLiteral("p", Number(1))),
+        assert Grounder.select(
+            LiteralCollection(
+                Naf(PredLiteral("p", Number(1))),
+                PredLiteral("q", Number(1)),
+            )
+        ) == Naf(
+            PredLiteral("p", Number(1))
         )  # first predicate literal gets select (NAF and ground)
-        self.assertEqual(
-            Grounder.select(
-                LiteralCollection(
-                    Equal(Variable("X"), Number(1)), PredLiteral("q", Number(1))
-                )
-            ),
-            PredLiteral("q", Number(1)),
+        assert Grounder.select(
+            LiteralCollection(
+                Equal(Variable("X"), Number(1)), PredLiteral("q", Number(1))
+            )
+        ) == PredLiteral(
+            "q", Number(1)
         )  # first built-in literal gets skipped (NON-ground)
-        self.assertEqual(
-            Grounder.select(
-                LiteralCollection(
-                    Equal(Number(0), Number(1)), PredLiteral("q", Number(1))
-                )
-            ),
-            Equal(Number(0), Number(1)),
+        assert Grounder.select(
+            LiteralCollection(Equal(Number(0), Number(1)), PredLiteral("q", Number(1)))
+        ) == Equal(
+            Number(0), Number(1)
         )  # first built-in literal gets selected (ground)
         # aggregate literals should always be skipped (NAF or not)
-        self.assertRaises(
-            ValueError,
-            Grounder.select,
-            LiteralCollection(
-                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
-                Naf(
+        with pytest.raises(ValueError):
+            Grounder.select(
+                LiteralCollection(
                     AggrLiteral(
                         AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
-                    )
-                ),
-                PredLiteral("p", Variable("X")),
-            ),
-        ), PredLiteral("p", Variable("X"))
+                    ),
+                    Naf(
+                        AggrLiteral(
+                            AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                        )
+                    ),
+                    PredLiteral("p", Variable("X")),
+                )
+            )
         # no selectable literal
-        self.assertRaises(
-            ValueError,
-            Grounder.select,
-            LiteralCollection(
-                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
-                Naf(PredLiteral("p", Variable("X"))),
-            ),
-        )
+        with pytest.raises(ValueError):
+            Grounder.select(
+                LiteralCollection(
+                    AggrLiteral(
+                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)
+                    ),
+                    Naf(PredLiteral("p", Variable("X"))),
+                )
+            )
 
-    def test_matches(self: Self):
+    def test_matches(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         # ground positive predicate literal
-        self.assertEqual(
-            Grounder.matches(
-                Neg(PredLiteral("p", Number(0))),
-                possible={Neg(PredLiteral("p", Number(0)))},
-            ),
-            {Substitution()},
-        )  # in set of possible literals
-        self.assertEqual(
-            Grounder.matches(Neg(PredLiteral("p", Number(0)))), set()
+        assert Grounder.matches(
+            Neg(PredLiteral("p", Number(0))),
+            possible={Neg(PredLiteral("p", Number(0)))},
+        ) == {
+            Substitution()
+        }  # in set of possible literals
+        assert (
+            Grounder.matches(Neg(PredLiteral("p", Number(0)))) == set()
         )  # not in set of possible literals
         # non-ground positive predicate literal
-        self.assertEqual(
-            Grounder.matches(
-                Neg(PredLiteral("p", Variable("X"))),
-                possible={Neg(PredLiteral("p", Number(0)))},
-            ),
-            {Substitution({Variable("X"): Number(0)})},
-        )  # match
-        self.assertEqual(
+        assert Grounder.matches(
+            Neg(PredLiteral("p", Variable("X"))),
+            possible={Neg(PredLiteral("p", Number(0)))},
+        ) == {
+            Substitution({Variable("X"): Number(0)})
+        }  # match
+        assert (
             Grounder.matches(
                 Neg(PredLiteral("p", Variable("X"))),
                 possible={Neg(PredLiteral("q", Number(0)))},
-            ),
-            set(),
+            )
+            == set()
         )  # no match
         # ground negative predicate literal
-        self.assertEqual(
-            Grounder.matches(Naf(Neg(PredLiteral("p", Number(0))))),
-            {Substitution()},
-        )  # not in set of certain literals
-        self.assertEqual(
+        assert Grounder.matches(Naf(Neg(PredLiteral("p", Number(0))))) == {
+            Substitution()
+        }  # not in set of certain literals
+        assert (
             Grounder.matches(
                 Naf(Neg(PredLiteral("p", Number(0)))),
                 certain={Neg(PredLiteral("p", Number(0)))},
-            ),
-            set(),
+            )
+            == set()
         )  # in set of certain literals
         # ground builtin literal
-        self.assertEqual(
-            Grounder.matches(Equal(Number(0), Number(0))), {Substitution()}
-        )  # relation holds
-        self.assertEqual(
-            Grounder.matches(Equal(Number(0), Number(1))), set()
+        assert Grounder.matches(Equal(Number(0), Number(0))) == {
+            Substitution()
+        }  # relation holds
+        assert (
+            Grounder.matches(Equal(Number(0), Number(1))) == set()
         )  # relation does not hold
         # invalid input literal
-        self.assertRaises(
-            ValueError, Grounder.matches, Naf(PredLiteral("p", Variable("X")))
-        )  # non-ground negative predicate literal
-        self.assertRaises(
-            ValueError, Grounder.matches, Equal(Number(0), Variable("X"))
-        )  # non-ground builtin predicate literal
-        self.assertRaises(
-            ValueError,
-            Grounder.matches,
-            AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False)),
-        )  # aggregate literal
+        with pytest.raises(ValueError):
+            Grounder.matches(
+                Naf(PredLiteral("p", Variable("X")))
+            )  # non-ground negative predicate literal
+        with pytest.raises(ValueError):
+            Grounder.matches(
+                Equal(Number(0), Variable("X"))
+            )  # non-ground builtin predicate literal
+        with pytest.raises(ValueError):
+            Grounder.matches(
+                AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False))
+            )  # aggregate literal
 
-    def test_ground_statement(self: Self):
+    def test_ground_statement(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         # unsafe statement
-        self.assertRaises(
-            ValueError,
-            Grounder.ground_statement,
-            NormalRule(PredLiteral("p", Variable("X"))),
-        )
+        with pytest.raises(ValueError):
+            Grounder.ground_statement(NormalRule(PredLiteral("p", Variable("X"))))
         # statement containing aggregates
-        self.assertRaises(
-            ValueError,
-            Grounder.ground_statement,
-            NormalRule(
-                PredLiteral("p", Variable("X")),
-                [
-                    AggrLiteral(
-                        AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)
-                    )
-                ],
-            ),
-        )
+        with pytest.raises(ValueError):
+            Grounder.ground_statement(
+                NormalRule(
+                    PredLiteral("p", Variable("X")),
+                    [
+                        AggrLiteral(
+                            AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(0), False)
+                        )
+                    ],
+                )
+            )
 
         # ----- normal facts -----
 
         # ground fact
-        self.assertEqual(
-            Grounder.ground_statement(NormalRule(PredLiteral("p", Number(1)))),
-            {NormalRule(PredLiteral("p", Number(1)))},
-        )
+        assert Grounder.ground_statement(NormalRule(PredLiteral("p", Number(1)))) == {
+            NormalRule(PredLiteral("p", Number(1)))
+        }
 
         # ----- normal rules -----
 
         # ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))]),
-                possible={PredLiteral("q", Number(0))},
-            ),
-            {NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))])},
-        )
+        assert Grounder.ground_statement(
+            NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))]),
+            possible={PredLiteral("q", Number(0))},
+        ) == {NormalRule(PredLiteral("p", Number(1)), [PredLiteral("q", Number(0))])}
         # non-ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                NormalRule(
-                    PredLiteral("p", Variable("X")),
-                    [PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))],
-                ),
-                possible={
+        assert Grounder.ground_statement(
+            NormalRule(
+                PredLiteral("p", Variable("X")),
+                [PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))],
+            ),
+            possible={
+                PredLiteral("q", Number(1)),
+                PredLiteral("q", Number(0)),
+            },
+        ) == {
+            NormalRule(
+                PredLiteral("p", Number(0)),
+                [
+                    PredLiteral("q", Number(0)),
+                    PredLiteral("q", Number(0)),
+                ],
+            ),
+            NormalRule(
+                PredLiteral("p", Number(1)),
+                [
                     PredLiteral("q", Number(1)),
                     PredLiteral("q", Number(0)),
-                },
+                ],
             ),
-            {
-                NormalRule(
-                    PredLiteral("p", Number(0)),
-                    [
-                        PredLiteral("q", Number(0)),
-                        PredLiteral("q", Number(0)),
-                    ],
-                ),
-                NormalRule(
-                    PredLiteral("p", Number(1)),
-                    [
-                        PredLiteral("q", Number(1)),
-                        PredLiteral("q", Number(0)),
-                    ],
-                ),
-            },
-        )  # all literals have matches in 'possible'
-        self.assertEqual(
+        }  # all literals have matches in 'possible'
+        assert (
             Grounder.ground_statement(
                 NormalRule(
                     PredLiteral("p", Variable("X")),
@@ -275,76 +258,63 @@ class TestGrounder(unittest.TestCase):
                     ],
                 ),
                 possible={PredLiteral("q", Number(1))},
-            ),
-            set(),
+            )
+            == set()
         )  # not all literals have matches in 'possible'
 
         # ----- disjunctive facts -----
 
         # ground fact
-        self.assertEqual(
-            Grounder.ground_statement(
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))
-                )
-            ),
-            {
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2)))
-                )
-            },
-        )
+        assert Grounder.ground_statement(
+            DisjunctiveRule((PredLiteral("p", Number(1)), PredLiteral("p", Number(2))))
+        ) == {
+            DisjunctiveRule((PredLiteral("p", Number(1)), PredLiteral("p", Number(2))))
+        }
 
         # ----- disjunctive rules -----
 
         # ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
-                    (PredLiteral("q", Number(0)),),
-                ),
-                possible={PredLiteral("q", Number(0))},
+        assert Grounder.ground_statement(
+            DisjunctiveRule(
+                (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
+                (PredLiteral("q", Number(0)),),
             ),
-            {
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
-                    (PredLiteral("q", Number(0)),),
-                )
-            },
-        )
+            possible={PredLiteral("q", Number(0))},
+        ) == {
+            DisjunctiveRule(
+                (PredLiteral("p", Number(1)), PredLiteral("p", Number(2))),
+                (PredLiteral("q", Number(0)),),
+            )
+        }
         # non-ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(0)), PredLiteral("p", Variable("X"))),
-                    (PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))),
-                ),
-                possible={
-                    PredLiteral("q", Number(1)),
-                    PredLiteral("q", Number(0)),
-                },
+        assert Grounder.ground_statement(
+            DisjunctiveRule(
+                (PredLiteral("p", Number(0)), PredLiteral("p", Variable("X"))),
+                (PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))),
             ),
-            {
-                NormalRule(
-                    PredLiteral("p", Number(0)),
-                    [PredLiteral("q", Number(0))],
-                ),  # simplified to normal rule since head reduces to a single atom
-                DisjunctiveRule(
-                    (PredLiteral("p", Number(0)), PredLiteral("p", Number(1))),
-                    (PredLiteral("q", Number(1)), PredLiteral("q", Number(0))),
-                ),
+            possible={
+                PredLiteral("q", Number(1)),
+                PredLiteral("q", Number(0)),
             },
-        )  # all literals have matches in 'possible'
-        self.assertEqual(
+        ) == {
+            NormalRule(
+                PredLiteral("p", Number(0)),
+                [PredLiteral("q", Number(0))],
+            ),  # simplified to normal rule since head reduces to a single atom
+            DisjunctiveRule(
+                (PredLiteral("p", Number(0)), PredLiteral("p", Number(1))),
+                (PredLiteral("q", Number(1)), PredLiteral("q", Number(0))),
+            ),
+        }  # all literals have matches in 'possible'
+        assert (
             Grounder.ground_statement(
                 DisjunctiveRule(
                     (PredLiteral("p", Number(0)), PredLiteral("p", Variable("X"))),
                     (PredLiteral("q", Variable("X")), PredLiteral("q", Number(0))),
                 ),
                 possible={PredLiteral("q", Number(1))},
-            ),
-            set(),
+            )
+            == set()
         )  # not all literals have matches in 'possible'
 
         # ----- choice facts -----
@@ -356,41 +326,35 @@ class TestGrounder(unittest.TestCase):
         # ----- strong constraints -----
 
         # ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
-                possible={PredLiteral("p", Number(1)), PredLiteral("q", Number(0))},
-            ),
-            {Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0)))},
-        )
+        assert Grounder.ground_statement(
+            Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0))),
+            possible={PredLiteral("p", Number(1)), PredLiteral("q", Number(0))},
+        ) == {Constraint(PredLiteral("p", Number(1)), PredLiteral("q", Number(0)))}
         # non-ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                Constraint(
-                    PredLiteral("p", Variable("X")),
-                    PredLiteral("q", Variable("X")),
-                ),
-                possible={
-                    PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(0)),
-                },
+        assert Grounder.ground_statement(
+            Constraint(
+                PredLiteral("p", Variable("X")),
+                PredLiteral("q", Variable("X")),
             ),
-            {
-                Constraint(
-                    PredLiteral("p", Number(0)),
-                    PredLiteral("q", Number(0)),
-                ),
+            possible={
+                PredLiteral("p", Number(0)),
+                PredLiteral("q", Number(0)),
             },
-        )  # all literals have matches in 'possible'
-        self.assertEqual(
+        ) == {
+            Constraint(
+                PredLiteral("p", Number(0)),
+                PredLiteral("q", Number(0)),
+            ),
+        }  # all literals have matches in 'possible'
+        assert (
             Grounder.ground_statement(
                 Constraint(
                     PredLiteral("p", Variable("X")),
                     PredLiteral("q", Variable("X")),
                 ),
                 possible={PredLiteral("q", Number(1))},
-            ),
-            set(),
+            )
+            == set()
         )  # not all literals have matches in 'possible'
 
         # TODO: aggregates
@@ -398,51 +362,42 @@ class TestGrounder(unittest.TestCase):
         # ----- NPP facts -----
 
         # ground fact
-        self.assertEqual(
-            Grounder.ground_statement(
-                NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),))),
-            ),
-            {NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)))},
-        )
+        assert Grounder.ground_statement(
+            NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),))),
+        ) == {NPPRule(NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)))}
 
         # ----- NPP rules -----
 
         # ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                NPPRule(
-                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
-                    (PredLiteral("q", Number(0)),),
-                ),
-                possible={PredLiteral("q", Number(0))},
+        assert Grounder.ground_statement(
+            NPPRule(
+                NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
+                (PredLiteral("q", Number(0)),),
             ),
-            {
-                NPPRule(
-                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
-                    (PredLiteral("q", Number(0)),),
-                ),
-            },
-        )
+            possible={PredLiteral("q", Number(0))},
+        ) == {
+            NPPRule(
+                NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(2),)),
+                (PredLiteral("q", Number(0)),),
+            ),
+        }
         # non-ground rule
-        self.assertEqual(
-            Grounder.ground_statement(
-                NPPRule(
-                    NPP("my_npp", (PredLiteral("p", Variable("X")),), (Variable("Y"),)),
-                    (PredLiteral("q", Variable("X")), PredLiteral("p", Variable("Y"))),
-                ),
-                possible={
-                    PredLiteral("q", Number(1)),
-                    PredLiteral("p", Number(0)),
-                },
+        assert Grounder.ground_statement(
+            NPPRule(
+                NPP("my_npp", (PredLiteral("p", Variable("X")),), (Variable("Y"),)),
+                (PredLiteral("q", Variable("X")), PredLiteral("p", Variable("Y"))),
             ),
-            {
-                NPPRule(
-                    NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(0),)),
-                    (PredLiteral("q", Number(1)), PredLiteral("p", Number(0))),
-                ),
+            possible={
+                PredLiteral("q", Number(1)),
+                PredLiteral("p", Number(0)),
             },
-        )  # all literals have matches in 'possible'
-        self.assertEqual(
+        ) == {
+            NPPRule(
+                NPP("my_npp", (PredLiteral("p", Number(1)),), (Number(0),)),
+                (PredLiteral("q", Number(1)), PredLiteral("p", Number(0))),
+            ),
+        }  # all literals have matches in 'possible'
+        assert (
             Grounder.ground_statement(
                 NPPRule(
                     NPP("my_npp", (PredLiteral("p", Variable("X")),), (Variable("Y"),)),
@@ -451,13 +406,13 @@ class TestGrounder(unittest.TestCase):
                 possible={
                     PredLiteral("q", Number(1)),
                 },
-            ),
-            set(),
+            )
+            == set()
         )  # not all literals have matches in 'possible'
 
-    def test_ground_unsafe(self: Self):
+    def test_ground_unsafe(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         # unsafe program
         prog_str = r"""
@@ -465,18 +420,19 @@ class TestGrounder(unittest.TestCase):
         """
 
         # build & ground program
-        prog = Program.from_string(prog_str)
-        self.assertRaises(ValueError, Grounder, prog)
+        prog = Program.from_string(prog_str, mode)
+        with pytest.raises(ValueError):
+            Grounder(prog)
 
-    def test_ground_component(self: Self):
+    def test_ground_component(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         # TODO
 
-    def test_example_1(self: Self):
+    def test_example_1(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(X) :- not q(X), u(X).  u(1). u(2).
@@ -486,11 +442,11 @@ class TestGrounder(unittest.TestCase):
         y :- not q(3).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_2(self: Self):
+    def test_example_2(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(1).
@@ -503,11 +459,11 @@ class TestGrounder(unittest.TestCase):
         d :- not b.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_3(self: Self):
+    def test_example_3(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         d(1).
@@ -523,11 +479,11 @@ class TestGrounder(unittest.TestCase):
         d :- not b.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_4(self: Self):
+    def test_example_4(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(1).
@@ -541,11 +497,11 @@ class TestGrounder(unittest.TestCase):
         d :- #count { X: p(X); X: q(X) } != 3.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_5(self: Self):
+    def test_example_5(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(a,1).
@@ -574,11 +530,11 @@ class TestGrounder(unittest.TestCase):
         gh(B) :- b(B), not h(B).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_6(self: Self):
+    def test_example_6(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(a,1).
@@ -607,11 +563,11 @@ class TestGrounder(unittest.TestCase):
         g(B) :- b(B), not f(B).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_7(self: Self):
+    def test_example_7(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(0) | p(1).
@@ -619,11 +575,11 @@ class TestGrounder(unittest.TestCase):
         :- p(0), q(1).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_8(self: Self):
+    def test_example_8(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         p(0). p(1).
@@ -631,12 +587,12 @@ class TestGrounder(unittest.TestCase):
         :- p(0), p(1).
         """
 
-        with self.assertWarns(Warning):
-            self.compare_to_clingo(prog_str)
+        with pytest.warns(Warning):
+            self.compare_to_clingo(prog_str, mode)
 
-    def test_example_9(self: Self):
+    def test_example_9(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         u(1).
@@ -650,12 +606,12 @@ class TestGrounder(unittest.TestCase):
         :- p(X), q(X).
         """
 
-        with self.assertWarns(Warning):
-            self.compare_to_clingo(prog_str)
+        with pytest.warns(Warning):
+            self.compare_to_clingo(prog_str, mode)
 
-    def test_example_10(self: Self):
+    def test_example_10(self: Self, mode: str):
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         u(1).
@@ -669,13 +625,13 @@ class TestGrounder(unittest.TestCase):
         :- p(X), q(X).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_roads(self: Self):
+    def test_example_roads(self: Self, mode: str):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         road(berlin,potsdam).
@@ -691,13 +647,13 @@ class TestGrounder(unittest.TestCase):
         drive(X) :- route(berlin,X).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_graph_color(self: Self):
+    def test_example_graph_color(self: Self, mode: str):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
-        self.assertTrue(ground_slash.debug())
+        assert ground_slash.debug()
 
         prog_str = r"""
         node(1). node(2). node(3). node(4). node(5). node(6).
@@ -714,8 +670,4 @@ class TestGrounder(unittest.TestCase):
         :- edge(X,Y), color(X,C), color(Y,C).
         """
 
-        self.compare_to_clingo(prog_str)
-
-
-if __name__ == "__main__":  # pragma: no cover
-    unittest.main()
+        self.compare_to_clingo(prog_str, mode)
