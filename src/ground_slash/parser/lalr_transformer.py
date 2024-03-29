@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
-from lark import Token, Transformer
+from lark import Token, Transformer  # type: ignore
 
 from ground_slash.program.literals import (
     AggrElement,
@@ -42,7 +42,7 @@ from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
-    from parser import Tree
+    from lark import Tree  # type: ignore
 
 
 class LALRTransformer(Transformer):

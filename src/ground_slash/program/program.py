@@ -1,7 +1,7 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Self, Set, Tuple
 
-from ground_slash.lark import EarleyTransformer, LALRTransformer, Parser
+from ground_slash.parser import EarleyTransformer, LALRTransformer, Parser
 
 if TYPE_CHECKING:  # pragma: no cover
     from .literals import AggrPlaceholder, ChoicePlaceholder

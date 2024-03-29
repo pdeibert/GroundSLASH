@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
-from lark import Token, Transformer
+from lark import Token, Transformer  # type: ignore
 
 from ground_slash.program.literals import (
     AggrElement,
@@ -29,6 +29,7 @@ from ground_slash.program.statements import (
     Statement,
 )
 from ground_slash.program.terms import (
+    ArithTerm,
     Functional,
     Minus,
     Number,
@@ -41,7 +42,7 @@ from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
-    from parser import Tree
+    from lark import Tree  # type: ignore
 
 
 class EarleyTransformer(Transformer):
@@ -593,59 +594,6 @@ class EarleyTransformer(Transformer):
 
         return terms
 
-    def term(self: Self, args: List[Any]) -> "Term":
-        """Visits 'term'.
-
-        Handles the following rule(s):
-            term                :   ID
-                                |   STRING
-                                |   VARIABLE
-                                |   ANONYMOUS_VARIABLE
-                                |   PAREN_OPEN term PAREN_CLOSE
-                                |   func_term
-                                |   arith_term
-
-        Args:
-            args: List of arguments.
-
-        Returns:
-            `Term` instance.
-        """
-        # first child is a token
-        if isinstance(args[0], Token):
-            # get token
-            token = args[0]
-            token_type = token.type
-
-            # ID
-            if token_type == "ID":
-                return SymbolicConstant(token.value)  # TODO: predicate or function ?!
-            # STRING
-            elif token_type == "STRING":
-                return String(token.value[1:-1])
-            # VARIABLE
-            elif token_type == "VARIABLE":
-                return self.var_table.create(token.value, register=False)
-            # ANONYMOUS_VARIABLE
-            elif token_type == "ANONYMOUS_VARIABLE":
-                return self.var_table.create(register=False)
-            # PAREN_OPEN term PAREN_CLOSE
-            elif token_type == "PAREN_OPEN":
-                return args[1]  # parse term
-            else:
-                # TODO: ???
-                raise Exception(f"TODO: REMOVE RULE: TOKEN {token_type}.")
-        # func_term
-        elif isinstance(args[0], Functional):
-            return args[0]
-        # arith_term
-        else:
-            # parse arithmetic term
-            arith_term = args[0]
-
-            # return (simplified arithmetic term)
-            return arith_term.simplify() if self.simplify_arithmetic else arith_term
-
     def npp_declaration(self: Self, args: List[Any]) -> NPP:
         """Visits 'npp_declaration'.
 
@@ -677,29 +625,12 @@ class EarleyTransformer(Transformer):
 
         return NPP(name, terms, outcomes)
 
-    def func_term(self: Self, args: List[Any]) -> "Functional":
-        """Visits 'func_term'.
+
+    def term(self: Self, args: List[Any]) -> "Term":
+        """Visits 'term'.
 
         Handles the following rule(s):
-            func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE
-
-        Args:
-            args: List of arguments.
-
-        Returns:
-            `Functional` instance.
-        """
-
-        # parse terms
-        terms = tuple() if len(args) < 4 else args[2]
-
-        return Functional(args[0].value, *terms)
-
-    def arith_term(self: Self, args: List[Any]) -> "Term":
-        """Visits 'arith_term'.
-
-        Handles the following rule(s):
-            arith_term          :   arith_sum
+            term                :   term_sum
 
         Args:
             args: List of arguments.
@@ -708,40 +639,43 @@ class EarleyTransformer(Transformer):
             `Term` instance.
         """
         # TODO: eliminate rule from grammar?
+        if isinstance(args[0], ArithTerm) and self.simplify_arithmetic:
+            return args[0].simplify()
+
         return args[0]
 
-    def arith_sum(self: Self, args: List[Any]) -> "Term":
-        """Visits 'arith_sum'.
+    def term_sum(self: Self, args: List[Any]) -> "Term":
+        """Visits 'term_sum'.
 
         Handles the following rule(s):
-            arith_sum           :   arith_prod
-                                |   arith_sum PLUS arith_prod
-                                |   arith_sum MINUS arith_prod
+            term_sum            :   term_sum PLUS term_prod
+                                |   term_sum MINUS term_prod
+                                |   term_prod
 
         Args:
             args: List of arguments.
 
         Returns:
-            `Term` instance.
+            `Functional` instance.
         """
-        # arith_sum (PLUS | MINUS) arith_prod
+        # term_prod (PLUS | MINUS) term_prod
         if len(args) > 1:
             # get operands and operator token
             loperand, op_token, roperand = args
 
             # PLUS | MINUS
             return op2arith[ArithOp(op_token.value)](loperand, roperand)
-        # arith_prod
+        # term_prod
         else:
             return args[0]
 
-    def arith_prod(self: Self, args: List[Any]) -> "Term":
-        """Visits 'arith_prod'.
+    def term_prod(self: Self, args: List[Any]) -> "Term":
+        """Visits 'term_prod'.
 
         Handles the following rule(s):
-            arith_prod          :   arith_atom
-                                |   arith_prod TIMES arith_atom
-                                |   arith_prod DIV arith_atom
+            term_prod           :   term_prod TIMES term_atom
+                                |   term_prod DIV term_atom
+                                |   term_atom
 
         Args:
             args: List of arguments.
@@ -749,25 +683,62 @@ class EarleyTransformer(Transformer):
         Returns:
             `Term` instance.
         """
-        # arith_prod (TIMES | DIV) arith_atom
+        # term_prod (TIMES | DIV) term_atom
         if len(args) > 1:
             # get operands and operator token
             loperand, op_token, roperand = args
 
             # TIMES | DIV
             return op2arith[ArithOp(op_token.value)](loperand, roperand)
-        # arith_atom
+        # term_atom
         else:
             return args[0]
 
-    def arith_atom(self: Self, args: List[Any]) -> "Term":
-        """Visits 'arith_atom'.
+    def term_atom(self: Self, args: List[Any]) -> "Term":
+        # first child is a token
+        if isinstance(args[0], Token):
+            # get token
+            token = args[0]
+            token_type = token.type
+
+            # NUMBER
+            if token_type == "NUMBER":
+                return Number(int(token.value))
+            # STRING
+            elif token_type == "STRING":
+                return String(token.value[1:-1])
+            # VARIABLE
+            elif token_type == "VARIABLE":
+                return self.var_table.create(token.value, register=False)
+            # ANONYMOUS_VARIABLE
+            elif token_type == "ANONYMOUS_VARIABLE":
+                return self.var_table.create(register=False)
+            # PAREN_OPEN term_sum PAREN_CLOSE
+            elif token_type == "PAREN_OPEN":
+                return args[1]  # parse term
+            # MINUS term_sum
+            elif token_type == "MINUS":
+                # make sure that argument is of valid type
+                if not isinstance(args[1], (Number, ArithTerm)):
+                    raise ValueError(
+                        f"Invalid argument of type {type(args[1])} for arithmetic operation 'MINUS'."
+                    )
+                return Minus(args[1])
+            # PAREN_OPEN term_sum PAREN_CLOSE
+            else:
+                # TODO: is (term) really identical to term?
+                return args[1]
+        # symbolic_term
+        else:
+            return args[0]
+
+    def symbolic_term(
+        self: Self, args: List[Any]
+    ) -> Union[SymbolicConstant, Functional]:
+        """Visits 'symbolic_term'.
 
         Handles the following rule(s):
-            arith_atom          :   NUMBER
-                                |   VARIABLE
-                                |   MINUS arith_atom
-                                |   PAREN_OPEN arith_sum PAREN_CLOSE
+            symbolic_term       :   ID (PAREN_OPEN terms? PAREN_CLOSE)?
 
         Args:
             args: List of arguments.
@@ -775,19 +746,14 @@ class EarleyTransformer(Transformer):
         Returns:
             `Term` instance.
         """
-        # get first token
-        token = args[0]
-        token_type = token.type
-
-        # NUMBER
-        if token_type == "NUMBER":
-            return Number(int(token.value))
-        # VARIABLE
-        elif token_type == "VARIABLE":
-            return self.var_table.create(token.value, register=False)
-        # MINUS arith_atom
-        elif token_type == "MINUS":
-            return Minus(args[1])
-        # PAREN_OPEN arith_sum PAREN_CLOSE
+        # ID
+        if len(args) == 1:
+            # return symbolic constant
+            return SymbolicConstant(args[0].value)
+        # ID PAREN_OPEN terms? PAREN_CLOSE
         else:
-            return args[1]
+            # parse terms
+            terms = tuple() if len(args) < 4 else args[2]
+
+            # return functional term
+            return Functional(args[0].value, *terms)
