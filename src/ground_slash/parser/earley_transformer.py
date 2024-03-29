@@ -29,7 +29,6 @@ from ground_slash.program.statements import (
     Statement,
 )
 from ground_slash.program.terms import (
-    ArithTerm,
     Functional,
     Minus,
     Number,
@@ -42,11 +41,11 @@ from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
 
 if TYPE_CHECKING:
-    from lark import Tree
+    from parser import Tree
 
 
-class LALRTransformer(Transformer):
-    """Builds a SLASH program from a Lark parse tree obtained using the LALR parser.
+class EarleyTransformer(Transformer):
+    """Builds a SLASH program from a Lark parse tree obtained using the Earley parser.
 
     Attributes:
         simplify_arithmetic:
@@ -77,9 +76,7 @@ class LALRTransformer(Transformer):
 
         Handles the following rule(s):
 
-            program             :   statements
-                                |   query
-                                |   statements query
+            program             :   statements? query?
 
         Args:
             args: List of arguments.
@@ -104,8 +101,7 @@ class LALRTransformer(Transformer):
         """Visits 'statements'.
 
         Handles the following rule(s):
-            statements          :   statements statement
-                                |   statement
+            statements          :   statement+
 
         Args:
             args: List of arguments.
@@ -113,12 +109,7 @@ class LALRTransformer(Transformer):
         Returns:
             Tuple of `Statement` instances.
         """
-        statements = tuple([args[-1]])
-
-        if len(args) > 1:
-            statements = args[0] + statements
-
-        return statements
+        return tuple(args)
 
     def query(self: Self, args: List[Any]) -> Query:
         """Visits 'query'.
@@ -138,11 +129,8 @@ class LALRTransformer(Transformer):
         """Visits 'statement'.
 
         Handles the following rule(s):
-            statement           :   CONS body DOT
-                                |   CONS DOT
-                                |   head CONS DOT
-                                |   head CONS body DOT
-                                |   head DOT
+            statement           :   CONS body? DOT
+                                |   head (CONS body?)? DOT
 
         Args:
             args: List of arguments.
@@ -211,12 +199,7 @@ class LALRTransformer(Transformer):
         """Visits 'body'.
 
         Handles the following rule(s):
-            body                :   naf_literal
-                                |   aggregate
-                                |   NAF aggregate
-                                |   body COMMA naf_literal
-                                |   body COMMA aggregate
-                                |   body COMMMA NAF aggregate
+            body                :   (naf_literal | NAF? aggregate) (COMMA body)?
 
         Args:
             args: List of arguments.
@@ -224,23 +207,21 @@ class LALRTransformer(Transformer):
         Returns:
             Tuple of `Literal` instances.
         """
-        # NAF? aggregate
-        if isinstance(args[-1], AggrLiteral):
-            literals = tuple(
-                [
-                    Naf(args[-1])
-                    if len(args) > 1 and isinstance(args[-2], Token)
-                    else args[-1]
-                ]
-            )
         # naf_literal
+        # TODO: correct ???
+        if isinstance(args[0], Literal):
+            literals = tuple([args[0]])
+        # NAF aggregate
+        elif isinstance(args[0], Token):
+            literals = tuple([Naf(args[1])])
+        # aggregate
         else:
-            literals = tuple([args[-1]])
+            literals = tuple([args[0]])
 
-        # body COMMA
+        # COMMA body
         if len(args) > 2:
             # append literals
-            literals = args[0] + literals
+            literals += args[-1]
 
         return tuple(literals)
 
@@ -248,8 +229,7 @@ class LALRTransformer(Transformer):
         """Visits 'disjunction'.
 
         Handles the following rule(s):
-            disjunction         :   disjunction OR classical_literal
-                                |   classical_literal
+            disjunction         :   classical_literal (OR disjunction)?
 
         Args:
             args: List of arguments.
@@ -258,12 +238,12 @@ class LALRTransformer(Transformer):
             List of `PredicateLiteral` instances.
         """
         # classical_literal
-        literals = [args[-1]]
+        literals = [args[0]]
 
         # OR disjunction
         if len(args) > 1:
             # append literals
-            literals += args[0] + literals
+            literals += args[2]
 
         return literals
 
@@ -271,14 +251,7 @@ class LALRTransformer(Transformer):
         """Visits 'choice'.
 
         Handles the following rule(s):
-            choice              :   CURLY_OPEN choice_elements CURLY_CLOSE relop term
-                                |   CURLY_OPEN CURLY_CLOSE relop term
-                                |   CURLY_OPEN CURLY_CLOSE
-                                |   CURLY_OPEN choice_elements CURLY_CLOSE
-                                |   term relop CURLY_OPEN choice_elements CURLY_CLOSE
-                                |   term relop CURLY_OPEN CURLY_CLOSE relop term
-                                |   term relop CURLY_OPEN CURLY_CLOSE
-                                |   term relop CURLY_OPEN choice_elements CURLY_CLOSE relop term
+            choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)?
 
         Args:
             args: List of arguments.
@@ -323,8 +296,7 @@ class LALRTransformer(Transformer):
         """Visits 'choice_elements'.
 
         Handles the following rule(s):
-            choice_elements     :   choice_elements SEMICOLON choice_element
-                                |   choice_element
+            choice_elements     :   choice_element (SEMICOLON choice_elements)?
 
         Args:
             args: List of arguments.
@@ -333,12 +305,12 @@ class LALRTransformer(Transformer):
             Tuple of `ChoiceElement` instances.
         """
         # choice_element
-        elements = tuple([args[-1]])
+        elements = tuple([args[0]])
 
         # SEMICOLON choice_elements
         if len(args) > 1:
             # append literals
-            elements = args[0] + elements
+            elements += args[2]
 
         return elements
 
@@ -346,9 +318,7 @@ class LALRTransformer(Transformer):
         """Visits 'choice_element'.
 
         Handles the following rule(s):
-            choice_element      :   classical_literal COLON naf_literals
-                                |   classical_literal COLON
-                                |   classical_literal
+            choice_element      :   classical_literal (COLON naf_literals?)?
 
         Args:
             args: List of arguments.
@@ -364,7 +334,7 @@ class LALRTransformer(Transformer):
             literals = args[2]
         # COLON?
         else:
-            literals = LiteralCollection()
+            literals = tuple()
 
         return ChoiceElement(atom, literals)
 
@@ -372,14 +342,7 @@ class LALRTransformer(Transformer):
         """Visits 'aggregate'.
 
         Handles the following rule(s):
-            aggregate           :   aggregate_function CURLY_OPEN aggregate_elements CURLY_CLOSE relop term
-                                |   aggregate_function CURLY_OPEN CURLY_CLOSE relop term
-                                |   aggregate_function CURLY_OPEN CURLY_CLOSE
-                                |   aggregate_function CURLY_OPEN aggregate_elements CURLY_CLOSE
-                                |   term relop aggregate_function CURLY_OPEN aggregate_elements CURLY_CLOSE
-                                |   term relop aggregate_function CURLY_OPEN CURLY_CLOSE relop term
-                                |   term relop aggregate_function CURLY_OPEN CURLY_CLOSE
-                                |   term relop aggregate_function CURLY_OPEN aggregate_elements CURLY_CLOSE relop term
+            aggregate           :   (term relop)? aggregate_function CURLY_OPEN aggregate_elements? CURLY_CLOSE (relop term)?
 
         Args:
             args: List of arguments.
@@ -422,8 +385,7 @@ class LALRTransformer(Transformer):
         """Visits 'aggregate_elements'.
 
         Handles the following rule(s):
-            aggregate_elements  :   aggregate_elements SEMICOLON aggregate_element
-                                |   aggregate_element
+            aggregate_elements  :   aggregate_element (SEMICOLON aggregate_elements)?
 
         Args:
             args: List of arguments.
@@ -432,13 +394,13 @@ class LALRTransformer(Transformer):
             Tuple of `AggrElement` instances.
         """
         # aggregate_element
-        element = args[-1]
+        element = args[0]
         elements = tuple([element]) if element is not None else tuple()
 
         # SEMICOLON aggregate_elements
         if len(args) > 1:
             # append literals
-            elements = args[0] + elements
+            elements += args[2]
 
         return elements
 
@@ -446,11 +408,9 @@ class LALRTransformer(Transformer):
         """Visits 'aggregate_element'.
 
         Handles the following rule(s):
-            aggregate_element   :   terms COLON naf_literals
-                                |   terms
-                                |   terms COLON
-                                |   COLON
-                                |   COLON naf_literals
+            aggregate_element   :   terms COLON?
+                                |   COLON? naf_literals?
+                                |   terms COLON naf_literals
 
         Args:
             args: List of arguments.
@@ -496,8 +456,7 @@ class LALRTransformer(Transformer):
         """Visits 'naf_literals'.
 
         Handles the following rule(s):
-            naf_literals        :   naf_literals COMMA naf_literal
-                                |   naf_literal
+            naf_literals        :   naf_literal (COMMA naf_literals)?
 
         Args:
             args: List of arguments.
@@ -506,12 +465,12 @@ class LALRTransformer(Transformer):
             Tuple of `Literal` instances.
         """
         # naf_literal
-        literals = LiteralCollection(args[-1])
+        literals = LiteralCollection(args[0])
 
         # COMMA naf_literals
         if len(args) > 1:
             # append literals
-            literals = args[0] + literals
+            literals += args[2]
 
         return literals
 
@@ -520,9 +479,8 @@ class LALRTransformer(Transformer):
 
         Handles the following rule(s):
 
-            naf_literal         :   classical_literal
-                                |   NAF classical_literal
-                                |   builtin_atom
+            naf_literal         :   NAF? classical_literal
+                                |   builtin_atom ;
 
         Args:
             args: List of arguments.
@@ -548,12 +506,7 @@ class LALRTransformer(Transformer):
         """Visits 'classical_literal'.
 
         Handles the following rule(s):
-            classical_literal   :   ID
-                                |   ID PAREN_OPEN PAREN_CLOSE
-                                |   ID PAREN_OPEN terms PAREN_CLOSE
-                                |   MINUS ID
-                                |   MINUS ID PAREN_OPEN PAREN_CLOSE
-                                |   MINUS ID PAREN_OPEN terms PAREN_CLOSE
+            classical_literal   :   MINUS? ID (PAREN_OPEN terms? PAREN_CLOSE)?
 
         Args:
             args: List of arguments.
@@ -622,8 +575,7 @@ class LALRTransformer(Transformer):
         """Visits 'terms'.
 
         Handles the following rule(s):
-            terms               :   terms COMMA term
-                                |   term
+            terms               :   term (COMMA terms)?
 
         Args:
             args: List of arguments.
@@ -632,24 +584,73 @@ class LALRTransformer(Transformer):
             Tuple of `Term` instances.
         """
         # term
-        terms = TermTuple(args[-1])
+        terms = TermTuple(args[0])
 
-        # terms COMMA
+        # COMMA terms
         if len(args) > 1:
             # append terms
-            terms = args[0] + terms
+            terms += args[2]
 
         return terms
+
+    def term(self: Self, args: List[Any]) -> "Term":
+        """Visits 'term'.
+
+        Handles the following rule(s):
+            term                :   ID
+                                |   STRING
+                                |   VARIABLE
+                                |   ANONYMOUS_VARIABLE
+                                |   PAREN_OPEN term PAREN_CLOSE
+                                |   func_term
+                                |   arith_term
+
+        Args:
+            args: List of arguments.
+
+        Returns:
+            `Term` instance.
+        """
+        # first child is a token
+        if isinstance(args[0], Token):
+            # get token
+            token = args[0]
+            token_type = token.type
+
+            # ID
+            if token_type == "ID":
+                return SymbolicConstant(token.value)  # TODO: predicate or function ?!
+            # STRING
+            elif token_type == "STRING":
+                return String(token.value[1:-1])
+            # VARIABLE
+            elif token_type == "VARIABLE":
+                return self.var_table.create(token.value, register=False)
+            # ANONYMOUS_VARIABLE
+            elif token_type == "ANONYMOUS_VARIABLE":
+                return self.var_table.create(register=False)
+            # PAREN_OPEN term PAREN_CLOSE
+            elif token_type == "PAREN_OPEN":
+                return args[1]  # parse term
+            else:
+                # TODO: ???
+                raise Exception(f"TODO: REMOVE RULE: TOKEN {token_type}.")
+        # func_term
+        elif isinstance(args[0], Functional):
+            return args[0]
+        # arith_term
+        else:
+            # parse arithmetic term
+            arith_term = args[0]
+
+            # return (simplified arithmetic term)
+            return arith_term.simplify() if self.simplify_arithmetic else arith_term
 
     def npp_declaration(self: Self, args: List[Any]) -> NPP:
         """Visits 'npp_declaration'.
 
         Handles the following rule(s):
-            npp_declaration     :   NPP PAREN_OPEN ID PAREN_OPEN terms PAREN_CLOSE SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
-                                |   NPP PAREN_OPEN ID PAREN_OPEN PAREN_CLOSE SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
-                                |   NPP PAREN_OPEN ID PAREN_OPEN PAREN_CLOSE SQUARE_OPEN SQUARE_CLOSE PAREN_CLOSE
-                                |   NPP PAREN_OPEN ID SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
-                                |   NPP PAREN_OPEN ID SQUARE_OPEN SQUARE_CLOSE PAREN_CLOSE
+            npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
 
         Args:
             args: List of arguments.
@@ -676,11 +677,29 @@ class LALRTransformer(Transformer):
 
         return NPP(name, terms, outcomes)
 
-    def term(self: Self, args: List[Any]) -> "Term":
-        """Visits 'term'.
+    def func_term(self: Self, args: List[Any]) -> "Functional":
+        """Visits 'func_term'.
 
         Handles the following rule(s):
-            term                :   term_sum
+            func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE
+
+        Args:
+            args: List of arguments.
+
+        Returns:
+            `Functional` instance.
+        """
+
+        # parse terms
+        terms = tuple() if len(args) < 4 else args[2]
+
+        return Functional(args[0].value, *terms)
+
+    def arith_term(self: Self, args: List[Any]) -> "Term":
+        """Visits 'arith_term'.
+
+        Handles the following rule(s):
+            arith_term          :   arith_sum
 
         Args:
             args: List of arguments.
@@ -689,43 +708,40 @@ class LALRTransformer(Transformer):
             `Term` instance.
         """
         # TODO: eliminate rule from grammar?
-        if isinstance(args[0], ArithTerm) and self.simplify_arithmetic:
-            return args[0].simplify()
-
         return args[0]
 
-    def term_sum(self: Self, args: List[Any]) -> "Term":
-        """Visits 'term_sum'.
+    def arith_sum(self: Self, args: List[Any]) -> "Term":
+        """Visits 'arith_sum'.
 
         Handles the following rule(s):
-            term_sum            :   term_sum PLUS term_prod
-                                |   term_sum MINUS term_prod
-                                |   term_prod
+            arith_sum           :   arith_prod
+                                |   arith_sum PLUS arith_prod
+                                |   arith_sum MINUS arith_prod
 
         Args:
             args: List of arguments.
 
         Returns:
-            `Functional` instance.
+            `Term` instance.
         """
-        # term_prod (PLUS | MINUS) term_prod
+        # arith_sum (PLUS | MINUS) arith_prod
         if len(args) > 1:
             # get operands and operator token
             loperand, op_token, roperand = args
 
             # PLUS | MINUS
             return op2arith[ArithOp(op_token.value)](loperand, roperand)
-        # term_prod
+        # arith_prod
         else:
             return args[0]
 
-    def term_prod(self: Self, args: List[Any]) -> "Term":
-        """Visits 'term_prod'.
+    def arith_prod(self: Self, args: List[Any]) -> "Term":
+        """Visits 'arith_prod'.
 
         Handles the following rule(s):
-            term_prod           :   term_prod TIMES term_atom
-                                |   term_prod DIV term_atom
-                                |   term_atom
+            arith_prod          :   arith_atom
+                                |   arith_prod TIMES arith_atom
+                                |   arith_prod DIV arith_atom
 
         Args:
             args: List of arguments.
@@ -733,64 +749,25 @@ class LALRTransformer(Transformer):
         Returns:
             `Term` instance.
         """
-        # term_prod (TIMES | DIV) term_atom
+        # arith_prod (TIMES | DIV) arith_atom
         if len(args) > 1:
             # get operands and operator token
             loperand, op_token, roperand = args
 
             # TIMES | DIV
             return op2arith[ArithOp(op_token.value)](loperand, roperand)
-        # term_atom
+        # arith_atom
         else:
             return args[0]
 
-    def term_atom(self: Self, args: List[Any]) -> "Term":
-        # first child is a token
-        if isinstance(args[0], Token):
-            # get token
-            token = args[0]
-            token_type = token.type
-
-            # NUMBER
-            if token_type == "NUMBER":
-                return Number(int(token.value))
-            # STRING
-            elif token_type == "STRING":
-                return String(token.value[1:-1])
-            # VARIABLE
-            elif token_type == "VARIABLE":
-                return self.var_table.create(token.value, register=False)
-            # ANONYMOUS_VARIABLE
-            elif token_type == "ANONYMOUS_VARIABLE":
-                return self.var_table.create(register=False)
-            # PAREN_OPEN term_sum PAREN_CLOSE
-            elif token_type == "PAREN_OPEN":
-                return args[1]  # parse term
-            # MINUS term_sum
-            elif token_type == "MINUS":
-                # make sure that argument is of valid type
-                if not isinstance(args[1], (Number, ArithTerm)):
-                    raise ValueError(
-                        f"Invalid argument of type {type(args[1])} for arithmetic operation 'MINUS'."
-                    )
-                return Minus(args[1])
-            # PAREN_OPEN term_sum PAREN_CLOSE
-            else:
-                # TODO: is (term) really identical to term?
-                return args[1]
-        # symbolic_term
-        else:
-            return args[0]
-
-    def symbolic_term(
-        self: Self, args: List[Any]
-    ) -> Union[SymbolicConstant, Functional]:
-        """Visits 'symbolic_term'.
+    def arith_atom(self: Self, args: List[Any]) -> "Term":
+        """Visits 'arith_atom'.
 
         Handles the following rule(s):
-            symbolic_term       :   ID PAREN_OPEN terms PAREN_CLOSE
-                                |   ID PAREN_OPEN PAREN_CLOSE
-                                |   ID
+            arith_atom          :   NUMBER
+                                |   VARIABLE
+                                |   MINUS arith_atom
+                                |   PAREN_OPEN arith_sum PAREN_CLOSE
 
         Args:
             args: List of arguments.
@@ -798,14 +775,19 @@ class LALRTransformer(Transformer):
         Returns:
             `Term` instance.
         """
-        # ID
-        if len(args) == 1:
-            # return symbolic constant
-            return SymbolicConstant(args[0].value)
-        # ID PAREN_OPEN terms? PAREN_CLOSE
-        else:
-            # parse terms
-            terms = tuple() if len(args) < 4 else args[2]
+        # get first token
+        token = args[0]
+        token_type = token.type
 
-            # return functional term
-            return Functional(args[0].value, *terms)
+        # NUMBER
+        if token_type == "NUMBER":
+            return Number(int(token.value))
+        # VARIABLE
+        elif token_type == "VARIABLE":
+            return self.var_table.create(token.value, register=False)
+        # MINUS arith_atom
+        elif token_type == "MINUS":
+            return Minus(args[1])
+        # PAREN_OPEN arith_sum PAREN_CLOSE
+        else:
+            return args[1]
