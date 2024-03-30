@@ -28,7 +28,7 @@ from ground_slash.program.substitution import Substitution
 from ground_slash.program.terms import Number, Variable
 
 
-@pytest.mark.parametrize("mode", ["earley", "lalr"])
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestGrounder:
     def compare_to_clingo(self: Self, prog_str: str, mode: str) -> None:
         """Helper method (not a test case on its own)."""
@@ -38,7 +38,6 @@ class TestGrounder:
             # instruct to return all models
             ctl.configuration.solve.models = 0
             ctl.add("prog", [], prog)
-            # TODO: optional?
             ctl.ground([("prog", [])])
 
             models = []

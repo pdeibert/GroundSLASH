@@ -7,7 +7,7 @@ from ground_slash.grounding.graphs.component_graph import ComponentGraph
 from ground_slash.program import Program
 
 
-@pytest.mark.parametrize("mode", ["earley", "lalr"])
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestComponentGraph:
     def test_component_graph(self: Self, mode: str):
         # make sure debug mode is enabled

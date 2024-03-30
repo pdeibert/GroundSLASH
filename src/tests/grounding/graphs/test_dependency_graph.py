@@ -7,7 +7,7 @@ from ground_slash.grounding.graphs import DependencyGraph
 from ground_slash.program import Program
 
 
-@pytest.mark.parametrize("mode", ["earley", "lalr"])
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestDependencyGraph:
     def test_dependency_graph(self: Self, mode: str):
         # make sure debug mode is enabled

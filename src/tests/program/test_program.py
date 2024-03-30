@@ -49,7 +49,7 @@ from ground_slash.program.terms import (
 )
 
 
-@pytest.mark.parametrize("mode", ["earley", "lalr"])
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestProgram:
     def test_program(self: Self, mode: str):
         # make sure debug mode is enabled

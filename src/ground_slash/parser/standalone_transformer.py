@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
-from lark import Token, Transformer  # type: ignore
+from .standalone_parser import Token, Transformer  # type: ignore
 
 from ground_slash.program.literals import (
     AggrElement,
@@ -45,8 +45,8 @@ if TYPE_CHECKING:
     from lark import Tree  # type: ignore
 
 
-class LALRTransformer(Transformer):
-    """Builds a SLASH program from a Lark parse tree obtained using the LALR parser.
+class StandaloneTransformer(Transformer):
+    """Builds a SLASH program from a Lark parse tree obtained using the standalone LALR parser.
 
     Attributes:
         simplify_arithmetic:
