@@ -11,5 +11,9 @@ GroundSLASH is based is a modification of the [ASPy](https://github.com/pdeibert
 
 Syntactic elements are implemented using classes which provide convenient methods and operators for handling them.
 
+Programs can be either build directly from objects or parsed from a convenient string notation.
+
+The grounding process generally follows the procedure described in [On the Foundations of Grounding in Answer Set Programming](https://arxiv.org/abs/2108.04769).
+
 Related repositories:
 * https://github.com/d-ochs/SLASH
