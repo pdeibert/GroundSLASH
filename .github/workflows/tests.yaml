@@ -1,6 +1,4 @@
 name: 'Unit tests'
-description: 'Set up library and run unit tests'
-
 on: [push]
 
 jobs:
