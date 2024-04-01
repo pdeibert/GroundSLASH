@@ -25,7 +25,7 @@ jobs:
       - name: Pytest
         shell: bash
         run:  |
-          pytest --cov-config=.coveragerc --cov=ground_slash
+          pytest --cov-config=.coveragerc --cov=ground_slash src/tests/
       - name: Coverage badge
         uses: tj-actions/coverage-badge-py@v2
         with:
