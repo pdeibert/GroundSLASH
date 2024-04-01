@@ -1,2 +1,2 @@
 [run]
-omit = ./src/aspy/antlr/*
+omit = ground_slash/parser/standalone_parser.py
