@@ -1,7 +1,7 @@
 # GroundSLASH
 
 ![Test badge](https://github.com/pdeibert/GroundSLASH/actions/workflows/tests.yaml/badge.svg)
-![Coverage badge](https://github.com/pdeibert/GroundSLASH/coverage.svg)
+![Coverage badge](https://github.com/pdeibert/GroundSLASH/tree/actions/coverage.svg)
 
 Parser and Grounder for the deep probabilistic programming language SLASH.
 
