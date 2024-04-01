@@ -29,10 +29,11 @@ jobs:
         run:  |
           pytest --cov-config=.coveragerc --cov=ground_slash tests/--cov=ground_slash tests/
       - name: Coverage badge
-          uses: tj-actions/coverage-badge-py@v2
+        uses: tj-actions/coverage-badge-py@v2
           with:
             output: coverage.svg
-      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
-        with:
-          add: 'coverage.svg'
-          commit: --signoff
+      - name: Add badge to commit
+        uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+          with:
+            add: 'coverage.svg'
+            commit: --signoff
