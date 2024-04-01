@@ -1,0 +1,2 @@
+[run]
+omit = ground_slash/parser/standalone_parser.py

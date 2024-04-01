@@ -1,0 +1,38 @@
+name: 'Unit tests'
+description: 'Set up library and run unit tests'
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: '3.11'
+            cache: 'pip'
+            cache-dependency-path: |
+              **/pyproject.toml
+      - name: Install library and dependencies
+        shell: bash
+        run:  |
+          python -m pip install --upgrade pip
+          pip install .[test]
+      - name: Change directory
+        shell: bash
+        run:  |
+          cd src/
+      - name: Pytest
+        shell: bash
+        run:  |
+          pytest --cov-config=.coveragerc --cov=ground_slash tests/--cov=ground_slash tests/
+      - name: Coverage badge
+          uses: tj-actions/coverage-badge-py@v2
+          with:
+            output: coverage.svg
+      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        with:
+          add: 'coverage.svg'
+          commit: --signoff
