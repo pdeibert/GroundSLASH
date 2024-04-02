@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
 
-from .standalone_parser import Token, Transformer  # type: ignore
-
 from ground_slash.program.literals import (
     AggrElement,
     AggrLiteral,
@@ -40,6 +38,8 @@ from ground_slash.program.terms import (
 )
 from ground_slash.program.terms.arithmetic import op2arith
 from ground_slash.program.variable_table import VariableTable
+
+from .standalone_parser import Token, Transformer  # type: ignore
 
 if TYPE_CHECKING:
     from lark import Tree  # type: ignore

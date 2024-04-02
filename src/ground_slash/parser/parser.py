@@ -1,16 +1,16 @@
-from typing import TYPE_CHECKING, Self, Tuple, Optional
+from typing import TYPE_CHECKING, Optional, Self, Tuple
 
 from lark import Lark  # type: ignore
 
-from .standalone_parser import Lark_StandAlone as StandaloneParser
-
 from .earley_transformer import EarleyTransformer
 from .lalr_transformer import LALRTransformer
+from .standalone_parser import Lark_StandAlone as StandaloneParser
 from .standalone_transformer import StandaloneTransformer
 
 if TYPE_CHECKING:
-    from ground_slash.program.statements import Statement
     from ground_slash.program.literals import PredLiteral
+    from ground_slash.program.statements import Statement
+
 
 class Parser:
     def __init__(self: Self, mode: str = "standalone") -> None:
@@ -42,7 +42,9 @@ class Parser:
             self.transformer = StandaloneTransformer()
             self.parser = StandaloneParser(transformer=self.transformer)
 
-    def parse(self: Self, prog_str: str) -> Tuple[Tuple["Statement", ...], Optional["PredLiteral"]]:
+    def parse(
+        self: Self, prog_str: str
+    ) -> Tuple[Tuple["Statement", ...], Optional["PredLiteral"]]:
         # TODO: typing
         if self.mode == "earley":
             return self.transformer.transform(self.parser.parse(prog_str))

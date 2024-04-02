@@ -625,7 +625,6 @@ class EarleyTransformer(Transformer):
 
         return NPP(name, terms, outcomes)
 
-
     def term(self: Self, args: List[Any]) -> "Term":
         """Visits 'term'.
 
