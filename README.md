@@ -10,9 +10,9 @@ Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH
 
 GroundSLASH is a fork of the [ASPy](https://github.com/pdeibert/ASPy) parser and grounder for Answer Set programs, extended to the SLASH language.
 
-Syntactic elements (terms, literals, rules, ...) are implemented using classes which provide convenient methods and operators for handling them.
+Internally, syntactic elements (terms, literals, rules, ...) are implemented using classes which provide convenient methods and operators for handling them, allowing for easy modification and extension.
 
-Programs can be either constructed directly from objects or parsed and build automatically from a convenient string notation.
+Programs are usually automatically build from a convenient string notation of the input language.
 
 The grounding process generally follows the procedure described in [On the Foundations of Grounding in Answer Set Programming](https://arxiv.org/abs/2108.04769).
 
@@ -82,6 +82,13 @@ addition(i2,i1,0) :- addition(i1,i2,0), i1<i2.
 ...
 addition(i2,i1,18) :- addition(i1,i2,18), i1<i2.
 ```
+
+## Parser modes
+
+`GroundSLASH` uses [Lark](https://github.com/lark-parser/lark) for parsing and provides three different parsing modes (passed as `mode` argument to `Program.from_string(...)`):
+* `mode=earley`: uses the [SLASH_earley.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_earley.lark) grammar and accompanying [earley_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/earley_transformer.py). The grammar follows a standard EBNF notation and is thus the easiest to modify. However, the used Earley parsing algorithm is comparatively slow and memory-inefficient. Use this grammar file, transformer, and parsing mode for experimental changes to the input language.
+* `mode=lalr`: uses the [SLASH_lalr.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_lalr.lark) grammar and accompanying [lalr_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/lalr_transformer.py). The grammar is optimized to use the faster and more efficient LALR parsing algorithm, but is more verbose in its notation. It therefore requires more work than `mode=earley` to implement changes at the benefit of increased parsing speed.
+* `mode=standalone` (default): uses a standalone LALR parser generated from [SLASH_lalr.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_lalr.lark) and the accompanying [standalone_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/standalone_transformer.py). This option is the fastest and most efficient option and used per default. A new standalone parser can be generated from the LALR grammar using `python -m lark.tools.standalone -s program SLASH_lalr.lark > standalone_parser.py` from the parser directory.
 
 ## Additional Resources
 
