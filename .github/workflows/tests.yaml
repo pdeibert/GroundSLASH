@@ -21,13 +21,4 @@ jobs:
       - name: Pytest & coverage
         shell: bash
         run:  |
-          pytest --cov-config=.coveragerc --cov=ground_slash src/tests/
-      # - name: Coverage badge
-        # uses: tj-actions/coverage-badge-py@v2
-        # with:
-          # output: coverage.svg
-      # - name: Add badge to commit
-        # uses: EndBug/add-and-commit@v9
-        # with:
-          # add: 'coverage.svg'
-          # commit: --signoff
+          pytest src/tests/
