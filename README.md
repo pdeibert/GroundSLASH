@@ -7,7 +7,7 @@ Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH
 * [SLASH: Embracing Probabilistic Circuits into Neural Answer Set Programming](https://arxiv.org/abs/2110.03395)
 * [Scalable Neural-Probabilistic Answer Set Programming](https://arxiv.org/abs/2306.08397)
 
-GroundSLASH is based is a modification of the [ASPy](https://github.com/pdeibert/ASPy) parser and grounder for Answer Set programs.
+GroundSLASH is a modification of the [ASPy](https://github.com/pdeibert/ASPy) parser and grounder for Answer Set programs.
 
 Syntactic elements are implemented using classes which provide convenient methods and operators for handling them.
 
