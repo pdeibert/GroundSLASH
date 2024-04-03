@@ -1,7 +1,7 @@
 import unittest
 
 import ground_slash
-from ground_slash.program.safety_characterization import SafetyRule, SafetyTriplet
+from ground_slash.program.safety_characterization import SafetyRule
 from ground_slash.program.terms import Variable
 
 

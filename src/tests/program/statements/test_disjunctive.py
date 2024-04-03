@@ -17,7 +17,6 @@ from ground_slash.program.literals import (
     PredLiteral,
 )
 from ground_slash.program.operators import RelOp
-from ground_slash.program.safety_characterization import SafetyTriplet
 from ground_slash.program.statements import AggrBaseRule, AggrElemRule, DisjunctiveRule
 from ground_slash.program.substitution import Substitution
 from ground_slash.program.terms import (
