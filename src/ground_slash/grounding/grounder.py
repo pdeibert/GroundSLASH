@@ -1,7 +1,7 @@
 import warnings
 from collections import defaultdict
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Optional, Self, Set, Type
 
 from ground_slash.program.literals import (
     AggrLiteral,
@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Grounder:
-    def __init__(self, prog: Program) -> None:
+    def __init__(self: Self, prog: Program) -> None:
         if not prog.safe:
             raise ValueError("Grounding requires program to be safe.")
 
@@ -33,7 +33,9 @@ class Grounder:
 
     @classmethod
     def select(
-        cls, literals: "LiteralCollection", subst: Optional[Substitution] = None
+        cls: Type["Grounder"],
+        literals: "LiteralCollection",
+        subst: Optional[Substitution] = None,
     ) -> "Literal":
         if subst is None:
             # initialize with empty/identity substitution
@@ -60,7 +62,7 @@ class Grounder:
 
     @classmethod
     def matches(
-        cls,
+        cls: Type["Grounder"],
         literal: "Literal",
         certain: Optional[Set["Literal"]] = None,
         possible: Optional[Set["Literal"]] = None,
@@ -111,7 +113,7 @@ class Grounder:
 
     @classmethod
     def ground_statement(
-        cls,
+        cls: Type["Grounder"],
         statement: "Statement",
         literals: Optional["LiteralCollection"] = None,
         certain: Optional[Set["Literal"]] = None,
@@ -181,7 +183,7 @@ class Grounder:
         return set()
 
     def ground_component(
-        self,
+        self: Self,
         component: Program,
         literals_I: Optional[Set["Literal"]] = None,
         literals_J: Optional[Set["Literal"]] = None,
@@ -367,7 +369,7 @@ class Grounder:
         # return re-assembled rules
         return assembled_instances
 
-    def ground(self) -> Program:
+    def ground(self: Self) -> Program:
         # compute component graph for rules/facts only
         component_graph = ComponentGraph(self.prog.statements)  # rules/facts only???
 

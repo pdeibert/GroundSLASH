@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, List, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Self, Set, Tuple
 
 from ground_slash.program.literals import ChoicePlaceholder
 from ground_slash.program.statements import Choice, ChoiceBaseRule, ChoiceElemRule
@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class ChoicePropagator:
     def __init__(
-        self,
+        self: Self,
         choice_map: Dict[
             int,
             Tuple["Choice", "ChoicePlaceholder", ChoiceBaseRule, List[ChoiceElemRule]],
@@ -21,7 +21,8 @@ class ChoicePropagator:
         self.instance_map = dict()
 
     def propagate(
-        self,
+        self: Self,
+        # TODO: typing
         eps_instances,
         eta_instances,
         literals_I: Set["Literal"],
@@ -88,7 +89,7 @@ class ChoicePropagator:
         return possible_chi_literals
 
     def assemble(
-        self, statements: Set["Statement"], satisfiable: Set[ChoicePlaceholder]
+        self: Self, statements: Set["Statement"], satisfiable: Set[ChoicePlaceholder]
     ) -> Set["Statement"]:
         # map ground chi literals to corresponding
         # assembled choice expressions to be replaced with

@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, Set, Tuple
+from typing import TYPE_CHECKING, Self, Set, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover
     from ground_slash.program.statements import Statement
 
 
 class DependencyGraph:
-    def __init__(self, rules: Tuple["Statement", ...]) -> None:
+    def __init__(self: Self, rules: Tuple["Statement", ...]) -> None:
         self.nodes = rules
 
         self.pos_edges = set()
@@ -37,5 +37,5 @@ class DependencyGraph:
                     self.neg_edges.add((depender, dependee))
 
     @property
-    def edges(self) -> Set[Tuple["Statement", "Statement"]]:
+    def edges(self: Self) -> Set[Tuple["Statement", "Statement"]]:
         return self.pos_edges.union(self.neg_edges)

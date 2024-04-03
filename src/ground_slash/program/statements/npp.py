@@ -1,6 +1,17 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Self,
+    Set,
+    Tuple,
+    Union,
+)
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.literals import (
@@ -40,7 +51,7 @@ class NPP(Expr):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         name: str,
         terms: Iterable[Term],
         outcomes: Iterable[Term],
@@ -60,7 +71,7 @@ class NPP(Expr):
             outcomes if isinstance(outcomes, TermTuple) else TermTuple(*outcomes)
         )
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the npp expression to a given object.
 
         Considered equal if the given object is also an `NPP` instance with same
@@ -80,10 +91,10 @@ class NPP(Expr):
             and self.outcomes == other.outcomes
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("npp", self.terms, self.outcomes))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the npp expression.
 
         Returns:
@@ -92,7 +103,7 @@ class NPP(Expr):
         return f"#npp({self.name}({str(self.terms)}),[{str(self.outcomes)}])"
 
     @property
-    def atoms(self) -> LiteralCollection:
+    def atoms(self: Self) -> LiteralCollection:
         return LiteralCollection(
             *tuple(
                 PredLiteral(self.name, *self.terms, outcome)
@@ -101,10 +112,10 @@ class NPP(Expr):
         )
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return self.atoms.ground
 
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:
@@ -112,7 +123,7 @@ class NPP(Expr):
         """
         return self.atoms
 
-    def neg_occ(self) -> "LiteralCollection":
+    def neg_occ(self: Self) -> "LiteralCollection":
         """Negative literal occurrences.
 
         Returns:
@@ -120,7 +131,7 @@ class NPP(Expr):
         """
         return LiteralCollection()
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the element.
 
         Returns:
@@ -128,7 +139,9 @@ class NPP(Expr):
         """
         return self.atoms.vars()
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+    def global_vars(
+        self: Self, statement: Optional["Statement"] = None
+    ) -> Set["Variable"]:
         """Returns the global variables associated with the expression.
 
         Args:
@@ -140,7 +153,7 @@ class NPP(Expr):
         """
         return self.vars()
 
-    def safety(self, statement: Optional["Statement"] = None) -> SafetyTriplet:
+    def safety(self: Self, statement: Optional["Statement"] = None) -> SafetyTriplet:
         """Returns the the safety characterizations for the NPP expression.
 
         Raises an exception, since safety characterization is undefined for NPP expressions
@@ -161,7 +174,7 @@ class NPP(Expr):
             "Safety characterization for NPP expressions is undefined without context."  # noqa
         )
 
-    def substitute(self, subst: "Substitution") -> "NPP":
+    def substitute(self: Self, subst: "Substitution") -> "NPP":
         """Applies a substitution to the NPP expression.
 
         Substitutes all literals recursively.
@@ -178,7 +191,7 @@ class NPP(Expr):
             self.outcomes.substitute(subst),
         )
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
+    def match(self: Self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the NPP expression with another expression.
 
         Raises an exception, since matching for NPP expressions is undefined.
@@ -191,7 +204,7 @@ class NPP(Expr):
         """  # noqa
         raise Exception("Matching for NPP expressions is not defined.")
 
-    def replace_arith(self, var_table: "VariableTable") -> "NPP":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "NPP":
         """Replaces arithmetic terms appearing in the expression with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -208,14 +221,14 @@ class NPP(Expr):
             self.outcomes.replace_arith(var_table),
         )
 
-    def as_choice(self) -> Choice:
+    def as_choice(self: Self) -> Choice:
         """TODO"""
         return Choice(
             tuple(ChoiceElement(atom) for atom in self.atoms),
             guards=(Guard(RelOp.EQUAL, Number(1), False), None),
         )
 
-    def __len__(self) -> int:
+    def __len__(self: Self) -> int:
         return len(self.outcomes)
 
 
@@ -248,7 +261,11 @@ class NPPRule(Statement):
     """  # noqa
 
     def __init__(
-        self, head: NPP, body: Optional[Iterable["Literal"]] = None, *args, **kwargs
+        self: Self,
+        head: NPP,
+        body: Optional[Iterable["Literal"]] = None,
+        *args,
+        **kwargs,
     ) -> None:
         """Initializes the NPP rule instance.
 
@@ -272,7 +289,7 @@ class NPPRule(Statement):
         self.output_key = PredLiteral(head.name, head.terms)
         self.inputs_keys = self.literals
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the statement to a given object.
 
         Considered equal if the given object is also an `NPPRule` instance with same NPP expression and
@@ -290,10 +307,10 @@ class NPPRule(Statement):
             and self.literals == other.literals
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("npp rule", self.head, self.literals))
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the statement.
 
         Returns:
@@ -302,15 +319,15 @@ class NPPRule(Statement):
         return f"{str(self.head)}{f' :- {str(self.body)}' if self.body else ''}."
 
     @property
-    def head(self) -> NPP:
+    def head(self: Self) -> NPP:
         return self.npp
 
     @property
-    def body(self) -> LiteralCollection:
+    def body(self: Self) -> LiteralCollection:
         return self.literals
 
     @cached_property
-    def safe(self) -> bool:
+    def safe(self: Self) -> bool:
         # TODO
         if LiteralCollection(*self.npp.vars()).safety(self) != SafetyTriplet(
             self.body.global_vars()
@@ -320,10 +337,10 @@ class NPPRule(Statement):
         return True
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return self.head.ground and self.body.ground
 
-    def consequents(self) -> "LiteralCollection":
+    def consequents(self: Self) -> "LiteralCollection":
         """Returns the consequents of the statement.
 
         Returns:
@@ -331,7 +348,7 @@ class NPPRule(Statement):
         """
         return self.npp.atoms
 
-    def antecedents(self) -> "LiteralCollection":
+    def antecedents(self: Self) -> "LiteralCollection":
         """Returns the antecedents of the statement.
 
         Returns:
@@ -340,11 +357,11 @@ class NPPRule(Statement):
         return self.literals
 
     def safety(
-        self, statement: Optional[Union["Statement", "Query"]] = None
+        self: Self, statement: Optional[Union["Statement", "Query"]] = None
     ) -> "SafetyTriplet":
         raise Exception("Safety characterization for npp rules not supported yet.")
 
-    def substitute(self, subst: "Substitution") -> "NPPRule":
+    def substitute(self: Self, subst: "Substitution") -> "NPPRule":
         """Applies a substitution to the statement.
 
         Substitutes the NPP expression and all literals recursively.
@@ -360,7 +377,7 @@ class NPPRule(Statement):
 
         return NPPRule(self.head.substitute(subst), self.body.substitute(subst))
 
-    def replace_arith(self) -> "NPPRule":
+    def replace_arith(self: Self) -> "NPPRule":
         """Replaces arithmetic terms appearing in the statement with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.
@@ -377,7 +394,7 @@ class NPPRule(Statement):
         )
 
     def rewrite_aggregates(
-        self,
+        self: Self,
         aggr_counter: int,
         aggr_map: Dict[
             int,
@@ -451,7 +468,7 @@ class NPPRule(Statement):
         return alpha_rule
 
     def assemble_aggregates(
-        self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
+        self: Self, assembling_map: Dict["AggrPlaceholder", "AggrLiteral"]
     ) -> "NPPRule":
         """Reassembles rewritten aggregates expressions inside the statement.
 
@@ -471,11 +488,11 @@ class NPPRule(Statement):
         )
 
     @cached_property
-    def is_fact(self) -> bool:
+    def is_fact(self: Self) -> bool:
         return bool(self.literals)
 
     def powerset(
-        self,
+        self: Self,
     ) -> List[Tuple[int, ...]]:
         """TODO"""
 

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Self, Tuple, Union
 
 import antlr4  # type: ignore
 
@@ -52,7 +52,7 @@ class ProgramBuilder(SLASHVisitor):
         TODO
     """
 
-    def __init__(self, simplify_arithmetic: bool = True) -> None:
+    def __init__(self: Self, simplify_arithmetic: bool = True) -> None:
         """Initializes the program builder instance.
 
         Args:
@@ -102,7 +102,7 @@ class ProgramBuilder(SLASHVisitor):
         return tuple([self.visitStatement(child) for child in ctx.children])
 
     # Visit a parse tree produced by SLASHParser#query.
-    def visitQuery(self, ctx: SLASHParser.QueryContext) -> Query:
+    def visitQuery(self: Self, ctx: SLASHParser.QueryContext) -> Query:
         """Visits 'query'.
 
         Handles the following rule(s):
@@ -117,7 +117,7 @@ class ProgramBuilder(SLASHVisitor):
         return Query(self.visitClassical_literal(ctx.children[0]))
 
     # Visit a parse tree produced by SLASHParser#statement.
-    def visitStatement(self, ctx: SLASHParser.StatementContext) -> "Statement":
+    def visitStatement(self: Self, ctx: SLASHParser.StatementContext) -> "Statement":
         """Visits 'statement'.
 
         Handles the following rule(s):
@@ -189,7 +189,7 @@ class ProgramBuilder(SLASHVisitor):
             return self.visitNpp_declaration(ctx.children[0])
 
     # Visit a parse tree produced by SLASHParser#body.
-    def visitBody(self, ctx: SLASHParser.BodyContext) -> Tuple["Literal", ...]:
+    def visitBody(self: Self, ctx: SLASHParser.BodyContext) -> Tuple["Literal", ...]:
         """Visits 'body'.
 
         Handles the following rule(s):
@@ -244,7 +244,7 @@ class ProgramBuilder(SLASHVisitor):
         return literals
 
     # Visit a parse tree produced by SLASHParser#choice.
-    def visitChoice(self, ctx: SLASHParser.ChoiceContext) -> Choice:
+    def visitChoice(self: Self, ctx: SLASHParser.ChoiceContext) -> Choice:
         """Visits 'choice'.
 
         Handles the following rule(s):
@@ -342,7 +342,7 @@ class ProgramBuilder(SLASHVisitor):
         return ChoiceElement(atom, literals)
 
     # Visit a parse tree produced by SLASHParser#aggregate.
-    def visitAggregate(self, ctx: SLASHParser.AggregateContext) -> "AggrLiteral":
+    def visitAggregate(self: Self, ctx: SLASHParser.AggregateContext) -> "AggrLiteral":
         """Visits 'aggregate'.
 
         Handles the following rule(s):
@@ -499,7 +499,7 @@ class ProgramBuilder(SLASHVisitor):
         return literals
 
     # Visit a parse tree produced by SLASHParser#naf_literal.
-    def visitNaf_literal(self, ctx: SLASHParser.Naf_literalContext) -> "Literal":
+    def visitNaf_literal(self: Self, ctx: SLASHParser.Naf_literalContext) -> "Literal":
         """Visits 'naf_literal'.
 
         Handles the following rule(s):
@@ -577,7 +577,7 @@ class ProgramBuilder(SLASHVisitor):
         )
 
     # Visit a parse tree produced by SLASHParser#relop.
-    def visitRelop(self, ctx: SLASHParser.RelopContext) -> RelOp:
+    def visitRelop(self: Self, ctx: SLASHParser.RelopContext) -> RelOp:
         """Visits 'relop'.
 
         Handles the following rule(s):
@@ -600,7 +600,7 @@ class ProgramBuilder(SLASHVisitor):
         return RelOp(token.text)
 
     # Visit a parse tree produced by SLASHParser#terms.
-    def visitTerms(self, ctx: SLASHParser.TermsContext) -> Tuple["Term", ...]:
+    def visitTerms(self: Self, ctx: SLASHParser.TermsContext) -> Tuple["Term", ...]:
         """Visits 'terms'.
 
         Handles the following rule(s):
@@ -623,7 +623,7 @@ class ProgramBuilder(SLASHVisitor):
         return terms
 
     # Visit a parse tree produced by SLASHParser#term.
-    def visitTerm(self, ctx: SLASHParser.TermContext) -> "Term":
+    def visitTerm(self: Self, ctx: SLASHParser.TermContext) -> "Term":
         """Visits 'term'.
 
         Handles the following rule(s):
@@ -677,7 +677,9 @@ class ProgramBuilder(SLASHVisitor):
             return arith_term.simplify() if self.simplify_arithmetic else arith_term
 
     # Visit a parse tree produced by SLASHParser#npp_declaration.
-    def visitNpp_declaration(self, ctx: SLASHParser.Npp_declarationContext) -> NPP:
+    def visitNpp_declaration(
+        self: Self, ctx: SLASHParser.Npp_declarationContext
+    ) -> NPP:
         """Visits 'npp_declaration'.
 
         Handles the following rule(s):
@@ -714,7 +716,7 @@ class ProgramBuilder(SLASHVisitor):
         return NPP(name, terms, outcomes)
 
     # Visit a parse tree produced by SLASHParser#func_term.
-    def visitFunc_term(self, ctx: SLASHParser.Func_termContext) -> "Functional":
+    def visitFunc_term(self: Self, ctx: SLASHParser.Func_termContext) -> "Functional":
         """Visits 'func_term'.
 
         Handles the following rule(s):
@@ -733,7 +735,7 @@ class ProgramBuilder(SLASHVisitor):
         return Functional(ctx.children[0].getSymbol().text, *terms)
 
     # Visit a parse tree produced by SLASHParser#arith_term.
-    def visitArith_term(self, ctx: SLASHParser.Arith_termContext) -> "Term":
+    def visitArith_term(self: Self, ctx: SLASHParser.Arith_termContext) -> "Term":
         """Visits 'arith_term'.
 
         Handles the following rule(s):
@@ -749,7 +751,7 @@ class ProgramBuilder(SLASHVisitor):
         return self.visitArith_sum(ctx.children[0])
 
     # Visit a parse tree produced by SLASHParser#arith_sum.
-    def visitArith_sum(self, ctx: SLASHParser.Arith_sumContext) -> "Term":
+    def visitArith_sum(self: Self, ctx: SLASHParser.Arith_sumContext) -> "Term":
         """Visits 'arith_sum'.
 
         Handles the following rule(s):
@@ -778,7 +780,7 @@ class ProgramBuilder(SLASHVisitor):
             return self.visitArith_prod(ctx.children[0])
 
     # Visit a parse tree produced by SLASHParser#arith_prod.
-    def visitArith_prod(self, ctx: SLASHParser.Arith_prodContext) -> "Term":
+    def visitArith_prod(self: Self, ctx: SLASHParser.Arith_prodContext) -> "Term":
         """Visits 'arith_prod'.
 
         Handles the following rule(s):
@@ -807,7 +809,7 @@ class ProgramBuilder(SLASHVisitor):
             return self.visitArith_atom(ctx.children[0])
 
     # Visit a parse tree produced by SLASHParser#arith_atom.
-    def visitArith_atom(self, ctx: SLASHParser.Arith_atomContext) -> "Term":
+    def visitArith_atom(self: Self, ctx: SLASHParser.Arith_atomContext) -> "Term":
         """Visits 'arith_atom'.
 
         Handles the following rule(s):
