@@ -18,6 +18,9 @@ jobs:
         run:  |
           python -m pip install --upgrade pip
           pip install .[dev]
+      - name: Generate parser files
+        shell: bash
+        run:  |
           ground_slash init
       - name: Pytest & coverage
         shell: bash
