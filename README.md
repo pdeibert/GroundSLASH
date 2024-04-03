@@ -1,3 +1,6 @@
+![Unit test badge](https://img.shields.io/badge/Unit_tests-passed-blue?color=rgb(0,128,0))
+![Coverage badge](https://img.shields.io/badge/Coverage-93%25-blue?color=rgb(35,145,0))
+
 # GroundSLASH
 
 Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH. SLASH is neural-probabilistic extension of the Answer Set Programming (ASP) paradigm. For more information, see:

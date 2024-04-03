@@ -1,2 +1,2 @@
 [run]
-omit = ./src/aspy/antlr/*
+omit = ./src/ground_slash/parser/*

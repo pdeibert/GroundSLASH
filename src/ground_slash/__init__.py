@@ -8,7 +8,7 @@ def main():
     import argparse
     import sys
 
-    parser = parser = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         prog="GroundSLASH",
         description="Parser & grounder for the SLASH input language",
     )
