@@ -7,7 +7,6 @@ from ground_slash.program import Program
 
 class TestDependencyGraph(unittest.TestCase):
     def test_dependency_graph(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

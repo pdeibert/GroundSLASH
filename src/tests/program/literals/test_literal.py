@@ -10,7 +10,6 @@ from ground_slash.program.variable_table import VariableTable
 
 class TestLiteral(unittest.TestCase):
     def test_literal_collection(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

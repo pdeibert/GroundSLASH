@@ -186,7 +186,6 @@ class VariableTable:
             var = AnonVariable(id)
         # special 'arithmetic replacement' variable
         elif symbol == SpecialChar.TAU.value:
-
             if orig_term is None:
                 raise ValueError(
                     "Variable table cannot create arithmetic variable without specifying 'orig_term'."  # noqa

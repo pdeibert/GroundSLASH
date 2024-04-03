@@ -49,7 +49,6 @@ from ground_slash.program.terms import (
 
 class TestProgram(unittest.TestCase):
     def test_program(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -122,7 +121,6 @@ class TestProgram(unittest.TestCase):
         # TODO: rewrite aggregates
 
     def test_from_string(self):
-
         # ----- terms -----
         # NOTE: use normal facts and predicate literals to check
         # (somewhat of a circular test)

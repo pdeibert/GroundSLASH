@@ -20,7 +20,6 @@ from ground_slash.program.variable_table import VariableTable
 
 class TestSpecial(unittest.TestCase):
     def test_aggr_placeholder(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -111,7 +110,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_aggr_base_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -192,7 +190,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_aggr_elem_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -337,7 +334,6 @@ class TestSpecial(unittest.TestCase):
         )  # ground terms don't match
 
     def test_choice_placeholder(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -421,7 +417,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_choice_base_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -502,7 +497,6 @@ class TestSpecial(unittest.TestCase):
         )
 
     def test_choice_elem_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

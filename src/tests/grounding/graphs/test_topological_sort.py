@@ -6,7 +6,6 @@ from ground_slash.grounding.graphs import topological_sort
 
 class TestSCC(unittest.TestCase):
     def test_topological_sort_acyclic(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -23,7 +22,6 @@ class TestSCC(unittest.TestCase):
         self.assertTrue(sequence in valid_sequences)
 
     def test_topological_sort_cyclic(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

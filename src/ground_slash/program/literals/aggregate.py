@@ -1027,7 +1027,6 @@ class AggrMax(AggrFunc):
         res = True
 
         for guard in guards:
-
             if guard is None:
                 continue
             if res is False:

@@ -20,7 +20,6 @@ from ground_slash.program.variable_table import VariableTable
 
 class TestTerm(unittest.TestCase):
     def test_infimum(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -51,7 +50,6 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(Infimum().match(Infimum()), Substitution())
 
     def test_supremum(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -82,7 +80,6 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(Supremum().match(Supremum()), Substitution())
 
     def test_variable(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -125,7 +122,6 @@ class TestTerm(unittest.TestCase):
         )
 
     def test_anon_variable(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -168,7 +164,6 @@ class TestTerm(unittest.TestCase):
         )
 
     def test_number(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -215,7 +210,6 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(Number(0).match(Number(0)), Substitution())
 
     def test_symbolic_constant(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -259,7 +253,6 @@ class TestTerm(unittest.TestCase):
         )
 
     def test_string(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -294,7 +287,6 @@ class TestTerm(unittest.TestCase):
         self.assertEqual(String("a").match(String("a")), Substitution())
 
     def test_term_tuple(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

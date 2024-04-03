@@ -18,7 +18,6 @@ from ground_slash.program.variable_table import VariableTable
 
 class TestArithmetic(unittest.TestCase):
     def test_minus(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -74,7 +73,6 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(Minus(Minus(Variable("X"))).simplify(), Variable("X"))
 
     def test_add(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -150,7 +148,6 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(Add(Number(0), Variable("X")).simplify(), Variable("X"))
 
     def test_sub(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -225,7 +222,6 @@ class TestArithmetic(unittest.TestCase):
         self.assertEqual(Sub(Number(0), Variable("X")).simplify(), Minus(Variable("X")))
 
     def test_mult(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -325,7 +321,6 @@ class TestArithmetic(unittest.TestCase):
         )
 
     def test_div(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

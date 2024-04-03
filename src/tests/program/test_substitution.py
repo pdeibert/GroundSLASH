@@ -7,7 +7,6 @@ from ground_slash.program.terms import Number, String, Variable
 
 class TestSubstitution(unittest.TestCase):
     def test_substitution(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

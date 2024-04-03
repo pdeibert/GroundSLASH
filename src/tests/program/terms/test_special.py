@@ -8,7 +8,6 @@ from ground_slash.program.terms import Add, ArithVariable, Minus, Number, Variab
 
 class TestSpecial(unittest.TestCase):
     def test_arith_variable(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

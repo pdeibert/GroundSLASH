@@ -32,7 +32,6 @@ from ground_slash.program.terms import (
 
 class TestDisjunctive(unittest.TestCase):
     def test_disjunctive_fact(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -144,7 +143,6 @@ class TestDisjunctive(unittest.TestCase):
         # TODO: propagate
 
     def test_disjunctive_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

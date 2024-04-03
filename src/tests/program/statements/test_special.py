@@ -28,7 +28,6 @@ from ground_slash.program.terms import Number, TermTuple, Variable
 
 class TestSpecial(unittest.TestCase):
     def test_aggr_base_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -175,7 +174,6 @@ class TestSpecial(unittest.TestCase):
         # TODO: assignment conflict
 
     def test_aggr_element_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -285,7 +283,6 @@ class TestSpecial(unittest.TestCase):
         # TODO: assignment conflict
 
     def test_choice_base_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -431,7 +428,6 @@ class TestSpecial(unittest.TestCase):
         # TODO: assignment conflict
 
     def test_choice_element_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

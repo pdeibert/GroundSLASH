@@ -117,7 +117,6 @@ class SafetyTriplet:
 
         # until there is no more change
         while rules != prev_rules or safe != prev_safe or unsafe != prev_unsafe:
-
             prev_safe = safe.copy()
             prev_unsafe = unsafe.copy()
             prev_rules = rules.copy()
@@ -126,7 +125,6 @@ class SafetyTriplet:
 
             for rule in prev_rules:
                 if not (rule.depender in rule.dependees or rule.depender in safe):
-
                     # remove safe variables from dependees and check if it becomes empty
                     if not (updated_dependees := rule.dependees - safe):
                         # drop rule and add depender to safe variables

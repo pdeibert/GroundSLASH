@@ -28,9 +28,7 @@ class ChoicePropagator:
         literals_J: Set["Literal"],
         literals_J_chi: Set["Literal"],
     ) -> Set[ChoicePlaceholder]:
-
         for rule in chain(eps_instances, eta_instances):
-
             # get corresponding chi_literal
             choice, chi_literal, *_ = self.choice_map[rule.ref_id]
 
@@ -92,7 +90,6 @@ class ChoicePropagator:
     def assemble(
         self, statements: Set["Statement"], satisfiable: Set[ChoicePlaceholder]
     ) -> Set["Statement"]:
-
         # map ground chi literals to corresponding
         # assembled choice expressions to be replaced with
         assembling_map = {

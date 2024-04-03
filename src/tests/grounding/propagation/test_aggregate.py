@@ -23,7 +23,6 @@ from ground_slash.program.terms import Number, TermTuple, Variable
 
 class TestAggrPropagator(unittest.TestCase):
     def test_aggr_propagator(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

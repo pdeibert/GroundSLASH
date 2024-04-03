@@ -40,7 +40,6 @@ class DummyRule:
 
 class TestAggregate(unittest.TestCase):
     def test_aggregate_element(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -142,7 +141,6 @@ class TestAggregate(unittest.TestCase):
         self.assertRaises(Exception, element.match, element)
 
     def test_aggregate_count(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -275,7 +273,6 @@ class TestAggregate(unittest.TestCase):
         # TODO: special cases?
 
     def test_aggregate_sum(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -444,7 +441,6 @@ class TestAggregate(unittest.TestCase):
         # TODO: special cases?
 
     def test_aggregate_max(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -577,7 +573,6 @@ class TestAggregate(unittest.TestCase):
         # TODO: special cases?
 
     def test_aggregate_min(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -710,7 +705,6 @@ class TestAggregate(unittest.TestCase):
         # TODO: special cases?
 
     def test_aggregate_literal(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

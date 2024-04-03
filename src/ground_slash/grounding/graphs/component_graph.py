@@ -26,7 +26,6 @@ class Component:
         return self.pos_edges.union(self.neg_edges)
 
     def sequence(self) -> List[Tuple["Statement", ...]]:
-
         # compute strong connected components (convert to tuples for dict hashing)
         sccs = [
             tuple(component) for component in compute_SCCs(self.nodes, self.pos_edges)
@@ -44,7 +43,7 @@ class Component:
         pos_edges = set()
 
         # group positive edges
-        for (src, dst) in self.pos_edges:
+        for src, dst in self.pos_edges:
             src_component = rule2scc[src]
             dst_component = rule2scc[dst]
 
@@ -70,7 +69,6 @@ class ComponentGraph(object):
 
     @classmethod
     def from_dependency_graph(cls, dep_graph: DependencyGraph) -> "ComponentGraph":
-
         # compute strong connected components (convert to tuples for dict hashing)
         sccs = [
             tuple(component)
@@ -92,7 +90,7 @@ class ComponentGraph(object):
         neg_edges = set()
 
         # group positive edges
-        for (src, dst) in dep_graph.pos_edges:
+        for src, dst in dep_graph.pos_edges:
             src_component = rule2scc[src]
             dst_component = rule2scc[dst]
 
@@ -102,7 +100,7 @@ class ComponentGraph(object):
                 pos_edges.add((src, dst))
 
         # group negative edges
-        for (src, dst) in dep_graph.neg_edges:
+        for src, dst in dep_graph.neg_edges:
             src_scc = rule2scc[src]
             dst_scc = rule2scc[dst]
 
@@ -152,11 +150,10 @@ class ComponentGraph(object):
             ).add(component)
 
         while not converged:
-
             converged = True
 
             for component in stratified_components.copy():
-                for (src_component, dst_component) in graph.edges:
+                for src_component, dst_component in graph.edges:
                     # if component depends on an unstratified component,
                     # mark it as unstratisfied
                     if (

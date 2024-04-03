@@ -6,7 +6,6 @@ from ground_slash.program.operators import AggrOp, ArithOp, RelOp
 
 class TestSubstitution(unittest.TestCase):
     def test_relop(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -37,7 +36,6 @@ class TestSubstitution(unittest.TestCase):
         # TODO: eval
 
     def test_arithop(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -48,7 +46,6 @@ class TestSubstitution(unittest.TestCase):
         self.assertEqual(str(ArithOp.DIV), "/")
 
     def test_aggrop(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

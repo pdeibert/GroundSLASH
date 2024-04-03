@@ -52,7 +52,6 @@ class DummyRule:  # pragma: no cover
 
 class TestChoice(unittest.TestCase):
     def test_choice_element(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -156,7 +155,6 @@ class TestChoice(unittest.TestCase):
         self.assertRaises(Exception, element.match, element)
 
     def test_choice(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -473,7 +471,6 @@ class TestChoice(unittest.TestCase):
         )
 
     def test_choice_fact(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -721,7 +718,11 @@ class TestChoice(unittest.TestCase):
         self.assertEqual(
             target_rule.assemble_choices(
                 {
-                    ChoicePlaceholder(1, TermTuple(), TermTuple(),): Choice(
+                    ChoicePlaceholder(
+                        1,
+                        TermTuple(),
+                        TermTuple(),
+                    ): Choice(
                         (
                             ChoiceElement(
                                 PredLiteral("p", Number(0)),
@@ -761,7 +762,6 @@ class TestChoice(unittest.TestCase):
         )  # choice is unsatisfiable (yields constraint)
 
     def test_choice_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

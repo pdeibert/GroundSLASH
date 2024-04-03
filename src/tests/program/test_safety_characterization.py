@@ -7,7 +7,6 @@ from ground_slash.program.terms import Variable
 
 class TestSafetyCharacterization(unittest.TestCase):
     def test_safety_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -19,7 +18,6 @@ class TestSafetyCharacterization(unittest.TestCase):
         self.assertEqual(hash(rule), hash(SafetyRule(Variable("X"), {Variable("Y")})))
 
     def test_safety_triple(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

@@ -12,11 +12,9 @@ class DependencyGraph:
         self.neg_edges = set()
 
         for dependee in rules:
-
             head_predicates = set(literal.pred() for literal in dependee.consequents())
 
             for depender in rules:
-
                 # skip self
                 if depender is dependee:
                     continue

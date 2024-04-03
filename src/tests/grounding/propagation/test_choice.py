@@ -27,7 +27,6 @@ from ground_slash.program.terms import Number, TermTuple, Variable
 
 class TestChoicePropagator(unittest.TestCase):
     def test_choice_propagator(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

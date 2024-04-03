@@ -15,7 +15,6 @@ from ground_slash.program.terms import Number, Variable
 
 class TestNaf(unittest.TestCase):
     def test_naf(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

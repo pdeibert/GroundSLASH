@@ -34,7 +34,6 @@ class PropBaseRule(NormalRule):
         rguard: Optional["Guard"],
         literals: "LiteralCollection",
     ) -> None:
-
         super().__init__(atom, literals)
         self.guards = (lguard, rguard)
 
@@ -57,7 +56,6 @@ class PropBaseRule(NormalRule):
         literals: "LiteralCollection",
         atom_type: Type = PropBaseLiteral,
     ) -> "PropBaseRule":
-
         # check if global vars is tuple (important for FIXED order)
         if ground_slash.debug():
             if not isinstance(glob_vars, TermTuple):
@@ -172,7 +170,6 @@ class PropElemRule(NormalRule):
         literals: "LiteralCollection",
         atom_type: Type = PropElemLiteral,
     ) -> "PropElemRule":
-
         # compute local variables
         local_vars = TermTuple(
             *tuple(var for var in element.vars() if var not in glob_vars)
@@ -218,7 +215,6 @@ class AggrBaseRule(PropBaseRule):
         rguard: Optional["Guard"],
         literals: "LiteralCollection",
     ) -> None:
-
         super().__init__(atom, lguard, rguard, literals)
 
     @classmethod
@@ -282,7 +278,6 @@ class ChoiceBaseRule(PropBaseRule):
         rguard: Optional["Guard"],
         literals: "LiteralCollection",
     ) -> None:
-
         super().__init__(atom, lguard, rguard, literals)
 
     @classmethod

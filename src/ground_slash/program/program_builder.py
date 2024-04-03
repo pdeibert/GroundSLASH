@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 import antlr4  # type: ignore
 
-from ground_slash.antlr.SLASHParser import SLASHParser
-from ground_slash.antlr.SLASHVisitor import SLASHVisitor
+from ground_slash.parser.SLASHParser import SLASHParser
+from ground_slash.parser.SLASHVisitor import SLASHVisitor
 from ground_slash.program.literals import (
     AggrElement,
     AggrLiteral,
@@ -643,7 +643,6 @@ class ProgramBuilder(SLASHVisitor):
         """
         # first child is a token
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNode):
-
             # get token
             token = ctx.children[0].getSymbol()
             token_type = SLASHParser.symbolicNames[token.type]
@@ -766,7 +765,6 @@ class ProgramBuilder(SLASHVisitor):
         """
         # arith_sum (PLUS | MINUS) arith_prod
         if len(ctx.children) > 1:
-
             # get operator token
             token = ctx.children[1].getSymbol()
 
@@ -796,7 +794,6 @@ class ProgramBuilder(SLASHVisitor):
         """
         # arith_prod (TIMES | DIV) arith_atom
         if len(ctx.children) > 1:
-
             # get operator token
             token = ctx.children[1].getSymbol()
 

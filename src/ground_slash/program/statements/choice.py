@@ -661,7 +661,6 @@ class Choice(Expr):
         exclude = set()
 
         for guard in self.guards:
-
             if guard is None:
                 continue
             elif guard.right:

@@ -25,7 +25,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class Grounder:
     def __init__(self, prog: Program) -> None:
-
         if not prog.safe:
             raise ValueError("Grounding requires program to be safe.")
 
@@ -237,7 +236,6 @@ class Grounder:
         converged = False
 
         while not converged:
-
             # ground aggregate epsilon rules
             # (encode the satisfiability of aggregates without any element instances)
             aggr_eps_instances.update(
@@ -370,7 +368,6 @@ class Grounder:
         return assembled_instances
 
     def ground(self) -> Program:
-
         # compute component graph for rules/facts only
         component_graph = ComponentGraph(self.prog.statements)  # rules/facts only???
 

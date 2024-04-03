@@ -26,7 +26,6 @@ from ground_slash.program.terms import Number, TermTuple, Variable
 
 class TestRewrite(unittest.TestCase):
     def test_rewrite_aggregate(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

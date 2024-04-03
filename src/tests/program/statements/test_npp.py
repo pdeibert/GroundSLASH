@@ -39,7 +39,6 @@ class DummyRule:  # pragma: no cover
 
 class TestNPP(unittest.TestCase):
     def test_npp(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -166,7 +165,6 @@ class TestNPP(unittest.TestCase):
         )
 
     def test_npp_fact(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -270,7 +268,6 @@ class TestNPP(unittest.TestCase):
         self.assertEqual(rule, rule.assemble_aggregates(dict()))
 
     def test_npp_rule(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 

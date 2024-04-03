@@ -33,7 +33,6 @@ class TestGrounder(unittest.TestCase):
         """Helper method (not a test case on its own)."""
 
         def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
-
             ctl = clingo.Control(message_limit=0)
             # instruct to return all models
             ctl.configuration.solve.models = 0
@@ -63,7 +62,6 @@ class TestGrounder(unittest.TestCase):
         self.assertEqual(our_models, gringo_models)
 
     def test_select(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -135,7 +133,6 @@ class TestGrounder(unittest.TestCase):
         )
 
     def test_matches(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -198,7 +195,6 @@ class TestGrounder(unittest.TestCase):
         )  # aggregate literal
 
     def test_ground_statement(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -460,7 +456,6 @@ class TestGrounder(unittest.TestCase):
         )  # not all literals have matches in 'possible'
 
     def test_ground_unsafe(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -474,14 +469,12 @@ class TestGrounder(unittest.TestCase):
         self.assertRaises(ValueError, Grounder, prog)
 
     def test_ground_component(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
         # TODO
 
     def test_example_1(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -496,7 +489,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_2(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -514,7 +506,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_3(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -535,7 +526,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_4(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -554,7 +544,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_5(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -588,7 +577,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_6(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -622,7 +610,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_7(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -635,7 +622,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_8(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -649,7 +635,6 @@ class TestGrounder(unittest.TestCase):
             self.compare_to_clingo(prog_str)
 
     def test_example_9(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -669,7 +654,6 @@ class TestGrounder(unittest.TestCase):
             self.compare_to_clingo(prog_str)
 
     def test_example_10(self):
-
         # make sure debug mode is enabled
         self.assertTrue(ground_slash.debug())
 
@@ -688,7 +672,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_roads(self):
-
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
@@ -711,7 +694,6 @@ class TestGrounder(unittest.TestCase):
         self.compare_to_clingo(prog_str)
 
     def test_example_graph_color(self):
-
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled

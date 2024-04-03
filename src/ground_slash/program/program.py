@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tupl
 
 import antlr4  # type: ignore
 
-from ground_slash.antlr.SLASHLexer import SLASHLexer
-from ground_slash.antlr.SLASHParser import SLASHParser
+from ground_slash.parser.SLASHLexer import SLASHLexer
+from ground_slash.parser.SLASHParser import SLASHParser
 
 from .program_builder import ProgramBuilder
 
@@ -147,7 +147,6 @@ class Program:
         aggr_map = dict()
 
         for statement in self.statements:
-
             alpha_statement = statement.rewrite_aggregates(aggr_counter, aggr_map)
 
             for *_, eps_statement, eta_statements in aggr_map.values():
@@ -202,7 +201,6 @@ class Program:
         aggr_map = dict()
 
         for statement in self.statements:
-
             chi_statement = statement.rewrite_choices(choice_counter, aggr_map)
 
             for *_, eps_statement, eta_statements in aggr_map.values():
@@ -228,7 +226,7 @@ class Program:
         return all(statement.ground for statement in self.statements)  # TODO: query?
 
     @classmethod
-    def from_string(cls, prog_str: str) -> "Program":
+    def from_string(cls, prog_str: str, simplify_arithmetic: bool = True) -> "Program":
         """Creates program from a raw string encoding.
 
         Args:
@@ -237,6 +235,7 @@ class Program:
         Returns:
             `Program` instance.
         """
+        # get input stream
         input_stream = antlr4.InputStream(prog_str)  # type: ignore
 
         # tokenize input program
@@ -244,10 +243,11 @@ class Program:
         stream = antlr4.CommonTokenStream(lexer)  # type: ignore
         stream.fill()
 
+        # parse program
         parser = SLASHParser(stream)
         tree = parser.program()
 
         # traverse parse tree using visitor
-        statements, query = ProgramBuilder().visit(tree)
+        statements, query = ProgramBuilder(simplify_arithmetic).visit(tree)
 
-        return Program(tuple(statements), query)
+        return Program(statements, query)
