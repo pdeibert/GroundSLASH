@@ -24,6 +24,8 @@ head                :   disjunction
 
 body                :   (naf_literal | NAF? aggregate) (COMMA body)? ;
 
+npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? COMMA SQUARE_OPEN terms? SQUARE_CLOSE PAREN_CLOSE ;
+
 disjunction         :   classical_literal (OR disjunction)? ;
 
 choice              :   (term relop)? CURLY_OPEN choice_elements? CURLY_CLOSE (relop term)? ;
@@ -66,38 +68,28 @@ relop               :   EQUAL
 
 terms               :   term (COMMA terms)? ;
 
-term                :   ID
+term                :   term_sum ;
+
+term_sum            :   term_sum PLUS term_prod
+                    |   term_sum MINUS term_prod
+                    |   term_prod
+                    ;
+
+term_prod           :   term_prod TIMES term_atom
+                    |   term_prod DIV term_atom
+                    |   term_atom
+                    ;
+
+term_atom           :   NUMBER
                     |   STRING
                     |   VARIABLE
                     |   ANONYMOUS_VARIABLE
                     |   PAREN_OPEN term PAREN_CLOSE
-                    |   func_term
-                    |   arith_term
+                    |   MINUS term_sum
+                    |   symbolic_term
                     ;
 
-npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? COMMA SQUARE_OPEN terms? SQUARE_CLOSE PAREN_CLOSE ;
-
-// functional terms
-func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE ;
-
-// arithmetical terms (operator precedences built into the grammar)
-arith_term          :   arith_sum ;
-
-arith_sum           :   arith_prod
-                    |   arith_sum PLUS arith_prod
-                    |   arith_sum MINUS arith_prod
-                    ;
-
-arith_prod          :   arith_atom
-                    |   arith_prod TIMES arith_atom
-                    |   arith_prod DIV arith_atom 
-                    ;
-
-arith_atom          :  NUMBER
-                    |  VARIABLE
-                    |  MINUS arith_atom
-                    |  PAREN_OPEN arith_sum PAREN_CLOSE
-                    ;
+symbolic_term       :   ID (PAREN_OPEN terms? PAREN_CLOSE)? ;
 
 /* lexer rules */
 

@@ -29,6 +29,7 @@ from ground_slash.program.statements import (  # ChoiceFact,; DisjunctiveFact,; 
     Statement,
 )
 from ground_slash.program.terms import (
+    ArithTerm,
     Functional,
     Minus,
     Number,
@@ -217,6 +218,45 @@ class ProgramBuilder(SLASHVisitor):
             literals += self.visitBody(ctx.children[-1])
 
         return tuple(literals)
+
+    # Visit a parse tree produced by SLASHParser#npp_declaration.
+    def visitNpp_declaration(
+        self: Self, ctx: SLASHParser.Npp_declarationContext
+    ) -> NPP:
+        """Visits 'npp_declaration'.
+
+        Handles the following rule(s):
+            npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
+
+        Args:
+            ctx: `SLASHParser.TermContext` to be visited.
+
+        Returns:
+            `Term` instance.
+        """  # noqa
+
+        # get identifier
+        name = ctx.children[2].getSymbol().text
+
+        # get next token
+        token_type = SLASHParser.symbolicNames[ctx.children[3].getSymbol().type]
+
+        # PAREN_OPEN terms? PAREN_CLOSE
+        terms = (
+            self.visitTerms(ctx.children[4])
+            if token_type == "PAREN_OPEN"
+            and isinstance(ctx.children[4], SLASHParser.TermsContext)
+            else TermTuple()
+        )
+
+        # COMMA SQUARE_OPEN terms? SQUARE_CLOSE
+        outcomes = (
+            self.visitTerms(ctx.children[-3])
+            if isinstance(ctx.children[-3], SLASHParser.TermsContext)
+            else TermTuple()
+        )
+
+        return NPP(name, terms, outcomes)
 
     # Visit a parse tree produced by SLASHParser#disjunction.
     def visitDisjunction(
@@ -627,16 +667,96 @@ class ProgramBuilder(SLASHVisitor):
         """Visits 'term'.
 
         Handles the following rule(s):
-            term                :   ID
+            term                :   term_sum
+
+        Args:
+            ctx: `SLASHParser.TermContext` to be visited.
+
+        Returns:
+            `Term` instance.
+        """
+        # term_sum
+        term = self.visitTerm_sum(ctx.children[0])
+
+        if isinstance(term, ArithTerm) and self.simplify_arithmetic:
+            # simplify arithmetic term
+            term = term.simplify()
+
+        return term
+
+    # Visit a parse tree produced by SLASHParser#term_sum.
+    def visitTerm_sum(self: Self, ctx: SLASHParser.Term_sumContext) -> "Term":
+        """Visits 'term_sum'.
+
+        Handles the following rule(s):
+            term_sum            :   term_sum PLUS term_prod
+                                |   term_sum MINUS term_prod
+                                |   term_prod
+
+        Args:
+            ctx: `SLASHParser.Term_sumContext` to be visited.
+
+        Returns:
+            `Term` instance.
+        """
+        # term_sum (PLUS | MINUS) term_prod
+        if len(ctx.children) > 1:
+            # get operator token
+            token = ctx.children[1].getSymbol()
+
+            loperand = self.visitTerm_sum(ctx.children[0])
+            roperand = self.visitTerm_prod(ctx.children[2])
+
+            # PLUS | MINUS
+            return op2arith[ArithOp(token.text)](loperand, roperand)
+        # term_prod
+        else:
+            return self.visitTerm_prod(ctx.children[0])
+
+    # Visit a parse tree produced by SLASHParser#term_prod.
+    def visitTerm_prod(self: Self, ctx: SLASHParser.Term_prodContext) -> "Term":
+        """Visits 'term_prod'.
+
+        Handles the following rule(s):
+            term_prod           :   term_prod TIMES term_atom
+                                |   term_prod TIMES term_atom
+                                |   term_atom
+
+        Args:
+            ctx: `SLASHParser.Term_prodContext` to be visited.
+
+        Returns:
+            `Term` instance.
+        """
+        # term_prod (TIMES | DIV) term_atom
+        if len(ctx.children) > 1:
+            # get operator token
+            token = ctx.children[1].getSymbol()
+
+            loperand = self.visitTerm_prod(ctx.children[0])
+            roperand = self.visitTerm_atom(ctx.children[2])
+
+            # TIMES | DIV
+            return op2arith[ArithOp(token.text)](loperand, roperand)
+        # term_atom
+        else:
+            return self.visitTerm_atom(ctx.children[0])
+
+    # Visit a parse tree produced by SLASHParser#Term_atom.
+    def visitTerm_atom(self: Self, ctx: SLASHParser.Term_atomContext) -> "Term":
+        """Visits 'term_atom'.
+
+        Handles the following rule(s):
+            term_atom           :   NUMBER
                                 |   STRING
                                 |   VARIABLE
                                 |   ANONYMOUS_VARIABLE
                                 |   PAREN_OPEN term PAREN_CLOSE
-                                |   func_term
-                                |   arith_term
+                                |   MINUS term_sum
+                                |   symbolic_term
 
         Args:
-            ctx: `SLASHParser.TermContext` to be visited.
+            ctx: `SLASHParser.Term_atomContext` to be visited.
 
         Returns:
             `Term` instance.
@@ -647,9 +767,9 @@ class ProgramBuilder(SLASHVisitor):
             token = ctx.children[0].getSymbol()
             token_type = SLASHParser.symbolicNames[token.type]
 
-            # ID
-            if token_type == "ID":
-                return SymbolicConstant(token.text)  # TODO: predicate or function ?!
+            # NUMBER
+            if token_type == "NUMBER":
+                return Number(int(token.text))
             # STRING
             elif token_type == "STRING":
                 return String(token.text[1:-1])
@@ -661,184 +781,49 @@ class ProgramBuilder(SLASHVisitor):
                 return self.var_table.create(register=False)
             # PAREN_OPEN term PAREN_CLOSE
             elif token_type == "PAREN_OPEN":
+                # TODO: is (term) really identical to term?
                 return self.visitTerm(ctx.children[1])  # parse term
+            # MINUS arith_atom
+            elif token_type == "MINUS":
+                term = self.visitTerm_sum(ctx.children[1])
+
+                if not isinstance(term, (Number, ArithTerm)):
+                    raise ValueError(
+                        f"Invalid argument of type {type(term)} for arithmetic operation 'MINUS'."
+                    )
+                return Minus(term)
             else:
-                # TODO: ???
-                raise Exception(f"TODO: REMOVE RULE: TOKEN {token_type}.")
-        # func_term
-        elif isinstance(ctx.children[0], SLASHParser.Func_termContext):
-            return self.visitFunc_term(ctx.children[0])
-        # arith_term
+                # TODO
+                raise Exception()
+        # symbolic_term
         else:
-            # parse arithmetic term
-            arith_term = self.visitArith_term(ctx.children[0])
-
-            # return (simplified arithmetic term)
-            return arith_term.simplify() if self.simplify_arithmetic else arith_term
-
-    # Visit a parse tree produced by SLASHParser#npp_declaration.
-    def visitNpp_declaration(
-        self: Self, ctx: SLASHParser.Npp_declarationContext
-    ) -> NPP:
-        """Visits 'npp_declaration'.
+            return self.visitSymbolic_term(ctx.children[0])
+    
+    # Visit a parse tree produced by SLASHParser#Symbolic_term.
+    def visitSymbolic_term(self: Self, ctx: SLASHParser.Symbolic_termContext) -> Union[SymbolicConstant, Functional]:
+        """Visits 'symbolic_term'.
 
         Handles the following rule(s):
-            npp_declaration     :   NPP PAREN_OPEN ID (PAREN_OPEN terms? PAREN_CLOSE)? SQUARE_OPEN terms SQUARE_CLOSE PAREN_CLOSE
+            symbolic_term       :   ID (PAREN_OPEN terms? PAREN_CLOSE)?
 
         Args:
-            ctx: `SLASHParser.TermContext` to be visited.
-
-        Returns:
-            `Term` instance.
-        """  # noqa
-
-        # get identifier
-        name = ctx.children[2].getSymbol().text
-
-        # get next token
-        token_type = SLASHParser.symbolicNames[ctx.children[3].getSymbol().type]
-
-        # PAREN_OPEN terms? PAREN_CLOSE
-        terms = (
-            self.visitTerms(ctx.children[4])
-            if token_type == "PAREN_OPEN"
-            and isinstance(ctx.children[4], SLASHParser.TermsContext)
-            else TermTuple()
-        )
-
-        # COMMA SQUARE_OPEN terms? SQUARE_CLOSE
-        outcomes = (
-            self.visitTerms(ctx.children[-3])
-            if isinstance(ctx.children[-3], SLASHParser.TermsContext)
-            else TermTuple()
-        )
-
-        return NPP(name, terms, outcomes)
-
-    # Visit a parse tree produced by SLASHParser#func_term.
-    def visitFunc_term(self: Self, ctx: SLASHParser.Func_termContext) -> "Functional":
-        """Visits 'func_term'.
-
-        Handles the following rule(s):
-            func_term           :   ID PAREN_OPEN terms? PAREN_CLOSE
-
-        Args:
-            ctx: `SLASHParser.Func_termContext` to be visited.
-
-        Returns:
-            `Functional` instance.
-        """
-
-        # parse terms
-        terms = tuple() if len(ctx.children) < 4 else self.visitTerms(ctx.children[2])
-
-        return Functional(ctx.children[0].getSymbol().text, *terms)
-
-    # Visit a parse tree produced by SLASHParser#arith_term.
-    def visitArith_term(self: Self, ctx: SLASHParser.Arith_termContext) -> "Term":
-        """Visits 'arith_term'.
-
-        Handles the following rule(s):
-            arith_term          :   arith_sum
-
-        Args:
-            ctx: `SLASHParser.Arith_termContext` to be visited.
+            ctx: `SLASHParser.Symbolic_termContext` to be visited.
 
         Returns:
             `Term` instance.
         """
-        # TODO: eliminate rule from grammar?
-        return self.visitArith_sum(ctx.children[0])
+        symbolic_id = ctx.children[0].getSymbol().text
 
-    # Visit a parse tree produced by SLASHParser#arith_sum.
-    def visitArith_sum(self: Self, ctx: SLASHParser.Arith_sumContext) -> "Term":
-        """Visits 'arith_sum'.
-
-        Handles the following rule(s):
-            arith_sum           :   arith_prod
-                                |   arith_sum PLUS arith_prod
-                                |   arith_sum MINUS arith_prod
-
-        Args:
-            ctx: `SLASHParser.Arith_sumContext` to be visited.
-
-        Returns:
-            `Term` instance.
-        """
-        # arith_sum (PLUS | MINUS) arith_prod
-        if len(ctx.children) > 1:
-            # get operator token
-            token = ctx.children[1].getSymbol()
-
-            loperand = self.visitArith_sum(ctx.children[0])
-            roperand = self.visitArith_prod(ctx.children[2])
-
-            # PLUS | MINUS
-            return op2arith[ArithOp(token.text)](loperand, roperand)
-        # arith_prod
+        # ID
+        if len(ctx.children) == 1:
+            # return symbolic constant
+            return SymbolicConstant(symbolic_id)
+        # ID PAREN_OPEN terms? PAREN_CLOSE
         else:
-            return self.visitArith_prod(ctx.children[0])
+            if not isinstance(ctx.children[-2], antlr4.tree.Tree.TerminalNode):
+                terms = self.visitTerms(ctx.children[-2])
+            else:
+                terms = tuple()
 
-    # Visit a parse tree produced by SLASHParser#arith_prod.
-    def visitArith_prod(self: Self, ctx: SLASHParser.Arith_prodContext) -> "Term":
-        """Visits 'arith_prod'.
-
-        Handles the following rule(s):
-            arith_prod          :   arith_atom
-                                |   arith_prod TIMES arith_atom
-                                |   arith_prod DIV arith_atom
-
-        Args:
-            ctx: `SLASHParser.Arith_prodContext` to be visited.
-
-        Returns:
-            `Term` instance.
-        """
-        # arith_prod (TIMES | DIV) arith_atom
-        if len(ctx.children) > 1:
-            # get operator token
-            token = ctx.children[1].getSymbol()
-
-            loperand = self.visitArith_prod(ctx.children[0])
-            roperand = self.visitArith_atom(ctx.children[2])
-
-            # TIMES | DIV
-            return op2arith[ArithOp(token.text)](loperand, roperand)
-        # arith_atom
-        else:
-            return self.visitArith_atom(ctx.children[0])
-
-    # Visit a parse tree produced by SLASHParser#arith_atom.
-    def visitArith_atom(self: Self, ctx: SLASHParser.Arith_atomContext) -> "Term":
-        """Visits 'arith_atom'.
-
-        Handles the following rule(s):
-            arith_atom          :   NUMBER
-                                |   VARIABLE
-                                |   MINUS arith_atom
-                                |   PAREN_OPEN arith_sum PAREN_CLOSE
-
-        Args:
-            ctx: `SLASHParser.Arith_atomContext` to be visited.
-
-        Returns:
-            `Term` instance.
-        """
-        # TODO: what about anonymous variables ?
-
-        # get first token
-        token = ctx.children[0].getSymbol()
-        token_type = SLASHParser.symbolicNames[token.type]
-
-        # NUMBER
-        if token_type == "NUMBER":
-            return Number(int(token.text))
-        # VARIABLE
-        elif token_type == "VARIABLE":
-            return self.var_table.create(token.text, register=False)
-        # MINUS arith_atom
-        elif token_type == "MINUS":
-            return Minus(self.visitArith_atom(ctx.children[1]))
-        # PAREN_OPEN arith_sum PAREN_CLOSE
-        else:
-            return self.visitArith_sum(ctx.children[1])
+            # return functional term
+            return Functional(symbolic_id, *terms)
