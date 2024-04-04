@@ -1,15 +1,12 @@
 from typing import Self
 
-import pytest  # type: ignore
-
 import ground_slash
 from ground_slash.grounding.graphs import DependencyGraph
 from ground_slash.program import Program
 
 
-@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestDependencyGraph:
-    def test_dependency_graph(self: Self, mode: str):
+    def test_dependency_graph(self: Self):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -27,7 +24,7 @@ class TestDependencyGraph:
         y :- not q(3).
         """
 
-        prog = Program.from_string(input, mode)
+        prog = Program.from_string(input)
 
         assert len(prog.statements) == 8  # make sure we have no extra statements
         u1, u2, v2, v3, pX, qX, x, y = prog.statements
