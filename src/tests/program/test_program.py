@@ -123,44 +123,36 @@ class TestProgram:
         # (somewhat of a circular test)
 
         # variable
-        assert Program.from_string("p(X).").statements[0].atom.terms[
-            0
-        ] == Variable("X")
+        assert Program.from_string("p(X).").statements[0].atom.terms[0] == Variable("X")
         # anonymous variable
-        assert Program.from_string("p(_).").statements[0].atom.terms[
+        assert Program.from_string("p(_).").statements[0].atom.terms[0] == AnonVariable(
             0
-        ] == AnonVariable(0)
-        assert Program.from_string("p(_, _).").statements[
-            0
-        ].atom.terms == TermTuple(
+        )
+        assert Program.from_string("p(_, _).").statements[0].atom.terms == TermTuple(
             AnonVariable(0), AnonVariable(1)
         )  # multiple anonymous variables should get distinct ids
         # string
-        assert Program.from_string(
-            r'p("string: \"internal string\" ").'
-        ).statements[0].atom.terms[0] == String(
+        assert Program.from_string(r'p("string: \"internal string\" ").').statements[
+            0
+        ].atom.terms[0] == String(
             r"string: \"internal string\" "
         )  # includes escaped string
-        assert Program.from_string(r'p("10").').statements[0].atom.terms[
-            0
-        ] == String("10")
+        assert Program.from_string(r'p("10").').statements[0].atom.terms[0] == String(
+            "10"
+        )
         # number
-        assert Program.from_string("p(-10).").statements[0].atom.terms[
-            0
-        ] == Number(-10)
+        assert Program.from_string("p(-10).").statements[0].atom.terms[0] == Number(-10)
         # symbolic constant
         assert Program.from_string("p(p).").statements[0].atom.terms[
             0
         ] == SymbolicConstant("p")
         # functional term (empty vs. symbolic constant)
-        assert Program.from_string("p(p()).").statements[0].atom.terms[
-            0
-        ] == Functional(
+        assert Program.from_string("p(p()).").statements[0].atom.terms[0] == Functional(
             "p"
         )  # empty
-        assert Program.from_string('p(p("string", 10)).').statements[
+        assert Program.from_string('p(p("string", 10)).').statements[0].atom.terms[
             0
-        ].atom.terms[0] == Functional("p", String("string"), Number(10))
+        ] == Functional("p", String("string"), Number(10))
         # arithmetic term (add, sub, mult, div, minus)
         assert Program.from_string("p(3+X).").statements[0].atom.terms[0] == Add(
             Number(3), Variable("X")
@@ -202,22 +194,16 @@ class TestProgram:
         assert Program.from_string("a :- 1 = 2.").statements[0].body[0] == Equal(
             Number(1), Number(2)
         )  # equal
-        assert Program.from_string("a :- 1 != 2.").statements[0].body[
-            0
-        ] == Unequal(
+        assert Program.from_string("a :- 1 != 2.").statements[0].body[0] == Unequal(
             Number(1), Number(2)
         )  # unequal
         assert Program.from_string("a :- 1 < 2.").statements[0].body[0] == Less(
             Number(1), Number(2)
         )  # less than
-        assert Program.from_string("a :- 1 > 2.").statements[0].body[
-            0
-        ] == Greater(
+        assert Program.from_string("a :- 1 > 2.").statements[0].body[0] == Greater(
             Number(1), Number(2)
         )  # greater than
-        assert Program.from_string("a :- 1 <= 2.").statements[0].body[
-            0
-        ] == LessEqual(
+        assert Program.from_string("a :- 1 <= 2.").statements[0].body[0] == LessEqual(
             Number(1), Number(2)
         )  # less than or equal
         assert Program.from_string("a :- 1 >= 2.").statements[0].body[
@@ -227,9 +213,9 @@ class TestProgram:
         )  # greater than or equal
 
         # aggregate literal
-        assert Program.from_string(r"a :- 3 = #count{X: p(X)}.").statements[
+        assert Program.from_string(r"a :- 3 = #count{X: p(X)}.").statements[0].body[
             0
-        ].body[0] == AggrLiteral(
+        ] == AggrLiteral(
             AggrCount(),
             (
                 AggrElement(
@@ -239,9 +225,9 @@ class TestProgram:
             ),
             (Guard(RelOp.EQUAL, Number(3), False), None),
         )  # only left guard
-        assert Program.from_string(r"a :- #count{X: p(X)} = 3.").statements[
+        assert Program.from_string(r"a :- #count{X: p(X)} = 3.").statements[0].body[
             0
-        ].body[0] == AggrLiteral(
+        ] == AggrLiteral(
             AggrCount(),
             (
                 AggrElement(
@@ -251,9 +237,9 @@ class TestProgram:
             ),
             (None, Guard(RelOp.EQUAL, Number(3), True)),
         )  # only right guard
-        assert Program.from_string(r"a :- 5 < #count{X: p(X)} = 3.").statements[
+        assert Program.from_string(r"a :- 5 < #count{X: p(X)} = 3.").statements[0].body[
             0
-        ].body[0] == AggrLiteral(
+        ] == AggrLiteral(
             AggrCount(),
             (
                 AggrElement(
@@ -276,9 +262,9 @@ class TestProgram:
                 Guard(RelOp.EQUAL, Number(3), True),
             ),
         )  # no elements
-        assert Program.from_string(r"a :- 5 < #count{X:} = 3.").statements[
+        assert Program.from_string(r"a :- 5 < #count{X:} = 3.").statements[0].body[
             0
-        ].body[0] == AggrLiteral(
+        ] == AggrLiteral(
             AggrCount(),
             (AggrElement(TermTuple(Variable("X")), LiteralCollection()),),
             (
@@ -286,9 +272,9 @@ class TestProgram:
                 Guard(RelOp.EQUAL, Number(3), True),
             ),
         )  # element without literals (i.e., condition)
-        assert Program.from_string(r"a :- 5 < #count{:p(X)} = 3.").statements[
+        assert Program.from_string(r"a :- 5 < #count{:p(X)} = 3.").statements[0].body[
             0
-        ].body[0] == AggrLiteral(
+        ] == AggrLiteral(
             AggrCount(),
             (
                 AggrElement(
@@ -361,9 +347,7 @@ class TestProgram:
         )  # max
 
         # ----- normal facts -----'
-        assert Program.from_string("p.").statements[0], NormalRule(
-            PredLiteral("p")
-        )
+        assert Program.from_string("p.").statements[0], NormalRule(PredLiteral("p"))
 
         # ----- normal rules -----
         assert Program.from_string("p :- q.").statements[0] == NormalRule(
@@ -376,17 +360,13 @@ class TestProgram:
         )
 
         # ----- disjunctive rules -----
-        assert Program.from_string("p | u | v :- q.").statements[
-            0
-        ] == DisjunctiveRule(
+        assert Program.from_string("p | u | v :- q.").statements[0] == DisjunctiveRule(
             (PredLiteral("p"), PredLiteral("u"), PredLiteral("v")),
             (PredLiteral("q"),),
         )
 
         # ----- choice facts -----
-        assert Program.from_string(r"3 < {u:p;v:q} > 5.").statements[
-            0
-        ] == ChoiceRule(
+        assert Program.from_string(r"3 < {u:p;v:q} > 5.").statements[0] == ChoiceRule(
             Choice(
                 (
                     ChoiceElement(PredLiteral("u"), (PredLiteral("p"),)),
@@ -428,9 +408,7 @@ class TestProgram:
         assert Program.from_string("#npp(h(),[p,0]):-.").statements[0] == NPPRule(
             NPP("h", TermTuple(), TermTuple(SymbolicConstant("p"), Number(0)))
         )
-        assert Program.from_string('#npp(h("f"),[p,0]).').statements[
-            0
-        ] == NPPRule(
+        assert Program.from_string('#npp(h("f"),[p,0]).').statements[0] == NPPRule(
             NPP(
                 "h",
                 TermTuple(String("f")),

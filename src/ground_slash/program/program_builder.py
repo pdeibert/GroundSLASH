@@ -798,9 +798,11 @@ class ProgramBuilder(SLASHVisitor):
         # symbolic_term
         else:
             return self.visitSymbolic_term(ctx.children[0])
-    
+
     # Visit a parse tree produced by SLASHParser#Symbolic_term.
-    def visitSymbolic_term(self: Self, ctx: SLASHParser.Symbolic_termContext) -> Union[SymbolicConstant, Functional]:
+    def visitSymbolic_term(
+        self: Self, ctx: SLASHParser.Symbolic_termContext
+    ) -> Union[SymbolicConstant, Functional]:
         """Visits 'symbolic_term'.
 
         Handles the following rule(s):
