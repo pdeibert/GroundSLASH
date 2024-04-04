@@ -28,7 +28,7 @@ Before using `GroundSLASH` for the first time, the ANTLR parser files need to be
 
 The package provides a convenient `ground_slash` command line tool:
 ```
-ground_slash -f <infile> [-o <outfile]
+ground_slash ground -f <infile> [-o <outfile]
 ```
 If no output file is specified, the grounded program will simply be output to the console (if successful).
 
