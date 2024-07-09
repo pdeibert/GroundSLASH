@@ -1,4 +1,9 @@
-from typing import Self, Set
+from typing import Set
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import pytest  # type: ignore
 

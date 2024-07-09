@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Self, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from .expression import Expr
 from .literals import LiteralCollection, PredLiteral

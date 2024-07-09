@@ -1,5 +1,10 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Optional, Self, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import ground_slash
 from ground_slash.program.literals import (

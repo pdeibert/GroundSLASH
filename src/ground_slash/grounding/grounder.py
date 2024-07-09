@@ -1,7 +1,12 @@
 import warnings
 from collections import defaultdict
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional, Self, Set, Type
+from typing import TYPE_CHECKING, Optional, Set, Type
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.literals import (
     AggrLiteral,

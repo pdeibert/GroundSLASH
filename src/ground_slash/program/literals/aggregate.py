@@ -8,12 +8,16 @@ from typing import (
     Iterable,
     Iterator,
     Optional,
-    Self,
     Set,
     Tuple,
     Type,
     Union,
 )
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.operators import AggrOp, RelOp

@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, List, Optional, Self, Set, Tuple, Type
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Type
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from .dependency_graph import DependencyGraph
 from .scc import compute_SCCs

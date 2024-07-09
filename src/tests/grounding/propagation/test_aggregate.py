@@ -1,4 +1,7 @@
-from typing import Self
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import ground_slash
 from ground_slash.grounding.propagation import AggrPropagator

@@ -1,4 +1,9 @@
-from typing import Dict, Optional, Self, Set, Union
+from typing import Dict, Optional, Set, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from .symbols import SpecialChar
 from .terms import AnonVariable, ArithTerm, ArithVariable, Variable

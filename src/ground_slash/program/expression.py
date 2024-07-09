@@ -1,5 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Dict, Optional, Self, Set, Union
+from typing import TYPE_CHECKING, Dict, Optional, Set, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from .query import Query

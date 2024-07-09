@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import ground_slash
 from ground_slash.program.symbols import SpecialChar

@@ -1,5 +1,10 @@
 from enum import Enum
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from ground_slash.program.terms import Term

@@ -3,7 +3,12 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Iterator, Optional, Self, Set, Union
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Set, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.safety_characterization import SafetyTriplet

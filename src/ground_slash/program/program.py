@@ -1,16 +1,10 @@
 from functools import cached_property
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Self,
-    Set,
-    Tuple,
-    Type,
-)
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Type
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import antlr4  # type: ignore
 
