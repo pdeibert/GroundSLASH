@@ -36,7 +36,7 @@ class PredLiteral(Literal):
     """  # noqa
 
     def __init__(
-        self,
+        self: Self,
         name: str,
         *terms: "Term",
         neg: bool = False,

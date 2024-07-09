@@ -2,17 +2,7 @@ import itertools
 from abc import ABC, abstractmethod
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Iterable,
-    Iterator,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Set, Tuple, Union
 
 try:
     from typing import Self
@@ -1154,7 +1144,7 @@ class AggrLiteral(Literal):
         self.func = func
         self.elements = elements
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns the string representation for the aggregate literal.
 
         Returns:
@@ -1173,7 +1163,7 @@ class AggrLiteral(Literal):
             "not " if self.naf else ""
         ) + f"{lguard_str}{str(self.func)}{{{elements_str}}}{rguard_str}"
 
-    def __eq__(self, other: "Any") -> bool:
+    def __eq__(self: Self, other: "Any") -> bool:
         """Compares the literal to a given object.
 
         Considered equal if the given object is also an `AggrLiteral` instance with same aggregate
@@ -1192,18 +1182,18 @@ class AggrLiteral(Literal):
             and self.guards == other.guards
         )
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash(("aggr literal", self.func, self.elements, self.guards))
 
     @cached_property
-    def ground(self) -> bool:
+    def ground(self: Self) -> bool:
         return (
             (self.lguard.bound.ground if self.lguard is not None else True)
             and (self.rguard.bound.ground if self.rguard is not None else True)
             and all(element.ground for element in self.elements)
         )
 
-    def set_naf(self, value: bool = True) -> None:
+    def set_naf(self: Self, value: bool = True) -> None:
         """Setter for the `naf` attribute.
 
         Args:
@@ -1211,7 +1201,7 @@ class AggrLiteral(Literal):
         """
         self.naf = value
 
-    def pos_occ(self) -> LiteralCollection:
+    def pos_occ(self: Self) -> LiteralCollection:
         """Positive literal occurrences.
 
         Returns:
@@ -1222,7 +1212,7 @@ class AggrLiteral(Literal):
             *itertools.chain(*tuple(element.pos_occ() for element in self.elements))
         )
 
-    def neg_occ(self) -> LiteralCollection:
+    def neg_occ(self: Self) -> LiteralCollection:
         """Negative literal occurrences.
 
         Returns:
@@ -1234,10 +1224,10 @@ class AggrLiteral(Literal):
         )
 
     @property
-    def guards(self) -> Tuple[Optional[Guard], Optional[Guard]]:
+    def guards(self: Self) -> Tuple[Optional[Guard], Optional[Guard]]:
         return (self.lguard, self.rguard)
 
-    def invars(self) -> Set["Variable"]:
+    def invars(self: Self) -> Set["Variable"]:
         """Inner variables.
 
         Returns:
@@ -1245,7 +1235,7 @@ class AggrLiteral(Literal):
         """
         return set().union(*tuple(element.vars() for element in self.elements))
 
-    def outvars(self) -> Set["Variable"]:
+    def outvars(self: Self) -> Set["Variable"]:
         """Outer variables.
 
         Returns:
@@ -1255,7 +1245,7 @@ class AggrLiteral(Literal):
             *tuple(guard.bound.vars() for guard in self.guards if guard is not None)
         )
 
-    def vars(self) -> Set["Variable"]:
+    def vars(self: Self) -> Set["Variable"]:
         """Returns the variables associated with the aggregate literal.
 
         Union of the sets of inner and outer variables.
@@ -1265,7 +1255,9 @@ class AggrLiteral(Literal):
         """  # noqa
         return self.invars().union(self.outvars())
 
-    def global_vars(self, statement: Optional["Statement"] = None) -> Set["Variable"]:
+    def global_vars(
+        self: Self, statement: Optional["Statement"] = None
+    ) -> Set["Variable"]:
         """Returns the global variables associated with the aggregate literal.
 
         For aggregate literals the set of outer variables are considered global.
@@ -1279,7 +1271,7 @@ class AggrLiteral(Literal):
         """
         return self.outvars()
 
-    def eval(self) -> bool:
+    def eval(self: Self) -> bool:
         """Evaluates the aggregate literal.
 
         The aggregate must be ground for evaluation.
@@ -1307,7 +1299,7 @@ class AggrLiteral(Literal):
             else True
         )
 
-    def safety(self, statement: Union["Statement", "Query"]) -> SafetyTriplet:
+    def safety(self: Self, statement: Union["Statement", "Query"]) -> SafetyTriplet:
         """Returns the the safety characterizations for the built-in literal.
 
         For details see Bicheler (2015): "Optimizing Non-Ground Answer Set Programs via Rule Decomposition".
@@ -1358,7 +1350,7 @@ class AggrLiteral(Literal):
 
         return SafetyTriplet.closure(*guard_safeties)
 
-    def substitute(self, subst: "Substitution") -> "AggrLiteral":
+    def substitute(self: Self, subst: "Substitution") -> "AggrLiteral":
         """Applies a substitution to the aggregate literal.
 
         Substitutes all guard terms and aggregate elements recursively.
@@ -1382,7 +1374,7 @@ class AggrLiteral(Literal):
             naf=self.naf,
         )
 
-    def match(self, other: "Expr") -> Set["Substitution"]:
+    def match(self: Self, other: "Expr") -> Set["Substitution"]:
         """Tries to match the aggregate element with an expression.
 
         Raises an exception, since direct matching for aggregate literals is undefined.
@@ -1396,7 +1388,7 @@ class AggrLiteral(Literal):
         """  # noqa
         raise Exception("Direct matching for aggregate literals not supported.")
 
-    def replace_arith(self, var_table: "VariableTable") -> "AggrLiteral":
+    def replace_arith(self: Self, var_table: "VariableTable") -> "AggrLiteral":
         """Replaces arithmetic terms appearing in the aggregate literal with arithmetic variables.
 
         Note: arithmetic terms are not replaced in-place.

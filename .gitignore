@@ -1,8 +1,4 @@
 __pycache__/
-src/ground_slash/parser/
-
-!src/ground_slash/parser/__init__.py
-!src/ground_slash/parser/SLASH.g4
-!src/ground_slash/parser/generate.sh
+.coverage
 
 src/*.egg-info

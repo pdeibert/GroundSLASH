@@ -319,7 +319,7 @@ class Variable(Term):
     def simplify(self: Self) -> "Variable":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as variables cannot be simplified.
 
         Returns:
             Copy of the `Variable` instance.
@@ -404,7 +404,7 @@ class AnonVariable(Variable):
     def simplify(self: Self) -> "AnonVariable":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as variables cannot be simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as variables cannot be simplified.
 
         Returns:
             Copy of the `AnonVariable` instance.
@@ -547,7 +547,7 @@ class Number(Term):
     def simplify(self: Self) -> "Number":
         """Simplifies the variable as part of an arithmetic term.
 
-        Used in arithmetic terms. Returns a copy of itself, as numbers cannot be further simplified.
+        Used in arithmetic terms. Returns a copy of itself: Self, as numbers cannot be further simplified.
 
         Returns:
             Copy of the `Number` instance.

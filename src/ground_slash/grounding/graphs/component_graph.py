@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Type
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 try:
     from typing import Self
@@ -75,9 +75,7 @@ class ComponentGraph(object):
         return cls.from_dependency_graph(dep_graph)
 
     @classmethod
-    def from_dependency_graph(
-        cls: Type["ComponentGraph"], dep_graph: DependencyGraph
-    ) -> "ComponentGraph":
+    def from_dependency_graph(cls, dep_graph: DependencyGraph) -> "ComponentGraph":
         # compute strong connected components (convert to tuples for dict hashing)
         sccs = [
             tuple(component)

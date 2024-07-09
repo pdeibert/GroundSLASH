@@ -20,7 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class AuxLiteral(PredLiteral, ABC):
     """Abstract base class for auxiliary predicate literals."""
 
-    def __init__(self, name: str, *args, **kwargs) -> None:
+    def __init__(self: Self, name: str, *args, **kwargs) -> None:
         """Initializes the auxiliary literal instance.
 
         Args:

@@ -27,7 +27,6 @@ class ChoicePropagator:
 
     def propagate(
         self: Self,
-        # TODO: typing
         eps_instances,
         eta_instances,
         literals_I: Set["Literal"],

@@ -33,8 +33,9 @@ from ground_slash.program.substitution import Substitution
 from ground_slash.program.terms import Number, Variable
 
 
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestGrounder:
-    def compare_to_clingo(self: Self, prog_str: str) -> None:
+    def compare_to_clingo(self: Self, prog_str: str, mode: str) -> None:
         """Helper method (not a test case on its own)."""
 
         def solve_using_clingo(prog) -> Tuple[bool, Set[FrozenSet[str]]]:
@@ -52,7 +53,7 @@ class TestGrounder:
             return sat.satisfiable, set(models)
 
         # build & ground program
-        prog = Program.from_string(prog_str)
+        prog = Program.from_string(prog_str, mode)
         grounder = Grounder(prog)
         ground_prog = grounder.ground()
 
@@ -65,7 +66,7 @@ class TestGrounder:
         assert len(our_models) == len(gringo_models)
         assert our_models == gringo_models
 
-    def test_select(self: Self):
+    def test_select(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -131,7 +132,7 @@ class TestGrounder:
                 )
             )
 
-    def test_matches(self: Self):
+    def test_matches(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -191,7 +192,7 @@ class TestGrounder:
                 AggrLiteral(AggrCount(), tuple(), Guard(RelOp.EQUAL, Number(1), False))
             )  # aggregate literal
 
-    def test_ground_statement(self: Self):
+    def test_ground_statement(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -413,7 +414,7 @@ class TestGrounder:
             == set()
         )  # not all literals have matches in 'possible'
 
-    def test_ground_unsafe(self: Self):
+    def test_ground_unsafe(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -423,17 +424,17 @@ class TestGrounder:
         """
 
         # build & ground program
-        prog = Program.from_string(prog_str)
+        prog = Program.from_string(prog_str, mode)
         with pytest.raises(ValueError):
             Grounder(prog)
 
-    def test_ground_component(self: Self):
+    def test_ground_component(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
         # TODO
 
-    def test_example_1(self: Self):
+    def test_example_1(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -445,9 +446,9 @@ class TestGrounder:
         y :- not q(3).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_2(self: Self):
+    def test_example_2(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -462,9 +463,9 @@ class TestGrounder:
         d :- not b.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_3(self: Self):
+    def test_example_3(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -482,9 +483,9 @@ class TestGrounder:
         d :- not b.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_4(self: Self):
+    def test_example_4(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -500,9 +501,9 @@ class TestGrounder:
         d :- #count { X: p(X); X: q(X) } != 3.
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_5(self: Self):
+    def test_example_5(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -533,9 +534,9 @@ class TestGrounder:
         gh(B) :- b(B), not h(B).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_6(self: Self):
+    def test_example_6(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -566,9 +567,9 @@ class TestGrounder:
         g(B) :- b(B), not f(B).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_7(self: Self):
+    def test_example_7(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -578,9 +579,9 @@ class TestGrounder:
         :- p(0), q(1).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_8(self: Self):
+    def test_example_8(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -591,9 +592,9 @@ class TestGrounder:
         """
 
         with pytest.warns(Warning):
-            self.compare_to_clingo(prog_str)
+            self.compare_to_clingo(prog_str, mode)
 
-    def test_example_9(self: Self):
+    def test_example_9(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -610,9 +611,9 @@ class TestGrounder:
         """
 
         with pytest.warns(Warning):
-            self.compare_to_clingo(prog_str)
+            self.compare_to_clingo(prog_str, mode)
 
-    def test_example_10(self: Self):
+    def test_example_10(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -628,9 +629,9 @@ class TestGrounder:
         :- p(X), q(X).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_roads(self: Self):
+    def test_example_roads(self: Self, mode: str):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
@@ -650,9 +651,9 @@ class TestGrounder:
         drive(X) :- route(berlin,X).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)
 
-    def test_example_graph_color(self: Self):
+    def test_example_graph_color(self: Self, mode: str):
         # from "Answer Set Solving in Practice"
 
         # make sure debug mode is enabled
@@ -673,4 +674,4 @@ class TestGrounder:
         :- edge(X,Y), color(X,C), color(Y,C).
         """
 
-        self.compare_to_clingo(prog_str)
+        self.compare_to_clingo(prog_str, mode)

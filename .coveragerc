@@ -1,2 +1,2 @@
 [run]
-omit = ./src/ground_slash/parser/*
+omit = src/ground_slash/parser/standalone_parser.py

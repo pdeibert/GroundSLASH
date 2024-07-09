@@ -67,7 +67,7 @@ class ArithTerm(Term, ABC):
         pass
 
     @abstractmethod  # pragma: no cover
-    def eval(self) -> int:
+    def eval(self: Self) -> int:
         """Evaluates the arithmetic term.
 
         Returns:

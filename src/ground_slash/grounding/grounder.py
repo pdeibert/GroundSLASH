@@ -8,6 +8,11 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 from ground_slash.program.literals import (
     AggrLiteral,
     BuiltinLiteral,

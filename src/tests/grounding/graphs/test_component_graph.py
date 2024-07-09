@@ -3,13 +3,16 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+import pytest  # type: ignore
+
 import ground_slash
 from ground_slash.grounding.graphs.component_graph import ComponentGraph
 from ground_slash.program import Program
 
 
+@pytest.mark.parametrize("mode", ["earley", "lalr", "standalone"])
 class TestComponentGraph:
-    def test_component_graph(self: Self):
+    def test_component_graph(self: Self, mode: str):
         # make sure debug mode is enabled
         assert ground_slash.debug()
 
@@ -27,7 +30,7 @@ class TestComponentGraph:
         y :- not q(3).
         """
 
-        prog = Program.from_string(input)
+        prog = Program.from_string(input, mode)
 
         assert len(prog.statements) == 8  # make sure we have no extra statements
         u1, u2, v2, v3, pX, qX, x, y = prog.statements

@@ -6,6 +6,11 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 if TYPE_CHECKING:  # pragma: no cover
     from .terms import Variable
 
@@ -131,6 +136,7 @@ class SafetyTriplet:
             for rule in prev_rules:
                 if not (rule.depender in rule.dependees or rule.depender in safe):
                     # remove safe variables from dependees and check if it becomes empty
+                    # TODO: avoid walrus operator for better backcompatibility?
                     if not (updated_dependees := rule.dependees - safe):
                         # drop rule and add depender to safe variables
                         safe.add(rule.depender)

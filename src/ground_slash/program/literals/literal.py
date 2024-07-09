@@ -36,7 +36,7 @@ class Literal(Expr, ABC):
     naf: bool = False
 
     @abstractmethod  # pragma: no cover
-    def pos_occ(self) -> "LiteralCollection":
+    def pos_occ(self: Self) -> "LiteralCollection":
         """Positive literal occurrences.
 
         Returns:

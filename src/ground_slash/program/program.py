@@ -1,17 +1,12 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple
 
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-import antlr4  # type: ignore
-
-from ground_slash.parser.SLASHLexer import SLASHLexer
-from ground_slash.parser.SLASHParser import SLASHParser
-
-from .program_builder import ProgramBuilder
+from ground_slash.parser import Parser
 
 if TYPE_CHECKING:  # pragma: no cover
     from .literals import AggrPlaceholder, ChoicePlaceholder
@@ -36,7 +31,7 @@ class Program:
     """
 
     def __init__(
-        self, statements: Iterable["Statement"], query: Optional["Query"] = None
+        self: Self, statements: Iterable["Statement"], query: Optional["Query"] = None
     ) -> None:
         """Initializes the program instance.
 
@@ -231,9 +226,7 @@ class Program:
         return all(statement.ground for statement in self.statements)  # TODO: query?
 
     @classmethod
-    def from_string(
-        cls: Type["Program"], prog_str: str, simplify_arithmetic: bool = True
-    ) -> "Program":
+    def from_string(cls, prog_str: str, mode: str = "standalone") -> "Program":
         """Creates program from a raw string encoding.
 
         Args:
@@ -242,19 +235,13 @@ class Program:
         Returns:
             `Program` instance.
         """
-        # get input stream
-        input_stream = antlr4.InputStream(prog_str)  # type: ignore
+        # check if mode is valid
+        if mode not in ("earley", "lalr", "standalone"):
+            raise ValueError(f"Invalid value {mode} for 'mode'.")
 
-        # tokenize input program
-        lexer = SLASHLexer(input_stream)
-        stream = antlr4.CommonTokenStream(lexer)  # type: ignore
-        stream.fill()
+        parser = Parser(mode=mode)
 
-        # parse program
-        parser = SLASHParser(stream)
-        tree = parser.program()
-
-        # traverse parse tree using visitor
-        statements, query = ProgramBuilder(simplify_arithmetic).visit(tree)
+        # parse & transform string to SLASH expression objects
+        statements, query = parser.parse(prog_str)
 
         return Program(statements, query)

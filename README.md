@@ -1,7 +1,7 @@
-![Unit test badge](https://img.shields.io/badge/Unit_tests-passed-blue?color=rgb(0,128,0))
-![Coverage badge](https://img.shields.io/badge/Coverage-93%25-blue?color=rgb(35,145,0))
-
 # GroundSLASH
+
+![Test badge](https://github.com/pdeibert/GroundSLASH/actions/workflows/tests.yaml/badge.svg?branch=lark)
+![Coverage badge](https://github.com/pdeibert/GroundSLASH/blob/lark/coverage.svg)
 
 Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH. SLASH is neural-probabilistic extension of the Answer Set Programming (ASP) paradigm. For more information, see:
 * [ASP-Core-2 Input Language Format](https://arxiv.org/abs/1911.04326)
@@ -10,31 +10,19 @@ Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH
 
 GroundSLASH is a fork of the [ASPy](https://github.com/pdeibert/ASPy) parser and grounder for Answer Set programs, extended to the SLASH language.
 
+Internally, syntactic elements (terms, literals, rules, ...) are implemented using classes which provide convenient methods and operators for handling them, allowing for easy modification and extension.
+
+Programs are usually automatically build from a convenient string notation of the input language.
+
 The grounding process generally follows the procedure described in [On the Foundations of Grounding in Answer Set Programming](https://arxiv.org/abs/2108.04769).
 
 This library serves the following purposes:
 * Provide an easy-to-use parser and grounder for SLASH
 * Serve as a starting point for further experimental extensions to the input language using a high-level programming language (i.e., Python)
 
-## Installation
-
-To install, run `pip install .`. If you wish to modify the project, install the package using the extra `dev` option: `pip install .[dev]`.
-
-Before using `GroundSLASH` for the first time, the ANTLR parser files need to be generated using the ANTLR runtime installed on the host system. To do so, simply run `ground_slash init` in a terminal. If this for some reason fails, you can manually generate the parse by calling `antlr4 -Dlanguage=Python3 -visitor -no-listener SLASH.g4` from the `ground_slash/parser` directory of the installed package.
-
 ## Usage
 
-### Command Line Interface
-
-The package provides a convenient `ground_slash` command line tool:
-```
-ground_slash ground -f <infile> [-o <outfile]
-```
-If no output file is specified, the grounded program will simply be output to the console (if successful).
-
-### Python
-
-Programs are usually automatically build from a convenient string notation of the input language. As an example, consider an [MNIST-addition](https://arxiv.org/abs/1805.10872) task with two images:
+As an example, consider an [MNIST-addition](https://arxiv.org/abs/1805.10872) task with two images:
 ```python
 from ground_slash.program import Program
 from ground_slash.grounding import Grounder
@@ -95,13 +83,12 @@ addition(i2,i1,0) :- addition(i1,i2,0), i1<i2.
 addition(i2,i1,18) :- addition(i1,i2,18), i1<i2.
 ```
 
-### Development
+## Parser modes
 
-Modifications to the input language require the parser to be modified. `GroundSLASH` uses ANTLR4 to generate a parser based on a specified grammar. The grammar (in EBNF notation) can be found under `ground_slash/parser/SLASH.g4`. To generate the parser files, either run `ground_slash init` if the package is already installed, or generate them manually by calling `antlr4 -Dlanguage=Python3 -visitor -no-listener SLASH.g4` from the directory of the grammar file.
-
-The parse tree is then converted into an internal representation using `ground_slash/parser/program_builder.py`. Internally, syntactic elements (terms, literals, rules, ...) are implemented using classes which provide convenient methods and operators for handling them, allowing for easy modification and extensions. New types of terms, literals, and statements can be derived from these classes, which reside in `ground_slash/program`.
-
-The grounder and all associated functionality can be found in `ground_slash/grounder`.
+`GroundSLASH` uses [Lark](https://github.com/lark-parser/lark) for parsing and provides three different parsing modes (passed as `mode` argument to `Program.from_string(...)`):
+* `mode=earley`: uses the [SLASH_earley.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_earley.lark) grammar and accompanying [earley_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/earley_transformer.py). The grammar follows a standard EBNF notation and is thus the easiest to modify. However, the used Earley parsing algorithm is comparatively slow and memory-inefficient. Use this grammar file, transformer, and parsing mode for experimental changes to the input language.
+* `mode=lalr`: uses the [SLASH_lalr.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_lalr.lark) grammar and accompanying [lalr_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/lalr_transformer.py). The grammar is optimized to use the faster and more efficient LALR parsing algorithm, but is more verbose in its notation. It therefore requires more work than `mode=earley` to implement changes at the benefit of increased parsing speed.
+* `mode=standalone` (default): uses a standalone LALR parser generated from [SLASH_lalr.lark](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/SLASH_lalr.lark) and the accompanying [standalone_transformer](https://github.com/pdeibert/GroundSLASH/blob/lark/src/ground_slash/parser/standalone_transformer.py). This option is the fastest and most efficient option and used per default. A new standalone parser can be generated from the LALR grammar using `python -m lark.tools.standalone -s program SLASH_lalr.lark > standalone_parser.py` from the parser directory.
 
 ## Additional Resources
 
