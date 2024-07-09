@@ -22,6 +22,16 @@ This library serves the following purposes:
 
 ## Usage
 
+### Command Line Interface
+
+The package provides a convenient `ground_slash` command line tool:
+```
+ground_slash ground -f <infile> [-o <outfile]
+```
+If no output file is specified, the grounded program will simply be output to the console (if successful).
+
+### Python
+
 As an example, consider an [MNIST-addition](https://arxiv.org/abs/1805.10872) task with two images:
 ```python
 from ground_slash.program import Program
