@@ -10,11 +10,15 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Self,
     Set,
     Tuple,
     Union,
 )
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.literals import (

@@ -1,6 +1,11 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional, Self, Set, Union
+from typing import TYPE_CHECKING, Any, Optional, Set, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import ground_slash
 from ground_slash.program.safety_characterization import SafetyTriplet

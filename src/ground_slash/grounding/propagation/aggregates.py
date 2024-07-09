@@ -1,5 +1,10 @@
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, List, Self, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Set, Tuple
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.literals import AggrLiteral, AggrPlaceholder
 from ground_slash.program.statements import AggrBaseRule, AggrElemRule

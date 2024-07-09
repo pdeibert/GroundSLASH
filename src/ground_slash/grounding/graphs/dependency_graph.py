@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, Self, Set, Tuple
+from typing import TYPE_CHECKING, Set, Tuple
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from ground_slash.program.statements import Statement

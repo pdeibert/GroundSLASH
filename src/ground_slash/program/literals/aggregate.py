@@ -2,17 +2,12 @@ import itertools
 from abc import ABC, abstractmethod
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Iterable,
-    Iterator,
-    Optional,
-    Self,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Set, Tuple, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.operators import AggrOp, RelOp

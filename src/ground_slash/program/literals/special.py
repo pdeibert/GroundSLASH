@@ -1,6 +1,11 @@
 from abc import ABC
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.literals import LiteralCollection, PredLiteral
 from ground_slash.program.substitution import Substitution

@@ -1,4 +1,9 @@
-from typing import FrozenSet, Self, Set, Tuple
+from typing import FrozenSet, Set, Tuple
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import clingo  # type: ignore
 import pytest  # type: ignore

@@ -1,5 +1,10 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Optional, Self, Set
+from typing import TYPE_CHECKING, Any, Optional, Set
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from .terms import Variable

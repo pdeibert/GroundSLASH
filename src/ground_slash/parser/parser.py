@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, Optional, Self, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from lark import Lark  # type: ignore
 

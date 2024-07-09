@@ -1,4 +1,9 @@
-from typing import Any, Dict, Self, Set
+from typing import Any, Dict, Set
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from ground_slash.program.expression import Expr
 from ground_slash.program.terms import Term

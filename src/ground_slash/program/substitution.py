@@ -1,6 +1,11 @@
 from copy import deepcopy
 from functools import reduce
-from typing import TYPE_CHECKING, Any, Dict, Optional, Self
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:  # pragma: no cover
     from ground_slash.program.terms import Term, Variable

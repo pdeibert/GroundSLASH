@@ -1,4 +1,9 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Self, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 from lark import Token, Transformer  # type: ignore
 
