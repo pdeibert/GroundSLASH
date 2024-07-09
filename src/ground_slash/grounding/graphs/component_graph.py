@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Type
 
 try:
     from typing import Self

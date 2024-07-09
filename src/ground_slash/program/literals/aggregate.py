@@ -2,7 +2,17 @@ import itertools
 from abc import ABC, abstractmethod
 from functools import cached_property, reduce
 from itertools import chain, combinations
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    Iterator,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 try:
     from typing import Self
