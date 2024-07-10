@@ -1,6 +1,6 @@
 # GroundSLASH
 
-![Test badge](https://github.com/pdeibert/GroundSLASH/actions/workflows/tests.yaml/badge.svg?branch=lark)
+![Test badge](https://github.com/pdeibert/GroundSLASH/actions/workflows/tests.yaml/badge.svg)
 ![Coverage badge](https://github.com/pdeibert/GroundSLASH/blob/lark/coverage.svg)
 
 Parser and Grounder for the deep probabilistic programming language (DPPL) SLASH. SLASH is neural-probabilistic extension of the Answer Set Programming (ASP) paradigm. For more information, see:
