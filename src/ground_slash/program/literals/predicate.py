@@ -79,7 +79,7 @@ class PredLiteral(Literal):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, PredLiteral)
+            isinstance(other, type(self))
             and self.name == other.name
             and self.terms == other.terms
             and self.neg == other.neg
@@ -87,7 +87,7 @@ class PredLiteral(Literal):
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("predicate literal", self.naf, self.neg, self.name, *self.terms))
+        return hash((type(self), self.naf, self.neg, self.name, *self.terms))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the predicate literal.
@@ -210,7 +210,7 @@ class PredLiteral(Literal):
             A substitution necessary for matching (may be empty) or `None` if cannot be matched.
         """  # noqa
         if (
-            isinstance(other, PredLiteral)
+            isinstance(other, type(self))
             and self.name == other.name
             and self.arity == other.arity
             and self.neg == other.neg

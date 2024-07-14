@@ -163,13 +163,13 @@ class LiteralCollection:
             Boolean indicating whether or not the literal collection is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, LiteralCollection)
+            isinstance(other, type(self))
             and len(self) == len(other)
             and frozenset(self.literals) == frozenset(other.literals)
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("literal collection", frozenset(self.literals)))
+        return hash((type(self), frozenset(self.literals)))
 
     def __iter__(self: Self) -> Iterator[Literal]:
         return iter(self.literals)

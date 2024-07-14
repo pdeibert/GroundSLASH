@@ -76,13 +76,13 @@ class Functional(Term):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Functional)
+            isinstance(other, type(self))
             and other.symbol == self.symbol
             and other.terms == self.terms
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("functional", self.symbol, self.terms))
+        return hash((type(self), self.symbol, self.terms))
 
     @property
     def arity(self: Self) -> int:
@@ -159,7 +159,7 @@ class Functional(Term):
             A substitution necessary for matching (may be empty) or `None` if cannot be matched.
         """  # noqa
         if not (
-            isinstance(other, Functional)
+            isinstance(other, type(self))
             and self.symbol == other.symbol
             and self.arity == other.arity
         ):

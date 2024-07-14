@@ -21,9 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Program:
-    """Answer Set program.
+    """SLASH program.
 
-    Represents an Answer Set program.
+    Represents a SLASH program.
 
     Attributes:
         safe: Boolean indicating whether or not the underlying program is safe.
@@ -52,7 +52,7 @@ class Program:
             Boolean indicating whether or not the program is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Program)
+            isinstance(other, type(self))
             and set(self.statements) == set(other.statements)
             and self.query == other.query
         )

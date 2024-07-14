@@ -159,10 +159,10 @@ class Infimum(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Infimum)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("inf",))
+        return hash((type(self),))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
@@ -207,10 +207,10 @@ class Supremum(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Supremum)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("sup",))
+        return hash((type(self),))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
@@ -274,10 +274,10 @@ class Variable(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Variable) and other.val == self.val
+        return isinstance(other, type(self)) and other.val == self.val
 
     def __hash__(self: Self) -> int:
-        return hash(("var", self.val))
+        return hash((type(self), self.val))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence w.r.t. a given term.
@@ -393,13 +393,13 @@ class AnonVariable(Variable):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, AnonVariable)
+            isinstance(other, type(self))
             and other.val == self.val
             and other.id == self.id
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("anon var", self.val))
+        return hash((type(self), self.val))
 
     def simplify(self: Self) -> "AnonVariable":
         """Simplifies the variable as part of an arithmetic term.
@@ -509,10 +509,10 @@ class Number(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Number) and other.val == self.val
+        return isinstance(other, type(self)) and other.val == self.val
 
     def __hash__(self: Self) -> int:
-        return hash(("num", self.val))
+        return hash((type(self), self.val))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
@@ -612,10 +612,10 @@ class SymbolicConstant(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, SymbolicConstant) and other.val == self.val
+        return isinstance(other, type(self)) and other.val == self.val
 
     def __hash__(self: Self) -> int:
-        return hash(("symbolic const", self.val))
+        return hash((type(self), self.val))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
@@ -686,10 +686,10 @@ class String(Term):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, String) and other.val == self.val
+        return isinstance(other, type(self)) and other.val == self.val
 
     def __hash__(self: Self) -> int:
-        return hash(("str", self.val))
+        return hash((type(self), self.val))
 
     def precedes(self: Self, other: Term) -> bool:
         """Checks precendence of w.r.t. a given term.
@@ -754,13 +754,13 @@ class TermTuple:
             Boolean indicating whether or not the term tuple is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, TermTuple)
+            isinstance(other, type(self))
             and len(self) == len(other)
             and all(t1 == t2 for t1, t2 in zip(self, other))
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("term tuple", *self.terms))
+        return hash((type(self), *self.terms))
 
     def __str__(self: Self) -> str:
         """TODO"""

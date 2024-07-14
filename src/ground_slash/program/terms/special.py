@@ -66,13 +66,13 @@ class ArithVariable(Variable):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, ArithVariable)
+            isinstance(other, type(self))
             and other.val == self.val
             and self.orig_term == other.orig_term
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("arith var", self.val, self.orig_term))
+        return hash((type(self), self.val, self.orig_term))
 
     def precedes(self: Self, other: "Term") -> bool:
         """Checks precendence w.r.t. a given term.

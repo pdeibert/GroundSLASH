@@ -101,7 +101,7 @@ class PropPlaceholder(AuxLiteral):
     def __hash__(self: Self) -> int:
         return hash(
             (
-                "prop placeholder",
+                type(self),
                 self.prefix,
                 self.ref_id,
                 frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
@@ -284,7 +284,7 @@ class PropBaseLiteral(AuxLiteral):
     def __hash__(self: Self) -> int:
         return hash(
             (
-                "prop base literal",
+                type(self),
                 self.prefix,
                 self.ref_id,
                 frozenset((v, t) for v, t in zip(self.glob_vars, self.terms)),
@@ -474,7 +474,7 @@ class PropElemLiteral(AuxLiteral):
     def __hash__(self: Self) -> int:
         return hash(
             (
-                "prop element literal",
+                type(self),
                 self.prefix,
                 self.ref_id,
                 self.element_id,

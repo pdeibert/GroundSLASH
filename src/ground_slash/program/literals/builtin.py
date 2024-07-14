@@ -172,13 +172,13 @@ class Equal(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Equal)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("equal", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def safety(
         self: Self, statement: Optional[Union["Statement", "Query"]] = None
@@ -288,13 +288,13 @@ class Unequal(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Unequal)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("unequal", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def eval(self: Self) -> bool:
         """Evaluates the built-in literal w.r.t. the total ordering for terms.
@@ -373,13 +373,13 @@ class Less(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Less)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("less", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def eval(self: Self) -> bool:
         """Evaluates the built-in literal w.r.t. the total ordering for terms.
@@ -458,13 +458,13 @@ class Greater(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Greater)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("greater", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def eval(self: Self) -> bool:
         """Evaluates the built-in literal w.r.t. the total ordering for terms.
@@ -543,13 +543,13 @@ class LessEqual(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, LessEqual)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("less equal", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def eval(self: Self) -> bool:
         """Evaluates the built-in literal w.r.t. the total ordering for terms.
@@ -628,13 +628,13 @@ class GreaterEqual(BuiltinLiteral):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, GreaterEqual)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("greater equal", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def eval(self: Self) -> bool:
         """Evaluates the built-in literal w.r.t. the total ordering for terms.

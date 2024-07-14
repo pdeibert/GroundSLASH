@@ -42,7 +42,7 @@ class SafetyRule:
             Boolean indicating whether or not the safety rule is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, SafetyRule)
+            isinstance(other, type(self))
             and self.depender == other.depender
             and self.dependees == other.dependees
         )
@@ -53,7 +53,7 @@ class SafetyRule:
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("safety rule", self.depender, frozenset(self.dependees)))
+        return hash((type(self), self.depender, frozenset(self.dependees)))
 
 
 class SafetyTriplet:
@@ -97,7 +97,7 @@ class SafetyTriplet:
             Boolean indicating whether or not the safety triplet is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, SafetyTriplet)
+            isinstance(other, type(self))
             and self.safe == other.safe
             and self.unsafe == self.unsafe
             and self.rules == other.rules

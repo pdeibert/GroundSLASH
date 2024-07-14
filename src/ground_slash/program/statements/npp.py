@@ -79,14 +79,14 @@ class NPP(Expr):
             to the given object.
         """
         return (
-            isinstance(other, NPP)
+            isinstance(other, type(self))
             # NOTE: order of atoms matters (corresponds to order of NPP outputs)
             and self.terms == other.terms
             and self.outcomes == other.outcomes
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("npp", self.terms, self.outcomes))
+        return hash((type(self), self.terms, self.outcomes))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the npp expression.
@@ -296,13 +296,13 @@ class NPPRule(Statement):
             Boolean indicating whether or not the statement is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, NPPRule)
+            isinstance(other, type(self))
             and self.head == other.head
             and self.literals == other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("npp rule", self.head, self.literals))
+        return hash((type(self), self.head, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the statement.

@@ -363,7 +363,7 @@ class TestSpecial:
         )
         # hashing
         assert hash(ground_rule) == hash(
-            AggrBaseRule(
+            ChoiceBaseRule(
                 ground_eps_literal,
                 *ground_guards,
                 ground_guard_literals

@@ -145,9 +145,7 @@ class PropElemRule(NormalRule):
         )
 
     def __hash__(self: Self) -> int:
-        return hash(
-            ("prop element rule", type(self), self.atom, self.literals, self.element)
-        )
+        return hash((type(self), type(self), self.atom, self.literals, self.element))
 
     @property
     def ref_id(self: Self) -> int:

@@ -99,13 +99,13 @@ class ChoiceElement(Expr):
             Boolean indicating whether or not the element is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, ChoiceElement)
+            isinstance(other, type(self))
             and self.atom == other.atom
             and self.literals == other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("choice element", self.atom, self.literals))
+        return hash((type(self), self.atom, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the choice element.
@@ -327,13 +327,13 @@ class Choice(Expr):
             to the given object.
         """
         return (
-            isinstance(other, Choice)
+            isinstance(other, type(self))
             and set(self.elements) == set(other.elements)
             and self.guards == other.guards
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("choice", frozenset(self.elements), self.guards))
+        return hash((type(self), frozenset(self.elements), self.guards))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the choice expression.
@@ -787,13 +787,13 @@ class ChoiceRule(Statement):
             Boolean indicating whether or not the statement is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, ChoiceRule)
+            isinstance(other, type(self))
             and self.head == other.head
             and self.literals == other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("choice rule", self.head, self.literals))
+        return hash((type(self), self.head, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the statement.

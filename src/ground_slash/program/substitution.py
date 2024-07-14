@@ -89,12 +89,10 @@ class Substitution(dict):
         Returns:
             Boolean indicating whether or not the substitution is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Substitution) and super(Substitution, self).__eq__(
-            other
-        )
+        return isinstance(other, type(self)) and super(Substitution, self).__eq__(other)
 
     def __hash__(self: Self) -> int:
-        return hash(("substitution", frozenset(self.items())))
+        return hash((type(self), frozenset(self.items())))
 
     def __add__(self: Self, other: "Substitution") -> "Substitution":
         """Combines the substitution with another one.

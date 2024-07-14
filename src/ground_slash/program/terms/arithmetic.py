@@ -142,7 +142,7 @@ class ArithTerm(Term, ABC):
         if not (self.ground and other.ground):
             raise ValueError("Cannot match non-groun arithmetic terms directly.")
 
-        if isinstance(other, ArithTerm):
+        if isinstance(other, type(self)):
             # returns a 'Number' instance since 'other' is ground
             other = other.simplify()
 
@@ -199,10 +199,10 @@ class Minus(ArithTerm):
         Returns:
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Minus) and self.operand == other.operand
+        return isinstance(other, type(self)) and self.operand == other.operand
 
     def __hash__(self: Self) -> int:
-        return hash(("minus", self.operand))
+        return hash((type(self), self.operand))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the arithmetic term.
@@ -303,13 +303,13 @@ class Add(ArithTerm):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Add)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("add", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the arithmetic term.
@@ -421,13 +421,13 @@ class Sub(ArithTerm):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Sub)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("sub", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the arithmetic term.
@@ -540,13 +540,13 @@ class Mult(ArithTerm):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Mult)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("mult", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the arithmetic term.
@@ -677,13 +677,13 @@ class Div(ArithTerm):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Div)
+            isinstance(other, type(self))
             and self.loperand == other.loperand
             and self.roperand == other.roperand
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("div", self.loperand, self.roperand))
+        return hash((type(self), self.loperand, self.roperand))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the arithmetic term.

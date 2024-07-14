@@ -114,13 +114,13 @@ class DisjunctiveRule(Statement):
             Boolean indicating whether or not the statement is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, DisjunctiveRule)
+            isinstance(other, type(self))
             and set(self.atoms) == set(other.atoms)
             and set(self.literals) == set(other.literals)
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("disjunctive rule", self.atoms, self.literals))
+        return hash((type(self), self.atoms, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the statement.

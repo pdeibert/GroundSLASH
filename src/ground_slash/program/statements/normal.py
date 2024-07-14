@@ -95,13 +95,13 @@ class NormalRule(Statement):
             Boolean indicating whether or not the statement is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, NormalRule)
+            isinstance(other, type(self))
             and self.atom == other.atom
             and self.literals == other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("normal rule", self.atom, self.literals))
+        return hash((type(self), self.atom, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the statement.

@@ -25,10 +25,10 @@ class Query(Expr):
         return f"{str(self.atom)} ?"
 
     def __eq__(self: Self, other: "Any") -> bool:
-        return isinstance(other, Query) and self.atom == other.atom
+        return isinstance(other, type(self)) and self.atom == other.atom
 
     def __hash__(self: Self) -> int:
-        return hash(("query", self.atom))
+        return hash((type(self), self.atom))
 
     @property
     def head(self: Self) -> LiteralCollection:

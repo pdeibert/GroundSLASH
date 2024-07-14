@@ -94,13 +94,13 @@ class AggrElement(Expr):
             Boolean indicating whether or not the element is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, AggrElement)
+            isinstance(other, type(self))
             and self.terms == other.terms
             and self.literals == other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("aggr element", self.terms, self.literals))
+        return hash((type(self), self.terms, self.literals))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the aggregate element.
@@ -366,10 +366,10 @@ class AggrCount(AggrFunc):
         Returns:
             Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
-        return isinstance(other, AggrCount)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("aggregate count"))
+        return hash((type(self),))
 
     @classmethod
     def eval(cls: Type["AggrCount"], tuples: Set["TermTuple"]) -> Number:
@@ -509,10 +509,10 @@ class AggrSum(AggrFunc):
         Returns:
             Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
-        return isinstance(other, AggrSum)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("aggregate sum"))
+        return hash((type(self),))
 
     @classmethod
     def eval(
@@ -749,7 +749,7 @@ class AggrMin(AggrFunc):
         Returns:
             Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
-        return isinstance(other, AggrMin)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
         return hash(("aggregate min"))
@@ -935,10 +935,10 @@ class AggrMax(AggrFunc):
         Returns:
             Boolean indicating whether or not the function is considered equal to the given object.
         """  # noqa
-        return isinstance(other, AggrMax)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("aggregate max"))
+        return hash((type(self),))
 
     @classmethod
     def eval(cls: Type["AggrMax"], tuples: Set["TermTuple"]) -> "Term":
@@ -1186,14 +1186,14 @@ class AggrLiteral(Literal):
             Boolean indicating whether or not the literal is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, AggrLiteral)
+            isinstance(other, type(self))
             and self.func == other.func
             and set(self.elements) == set(other.elements)
             and self.guards == other.guards
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("aggr literal", self.func, self.elements, self.guards))
+        return hash((type(self), self.func, self.elements, self.guards))
 
     @cached_property
     def ground(self: Self) -> bool:

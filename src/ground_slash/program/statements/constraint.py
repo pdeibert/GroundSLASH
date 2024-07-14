@@ -67,12 +67,12 @@ class Constraint(Statement):
         Returns:
             Boolean indicating whether or not the statement is considered equal to the given object.
         """  # noqa
-        return isinstance(other, Constraint) and set(self.literals) == set(
+        return isinstance(other, type(self)) and set(self.literals) == set(
             other.literals
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("constraint", frozenset(self.literals)))
+        return hash((type(self), frozenset(self.literals)))
 
     def __str__(self: Self) -> str:
         """Returns the string representation for the statement.

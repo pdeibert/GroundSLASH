@@ -1,5 +1,6 @@
 from .expression import Expr  # noqa
 from .literals import *  # noqa
+from .observation import Observation  # noqa
 from .operators import AggrOp, ArithOp, RelOp  # noqa
 from .program import Program  # noqa
 from .query import Query  # noqa

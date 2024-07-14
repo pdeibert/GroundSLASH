@@ -15,10 +15,10 @@ from .literal import Literal, LiteralCollection
 
 class TrueConstant(Literal):
     def __eq__(self: Self, other: Any) -> bool:
-        return isinstance(other, TrueConstant)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("#true"))
+        return hash((type(self),))
 
     def __str__(self: Self) -> str:
         return "#true"
@@ -46,10 +46,10 @@ class TrueConstant(Literal):
 
 class FalseConstant(Literal):
     def __eq__(self: Self, other: Any) -> bool:
-        return isinstance(other, FalseConstant)
+        return isinstance(other, type(self))
 
     def __hash__(self: Self) -> int:
-        return hash(("#false"))
+        return hash((type(self),))
 
     def __str__(self: Self) -> str:
         return "#false"

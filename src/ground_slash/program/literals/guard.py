@@ -60,7 +60,7 @@ class Guard(NamedTuple):
             Boolean indicating whether or not the term is considered equal to the given object.
         """  # noqa
         return (
-            isinstance(other, Guard)
+            isinstance(other, type(self))
             and self.bound == other.bound
             and (
                 (self.right == other.right and self.op == other.op)
@@ -69,7 +69,7 @@ class Guard(NamedTuple):
         )
 
     def __hash__(self: Self) -> int:
-        return hash(("guard", self.op, self.bound, self.right))
+        return hash((type(self), self.op, self.bound, self.right))
 
     def to_left(self: Self) -> "Guard":
         """Moves guard to the left-hand side.
